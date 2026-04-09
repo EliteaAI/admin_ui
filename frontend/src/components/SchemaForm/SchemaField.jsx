@@ -113,6 +113,7 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
     { skip: !enumSource },
   );
   const suggestions = suggestionsData?.values || [];
+  const suggestionLabels = suggestionsData?.labels || {};
 
   // Fetch suggestions for enum_source_keys (map editor keys)
   const enumSourceKeys = field.enum_source_keys;
@@ -172,12 +173,13 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
       );
 
     case 'array':
-      if (items?.type === 'string') {
+      if (items?.type === 'string' || (items?.type === 'integer' && enumSource)) {
         return (
           <ArrayChipsInput
             value={Array.isArray(value) ? value : []}
             onChange={onChange}
             suggestions={suggestions}
+            labels={suggestionLabels}
           />
         );
       }

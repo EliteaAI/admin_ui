@@ -1,11 +1,19 @@
 import { memo, useCallback, useMemo, useState } from 'react';
-import Autocomplete from '@mui/material/Autocomplete';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import TextField from '@mui/material/TextField';
 
-const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggestions, placeholder }) {
+const defaultFilter = createFilterOptions();
+const MAX_DROPDOWN_OPTIONS = 50;
+
+const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggestions, labels, placeholder }) {
   const [inputValue, setInputValue] = useState('');
+
+  const getLabel = useCallback(
+    (item) => labels?.[String(item)] || String(item),
+    [labels],
+  );
 
   const availableOptions = useMemo(() => {
     if (!suggestions?.length) return [];
@@ -32,15 +40,26 @@ const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggest
           inputValue={inputValue}
           onInputChange={(_, newInput) => setInputValue(newInput)}
           onChange={(_, newValue) => onChange(newValue)}
+          getOptionLabel={(option) => getLabel(option)}
+          filterOptions={(options, state) => {
+            const filtered = defaultFilter(options, {
+              ...state,
+              getOptionLabel: (o) => getLabel(o),
+            });
+            return filtered.slice(0, MAX_DROPDOWN_OPTIONS);
+          }}
           renderTags={() => null}
           renderInput={(params) => (
             <TextField
               {...params}
-              placeholder={value.length === 0 ? (placeholder || 'Type to search...') : ''}
+              placeholder={value.length === 0 ? (placeholder || 'Type to search and filter...') : ''}
               sx={styles.input}
             />
           )}
-          slotProps={{ popper: { sx: styles.popper } }}
+          slotProps={{
+            popper: { sx: styles.popper },
+            listbox: { sx: { maxHeight: 300 } },
+          }}
           sx={styles.autocomplete}
         />
         {value.length > 0 && (
@@ -48,7 +67,7 @@ const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggest
             {value.map((item) => (
               <Chip
                 key={item}
-                label={item}
+                label={getLabel(item)}
                 size="small"
                 onDelete={() => handleDelete(item)}
                 sx={styles.chip}
