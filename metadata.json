@@ -1,0 +1,9 @@
+{
+  "name": "Admin UI SPA",
+  "version": "0.1",
+  "depends_on": [
+    "shared",
+    "auth"
+  ],
+  "init_after": []
+}

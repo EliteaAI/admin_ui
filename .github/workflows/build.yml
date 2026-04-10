@@ -1,0 +1,45 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/*'
+
+jobs:
+  build:
+    runs-on: ${{ fromJSON('["self-hosted", "Linux"]') }}
+    steps:
+      - name: Clear repository
+        run: rm -rf $GITHUB_WORKSPACE && mkdir $GITHUB_WORKSPACE
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.0.0
+
+      - name: Install dependencies
+        env:
+          NODE_OPTIONS: '--max-old-space-size=8192'
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build project
+        env:
+          NODE_OPTIONS: '--max-old-space-size=8192'
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Push built files
+        run: |
+          # Configure Git user info for this commit
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Commit and push changes
+          git add -f static/dist
+          git commit -m "build: dist" || echo "No changes to commit"
+          git push
