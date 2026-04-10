@@ -1,28 +1,45 @@
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import Tooltip from "@mui/material/Tooltip";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
 import {
   useUserListQuery,
+  useLazyUserListQuery,
   useUserToggleAdminMutation,
   useUserSuspendMutation,
 } from "@/api/usersApi";
 import { useDebounceValue } from "@/hooks/useDebounceValue";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 import UsersTable from "./UsersTable";
 import DeleteUserDialog from "./DeleteUserDialog";
 import UserActivityDrawer from "./UserActivityDrawer";
 
 const USER_TYPES = ["platform", "system"];
+const EXPORT_COLUMNS = [
+  { header: "Name", key: "name" },
+  { header: "Email", key: "email" },
+  { header: "Last Login", key: "last_login" },
+  { header: "Status", key: "status" },
+  {
+    header: "Platform Admin",
+    key: "is_admin",
+    transform: (v) => (v ? "Yes" : "No"),
+  },
+];
 
-function UsersPage() {
+const UsersPage = memo(() => {
   usePageTitle("Users");
 
   const [activeTab, setActiveTab] = useState(0);
@@ -44,6 +61,8 @@ function UsersPage() {
 
   const [toggleAdmin] = useUserToggleAdminMutation();
   const [suspendUser] = useUserSuspendMutation();
+  const [fetchUsers] = useLazyUserListQuery();
+  const [exporting, setExporting] = useState(false);
 
   const { data, isFetching, isError } = useUserListQuery(
     {
@@ -131,6 +150,53 @@ function UsersPage() {
     [suspendUser],
   );
 
+  // Export handler
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+
+    try {
+      const fetchAll = async (userType) => {
+        const first = await fetchUsers({
+          limit: 1,
+          offset: 0,
+          user_type: userType,
+        }).unwrap();
+        const total = first?.total ?? 0;
+
+        if (total === 0) return [];
+
+        const result = await fetchUsers({
+          limit: total,
+          offset: 0,
+          user_type: userType,
+        }).unwrap();
+        return result?.rows ?? [];
+      };
+
+      const [platformRows, systemRows] = await Promise.all([
+        fetchAll("platform"),
+        fetchAll("system"),
+      ]);
+
+      exportToExcel("Users.xlsx", [
+        {
+          sheetName: "Platform Users",
+          columns: EXPORT_COLUMNS,
+          rows: platformRows,
+        },
+        {
+          sheetName: "System Users",
+          columns: EXPORT_COLUMNS,
+          rows: systemRows,
+        },
+      ]);
+    } catch {
+      // Export failed silently
+    } finally {
+      setExporting(false);
+    }
+  }, [fetchUsers]);
+
   // Activity drawer handlers
   const handleActivity = useCallback((user) => {
     setActivityUser(user);
@@ -144,18 +210,37 @@ function UsersPage() {
 
   const isSystemTab = activeTab === 1;
 
-  const extraContent =
-    !isSystemTab && selectedIds.length > 0 ? (
-      <Button
-        variant="outlined"
-        color="error"
-        size="small"
-        startIcon={<DeleteIcon />}
-        onClick={() => handleDelete(selectedIds)}
-      >
-        Delete ({selectedIds.length})
-      </Button>
-    ) : null;
+  const extraContent = (
+    <>
+      {!isSystemTab && selectedIds.length > 0 && (
+        <Button
+          variant="outlined"
+          color="error"
+          size="small"
+          startIcon={<DeleteIcon />}
+          onClick={() => handleDelete(selectedIds)}
+        >
+          Delete ({selectedIds.length})
+        </Button>
+      )}
+      <Tooltip title="Export to Excel" placement="top">
+        <Box component="span">
+          <IconButton
+            disabled={exporting}
+            disableRipple
+            onClick={handleExport}
+            sx={styles.exportButton}
+          >
+            {exporting ? (
+              <CircularProgress size={16} sx={{ color: "icon.fill.send" }} />
+            ) : (
+              <FileDownloadOutlined sx={styles.exportIcon} />
+            )}
+          </IconButton>
+        </Box>
+      </Tooltip>
+    </>
+  );
 
   const platformLabel = `Platform Users${counts.platform != null ? ` (${counts.platform})` : ""}`;
   const systemLabel = `System Users${counts.system != null ? ` (${counts.system})` : ""}`;
@@ -220,7 +305,9 @@ function UsersPage() {
       />
     </>
   );
-}
+});
+
+UsersPage.displayName = "UsersPage";
 
 const styles = {
   tabs: ({ palette }) => ({
@@ -255,6 +342,26 @@ const styles = {
     padding: "3rem",
     color: "error.main",
   },
+  exportButton: ({ palette }) => ({
+    minWidth: "1.75rem",
+    width: "1.75rem",
+    height: "1.75rem",
+    padding: ".5rem",
+    backgroundColor: palette.background.button.primary.default,
+    borderRadius: "50%",
+    "&:hover": {
+      backgroundColor: palette.background.button.primary.hover,
+    },
+    "&.Mui-disabled": {
+      backgroundColor: palette.background.button.primary.default,
+      opacity: 0.6,
+    },
+  }),
+  exportIcon: ({ palette }) => ({
+    width: "1rem",
+    height: "1rem",
+    fill: palette.icon.fill.send,
+  }),
 };
 
 export default UsersPage;

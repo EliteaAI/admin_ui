@@ -1,19 +1,25 @@
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import Tooltip from "@mui/material/Tooltip";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
 import {
   useProjectListQuery,
+  useLazyProjectListQuery,
   useProjectSuspendMutation,
 } from "@/api/projectsApi";
 import { useDebounceValue } from "@/hooks/useDebounceValue";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 import ProjectsTable from "./ProjectsTable";
 import DeleteProjectDialog from "./DeleteProjectDialog";
@@ -22,8 +28,19 @@ import AddProjectAdminDialog from "./AddProjectAdminDialog";
 import ProjectActivityDrawer from "./ProjectActivityDrawer";
 
 const PROJECT_TYPES = ["team", "personal"];
+const EXPORT_COLUMNS = [
+  { header: "Name", key: "name" },
+  { header: "ID", key: "id" },
+  { header: "Owners", key: "owner_name" },
+  {
+    header: "Admins",
+    key: "admin_names",
+    transform: (v) => (Array.isArray(v) ? v.join(", ") : v || ""),
+  },
+  { header: "Status", key: "status" },
+];
 
-function ProjectsPage() {
+const ProjectsPage = memo(() => {
   usePageTitle("Projects");
 
   const [activeTab, setActiveTab] = useState(0);
@@ -45,6 +62,8 @@ function ProjectsPage() {
   const [activityProject, setActivityProject] = useState(null);
 
   const [suspendProject] = useProjectSuspendMutation();
+  const [fetchProjects] = useLazyProjectListQuery();
+  const [exporting, setExporting] = useState(false);
 
   const projectType = PROJECT_TYPES[activeTab];
 
@@ -146,6 +165,50 @@ function ProjectsPage() {
     [suspendProject],
   );
 
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+
+    try {
+      const fetchAll = async (projectType) => {
+        const first = await fetchProjects({
+          limit: 1,
+          offset: 0,
+          project_type: projectType,
+        }).unwrap();
+
+        const total = first?.total ?? 0;
+
+        if (total === 0) return [];
+
+        const result = await fetchProjects({
+          limit: total,
+          offset: 0,
+          project_type: projectType,
+        }).unwrap();
+
+        return result?.rows ?? [];
+      };
+
+      const [teamRows, personalRows] = await Promise.all([
+        fetchAll("team"),
+        fetchAll("personal"),
+      ]);
+
+      exportToExcel("Projects.xlsx", [
+        { sheetName: "Team Projects", columns: EXPORT_COLUMNS, rows: teamRows },
+        {
+          sheetName: "Personal Projects",
+          columns: EXPORT_COLUMNS,
+          rows: personalRows,
+        },
+      ]);
+    } catch {
+      // Export failed silently
+    } finally {
+      setExporting(false);
+    }
+  }, [fetchProjects]);
+
   // Activity drawer handlers
   const handleActivity = useCallback((project) => {
     setActivityProject(project);
@@ -157,18 +220,37 @@ function ProjectsPage() {
     setActivityProject(null);
   }, []);
 
-  const extraContent =
-    selectedIds.length > 0 ? (
-      <Button
-        variant="outlined"
-        color="error"
-        size="small"
-        startIcon={<DeleteIcon />}
-        onClick={() => handleDelete(selectedIds)}
-      >
-        Delete ({selectedIds.length})
-      </Button>
-    ) : null;
+  const extraContent = (
+    <>
+      {selectedIds.length > 0 && (
+        <Button
+          variant="outlined"
+          color="error"
+          size="small"
+          startIcon={<DeleteIcon />}
+          onClick={() => handleDelete(selectedIds)}
+        >
+          Delete ({selectedIds.length})
+        </Button>
+      )}
+      <Tooltip title="Export to Excel" placement="top">
+        <Box component="span">
+          <IconButton
+            disabled={exporting}
+            disableRipple
+            onClick={handleExport}
+            sx={styles.exportButton}
+          >
+            {exporting ? (
+              <CircularProgress size={16} sx={{ color: "icon.fill.send" }} />
+            ) : (
+              <FileDownloadOutlined sx={styles.exportIcon} />
+            )}
+          </IconButton>
+        </Box>
+      </Tooltip>
+    </>
+  );
 
   const teamLabel = `Team Projects${counts.team != null ? ` (${counts.team})` : ""}`;
   const personalLabel = `Personal Projects${counts.personal != null ? ` (${counts.personal})` : ""}`;
@@ -190,7 +272,7 @@ function ProjectsPage() {
           search={search}
           onSearchChange={handleSearchChange}
           searchPlaceholder="Search by Name, ID and Owner"
-          searchInputSx={{ '& input::placeholder': { fontSize: '0.75rem' } }}
+          searchInputSx={{ "& input::placeholder": { fontSize: "0.75rem" } }}
           showAddButton
           onAdd={handleCreateOpen}
           addButtonTooltip="Create project"
@@ -240,7 +322,9 @@ function ProjectsPage() {
       />
     </>
   );
-}
+});
+
+ProjectsPage.displayName = "ProjectsPage";
 
 const styles = {
   tabs: ({ palette }) => ({
@@ -275,6 +359,26 @@ const styles = {
     padding: "3rem",
     color: "error.main",
   },
+  exportButton: ({ palette }) => ({
+    minWidth: "1.75rem",
+    width: "1.75rem",
+    height: "1.75rem",
+    padding: ".5rem",
+    backgroundColor: palette.background.button.primary.default,
+    borderRadius: "50%",
+    "&:hover": {
+      backgroundColor: palette.background.button.primary.hover,
+    },
+    "&.Mui-disabled": {
+      backgroundColor: palette.background.button.primary.default,
+      opacity: 0.6,
+    },
+  }),
+  exportIcon: ({ palette }) => ({
+    width: "1rem",
+    height: "1rem",
+    fill: palette.icon.fill.send,
+  }),
 };
 
 export default ProjectsPage;
