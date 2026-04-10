@@ -1,10 +1,17 @@
-import { adminApi } from './adminApi';
-import { V2_BASE } from '@/utils/env';
+import { adminApi } from "./adminApi";
+import { V2_BASE } from "@/utils/env";
 
 export const projectsApi = adminApi.injectEndpoints({
   endpoints: (build) => ({
     projectList: build.query({
-      query: ({ limit = 20, offset = 0, search, sort_by, sort_order, project_type } = {}) => ({
+      query: ({
+        limit = 20,
+        offset = 0,
+        search,
+        sort_by,
+        sort_order,
+        project_type,
+      } = {}) => ({
         url: `${V2_BASE}/admin/projects/administration`,
         params: {
           limit,
@@ -15,42 +22,42 @@ export const projectsApi = adminApi.injectEndpoints({
           ...(project_type && { project_type }),
         },
       }),
-      providesTags: ['Projects'],
+      providesTags: ["Projects"],
     }),
 
     projectCreate: build.mutation({
       query: ({ name, project_admin_email }) => ({
-        url: '/projects/project/administration',
-        method: 'POST',
+        url: "/projects/project/administration",
+        method: "POST",
         body: { name, project_admin_email },
       }),
-      invalidatesTags: ['Projects'],
+      invalidatesTags: ["Projects"],
     }),
 
     projectDelete: build.mutation({
       query: ({ projectId }) => ({
         url: `/projects/project/administration/${projectId}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Projects'],
+      invalidatesTags: ["Projects"],
     }),
 
     projectAddAdmin: build.mutation({
       query: ({ projectId, email }) => ({
         url: `/admin/users/administration/${projectId}`,
-        method: 'POST',
-        body: { emails: [email], roles: ['admin'] },
+        method: "POST",
+        body: { emails: [email], roles: ["admin"] },
       }),
-      invalidatesTags: ['Projects'],
+      invalidatesTags: ["Projects"],
     }),
 
     projectSuspend: build.mutation({
       query: ({ projectId, suspended }) => ({
         url: `/admin/project_suspend/administration/${projectId}`,
-        method: 'PUT',
+        method: "PUT",
         body: { suspended },
       }),
-      invalidatesTags: ['Projects'],
+      invalidatesTags: ["Projects"],
     }),
 
     projectUserList: build.query({
@@ -74,6 +81,7 @@ export const projectsApi = adminApi.injectEndpoints({
 
 export const {
   useProjectListQuery,
+  useLazyProjectListQuery,
   useProjectCreateMutation,
   useProjectDeleteMutation,
   useProjectAddAdminMutation,
