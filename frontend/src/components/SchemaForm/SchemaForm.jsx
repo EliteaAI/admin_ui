@@ -40,8 +40,10 @@ function buildPylonLabels(pylonIds) {
 // Check if a field renders a JSON editor (should expand to fill space)
 const isJsonEditor = (field) => {
   if (field.type === 'object' && !field.additionalProperties?.type) return true;
-  if (field.type === 'array' && field.items?.type !== 'string' &&
-      !(field.items?.type === 'object' && field.items?.properties?.login)) return true;
+  if (field.type === 'array'
+      && field.items?.type !== 'string'
+      && !(field.items?.type === 'integer' && field.enum_source)
+      && !(field.items?.type === 'object' && field.items?.properties?.login)) return true;
   return false;
 };
 
