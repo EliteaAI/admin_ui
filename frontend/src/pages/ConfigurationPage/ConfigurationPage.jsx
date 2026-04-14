@@ -21,6 +21,7 @@ import DrawerPageHeader from "@/components/DrawerPageHeader";
 import SchemaForm from "@/components/SchemaForm/SchemaForm";
 import AdvancedSection from "@/components/SchemaForm/AdvancedSection";
 import MaintenanceSection from "@/components/SchemaForm/MaintenanceSection";
+import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
 import ServiceDescriptorsSection from "../ServiceDescriptorsPage/ServiceDescriptorsSection";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
@@ -282,6 +283,21 @@ function ConfigurationPage() {
                     />
                   </Box>
                 );
+              case "guardrails":
+                return valuesFetching ? (
+                  <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <Box sx={styles.formScroll}>
+                    <GuardrailsSection
+                      fields={activeFields}
+                      values={localValues}
+                      sectionDescription={activeSectionDescription}
+                      onChange={handleFieldChange}
+                    />
+                  </Box>
+                );
               default:
                 return valuesFetching ? (
                   <Box sx={styles.loadingContainer}>
@@ -377,6 +393,7 @@ function ConfigurationPage() {
   );
 }
 
+/** @type {MuiSx} */
 const styles = {
   content: {
     display: "flex",
