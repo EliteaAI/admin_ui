@@ -228,7 +228,7 @@ const TaskDetail = memo(function TaskDetail({
           color="text.metrics"
           sx={styles.editorLabel}
         >
-          Parameters (string)
+          Parameters (string | json)
         </Typography>
         <Box sx={styles.editorWrapper}>
           <CodeMirror
@@ -236,7 +236,7 @@ const TaskDetail = memo(function TaskDetail({
             onChange={setParam}
             extensions={jsonExtensions}
             theme={cmTheme}
-            placeholder="Task parameters in string format"
+            placeholder="String or JSON"
             basicSetup={{
               lineNumbers: false,
               foldGutter: false,
