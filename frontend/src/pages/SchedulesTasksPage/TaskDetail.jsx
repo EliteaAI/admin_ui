@@ -1,49 +1,61 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from "react";
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
-import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
-import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
-import StopOutlined from '@mui/icons-material/StopOutlined';
+import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
+import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
+import StopOutlined from "@mui/icons-material/StopOutlined";
 
-import CodeMirror from '@uiw/react-codemirror';
-import { json } from '@codemirror/lang-json';
-import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
+import CodeMirror from "@uiw/react-codemirror";
+import { json } from "@codemirror/lang-json";
+import { vscodeDarkInit, vscodeLightInit } from "@uiw/codemirror-theme-vscode";
 
-import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
+import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import {
   GridTableContainer,
   GridTableHeader,
   GridTableBody,
   GridTableRow,
-} from '@/components/GridTable';
+} from "@/components/GridTable";
 
 const STATUS_CONFIG = {
-  running: { label: 'Running', color: 'success' },
-  done: { label: 'Done', color: 'default' },
-  finished: { label: 'Finished', color: 'default' },
-  error: { label: 'Error', color: 'error' },
-  stopped: { label: 'Stopped', color: 'warning' },
+  running: { label: "Running", color: "success" },
+  done: { label: "Done", color: "default" },
+  finished: { label: "Finished", color: "default" },
+  error: { label: "Error", color: "error" },
+  stopped: { label: "Stopped", color: "warning" },
 };
 
 const INSTANCE_COLUMNS = [
-  { field: 'status', label: 'Status', width: '7rem', sortable: false },
-  { field: 'task_id', label: 'Task ID', width: '1fr', sortable: false },
-  { field: 'user', label: 'User', width: '12rem', sortable: false, hideBelow: 900 },
-  { field: 'started_at', label: 'Started', width: '13rem', sortable: false, hideBelow: 800 },
-  { field: 'actions', label: '', width: '5rem', sortable: false },
+  { field: "status", label: "Status", width: "7rem", sortable: false },
+  { field: "task_id", label: "Task ID", width: "1fr", sortable: false },
+  {
+    field: "user",
+    label: "User",
+    width: "12rem",
+    sortable: false,
+    hideBelow: 900,
+  },
+  {
+    field: "started_at",
+    label: "Started",
+    width: "13rem",
+    sortable: false,
+    hideBelow: 800,
+  },
+  { field: "actions", label: "", width: "5rem", sortable: false },
 ];
 
 const jsonExtensions = [json()];
 
 function formatDateTime(iso) {
-  if (!iso) return '\u2014';
+  if (!iso) return "\u2014";
   try {
     return new Date(iso).toLocaleString();
   } catch {
@@ -60,10 +72,10 @@ const TaskDetail = memo(function TaskDetail({
   onOpenLogs,
   isStarting,
 }) {
-  const [param, setParam] = useState('');
+  const [param, setParam] = useState("");
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const isDark = theme.palette.mode === "dark";
 
   const cmTheme = useMemo(
     () =>
@@ -83,63 +95,86 @@ const TaskDetail = memo(function TaskDetail({
     [isDark, theme.palette.background.default],
   );
 
-  const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
-    columns: INSTANCE_COLUMNS,
-    containerWidth: window.innerWidth,
-    showCheckbox: false,
-    actionsColumnWidth: '5rem',
-  });
+  const { visibleColumns, dataColumns, gridTemplateColumns } =
+    useResponsiveColumns({
+      columns: INSTANCE_COLUMNS,
+      containerWidth: window.innerWidth,
+      showCheckbox: false,
+      actionsColumnWidth: "5rem",
+    });
 
   const handleStart = useCallback(() => {
     onStart(taskName, param);
-    setParam('');
+    setParam("");
   }, [taskName, param, onStart]);
 
   const renderCell = useCallback((column, value) => {
-    if (column.field === 'status') {
-      const statusLower = (value || '').toLowerCase();
-      const cfg = STATUS_CONFIG[statusLower] || { label: value || 'Unknown', color: 'default' };
-      return <Chip label={cfg.label} size="small" color={cfg.color} variant="outlined" />;
+    if (column.field === "status") {
+      const statusLower = (value || "").toLowerCase();
+      const cfg = STATUS_CONFIG[statusLower] || {
+        label: value || "Unknown",
+        color: "default",
+      };
+      return (
+        <Chip
+          label={cfg.label}
+          size="small"
+          color={cfg.color}
+          variant="outlined"
+        />
+      );
     }
 
-    if (column.field === 'task_id') {
+    if (column.field === "task_id") {
       return (
-        <Tooltip title={value || ''}>
+        <Tooltip title={value || ""}>
           <Typography variant="bodyMedium" sx={styles.cellTextMono}>
-            {value || '\u2014'}
+            {value || "\u2014"}
           </Typography>
         </Tooltip>
       );
     }
 
-    if (column.field === 'started_at') {
+    if (column.field === "started_at") {
       return (
-        <Typography variant="bodyMedium" color="text.secondary" sx={styles.cellText}>
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          sx={styles.cellText}
+        >
           {formatDateTime(value)}
         </Typography>
       );
     }
 
-    if (column.field === 'user') {
+    if (column.field === "user") {
       return (
-        <Tooltip title={value || ''}>
-          <Typography variant="bodyMedium" color="text.secondary" sx={styles.cellText}>
-            {value || '\u2014'}
+        <Tooltip title={value || ""}>
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.cellText}
+          >
+            {value || "\u2014"}
           </Typography>
         </Tooltip>
       );
     }
 
     return (
-      <Typography variant="bodyMedium" color="text.secondary" sx={styles.cellText}>
-        {value || '\u2014'}
+      <Typography
+        variant="bodyMedium"
+        color="text.secondary"
+        sx={styles.cellText}
+      >
+        {value || "\u2014"}
       </Typography>
     );
   }, []);
 
   const renderActions = useCallback(
     (row) => {
-      const isRunning = (row.status || '').toLowerCase() === 'running';
+      const isRunning = (row.status || "").toLowerCase() === "running";
       return (
         <Box sx={styles.actionsRow}>
           <Tooltip title="View logs">
@@ -166,7 +201,11 @@ const TaskDetail = memo(function TaskDetail({
         <Box sx={styles.headerLeft}>
           <Typography sx={styles.title}>{taskName}</Typography>
           {taskDescription && (
-            <Typography variant="bodySmall" color="text.metrics" sx={styles.description}>
+            <Typography
+              variant="bodySmall"
+              color="text.metrics"
+              sx={styles.description}
+            >
               {taskDescription}
             </Typography>
           )}
@@ -184,8 +223,12 @@ const TaskDetail = memo(function TaskDetail({
       </Box>
 
       <Box sx={styles.editorArea}>
-        <Typography variant="bodySmall" color="text.metrics" sx={styles.editorLabel}>
-          Parameters (JSON)
+        <Typography
+          variant="bodySmall"
+          color="text.metrics"
+          sx={styles.editorLabel}
+        >
+          Parameters (string)
         </Typography>
         <Box sx={styles.editorWrapper}>
           <CodeMirror
@@ -193,13 +236,13 @@ const TaskDetail = memo(function TaskDetail({
             onChange={setParam}
             extensions={jsonExtensions}
             theme={cmTheme}
-            placeholder='{"key": "value"}'
+            placeholder="Task parameters in string format"
             basicSetup={{
               lineNumbers: false,
               foldGutter: false,
               highlightActiveLine: false,
             }}
-            style={{ fontSize: '0.8125rem' }}
+            style={{ fontSize: "0.8125rem" }}
           />
         </Box>
       </Box>
@@ -240,81 +283,81 @@ const TaskDetail = memo(function TaskDetail({
 
 const styles = {
   container: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
-    overflow: 'hidden',
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+    overflow: "hidden",
   },
   header: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    padding: '0.75rem 1.5rem 0',
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    padding: "0.75rem 1.5rem 0",
     flexShrink: 0,
   },
   headerLeft: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.125rem',
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.125rem",
   },
   title: {
-    fontSize: '0.875rem',
+    fontSize: "0.875rem",
     fontWeight: 600,
   },
   description: {
-    fontSize: '0.75rem',
+    fontSize: "0.75rem",
     lineHeight: 1.4,
   },
   startButton: {
-    textTransform: 'none',
+    textTransform: "none",
     fontWeight: 500,
-    whiteSpace: 'nowrap',
-    fontSize: '0.8125rem',
+    whiteSpace: "nowrap",
+    fontSize: "0.8125rem",
     flexShrink: 0,
   },
   editorArea: {
-    padding: '0.5rem 1.5rem 0.75rem',
+    padding: "0.5rem 1.5rem 0.75rem",
     flexShrink: 0,
   },
   editorLabel: {
-    fontSize: '0.6875rem',
+    fontSize: "0.6875rem",
     fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    marginBottom: '0.375rem',
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    marginBottom: "0.375rem",
   },
   editorWrapper: ({ palette }) => ({
     border: `0.0625rem solid ${palette.border.lines}`,
-    borderRadius: '0.375rem',
-    overflow: 'hidden',
-    '& .cm-editor': {
-      minHeight: '4rem',
-      maxHeight: '10rem',
+    borderRadius: "0.375rem",
+    overflow: "hidden",
+    "& .cm-editor": {
+      minHeight: "4rem",
+      maxHeight: "10rem",
     },
-    '& .cm-scroller': {
-      overflow: 'auto',
+    "& .cm-scroller": {
+      overflow: "auto",
     },
   }),
   tableArea: {
     flex: 1,
-    overflow: 'auto',
+    overflow: "auto",
   },
   cellText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   cellTextMono: {
-    fontFamily: 'monospace',
-    fontSize: '0.75rem',
-    color: 'text.secondary',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    fontFamily: "monospace",
+    fontSize: "0.75rem",
+    color: "text.secondary",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   actionsRow: {
-    display: 'flex',
-    gap: '0.125rem',
+    display: "flex",
+    gap: "0.125rem",
   },
 };
 
