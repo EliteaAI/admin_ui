@@ -80,13 +80,14 @@ const TaskLogDrawer = memo(function TaskLogDrawer({ open, taskId, taskMeta, onCl
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
+          onClose();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [open, isFinished, taskId]);
+  }, [open, isFinished, taskId, onClose]);
 
   const handleScrollTop = useCallback(() => {
     setAutoScroll(false);
