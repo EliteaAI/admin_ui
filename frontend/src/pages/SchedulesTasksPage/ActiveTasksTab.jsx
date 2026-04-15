@@ -334,7 +334,7 @@ function NodeCard({ node, onRefresh, onRefreshScope, onStop, onOpenLogs, refresh
 
 const ActiveTasksTab = memo(function ActiveTasksTab() {
   const { data, isLoading } = useActiveTasksListQuery(undefined, {
-    pollingInterval: 5000,
+    pollingInterval: 15000,
   });
   const [refreshNode, { isLoading: refreshing }] = useActiveTasksRefreshMutation();
   const [stopTask] = useActiveTasksStopMutation();
