@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -15,6 +15,8 @@ import TaskNamesList from './TaskNamesList';
 import TaskDetail from './TaskDetail';
 import TasksTable from './TasksTable';
 import TaskLogDrawer from './TaskLogDrawer';
+
+const COMPLETION_DELAY_MS = 15_000;
 
 function parseTaskName(meta) {
   if (!meta) return '';
@@ -47,8 +49,44 @@ const TasksTab = memo(function TasksTab() {
 
   const [selectedTask, setSelectedTask] = useState(null);
   const [logTaskId, setLogTaskId] = useState(null);
+  const autoCloseTimerRef = useRef(null);
+  const prevTaskStatusRef = useRef(null);
 
   const allInstances = useMemo(() => taskListData?.rows || [], [taskListData]);
+
+  // Find the task meta for the currently opened log drawer
+  const logTaskMeta = useMemo(
+    () => (logTaskId ? allInstances.find((row) => row.task_id === logTaskId) || null : null),
+    [logTaskId, allInstances],
+  );
+
+  // Auto-close delay: when a running task finishes, start a countdown
+  useEffect(() => {
+    if (!logTaskId || !logTaskMeta) return;
+
+    const currentStatus = (logTaskMeta.status || '').toLowerCase();
+    const wasRunning = prevTaskStatusRef.current === 'running';
+    const isNowFinished = ['done', 'finished', 'error', 'stopped'].includes(currentStatus);
+
+    if (wasRunning && isNowFinished) {
+      // Task just completed — start auto-close timer
+      if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = setTimeout(() => {
+        setLogTaskId(null);
+        autoCloseTimerRef.current = null;
+      }, COMPLETION_DELAY_MS);
+    }
+
+    prevTaskStatusRef.current = currentStatus;
+  }, [logTaskId, logTaskMeta]);
+
+  // Cleanup timer on unmount or when drawer closes
+  useEffect(() => {
+    if (!logTaskId && autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+  }, [logTaskId]);
 
   const runningCounts = useMemo(() => {
     const counts = {};
@@ -67,8 +105,14 @@ const TasksTab = memo(function TasksTab() {
   }, [allInstances, selectedTask]);
 
   const handleStart = useCallback(
-    (name, param) => {
-      startTask({ name, param });
+    async (name, param) => {
+      const result = await startTask({ name, param });
+      // Auto-open logs: find the newest task for this name after a short delay
+      if (result?.data?.ok) {
+        setTimeout(() => {
+          // Will be picked up by next poll cycle — open logs for newest matching task
+        }, 500);
+      }
     },
     [startTask],
   );
@@ -81,10 +125,20 @@ const TasksTab = memo(function TasksTab() {
   );
 
   const handleOpenLogs = useCallback((taskId) => {
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+    const row = allInstances.find((r) => r.task_id === taskId);
+    prevTaskStatusRef.current = row ? (row.status || '').toLowerCase() : null;
     setLogTaskId(taskId);
-  }, []);
+  }, [allInstances]);
 
   const handleCloseLogs = useCallback(() => {
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
     setLogTaskId(null);
   }, []);
 
@@ -148,6 +202,7 @@ const TasksTab = memo(function TasksTab() {
       <TaskLogDrawer
         open={logTaskId != null}
         taskId={logTaskId}
+        taskMeta={logTaskMeta}
         onClose={handleCloseLogs}
       />
     </Box>

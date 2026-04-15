@@ -10,6 +10,7 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import StopOutlined from '@mui/icons-material/StopOutlined';
@@ -29,6 +30,8 @@ import {
   useActiveTasksStopMutation,
 } from '@/api/tasksApi';
 
+import TaskLogDrawer from './TaskLogDrawer';
+
 const POOL_COLUMNS = [
   { field: 'pool', label: 'Pool', width: '1fr', sortable: false },
   { field: 'ident', label: 'Ident', width: '1fr', sortable: false },
@@ -41,7 +44,7 @@ const TASK_COLUMNS = [
   { field: 'status', label: 'Status', width: '7rem', sortable: false },
   { field: 'meta', label: 'Meta', width: '1fr', sortable: false },
   { field: 'runner', label: 'Runner', width: '1fr', sortable: false, hideBelow: 900 },
-  { field: 'actions', label: '', width: '4rem', sortable: false },
+  { field: 'actions', label: '', width: '7rem', sortable: false },
 ];
 
 const STATUS_CONFIG = {
@@ -62,7 +65,7 @@ function parseMeta(meta) {
   return String(meta).length > 60 ? String(meta).substring(0, 60) + '...' : String(meta);
 }
 
-function NodeCard({ node, onRefresh, onRefreshScope, onStop, refreshing, refreshingScope }) {
+function NodeCard({ node, onRefresh, onRefreshScope, onStop, onOpenLogs, refreshing, refreshingScope }) {
   const [expanded, setExpanded] = useState(true);
   const [poolExpanded, setPoolExpanded] = useState(true);
   const [tasksExpanded, setTasksExpanded] = useState(true);
@@ -80,7 +83,7 @@ function NodeCard({ node, onRefresh, onRefreshScope, onStop, refreshing, refresh
     columns: TASK_COLUMNS,
     containerWidth: window.innerWidth,
     showCheckbox: false,
-    actionsColumnWidth: '4rem',
+    actionsColumnWidth: '7rem',
   });
 
   const handleRefresh = useCallback(() => {
@@ -146,16 +149,24 @@ function NodeCard({ node, onRefresh, onRefreshScope, onStop, refreshing, refresh
   const renderTaskActions = useCallback(
     (row) => {
       const status = (row.status || '').toLowerCase();
-      if (status !== 'running') return null;
       return (
-        <Tooltip title="Stop task">
-          <IconButton size="small" onClick={() => onStop(node.node, row.task_id)}>
-            <StopOutlined fontSize="small" color="error" />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', gap: '0.125rem' }}>
+          <Tooltip title="View logs">
+            <IconButton size="small" onClick={() => onOpenLogs(row.task_id)}>
+              <DescriptionOutlined fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          {status === 'running' && (
+            <Tooltip title="Stop task">
+              <IconButton size="small" onClick={() => onStop(node.node, row.task_id)}>
+                <StopOutlined fontSize="small" color="error" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
       );
     },
-    [node.node, onStop],
+    [node.node, onStop, onOpenLogs],
   );
 
   return (
@@ -330,8 +341,17 @@ const ActiveTasksTab = memo(function ActiveTasksTab() {
   const [refreshingNode, setRefreshingNode] = useState(null);
   const [refreshingScopeKey, setRefreshingScopeKey] = useState(null); // "node::scope"
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [logTaskId, setLogTaskId] = useState(null);
 
   const nodes = useMemo(() => data?.nodes || [], [data]);
+
+  const handleOpenLogs = useCallback((taskId) => {
+    setLogTaskId(taskId);
+  }, []);
+
+  const handleCloseLogs = useCallback(() => {
+    setLogTaskId(null);
+  }, []);
 
   const handleRefresh = useCallback(
     async (nodeStr) => {
@@ -424,6 +444,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab() {
             onRefresh={handleRefresh}
             onRefreshScope={handleRefreshScope}
             onStop={handleStop}
+            onOpenLogs={handleOpenLogs}
             refreshing={refreshingNode === node.node}
             refreshingScope={
               refreshingScopeKey?.startsWith(`${node.node}::`)
@@ -444,6 +465,12 @@ const ActiveTasksTab = memo(function ActiveTasksTab() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <TaskLogDrawer
+        open={logTaskId != null}
+        taskId={logTaskId}
+        onClose={handleCloseLogs}
+      />
     </Box>
   );
 });
