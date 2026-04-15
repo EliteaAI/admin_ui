@@ -566,6 +566,7 @@ function AdvancedSection() {
                       </Button>
                       <Button
                         size="small"
+                        disabled
                         startIcon={
                           <RefreshOutlinedIcon sx={{ fontSize: "0.875rem" }} />
                         }
