@@ -12,6 +12,8 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import FullscreenOutlined from '@mui/icons-material/FullscreenOutlined';
+import FullscreenExitOutlined from '@mui/icons-material/FullscreenExitOutlined';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -26,6 +28,7 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({ open, pylonId, onClose }
   const [fetchLogs, { isLoading }] = useRuntimePylonLogsMutation();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [downloadAnchor, setDownloadAnchor] = useState(null);
+  const [fullscreen, setFullscreen] = useState(false);
   const editorViewRef = useRef(null);
   const muiTheme = useTheme();
   const cmTheme = muiTheme.palette.mode === 'dark' ? 'dark' : 'light';
@@ -98,7 +101,7 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({ open, pylonId, onClose }
 
   return (
     <>
-      <Drawer anchor="right" open={open} onClose={onClose} sx={styles.drawer}>
+      <Drawer anchor="right" open={open} onClose={onClose} sx={styles.drawer(fullscreen)}>
         <Box sx={styles.root}>
           {/* Header */}
           <Box sx={styles.header}>
@@ -110,9 +113,16 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({ open, pylonId, onClose }
                 {pylonId}
               </Typography>
             </Box>
-            <IconButton size="small" onClick={onClose}>
-              <CloseOutlined fontSize="small" />
-            </IconButton>
+            <Box sx={{ display: 'flex', gap: '0.25rem' }}>
+              <Tooltip title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
+                <IconButton size="small" onClick={() => setFullscreen((f) => !f)}>
+                  {fullscreen ? <FullscreenExitOutlined fontSize="small" /> : <FullscreenOutlined fontSize="small" />}
+                </IconButton>
+              </Tooltip>
+              <IconButton size="small" onClick={onClose}>
+                <CloseOutlined fontSize="small" />
+              </IconButton>
+            </Box>
           </Box>
 
           {/* Log display area */}
@@ -207,12 +217,13 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({ open, pylonId, onClose }
 });
 
 const styles = {
-  drawer: {
+  drawer: (fullscreen) => ({
     '& .MuiDrawer-paper': {
-      width: '50vw',
-      maxWidth: '50vw',
+      width: fullscreen ? '100vw' : '50vw',
+      maxWidth: fullscreen ? '100vw' : '50vw',
+      transition: 'width 0.3s ease, max-width 0.3s ease',
     },
-  },
+  }),
   root: {
     display: 'flex',
     flexDirection: 'column',
