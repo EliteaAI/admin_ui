@@ -10,6 +10,8 @@ import { useTheme } from '@mui/material/styles';
 
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
+import FullscreenOutlined from '@mui/icons-material/FullscreenOutlined';
+import FullscreenExitOutlined from '@mui/icons-material/FullscreenExitOutlined';
 import KeyboardArrowUpOutlined from '@mui/icons-material/KeyboardArrowUpOutlined';
 import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined';
 
@@ -25,6 +27,7 @@ const TaskLogDrawer = memo(function TaskLogDrawer({ open, taskId, taskMeta, onCl
   const { logs, connected, clearLogs } = useTaskLogSocket(taskId, open);
   const editorViewRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
@@ -139,7 +142,7 @@ const TaskLogDrawer = memo(function TaskLogDrawer({ open, taskId, taskMeta, onCl
   })();
 
   return (
-    <Drawer anchor="right" open={open} onClose={onClose} sx={styles.drawer}>
+    <Drawer anchor="right" open={open} onClose={onClose} sx={styles.drawer(fullscreen)}>
       <Box sx={styles.root}>
         <Box sx={styles.header}>
           <Box sx={styles.headerLeft}>
@@ -161,9 +164,16 @@ const TaskLogDrawer = memo(function TaskLogDrawer({ open, taskId, taskMeta, onCl
               />
             </Box>
           </Box>
-          <IconButton size="small" onClick={onClose}>
-            <CloseOutlined fontSize="small" />
-          </IconButton>
+          <Box sx={{ display: 'flex', gap: '0.25rem' }}>
+            <Tooltip title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
+              <IconButton size="small" onClick={() => setFullscreen((f) => !f)}>
+                {fullscreen ? <FullscreenExitOutlined fontSize="small" /> : <FullscreenOutlined fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+            <IconButton size="small" onClick={onClose}>
+              <CloseOutlined fontSize="small" />
+            </IconButton>
+          </Box>
         </Box>
 
         {taskMeta && (
@@ -249,12 +259,13 @@ const TaskLogDrawer = memo(function TaskLogDrawer({ open, taskId, taskMeta, onCl
 });
 
 const styles = {
-  drawer: {
+  drawer: (fullscreen) => ({
     '& .MuiDrawer-paper': {
-      width: '50vw',
-      maxWidth: '50vw',
+      width: fullscreen ? '100vw' : '50vw',
+      maxWidth: fullscreen ? '100vw' : '50vw',
+      transition: 'width 0.3s ease, max-width 0.3s ease',
     },
-  },
+  }),
   root: {
     display: 'flex',
     flexDirection: 'column',
