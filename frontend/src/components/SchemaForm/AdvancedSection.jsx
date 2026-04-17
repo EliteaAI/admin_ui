@@ -19,7 +19,7 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ClearAllOutlinedIcon from "@mui/icons-material/ClearAllOutlined";
 import PluginConfigDrawer from "./PluginConfigDrawer";
-import PylonLogsDrawer from "./PylonLogsDrawer";
+import { PylonLogsDrawer } from "@/components/LogViewerDrawer";
 import {
   useRuntimeRemoteQuery,
   useConfigRestartMutation,

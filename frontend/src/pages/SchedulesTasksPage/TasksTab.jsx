@@ -14,7 +14,7 @@ import {
 import TaskNamesList from './TaskNamesList';
 import TaskDetail from './TaskDetail';
 import TasksTable from './TasksTable';
-import TaskLogDrawer from './TaskLogDrawer';
+import { TaskLogDrawer } from "@/components/LogViewerDrawer";
 
 const COMPLETION_DELAY_MS = 15_000;
 
