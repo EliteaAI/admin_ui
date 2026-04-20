@@ -31,7 +31,7 @@ function RolesPage() {
     isFetching: stdFetching,
     isError: stdError,
   } = usePermissionMatrixQuery(
-    { targetMode: "default" },
+    { targetMode: "administration" },
     { refetchOnMountOrArgChange: true, skip: activeTab !== "standard" },
   );
   const [updateStdMatrix, { isLoading: stdSaving }] =
@@ -106,7 +106,9 @@ function RolesPage() {
     if (!localRows) return;
     const mutation =
       activeTab === "standard" ? updateStdMatrix : updatePubMatrix;
-    await mutation({ targetMode: "default", rows: localRows }).unwrap();
+    const targetMode =
+      activeTab === "standard" ? "administration" : "default";
+    await mutation({ targetMode, rows: localRows }).unwrap();
   }, [localRows, activeTab, updateStdMatrix, updatePubMatrix]);
 
   const handleSearchChange = useCallback((value) => {
