@@ -96,8 +96,6 @@ const UsersTable = memo(function UsersTable(props) {
 
   const { isSuperAdmin, isAdmin } = useCheckPermission();
 
-  console.log("users", users);
-
   const [hoveredRowId, setHoveredRowId] = useState(null);
 
   const activeColumns = useMemo(
@@ -239,25 +237,31 @@ const UsersTable = memo(function UsersTable(props) {
       const isSuspended = row.status === "suspended";
       return (
         <Box sx={styles.actionsRow}>
-          <Tooltip title={isSuspended ? "Unsuspend user" : "Suspend user"}>
-            <IconButton size="small" onClick={() => onSuspend(row)}>
-              {isSuspended ? (
-                <CheckCircleOutlined fontSize="small" color="success" />
-              ) : (
-                <BlockOutlined fontSize="small" />
-              )}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="User activity">
-            <IconButton size="small" onClick={() => onActivity(row)}>
-              <TimelineOutlined fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete user">
-            <IconButton size="small" onClick={() => onDelete([row.id])}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          {onSuspend && (
+            <Tooltip title={isSuspended ? "Unsuspend user" : "Suspend user"}>
+              <IconButton size="small" onClick={() => onSuspend(row)}>
+                {isSuspended ? (
+                  <CheckCircleOutlined fontSize="small" color="success" />
+                ) : (
+                  <BlockOutlined fontSize="small" />
+                )}
+              </IconButton>
+            </Tooltip>
+          )}
+          {onActivity && (
+            <Tooltip title="User activity">
+              <IconButton size="small" onClick={() => onActivity(row)}>
+                <TimelineOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {onDelete && (
+            <Tooltip title="Delete user">
+              <IconButton size="small" onClick={() => onDelete([row.id])}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       );
     },

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
@@ -7,16 +7,26 @@ import Tabs from "@mui/material/Tabs";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { PERMISSIONS } from "@/constants/permissions";
 
 import SchedulesTab from "./SchedulesTab";
 import TasksTab from "./TasksTab";
 import ActiveTasksTab from "./ActiveTasksTab";
+import { useMemo } from "react";
 
-function SchedulesTasksPage() {
+const SchedulesTasksPage = memo(() => {
   usePageTitle("Schedules & Tasks");
+
+  const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState("schedules");
   const [search, setSearch] = useState("");
+
+  const canEditSchedules = useMemo(
+    () => hasPermission(PERMISSIONS.scheduling.edit),
+    [hasPermission],
+  );
 
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
@@ -52,12 +62,16 @@ function SchedulesTasksPage() {
         }
       />
 
-      {activeTab === "schedules" && <SchedulesTab search={search} />}
+      {activeTab === "schedules" && (
+        <SchedulesTab search={search} readOnly={!canEditSchedules} />
+      )}
       {activeTab === "tasks" && <TasksTab />}
       {activeTab === "active-tasks" && <ActiveTasksTab />}
     </DrawerPage>
   );
-}
+});
+
+SchedulesTasksPage.displayName = "SchedulesTasksPage";
 
 const styles = {
   tabs: ({ palette }) => ({

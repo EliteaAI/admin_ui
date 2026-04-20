@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -19,6 +19,8 @@ import {
 } from "@/api/projectsApi";
 import { useDebounceValue } from "@/hooks/useDebounceValue";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { PERMISSIONS } from "@/constants/permissions";
 import { exportToExcel } from "@/utils/exportToExcel";
 
 import ProjectsTable from "./ProjectsTable";
@@ -42,6 +44,7 @@ const EXPORT_COLUMNS = [
 
 const ProjectsPage = memo(() => {
   usePageTitle("Projects");
+  const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState(0);
   const [search, setSearch] = useState("");
@@ -66,6 +69,11 @@ const ProjectsPage = memo(() => {
   const [exporting, setExporting] = useState(false);
 
   const projectType = PROJECT_TYPES[activeTab];
+
+  const canEdit = useMemo(
+    () => hasPermission(PERMISSIONS.projects.edit),
+    [hasPermission],
+  );
 
   const { data, isFetching, isError } = useProjectListQuery(
     {
@@ -222,7 +230,7 @@ const ProjectsPage = memo(() => {
 
   const extraContent = (
     <>
-      {selectedIds.length > 0 && (
+      {canEdit && selectedIds.length > 0 && (
         <Button
           variant="outlined"
           color="error"
@@ -273,7 +281,7 @@ const ProjectsPage = memo(() => {
           onSearchChange={handleSearchChange}
           searchPlaceholder="Search by Name, ID and Owner"
           searchInputSx={{ "& input::placeholder": { fontSize: "0.75rem" } }}
-          showAddButton
+          showAddButton={canEdit}
           onAdd={handleCreateOpen}
           addButtonTooltip="Create project"
           extraContent={extraContent}
@@ -293,11 +301,11 @@ const ProjectsPage = memo(() => {
               sortConfig={{ field: sortBy, direction: sortOrder }}
               onSort={handleSort}
               isFetching={isFetching}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelectedIds}
-              onDelete={handleDelete}
-              onAddAdmin={handleAddAdmin}
-              onSuspend={handleSuspend}
+              selectedIds={canEdit ? selectedIds : []}
+              onSelectionChange={canEdit ? setSelectedIds : undefined}
+              onDelete={canEdit ? handleDelete : undefined}
+              onAddAdmin={canEdit ? handleAddAdmin : undefined}
+              onSuspend={canEdit ? handleSuspend : undefined}
               onActivity={handleActivity}
             />
           )}

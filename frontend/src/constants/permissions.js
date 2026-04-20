@@ -78,11 +78,14 @@ export const PERMISSIONS = {
   secrets: {
     list: "configuration.secrets.secret.list",
     create: "configuration.secrets.secret.create",
+    edit: "configuration.secrets.secret.edit",
+    delete: "configuration.secrets.secret.delete",
   },
 
   // LiteLLM section
   litellm: {
     section: "configuration.litellm",
+    edit: "configuration.litellm.edit",
   },
 
   // Scheduling section

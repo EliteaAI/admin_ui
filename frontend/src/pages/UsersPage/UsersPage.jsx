@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
 import Box from "@mui/material/Box";
@@ -21,6 +21,8 @@ import {
 } from "@/api/usersApi";
 import { useDebounceValue } from "@/hooks/useDebounceValue";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { PERMISSIONS } from "@/constants/permissions";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { setRoles } from "@/store";
 
@@ -44,6 +46,7 @@ const EXPORT_COLUMNS = [
 const UsersPage = memo(() => {
   usePageTitle("Users");
   const dispatch = useDispatch();
+  const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState(0);
   const [search, setSearch] = useState("");
@@ -85,6 +88,14 @@ const UsersPage = memo(() => {
   const users = data?.rows ?? [];
   const total = data?.total ?? 0;
   const counts = data?.counts ?? {};
+
+  const { canEdit, canDelete } = useMemo(
+    () => ({
+      canEdit: hasPermission(PERMISSIONS.users.edit),
+      canDelete: hasPermission(PERMISSIONS.users.delete),
+    }),
+    [hasPermission],
+  );
 
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
@@ -141,6 +152,8 @@ const UsersPage = memo(() => {
         // If the user changed their own role, update the Redux store
         if (userId === currentUserId)
           dispatch(setRoles(roleName ? [roleName] : []));
+        // Reload the page to reflect changes in permissions
+        window.location.reload();
       } catch (err) {
         // Silent error handling
       }
@@ -226,7 +239,7 @@ const UsersPage = memo(() => {
 
   const extraContent = (
     <>
-      {!isSystemTab && selectedIds.length > 0 && (
+      {canDelete && !isSystemTab && selectedIds.length > 0 && (
         <Button
           variant="outlined"
           color="error"
@@ -295,11 +308,11 @@ const UsersPage = memo(() => {
               isFetching={isFetching}
               selectedIds={isSystemTab ? [] : selectedIds}
               onSelectionChange={isSystemTab ? undefined : setSelectedIds}
-              onDelete={isSystemTab ? undefined : handleDelete}
+              onDelete={isSystemTab || !canDelete ? undefined : handleDelete}
               onSetAdminRole={isSystemTab ? undefined : handleSetAdminRole}
-              onSuspend={isSystemTab ? undefined : handleSuspend}
+              onSuspend={isSystemTab || !canEdit ? undefined : handleSuspend}
               onActivity={isSystemTab ? undefined : handleActivity}
-              showCheckbox={!isSystemTab}
+              showCheckbox={!isSystemTab && canDelete}
               showActions={!isSystemTab}
               showAdminRoleSelect={!isSystemTab}
               currentUserId={currentUserId}

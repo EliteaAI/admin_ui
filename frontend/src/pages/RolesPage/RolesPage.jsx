@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -8,6 +8,8 @@ import Tabs from "@mui/material/Tabs";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { PERMISSIONS } from "@/constants/permissions";
 import {
   usePermissionMatrixQuery,
   usePermissionMatrixUpdateMutation,
@@ -19,8 +21,10 @@ import PermissionMatrix from "./PermissionMatrix";
 
 const ROLE_ORDER = ["system", "admin", "editor", "viewer"];
 
-function RolesPage() {
+const RolesPage = memo(() => {
   usePageTitle("Roles");
+
+  const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState("standard");
   const [search, setSearch] = useState("");
@@ -77,6 +81,11 @@ function RolesPage() {
   const isError = activeTab === "standard" ? stdError : pubError;
   const isSaving = activeTab === "standard" ? stdSaving : pubSaving;
 
+  const canEdit = useMemo(
+    () => hasPermission(PERMISSIONS.roles.edit),
+    [hasPermission],
+  );
+
   const roles = useMemo(() => {
     if (!localRows || localRows.length === 0) return ROLE_ORDER;
     const sample = localRows[0];
@@ -106,8 +115,7 @@ function RolesPage() {
     if (!localRows) return;
     const mutation =
       activeTab === "standard" ? updateStdMatrix : updatePubMatrix;
-    const targetMode =
-      activeTab === "standard" ? "administration" : "default";
+    const targetMode = activeTab === "standard" ? "administration" : "default";
     await mutation({ targetMode, rows: localRows }).unwrap();
   }, [localRows, activeTab, updateStdMatrix, updatePubMatrix]);
 
@@ -119,26 +127,27 @@ function RolesPage() {
     setActiveTab(newValue);
   }, []);
 
-  const extraContent = isDirty ? (
-    <Box sx={{ display: "flex", gap: "0.5rem" }}>
-      <Button
-        variant="outlined"
-        size="small"
-        onClick={handleDiscard}
-        disabled={isSaving}
-      >
-        Discard
-      </Button>
-      <Button
-        variant="contained"
-        size="small"
-        onClick={handleSave}
-        disabled={isSaving}
-      >
-        {isSaving ? "Saving..." : "Save"}
-      </Button>
-    </Box>
-  ) : null;
+  const extraContent =
+    canEdit && isDirty ? (
+      <Box sx={{ display: "flex", gap: "0.5rem" }}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={handleDiscard}
+          disabled={isSaving}
+        >
+          Discard
+        </Button>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? "Saving..." : "Save"}
+        </Button>
+      </Box>
+    ) : null;
 
   const tabsElement = (
     <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
@@ -172,12 +181,15 @@ function RolesPage() {
             roles={roles}
             search={search}
             onChange={handleChange}
+            readOnly={!canEdit}
           />
         )}
       </Box>
     </DrawerPage>
   );
-}
+});
+
+RolesPage.displayName = "RolesPage";
 
 const styles = {
   tabs: ({ palette }) => ({

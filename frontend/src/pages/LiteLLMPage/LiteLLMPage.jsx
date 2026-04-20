@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -10,6 +10,8 @@ import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
 import SchemaForm from "@/components/SchemaForm/SchemaForm";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { PERMISSIONS } from "@/constants/permissions";
 import {
   useConfigSchemasQuery,
   useConfigValuesQuery,
@@ -18,8 +20,10 @@ import {
 } from "@/api/configurationApi";
 import { useTaskStartMutation } from "@/api/tasksApi";
 
-function LiteLLMPage() {
+const LiteLLMPage = memo(() => {
   usePageTitle("LiteLLM");
+
+  const { hasPermission } = useCheckPermission();
 
   const [localValues, setLocalValues] = useState({});
   const [pendingRestarts, setPendingRestarts] = useState([]);
@@ -53,11 +57,16 @@ function LiteLLMPage() {
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
   const [startTask] = useTaskStartMutation();
 
-  const isDirty = useMemo(() => {
-    return (
-      JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current)
-    );
-  }, [localValues]);
+  const canEdit = useMemo(
+    () => hasPermission(PERMISSIONS.litellm.edit),
+    [hasPermission],
+  );
+
+  const isDirty = useMemo(
+    () =>
+      JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current),
+    [localValues],
+  );
 
   const fields = litellmSection?.fields || [];
   const sectionDescription = litellmSection?.description || "";
@@ -206,26 +215,28 @@ function LiteLLMPage() {
         )}
 
         <Box sx={styles.actionBar}>
-          <Box sx={styles.actionButtons}>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={handleDiscard}
-              disabled={!isDirty || saving}
-              sx={styles.discardButton}
-            >
-              Discard
-            </Button>
-            <Button
-              size="small"
-              variant="contained"
-              onClick={handleSave}
-              disabled={!isDirty || saving}
-              sx={styles.saveButton}
-            >
-              {saving ? "Saving..." : "Save"}
-            </Button>
-          </Box>
+          {canEdit && (
+            <Box sx={styles.actionButtons}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={handleDiscard}
+                disabled={!isDirty || saving}
+                sx={styles.discardButton}
+              >
+                Discard
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={handleSave}
+                disabled={!isDirty || saving}
+                sx={styles.saveButton}
+              >
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            </Box>
+          )}
 
           {pendingRestarts.length > 0 && (
             <Box sx={styles.restartBar}>
@@ -270,7 +281,9 @@ function LiteLLMPage() {
       </Snackbar>
     </DrawerPage>
   );
-}
+});
+
+LiteLLMPage.displayName = "LiteLLMPage";
 
 const styles = {
   content: {
