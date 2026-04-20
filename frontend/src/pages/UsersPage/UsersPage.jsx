@@ -1,4 +1,5 @@
 import { memo, useCallback, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -15,12 +16,13 @@ import DrawerPageHeader from "@/components/DrawerPageHeader";
 import {
   useUserListQuery,
   useLazyUserListQuery,
-  useUserToggleAdminMutation,
+  useUserSetAdminRoleMutation,
   useUserSuspendMutation,
 } from "@/api/usersApi";
 import { useDebounceValue } from "@/hooks/useDebounceValue";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { exportToExcel } from "@/utils/exportToExcel";
+import { setRoles } from "@/store";
 
 import UsersTable from "./UsersTable";
 import DeleteUserDialog from "./DeleteUserDialog";
@@ -33,14 +35,15 @@ const EXPORT_COLUMNS = [
   { header: "Last Login", key: "last_login" },
   { header: "Status", key: "status" },
   {
-    header: "Platform Admin",
-    key: "is_admin",
-    transform: (v) => (v ? "Yes" : "No"),
+    header: "Admin Role",
+    key: "admin_role",
+    transform: (v) => v || "None",
   },
 ];
 
 const UsersPage = memo(() => {
   usePageTitle("Users");
+  const dispatch = useDispatch();
 
   const [activeTab, setActiveTab] = useState(0);
   const [search, setSearch] = useState("");
@@ -59,7 +62,10 @@ const UsersPage = memo(() => {
 
   const userType = USER_TYPES[activeTab];
 
-  const [toggleAdmin] = useUserToggleAdminMutation();
+  const currentUser = useSelector((state) => state.user.user);
+  const currentUserId = currentUser?.id;
+
+  const [setAdminRole] = useUserSetAdminRoleMutation();
   const [suspendUser] = useUserSuspendMutation();
   const [fetchUsers] = useLazyUserListQuery();
   const [exporting, setExporting] = useState(false);
@@ -127,11 +133,19 @@ const UsersPage = memo(() => {
     setSelectedIds([]);
   }, []);
 
-  const handleToggleAdmin = useCallback(
-    (userId, isAdmin) => {
-      toggleAdmin({ userId, isAdmin });
+  const handleSetAdminRole = useCallback(
+    async (userId, roleName) => {
+      try {
+        await setAdminRole({ userId, roleName }).unwrap();
+
+        // If the user changed their own role, update the Redux store
+        if (userId === currentUserId)
+          dispatch(setRoles(roleName ? [roleName] : []));
+      } catch (err) {
+        // Silent error handling
+      }
     },
-    [toggleAdmin],
+    [setAdminRole, currentUserId, dispatch],
   );
 
   // Suspend handler
@@ -282,12 +296,13 @@ const UsersPage = memo(() => {
               selectedIds={isSystemTab ? [] : selectedIds}
               onSelectionChange={isSystemTab ? undefined : setSelectedIds}
               onDelete={isSystemTab ? undefined : handleDelete}
-              onToggleAdmin={isSystemTab ? undefined : handleToggleAdmin}
+              onSetAdminRole={isSystemTab ? undefined : handleSetAdminRole}
               onSuspend={isSystemTab ? undefined : handleSuspend}
               onActivity={isSystemTab ? undefined : handleActivity}
               showCheckbox={!isSystemTab}
               showActions={!isSystemTab}
-              showAdminToggle={!isSystemTab}
+              showAdminRoleSelect={!isSystemTab}
+              currentUserId={currentUserId}
             />
           )}
         </Box>

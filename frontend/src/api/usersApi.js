@@ -50,6 +50,19 @@ export const usersApi = adminApi.injectEndpoints({
       invalidatesTags: ["Users"],
     }),
 
+    userSetAdminRole: build.mutation({
+      query: ({ userId, roleName }) => ({
+        url: "/admin/auth_users/administration",
+        method: "POST",
+        body: {
+          action: "set_admin_role",
+          user_id: userId,
+          role_name: roleName,  // Can be null to remove all admin roles
+        },
+      }),
+      invalidatesTags: ["Users"],
+    }),
+
     userSuspend: build.mutation({
       query: ({ userId, suspended }) => ({
         url: `${VITE_SERVER_URL}/admin/user_suspend/administration/${userId}`,
@@ -105,6 +118,7 @@ export const {
   useLazyUserListQuery,
   useUserDeleteMutation,
   useUserToggleAdminMutation,
+  useUserSetAdminRoleMutation,
   useUserSuspendMutation,
   useRoleListQuery,
   usePermissionMatrixQuery,

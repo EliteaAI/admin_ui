@@ -31,11 +31,24 @@ const settingsSlice = createSlice({
   },
 });
 
+// Get initial user data from server-injected config (available before React mounts)
+const adminConfig = globalThis?.admin_ui_config || {};
+
 const userSlice = createSlice({
   name: "user",
   initialState: {
-    user: null,
-    permissions: [],
+    user:
+      adminConfig.user_id || adminConfig.user_name || adminConfig.user_email
+        ? {
+            id: adminConfig.user_id || null,
+            name: adminConfig.user_name || "",
+            email: adminConfig.user_email || "",
+          }
+        : null,
+    permissions: Array.isArray(adminConfig.permissions)
+      ? adminConfig.permissions
+      : [],
+    roles: Array.isArray(adminConfig.roles) ? adminConfig.roles : [],
   },
   reducers: {
     setUser: (state, action) => {
@@ -43,6 +56,9 @@ const userSlice = createSlice({
     },
     setPermissions: (state, action) => {
       state.permissions = action.payload;
+    },
+    setRoles: (state, action) => {
+      state.roles = action.payload;
     },
   },
 });
@@ -72,4 +88,4 @@ export const {
   setSocketConnected,
   toggleSidebarCollapsed,
 } = settingsActions;
-export const { setUser, setPermissions } = userActions;
+export const { setUser, setPermissions, setRoles } = userActions;

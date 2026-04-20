@@ -28,7 +28,8 @@ import ArrowLeftIcon from "@/components/Icons/ArrowLeftIcon";
 import ArrowRightIcon from "@/components/Icons/ArrowRightIcon";
 import { RouteDefinitions } from "@/routes";
 import { toggleSidebarCollapsed } from "@/store";
-import { USER_NAME } from "@/utils/env";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { SIDEBAR_PERMISSIONS } from "@/constants/permissions";
 
 const DRAWER_WIDTH = "13.75rem";
 const COLLAPSED_DRAWER_WIDTH = "3.75rem";
@@ -97,8 +98,28 @@ const Sidebar = memo(() => {
   const socketConnected = useSelector(
     (state) => state.settings.socketConnected,
   );
+  const user = useSelector((state) => state.user.user);
+  const { hasAnyPermission } = useCheckPermission();
   const styles = getStyles(sideBarCollapsed, socketConnected);
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const filteredTopMenuItems = useMemo(
+    () =>
+      topMenuItems.filter((item) => {
+        const required = SIDEBAR_PERMISSIONS[item.id];
+        return !required || hasAnyPermission(required);
+      }),
+    [hasAnyPermission],
+  );
+
+  const filteredBottomMenuItems = useMemo(
+    () =>
+      bottomMenuItems.filter((item) => {
+        const required = SIDEBAR_PERMISSIONS[item.id];
+        return !required || hasAnyPermission(required);
+      }),
+    [hasAnyPermission],
+  );
 
   const isActiveTab = useCallback(
     (tabId) => {
@@ -159,16 +180,16 @@ const Sidebar = memo(() => {
   );
 
   const renderedTopTabs = useMemo(
-    () => topMenuItems.map(renderMenuItem),
-    [renderMenuItem],
+    () => filteredTopMenuItems.map(renderMenuItem),
+    [renderMenuItem, filteredTopMenuItems],
   );
 
   const renderedBottomTabs = useMemo(
-    () => bottomMenuItems.map(renderMenuItem),
-    [renderMenuItem],
+    () => filteredBottomMenuItems.map(renderMenuItem),
+    [renderMenuItem, filteredBottomMenuItems],
   );
 
-  const userName = USER_NAME || "Admin";
+  const userName = user?.name || "Admin";
 
   return (
     <Box sx={styles.drawerWrapper}>
