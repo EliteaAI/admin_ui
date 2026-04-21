@@ -124,4 +124,30 @@ export const SIDEBAR_PERMISSIONS = {
   "schedules-tasks": [PERMISSIONS.scheduling.view, PERMISSIONS.runtime.plugins],
 };
 
+/**
+ * Permissions required for each Configuration page sub-section.
+ * "advanced" and "service_descriptors" are restricted by super_admin role.
+ * All other sections require the base configuration permission.
+ */
+export const CONFIG_SECTION_PERMISSIONS = {
+  advanced: [PERMISSIONS.configuration.advanced],
+  service_descriptors: [PERMISSIONS.configuration.serviceDescriptors],
+};
+
+/**
+ * Permissions required to access each route.
+ * Uses the same permission arrays as SIDEBAR_PERMISSIONS keyed by route path.
+ * Routes not listed here are accessible to any authenticated user.
+ */
+export const ROUTE_PERMISSIONS = {
+  "/users": SIDEBAR_PERMISSIONS.users,
+  "/roles": SIDEBAR_PERMISSIONS.roles,
+  "/projects": SIDEBAR_PERMISSIONS.projects,
+  "/secrets": SIDEBAR_PERMISSIONS.secrets,
+  "/litellm": SIDEBAR_PERMISSIONS.litellm,
+  "/configuration": SIDEBAR_PERMISSIONS.configuration,
+  "/audit-trail": SIDEBAR_PERMISSIONS["audit-trail"],
+  "/schedules-tasks": SIDEBAR_PERMISSIONS["schedules-tasks"],
+};
+
 export default PERMISSIONS;

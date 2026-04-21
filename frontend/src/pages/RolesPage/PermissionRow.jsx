@@ -5,7 +5,14 @@ import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
 
 const PermissionRow = memo((props) => {
-  const { permission, roles, values, onChange, readOnly } = props;
+  const {
+    permission,
+    roles,
+    values,
+    onChange,
+    readOnly,
+    disabledRoles = [],
+  } = props;
 
   const shortName = permission.split(".").slice(2).join(".") || permission;
 
@@ -33,7 +40,9 @@ const PermissionRow = memo((props) => {
             size="small"
             checked={!!values[role]}
             onChange={() => handleChange(role)}
-            disabled={role === "system" || readOnly}
+            disabled={
+              role === "system" || readOnly || disabledRoles.includes(role)
+            }
             sx={styles.checkbox}
           />
         </Box>

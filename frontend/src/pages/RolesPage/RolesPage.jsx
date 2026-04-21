@@ -19,12 +19,12 @@ import {
 
 import PermissionMatrix from "./PermissionMatrix";
 
-const ROLE_ORDER = ["system", "admin", "editor", "viewer"];
+const ROLE_ORDER = ["system", "super_admin", "admin", "editor", "viewer"];
 
 const RolesPage = memo(() => {
   usePageTitle("Roles");
 
-  const { hasPermission } = useCheckPermission();
+  const { hasPermission, isSuperAdmin } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState("standard");
   const [search, setSearch] = useState("");
@@ -84,6 +84,11 @@ const RolesPage = memo(() => {
   const canEdit = useMemo(
     () => hasPermission(PERMISSIONS.roles.edit),
     [hasPermission],
+  );
+
+  const disabledRoles = useMemo(
+    () => (isSuperAdmin ? [] : ["super_admin"]),
+    [isSuperAdmin],
   );
 
   const roles = useMemo(() => {
@@ -182,6 +187,7 @@ const RolesPage = memo(() => {
             search={search}
             onChange={handleChange}
             readOnly={!canEdit}
+            disabledRoles={disabledRoles}
           />
         )}
       </Box>

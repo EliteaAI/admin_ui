@@ -16,6 +16,7 @@ const PermissionGroupRow = memo((props) => {
     onToggleExpand,
     onToggleGroupRole,
     readOnly,
+    disabledRoles = [],
   } = props;
 
   const aggregates = useMemo(() => {
@@ -73,7 +74,9 @@ const PermissionGroupRow = memo((props) => {
             checked={aggregates[role] === "all"}
             indeterminate={aggregates[role] === "indeterminate"}
             onChange={() => handleGroupToggle(role)}
-            disabled={role === "system" || readOnly}
+            disabled={
+              role === "system" || readOnly || disabledRoles.includes(role)
+            }
             sx={styles.checkbox}
           />
         </Box>

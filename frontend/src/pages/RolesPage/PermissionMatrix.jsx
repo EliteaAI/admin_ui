@@ -7,7 +7,7 @@ import PermissionGroupRow from "./PermissionGroupRow";
 import PermissionRow from "./PermissionRow";
 
 const PermissionMatrix = memo((props) => {
-  const { rows, roles, search, onChange, readOnly } = props;
+  const { rows, roles, search, onChange, readOnly, disabledRoles = [] } = props;
 
   const [expandedGroups, setExpandedGroups] = useState(new Set());
 
@@ -124,7 +124,7 @@ const PermissionMatrix = memo((props) => {
               color="text.secondary"
               sx={{ textTransform: "capitalize" }}
             >
-              {role}
+              {role.replace(/_/g, " ")}
             </Typography>
           </Box>
         ))}
@@ -150,6 +150,7 @@ const PermissionMatrix = memo((props) => {
                 onToggleExpand={toggleExpand}
                 onToggleGroupRole={handleGroupToggle}
                 readOnly={readOnly}
+                disabledRoles={disabledRoles}
               />
               {isExpanded &&
                 perms.map((perm) => (
@@ -160,6 +161,7 @@ const PermissionMatrix = memo((props) => {
                     values={perm}
                     onChange={handlePermissionChange}
                     readOnly={readOnly}
+                    disabledRoles={disabledRoles}
                   />
                 ))}
             </Box>

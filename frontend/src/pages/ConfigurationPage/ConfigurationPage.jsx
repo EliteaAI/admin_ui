@@ -24,6 +24,8 @@ import MaintenanceSection from "@/components/SchemaForm/MaintenanceSection";
 import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
 import ServiceDescriptorsSection from "../ServiceDescriptorsPage/ServiceDescriptorsSection";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { CONFIG_SECTION_PERMISSIONS } from "@/constants/permissions";
 import {
   useConfigSchemasQuery,
   useConfigValuesQuery,
@@ -47,6 +49,7 @@ const SECTION_ICONS = {
 
 function ConfigurationPage() {
   const [activeSection, setActiveSection] = useState(null);
+  const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
@@ -64,11 +67,17 @@ function ConfigurationPage() {
       (s) => s.id !== "litellm",
     );
 
-    return [
+    const allSections = [
       ...serverSections,
       { id: "service_descriptors", title: "Service Descriptors" },
     ];
-  }, [schemasData]);
+
+    return allSections.filter((s) => {
+      const requiredPerms = CONFIG_SECTION_PERMISSIONS[s.id];
+      if (!requiredPerms) return true;
+      return hasAnyPermission(requiredPerms);
+    });
+  }, [schemasData, hasAnyPermission]);
 
   // Set default section on load
   useEffect(() => {
