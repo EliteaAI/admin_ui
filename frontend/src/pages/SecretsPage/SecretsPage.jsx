@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
@@ -11,6 +11,8 @@ import { useDebounceValue } from "@/hooks/useDebounceValue";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useSecretListQuery } from "@/api/secretsApi";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { PERMISSIONS } from "@/constants/permissions";
 
 import SecretsTable from "./SecretsTable";
 import CreateSecretDialog from "./CreateSecretDialog";
@@ -18,8 +20,10 @@ import EditSecretDialog from "./EditSecretDialog";
 import DeleteSecretDialog from "./DeleteSecretDialog";
 import { isInternalSecret } from "./constants";
 
-function SecretsPage() {
+const SecretsPage = memo(() => {
   usePageTitle("Secrets");
+
+  const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState(0);
   const [search, setSearch] = useState("");
@@ -54,6 +58,15 @@ function SecretsPage() {
   }, [allSecrets]);
 
   const activeSecrets = activeTab === 0 ? userSecrets : internalSecrets;
+
+  const { canCreate, canEdit, canDelete } = useMemo(
+    () => ({
+      canCreate: hasPermission(PERMISSIONS.secrets.create),
+      canEdit: hasPermission(PERMISSIONS.secrets.edit),
+      canDelete: hasPermission(PERMISSIONS.secrets.delete),
+    }),
+    [],
+  );
 
   // Client-side search
   const filteredSecrets = useMemo(() => {
@@ -140,7 +153,7 @@ function SecretsPage() {
           search={search}
           onSearchChange={handleSearchChange}
           searchPlaceholder="Search by name"
-          showAddButton={activeTab === 0}
+          showAddButton={activeTab === 0 && canCreate}
           onAdd={handleCreateOpen}
           addButtonTooltip="Create secret"
         />
@@ -163,9 +176,9 @@ function SecretsPage() {
               sortConfig={sortConfig}
               onSort={handleSort}
               isFetching={isFetching}
-              isReadOnly={activeTab === 1}
-              onEdit={handleEditOpen}
-              onDelete={handleDeleteOpen}
+              isReadOnly={activeTab === 1 || (!canEdit && !canDelete)}
+              onEdit={canEdit ? handleEditOpen : undefined}
+              onDelete={canDelete ? handleDeleteOpen : undefined}
             />
           )}
         </Box>
@@ -188,7 +201,9 @@ function SecretsPage() {
       />
     </>
   );
-}
+});
+
+SecretsPage.displayName = "SecretsPage";
 
 const styles = {
   tabs: ({ palette }) => ({

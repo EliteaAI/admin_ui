@@ -1,4 +1,5 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -15,12 +16,15 @@ import DrawerPageHeader from "@/components/DrawerPageHeader";
 import {
   useUserListQuery,
   useLazyUserListQuery,
-  useUserToggleAdminMutation,
+  useUserSetAdminRoleMutation,
   useUserSuspendMutation,
 } from "@/api/usersApi";
 import { useDebounceValue } from "@/hooks/useDebounceValue";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { PERMISSIONS } from "@/constants/permissions";
 import { exportToExcel } from "@/utils/exportToExcel";
+import { setRoles } from "@/store";
 
 import UsersTable from "./UsersTable";
 import DeleteUserDialog from "./DeleteUserDialog";
@@ -33,14 +37,16 @@ const EXPORT_COLUMNS = [
   { header: "Last Login", key: "last_login" },
   { header: "Status", key: "status" },
   {
-    header: "Platform Admin",
-    key: "is_admin",
-    transform: (v) => (v ? "Yes" : "No"),
+    header: "Admin Role",
+    key: "admin_role",
+    transform: (v) => v || "None",
   },
 ];
 
 const UsersPage = memo(() => {
   usePageTitle("Users");
+  const dispatch = useDispatch();
+  const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState(0);
   const [search, setSearch] = useState("");
@@ -59,7 +65,10 @@ const UsersPage = memo(() => {
 
   const userType = USER_TYPES[activeTab];
 
-  const [toggleAdmin] = useUserToggleAdminMutation();
+  const currentUser = useSelector((state) => state.user.user);
+  const currentUserId = currentUser?.id;
+
+  const [setAdminRole] = useUserSetAdminRoleMutation();
   const [suspendUser] = useUserSuspendMutation();
   const [fetchUsers] = useLazyUserListQuery();
   const [exporting, setExporting] = useState(false);
@@ -79,6 +88,14 @@ const UsersPage = memo(() => {
   const users = data?.rows ?? [];
   const total = data?.total ?? 0;
   const counts = data?.counts ?? {};
+
+  const { canEdit, canDelete } = useMemo(
+    () => ({
+      canEdit: hasPermission(PERMISSIONS.users.edit),
+      canDelete: hasPermission(PERMISSIONS.users.delete),
+    }),
+    [hasPermission],
+  );
 
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
@@ -127,11 +144,21 @@ const UsersPage = memo(() => {
     setSelectedIds([]);
   }, []);
 
-  const handleToggleAdmin = useCallback(
-    (userId, isAdmin) => {
-      toggleAdmin({ userId, isAdmin });
+  const handleSetAdminRole = useCallback(
+    async (userId, roleName) => {
+      try {
+        await setAdminRole({ userId, roleName }).unwrap();
+
+        // If the user changed their own role, update the Redux store
+        if (userId === currentUserId)
+          dispatch(setRoles(roleName ? [roleName] : []));
+        // Reload the page to reflect changes in permissions
+        window.location.reload();
+      } catch (err) {
+        // Silent error handling
+      }
     },
-    [toggleAdmin],
+    [setAdminRole, currentUserId, dispatch],
   );
 
   // Suspend handler
@@ -212,7 +239,7 @@ const UsersPage = memo(() => {
 
   const extraContent = (
     <>
-      {!isSystemTab && selectedIds.length > 0 && (
+      {canDelete && !isSystemTab && selectedIds.length > 0 && (
         <Button
           variant="outlined"
           color="error"
@@ -281,13 +308,14 @@ const UsersPage = memo(() => {
               isFetching={isFetching}
               selectedIds={isSystemTab ? [] : selectedIds}
               onSelectionChange={isSystemTab ? undefined : setSelectedIds}
-              onDelete={isSystemTab ? undefined : handleDelete}
-              onToggleAdmin={isSystemTab ? undefined : handleToggleAdmin}
-              onSuspend={isSystemTab ? undefined : handleSuspend}
+              onDelete={isSystemTab || !canDelete ? undefined : handleDelete}
+              onSetAdminRole={isSystemTab ? undefined : handleSetAdminRole}
+              onSuspend={isSystemTab || !canEdit ? undefined : handleSuspend}
               onActivity={isSystemTab ? undefined : handleActivity}
-              showCheckbox={!isSystemTab}
+              showCheckbox={!isSystemTab && canDelete}
               showActions={!isSystemTab}
-              showAdminToggle={!isSystemTab}
+              showAdminRoleSelect={!isSystemTab}
+              currentUserId={currentUserId}
             />
           )}
         </Box>

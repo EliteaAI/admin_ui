@@ -37,15 +37,30 @@ class Route:  # pylint: disable=E1101,R0903
             #
             admin_ui_config_data = self.get_admin_ui_config()
             #
-            # Inject current user info for the profile icon
+            # Inject current user info for the profile icon and RBAC
             #
             try:
                 current_user = auth.current_user()
+                admin_ui_config_data["user_id"] = current_user.get("id")
                 admin_ui_config_data["user_name"] = current_user.get("name", "")
                 admin_ui_config_data["user_email"] = current_user.get("email", "")
             except Exception:
+                admin_ui_config_data["user_id"] = None
                 admin_ui_config_data["user_name"] = ""
                 admin_ui_config_data["user_email"] = ""
+            #
+            # Inject current user's administration permissions and roles for RBAC
+            #
+            admin_ui_config_data["permissions"] = list(current_permissions)
+            try:
+                user_id = current_user.get("id")
+                if user_id:
+                    admin_roles = auth.get_user_roles(user_id, mode='administration')
+                    admin_ui_config_data["roles"] = list(admin_roles)
+                else:
+                    admin_ui_config_data["roles"] = []
+            except Exception:
+                admin_ui_config_data["roles"] = []
             #
             vite_base_uri = admin_ui_config_data["vite_base_uri"]
             admin_ui_config = json.dumps(admin_ui_config_data)

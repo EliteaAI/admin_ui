@@ -1,11 +1,20 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback } from "react";
 
-import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import Typography from "@mui/material/Typography";
 
-const PermissionRow = memo(function PermissionRow({ permission, roles, values, onChange }) {
-  const shortName = permission.split('.').slice(2).join('.') || permission;
+const PermissionRow = memo((props) => {
+  const {
+    permission,
+    roles,
+    values,
+    onChange,
+    readOnly,
+    disabledRoles = [],
+  } = props;
+
+  const shortName = permission.split(".").slice(2).join(".") || permission;
 
   const handleChange = useCallback(
     (role) => {
@@ -17,7 +26,11 @@ const PermissionRow = memo(function PermissionRow({ permission, roles, values, o
   return (
     <Box sx={styles.row}>
       <Box sx={styles.nameCell}>
-        <Typography variant="bodySmall" color="text.secondary" sx={styles.nameText}>
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          sx={styles.nameText}
+        >
           {shortName}
         </Typography>
       </Box>
@@ -27,7 +40,9 @@ const PermissionRow = memo(function PermissionRow({ permission, roles, values, o
             size="small"
             checked={!!values[role]}
             onChange={() => handleChange(role)}
-            disabled={role === 'system'}
+            disabled={
+              role === "system" || readOnly || disabledRoles.includes(role)
+            }
             sx={styles.checkbox}
           />
         </Box>
@@ -38,30 +53,30 @@ const PermissionRow = memo(function PermissionRow({ permission, roles, values, o
 
 const styles = {
   row: ({ palette }) => ({
-    display: 'grid',
-    gridTemplateColumns: 'var(--matrix-columns)',
-    alignItems: 'center',
-    minHeight: '2.25rem',
-    paddingLeft: '2.5rem',
-    '&:hover': {
+    display: "grid",
+    gridTemplateColumns: "var(--matrix-columns)",
+    alignItems: "center",
+    minHeight: "2.25rem",
+    paddingLeft: "2.5rem",
+    "&:hover": {
       backgroundColor: palette.background.userInputBackgroundActive,
     },
   }),
   nameCell: {
-    overflow: 'hidden',
-    paddingRight: '0.5rem',
+    overflow: "hidden",
+    paddingRight: "0.5rem",
   },
   nameText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   checkboxCell: {
-    display: 'flex',
-    justifyContent: 'center',
+    display: "flex",
+    justifyContent: "center",
   },
   checkbox: {
-    padding: '0.25rem',
+    padding: "0.25rem",
   },
 };
 
