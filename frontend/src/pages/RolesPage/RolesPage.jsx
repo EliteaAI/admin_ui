@@ -4,6 +4,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
@@ -13,6 +15,7 @@ import { PERMISSIONS } from "@/constants/permissions";
 import {
   usePermissionMatrixQuery,
   usePermissionMatrixUpdateMutation,
+  usePermissionMatrixSyncMutation,
   usePublicPermissionMatrixQuery,
   usePublicPermissionMatrixUpdateMutation,
 } from "@/api/usersApi";
@@ -24,10 +27,34 @@ const ROLE_ORDER = ["system", "super_admin", "admin", "editor", "viewer"];
 const RolesPage = memo(() => {
   usePageTitle("Roles");
 
+  const adminServerRef = useRef(null);
+  const stdServerRef = useRef(null);
+  const pubServerRef = useRef(null);
+
   const { hasPermission, isSuperAdmin } = useCheckPermission();
 
-  const [activeTab, setActiveTab] = useState("standard");
+  const [activeTab, setActiveTab] = useState("admin");
   const [search, setSearch] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  // Admin roles data
+  const {
+    data: adminData,
+    isFetching: adminFetching,
+    isError: adminError,
+  } = usePermissionMatrixQuery(
+    { targetMode: "administration" },
+    { refetchOnMountOrArgChange: true, skip: activeTab !== "admin" },
+  );
+
+  const [updateAdminMatrix, { isLoading: adminSaving }] =
+    usePermissionMatrixUpdateMutation();
+
+  const [adminRows, setAdminRows] = useState(null);
 
   // Standard roles data
   const {
@@ -35,13 +62,16 @@ const RolesPage = memo(() => {
     isFetching: stdFetching,
     isError: stdError,
   } = usePermissionMatrixQuery(
-    { targetMode: "administration" },
+    { targetMode: "default" },
     { refetchOnMountOrArgChange: true, skip: activeTab !== "standard" },
   );
+
   const [updateStdMatrix, { isLoading: stdSaving }] =
     usePermissionMatrixUpdateMutation();
+  const [syncStdMatrix, { isLoading: stdSyncing }] =
+    usePermissionMatrixSyncMutation();
+
   const [stdRows, setStdRows] = useState(null);
-  const stdServerRef = useRef(null);
 
   // Public project data
   const {
@@ -52,10 +82,19 @@ const RolesPage = memo(() => {
     { targetMode: "default" },
     { refetchOnMountOrArgChange: true, skip: activeTab !== "public" },
   );
+
   const [updatePubMatrix, { isLoading: pubSaving }] =
     usePublicPermissionMatrixUpdateMutation();
+
   const [pubRows, setPubRows] = useState(null);
-  const pubServerRef = useRef(null);
+
+  // Sync admin data
+  useEffect(() => {
+    if (adminData?.rows) {
+      adminServerRef.current = adminData.rows;
+      setAdminRows(adminData.rows);
+    }
+  }, [adminData]);
 
   // Sync standard data
   useEffect(() => {
@@ -73,13 +112,68 @@ const RolesPage = memo(() => {
     }
   }, [pubData]);
 
-  // Active tab's data
-  const localRows = activeTab === "standard" ? stdRows : pubRows;
-  const setLocalRows = activeTab === "standard" ? setStdRows : setPubRows;
-  const serverRef = activeTab === "standard" ? stdServerRef : pubServerRef;
-  const isFetching = activeTab === "standard" ? stdFetching : pubFetching;
-  const isError = activeTab === "standard" ? stdError : pubError;
-  const isSaving = activeTab === "standard" ? stdSaving : pubSaving;
+  const tabConfig = useMemo(
+    () => ({
+      admin: {
+        rows: adminRows,
+        setRows: setAdminRows,
+        serverRef: adminServerRef,
+        isFetching: adminFetching,
+        isError: adminError,
+        isSaving: adminSaving,
+        mutation: updateAdminMatrix,
+        targetMode: "administration",
+      },
+      standard: {
+        rows: stdRows,
+        setRows: setStdRows,
+        serverRef: stdServerRef,
+        isFetching: stdFetching,
+        isError: stdError,
+        isSaving: stdSaving,
+        mutation: updateStdMatrix,
+        targetMode: "default",
+      },
+      public: {
+        rows: pubRows,
+        setRows: setPubRows,
+        serverRef: pubServerRef,
+        isFetching: pubFetching,
+        isError: pubError,
+        isSaving: pubSaving,
+        mutation: updatePubMatrix,
+        targetMode: "default",
+      },
+    }),
+    [
+      adminRows,
+      stdRows,
+      pubRows,
+      adminFetching,
+      stdFetching,
+      pubFetching,
+      adminError,
+      stdError,
+      pubError,
+      adminSaving,
+      stdSaving,
+      pubSaving,
+      updateAdminMatrix,
+      updateStdMatrix,
+      updatePubMatrix,
+    ],
+  );
+
+  const {
+    rows,
+    setRows,
+    serverRef,
+    isFetching,
+    isError,
+    isSaving,
+    mutation,
+    targetMode,
+  } = tabConfig[activeTab] ?? tabConfig.admin;
 
   const canEdit = useMemo(
     () => hasPermission(PERMISSIONS.roles.edit),
@@ -92,37 +186,68 @@ const RolesPage = memo(() => {
   );
 
   const roles = useMemo(() => {
-    if (!localRows || localRows.length === 0) return ROLE_ORDER;
-    const sample = localRows[0];
+    let currentOrder = ROLE_ORDER;
+
+    if (activeTab !== "admin")
+      currentOrder = currentOrder.filter((r) => r !== "super_admin");
+    if (!rows || rows.length === 0) return currentOrder;
+
+    const sample = rows[0];
     const keys = Object.keys(sample).filter((k) => k !== "name");
-    return ROLE_ORDER.filter((r) => keys.includes(r));
-  }, [localRows]);
+
+    return currentOrder.filter((r) => keys.includes(r));
+  }, [rows, activeTab]);
 
   const isDirty = useMemo(() => {
-    if (!localRows || !serverRef.current) return false;
-    return JSON.stringify(localRows) !== JSON.stringify(serverRef.current);
-  }, [localRows, serverRef]);
+    if (!rows || !serverRef.current) return false;
+    return JSON.stringify(rows) !== JSON.stringify(serverRef.current);
+  }, [rows, serverRef]);
 
   const handleChange = useCallback(
     (updater) => {
-      setLocalRows((prev) =>
+      setRows((prev) =>
         typeof updater === "function" ? updater(prev) : updater,
       );
     },
-    [setLocalRows],
+    [setRows],
   );
 
   const handleDiscard = useCallback(() => {
-    setLocalRows(serverRef.current);
-  }, [setLocalRows, serverRef]);
+    setRows(serverRef.current);
+  }, [setRows, serverRef]);
+
+  const showSnackbar = useCallback((message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
+
+  const handleCloseSnackbar = useCallback((_, reason) => {
+    if (reason === "clickaway") return;
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  }, []);
 
   const handleSave = useCallback(async () => {
-    if (!localRows) return;
-    const mutation =
-      activeTab === "standard" ? updateStdMatrix : updatePubMatrix;
-    const targetMode = activeTab === "standard" ? "administration" : "default";
-    await mutation({ targetMode, rows: localRows }).unwrap();
-  }, [localRows, activeTab, updateStdMatrix, updatePubMatrix]);
+    if (!rows) return;
+
+    try {
+      await mutation({ targetMode, rows: rows }).unwrap();
+
+      showSnackbar("Permissions saved successfully", "success");
+    } catch (err) {
+      showSnackbar("Failed to save permissions", "error");
+    }
+  }, [rows, activeTab, mutation, targetMode, showSnackbar]);
+
+  const handleApply = useCallback(async () => {
+    try {
+      await syncStdMatrix({ targetMode: "default" }).unwrap();
+      showSnackbar("Permissions synced to projects successfully", "success");
+    } catch (err) {
+      showSnackbar(
+        err?.data?.error || "Failed to sync permissions to projects",
+        "error",
+      );
+    }
+  }, [syncStdMatrix, showSnackbar]);
 
   const handleSearchChange = useCallback((value) => {
     setSearch(value);
@@ -132,30 +257,44 @@ const RolesPage = memo(() => {
     setActiveTab(newValue);
   }, []);
 
-  const extraContent =
-    canEdit && isDirty ? (
-      <Box sx={{ display: "flex", gap: "0.5rem" }}>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={handleDiscard}
-          disabled={isSaving}
-        >
-          Discard
-        </Button>
+  const extraContent = (
+    <Box sx={{ display: "flex", gap: "0.5rem" }}>
+      {activeTab === "standard" && canEdit && !isDirty && (
         <Button
           variant="contained"
           size="small"
-          onClick={handleSave}
-          disabled={isSaving}
+          onClick={handleApply}
+          disabled={stdSyncing || isSaving}
         >
-          {isSaving ? "Saving..." : "Save"}
+          {stdSyncing ? "Applying..." : "Apply to Projects"}
         </Button>
-      </Box>
-    ) : null;
+      )}
+      {canEdit && isDirty && (
+        <>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleDiscard}
+            disabled={isSaving}
+          >
+            Discard
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save"}
+          </Button>
+        </>
+      )}
+    </Box>
+  );
 
   const tabsElement = (
     <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
+      <Tab label="Admin Roles" value="admin" sx={styles.tab} />
       <Tab label="Standard Roles" value="standard" sx={styles.tab} />
       <Tab label="Public Project" value="public" sx={styles.tab} />
     </Tabs>
@@ -177,12 +316,12 @@ const RolesPage = memo(() => {
         {isError && (
           <Box sx={styles.errorContainer}>Failed to load permissions.</Box>
         )}
-        {isFetching && !localRows && (
+        {isFetching && !rows && (
           <Box sx={styles.loadingContainer}>Loading permissions...</Box>
         )}
-        {localRows && (
+        {rows && (
           <PermissionMatrix
-            rows={localRows}
+            rows={rows}
             roles={roles}
             search={search}
             onChange={handleChange}
@@ -191,6 +330,21 @@ const RolesPage = memo(() => {
           />
         )}
       </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </DrawerPage>
   );
 });
