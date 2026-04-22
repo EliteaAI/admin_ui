@@ -95,6 +95,14 @@ export const usersApi = adminApi.injectEndpoints({
       invalidatesTags: ["Permissions"],
     }),
 
+    permissionMatrixSync: build.mutation({
+      query: ({ targetMode = "default" }) => ({
+        url: `/admin/permissions/administration/${targetMode}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Permissions"],
+    }),
+
     publicPermissionMatrix: build.query({
       query: ({ targetMode = "default" } = {}) => ({
         url: `/admin/permissions/public/${targetMode}`,
@@ -123,6 +131,7 @@ export const {
   useRoleListQuery,
   usePermissionMatrixQuery,
   usePermissionMatrixUpdateMutation,
+  usePermissionMatrixSyncMutation,
   usePublicPermissionMatrixQuery,
   usePublicPermissionMatrixUpdateMutation,
 } = usersApi;
