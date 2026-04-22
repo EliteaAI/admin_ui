@@ -201,7 +201,7 @@ const RolesPage = memo(() => {
   const isDirty = useMemo(() => {
     if (!rows || !serverRef.current) return false;
     return JSON.stringify(rows) !== JSON.stringify(serverRef.current);
-  }, [rows, serverRef]);
+  }, [rows]);
 
   const handleChange = useCallback(
     (updater) => {
@@ -230,12 +230,13 @@ const RolesPage = memo(() => {
 
     try {
       await mutation({ targetMode, rows: rows }).unwrap();
-
+      serverRef.current = rows;
+      setRows([...rows]);
       showSnackbar("Permissions saved successfully", "success");
     } catch (err) {
       showSnackbar("Failed to save permissions", "error");
     }
-  }, [rows, activeTab, mutation, targetMode, showSnackbar]);
+  }, [rows, mutation, targetMode, serverRef, setRows, showSnackbar]);
 
   const handleApply = useCallback(async () => {
     try {
