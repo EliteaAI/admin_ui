@@ -14,6 +14,7 @@ import LockIcon from "@mui/icons-material/LockOutlined";
 import CodeIcon from "@mui/icons-material/CodeOutlined";
 import ConstructionIcon from "@mui/icons-material/ConstructionOutlined";
 import CampaignIcon from "@mui/icons-material/CampaignOutlined";
+import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SettingsInputComponentIcon from "@mui/icons-material/SettingsInputComponent";
 import DrawerPage from "@/components/DrawerPage";
@@ -33,6 +34,7 @@ import {
   useConfigRestartMutation,
 } from "@/api/configurationApi";
 import DedicatedBanner from "@/components/SchemaForm/DedicatedBanner";
+import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
 
 const SECTION_ICONS = {
   guardrails: SecurityIcon,
@@ -44,6 +46,7 @@ const SECTION_ICONS = {
   service_descriptors: SettingsInputComponentIcon,
   maintenance: ConstructionIcon,
   dedicated_banner: CampaignIcon,
+  support_assistant: SupportAgentIcon,
   advanced: CodeIcon,
 };
 
@@ -287,6 +290,19 @@ function ConfigurationPage() {
                 ) : (
                   <Box sx={styles.formScroll}>
                     <DedicatedBanner
+                      values={localValues}
+                      onChange={handleFieldChange}
+                    />
+                  </Box>
+                );
+              case "support_assistant":
+                return valuesFetching ? (
+                  <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <Box sx={styles.formScroll}>
+                    <SupportAssistant
                       values={localValues}
                       onChange={handleFieldChange}
                     />
