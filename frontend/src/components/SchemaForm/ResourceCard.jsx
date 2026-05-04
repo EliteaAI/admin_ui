@@ -1,45 +1,7 @@
 import { memo, useCallback, useMemo } from "react";
-import Box from "@mui/material/Box";
-import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+import { Box, Switch, TextField, Typography } from "@mui/material";
 import LinksEditor from "@/components/SchemaForm/LinksEditor";
-import { color, palette } from "@mui/system";
-
-const ResourceVersionRow = memo((props) => {
-  const { row, onChange } = props;
-
-  const handleLabelChange = useCallback(
-    (event) => {
-      if (!row.labelKey) return;
-      onChange(row.labelKey, event.target.value);
-    },
-    [onChange, row],
-  );
-
-  return (
-    <Box sx={styles.versionRow}>
-      {row.labelKey ? (
-        <TextField
-          variant="standard"
-          value={row.label}
-          onChange={handleLabelChange}
-          sx={styles.versionLabelInput}
-          inputProps={{ style: { fontWeight: 400, fontSize: "0.8125rem" } }}
-        />
-      ) : (
-        <Typography variant="body2" sx={styles.versionLabel}>
-          {row.label}
-        </Typography>
-      )}
-      <Typography variant="body2" sx={styles.versionValue}>
-        {row.value}
-      </Typography>
-    </Box>
-  );
-});
-
-ResourceVersionRow.displayName = "ResourceVersionRow";
+import ResourceVersionRow from "@/components/SchemaForm/ResourceVersionRow";
 
 const ResourceCard = memo((props) => {
   const { card, values, onChange, systemInfo } = props;
@@ -56,23 +18,17 @@ const ResourceCard = memo((props) => {
   const links = values?.[linksKey] ?? [];
   const versionLabel = values?.[versionLabelKey] ?? "ELITEA VERSION";
 
-  const handleToggle = useCallback(() => {
+  const handleToggle = () => {
     onChange(enabledKey, !enabled);
-  }, [enabledKey, enabled, onChange]);
+  };
 
-  const handleTitleChange = useCallback(
-    (event) => {
-      onChange(titleKey, event.target.value);
-    },
-    [onChange, titleKey],
-  );
+  const handleTitleChange = (event) => {
+    onChange(titleKey, event.target.value);
+  };
 
-  const handleDescriptionChange = useCallback(
-    (event) => {
-      onChange(descriptionKey, event.target.value);
-    },
-    [descriptionKey, onChange],
-  );
+  const handleDescriptionChange = (event) => {
+    onChange(descriptionKey, event.target.value);
+  };
 
   const handleLinksChange = useCallback(
     (newLinks) => {
@@ -281,35 +237,6 @@ const styles = {
     padding: "0.75rem 1.25rem",
     gap: "0",
     backgroundColor: palette.background.default,
-  }),
-  versionRow: ({ palette }) => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0.5rem 0",
-    borderBottom: `1px solid ${palette.border.table}`,
-    "&:last-child": { borderBottom: "none" },
-  }),
-  versionLabel: {
-    fontWeight: 600,
-    fontSize: "0.8125rem",
-  },
-  versionLabelInput: ({ palette }) => ({
-    flex: 1,
-    "& .MuiInput-root": {
-      color: palette.text.primary,
-      "&:before": { borderBottom: "none" },
-      "&:after": { borderBottom: `1px solid ${palette.primary.main}` },
-      "&:hover:not(.Mui-disabled):before": {
-        borderBottom: `1px solid ${palette.border.table}`,
-      },
-    },
-    "& .MuiInput-input": { padding: "1px 0" },
-  }),
-  versionValue: ({ palette }) => ({
-    fontSize: "0.8125rem",
-    color: palette.text.metrics,
-    fontFamily: "monospace",
   }),
 };
 

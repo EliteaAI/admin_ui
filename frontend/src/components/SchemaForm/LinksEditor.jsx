@@ -1,9 +1,5 @@
 import { memo, useCallback } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
@@ -12,9 +8,9 @@ const LinksEditor = memo((props) => {
 
   const links = Array.isArray(value) ? value : [];
 
-  const handleAdd = useCallback(() => {
+  const handleAdd = () => {
     onChange([...links, { title: "", url: "" }]);
-  }, [links, onChange]);
+  };
 
   const handleDelete = useCallback(
     (index) => {
@@ -64,17 +60,9 @@ LinksEditor.displayName = "LinksEditor";
 const LinkRow = memo((props) => {
   const { index, link, onDelete, onChange } = props;
 
-  const handleTitleChange = useCallback(
-    (e) => onChange(index, "title", e.target.value),
-    [index, onChange],
-  );
-
-  const handleUrlChange = useCallback(
-    (e) => onChange(index, "url", e.target.value),
-    [index, onChange],
-  );
-
-  const handleDelete = useCallback(() => onDelete(index), [index, onDelete]);
+  const handleTitleChange = (e) => onChange(index, "title", e.target.value);
+  const handleUrlChange = (e) => onChange(index, "url", e.target.value);
+  const handleDelete = () => onDelete(index);
 
   return (
     <Box sx={styles.row}>
