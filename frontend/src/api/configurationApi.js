@@ -105,6 +105,12 @@ export const configurationApi = adminApi.injectEndpoints({
       }),
       invalidatesTags: ["Maintenance"],
     }),
+
+    systemInfo: build.query({
+      query: () => ({
+        url: `${V2_BASE}/admin/system_info/administration`,
+      }),
+    }),
   }),
 });
 
@@ -123,4 +129,5 @@ export const {
   useRuntimePylonLogsMutation,
   useMaintenanceQuery,
   useMaintenanceSaveMutation,
+  useSystemInfoQuery,
 } = configurationApi;
