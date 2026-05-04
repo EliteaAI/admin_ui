@@ -1,13 +1,10 @@
 import { memo, useCallback } from "react";
 import Box from "@mui/material/Box";
-import Switch from "@mui/material/Switch";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import Typography from "@mui/material/Typography";
+import { Switch, Select, MenuItem, Typography, useTheme } from "@mui/material";
+
 import CodeMirror from "@uiw/react-codemirror";
 import { html } from "@codemirror/lang-html";
 import { EditorView } from "@codemirror/view";
-import { useTheme } from "@mui/material/styles";
 
 const STYLE_OPTIONS = ["info", "warning"];
 const ICON_OPTIONS = ["info", "warning"];

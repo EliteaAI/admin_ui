@@ -14,7 +14,7 @@ export const configurationApi = adminApi.injectEndpoints({
       query: ({ sectionId }) => ({
         url: `${V2_BASE}/admin/plugin_config_values/administration/${sectionId}`,
       }),
-      providesTags: (result, error, { sectionId }) => [
+      providesTags: (_, __, { sectionId }) => [
         { type: "Configuration", id: sectionId },
       ],
     }),
