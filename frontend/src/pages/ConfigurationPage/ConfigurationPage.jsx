@@ -14,6 +14,7 @@ import LockIcon from "@mui/icons-material/LockOutlined";
 import CodeIcon from "@mui/icons-material/CodeOutlined";
 import ConstructionIcon from "@mui/icons-material/ConstructionOutlined";
 import CampaignIcon from "@mui/icons-material/CampaignOutlined";
+import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
 import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SettingsInputComponentIcon from "@mui/icons-material/SettingsInputComponent";
@@ -34,12 +35,14 @@ import {
   useConfigRestartMutation,
 } from "@/api/configurationApi";
 import DedicatedBanner from "@/components/SchemaForm/DedicatedBanner";
+import ResourcesSection from "@/components/SchemaForm/ResourcesSection";
 import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
 
 const SECTION_ICONS = {
   guardrails: SecurityIcon,
   mcp_servers: DnsIcon,
   observability: MonitorHeartIcon,
+  resources: MenuBookIcon,
   runtime: SettingsIcon,
   admin_panel: AdminPanelSettingsIcon,
   auth: LockIcon,
@@ -280,6 +283,19 @@ function ConfigurationPage() {
                 return (
                   <Box sx={{ ...styles.formScroll, padding: 0 }}>
                     <ServiceDescriptorsSection />
+                  </Box>
+                );
+              case "resources":
+                return valuesFetching ? (
+                  <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <Box sx={styles.formScroll}>
+                    <ResourcesSection
+                      values={localValues}
+                      onChange={handleFieldChange}
+                    />
                   </Box>
                 );
               case "dedicated_banner":
