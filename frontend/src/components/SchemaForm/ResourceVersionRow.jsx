@@ -1,30 +1,48 @@
 import { memo } from "react";
 import { Box, TextField, Typography } from "@mui/material";
 
-const ResourceVersionRow = memo((props) => {
+const ResourceVersionRow = memo(props => {
   const { row, onChange } = props;
 
-  const handleLabelChange = (event) => {
-    if (!row.labelKey) return;
-    onChange(row.labelKey, event.target.value);
+  const handleValueChange = event => {
+    if (!row.valueKey) return;
+    onChange(row.valueKey, event.target.value);
   };
 
-  return (
-    <Box sx={styles.versionRow}>
-      {row.labelKey ? (
-        <TextField
-          variant="standard"
-          value={row.label}
-          onChange={handleLabelChange}
-          sx={styles.versionLabelInput}
-          slotProps={{ htmlInput: { style: { fontWeight: 400, fontSize: "0.8125rem" } } }}
-        />
-      ) : (
-        <Typography variant="body2" sx={styles.versionLabel}>
+  // Editable value: label (static) + outlined input for value
+  if (row.valueKey) {
+    return (
+      <Box sx={styles.editableRow}>
+        <Typography
+          variant="body2"
+          sx={styles.editableLabel}
+        >
           {row.label}
         </Typography>
-      )}
-      <Typography variant="body2" sx={styles.versionValue}>
+        <TextField
+          size="small"
+          value={row.value}
+          onChange={handleValueChange}
+          sx={styles.valueField}
+          slotProps={{ htmlInput: { style: { fontSize: "0.8125rem" } } }}
+        />
+      </Box>
+    );
+  }
+
+  // Read-only rows (plugin versions): label + monospace value
+  return (
+    <Box sx={styles.readOnlyRow}>
+      <Typography
+        variant="body2"
+        sx={styles.readOnlyLabel}
+      >
+        {row.label}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={styles.readOnlyValue}
+      >
         {row.value}
       </Typography>
     </Box>
@@ -34,7 +52,22 @@ const ResourceVersionRow = memo((props) => {
 ResourceVersionRow.displayName = "ResourceVersionRow";
 
 const styles = {
-  versionRow: ({ palette }) => ({
+  editableRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+  },
+  editableLabel: {
+    width: "12rem",
+    flexShrink: 0,
+    fontWeight: 600,
+    fontSize: "0.8125rem",
+  },
+  valueField: {
+    flex: 1,
+    "& .MuiInputBase-input": { fontSize: "0.8125rem" },
+  },
+  readOnlyRow: ({ palette }) => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -42,23 +75,11 @@ const styles = {
     borderBottom: `1px solid ${palette.border.table}`,
     "&:last-child": { borderBottom: "none" },
   }),
-  versionLabel: {
+  readOnlyLabel: {
     fontWeight: 600,
     fontSize: "0.8125rem",
   },
-  versionLabelInput: ({ palette }) => ({
-    flex: 1,
-    "& .MuiInput-root": {
-      color: palette.text.primary,
-      "&:before": { borderBottom: "none" },
-      "&:after": { borderBottom: `1px solid ${palette.primary.main}` },
-      "&:hover:not(.Mui-disabled):before": {
-        borderBottom: `1px solid ${palette.border.table}`,
-      },
-    },
-    "& .MuiInput-input": { padding: "1px 0" },
-  }),
-  versionValue: ({ palette }) => ({
+  readOnlyValue: ({ palette }) => ({
     fontSize: "0.8125rem",
     color: palette.text.metrics,
     fontFamily: "monospace",
