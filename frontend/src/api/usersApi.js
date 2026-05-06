@@ -118,6 +118,22 @@ export const usersApi = adminApi.injectEndpoints({
       }),
       invalidatesTags: ["PublicPermissions"],
     }),
+
+    supportPermissionMatrix: build.query({
+      query: ({ targetMode = "default" } = {}) => ({
+        url: `/admin/permissions/support/${targetMode}`,
+      }),
+      providesTags: ["SupportPermissions"],
+    }),
+
+    supportPermissionMatrixUpdate: build.mutation({
+      query: ({ targetMode = "default", rows }) => ({
+        url: `/admin/permissions/support/${targetMode}`,
+        method: "PUT",
+        body: rows,
+      }),
+      invalidatesTags: ["SupportPermissions"],
+    }),
   }),
 });
 
@@ -134,4 +150,6 @@ export const {
   usePermissionMatrixSyncMutation,
   usePublicPermissionMatrixQuery,
   usePublicPermissionMatrixUpdateMutation,
+  useSupportPermissionMatrixQuery,
+  useSupportPermissionMatrixUpdateMutation,
 } = usersApi;

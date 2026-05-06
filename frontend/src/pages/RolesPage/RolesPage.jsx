@@ -18,6 +18,8 @@ import {
   usePermissionMatrixSyncMutation,
   usePublicPermissionMatrixQuery,
   usePublicPermissionMatrixUpdateMutation,
+  useSupportPermissionMatrixQuery,
+  useSupportPermissionMatrixUpdateMutation,
 } from "@/api/usersApi";
 
 import PermissionMatrix from "./PermissionMatrix";
@@ -30,6 +32,7 @@ const RolesPage = memo(() => {
   const adminServerRef = useRef(null);
   const stdServerRef = useRef(null);
   const pubServerRef = useRef(null);
+  const supServerRef = useRef(null);
 
   const { hasPermission, isSuperAdmin } = useCheckPermission();
 
@@ -88,6 +91,21 @@ const RolesPage = memo(() => {
 
   const [pubRows, setPubRows] = useState(null);
 
+  // Support project data
+  const {
+    data: supData,
+    isFetching: supFetching,
+    isError: supError,
+  } = useSupportPermissionMatrixQuery(
+    { targetMode: "default" },
+    { refetchOnMountOrArgChange: true, skip: activeTab !== "support" },
+  );
+
+  const [updateSupMatrix, { isLoading: supSaving }] =
+    useSupportPermissionMatrixUpdateMutation();
+
+  const [supRows, setSupRows] = useState(null);
+
   // Sync admin data
   useEffect(() => {
     if (adminData?.rows) {
@@ -111,6 +129,14 @@ const RolesPage = memo(() => {
       setPubRows(pubData.rows);
     }
   }, [pubData]);
+
+  // Sync support data
+  useEffect(() => {
+    if (supData?.rows) {
+      supServerRef.current = supData.rows;
+      setSupRows(supData.rows);
+    }
+  }, [supData]);
 
   const tabConfig = useMemo(
     () => ({
@@ -144,23 +170,38 @@ const RolesPage = memo(() => {
         mutation: updatePubMatrix,
         targetMode: "default",
       },
+      support: {
+        rows: supRows,
+        setRows: setSupRows,
+        serverRef: supServerRef,
+        isFetching: supFetching,
+        isError: supError,
+        isSaving: supSaving,
+        mutation: updateSupMatrix,
+        targetMode: "default",
+      },
     }),
     [
       adminRows,
       stdRows,
       pubRows,
+      supRows,
       adminFetching,
       stdFetching,
       pubFetching,
+      supFetching,
       adminError,
       stdError,
       pubError,
+      supError,
       adminSaving,
       stdSaving,
       pubSaving,
+      supSaving,
       updateAdminMatrix,
       updateStdMatrix,
       updatePubMatrix,
+      updateSupMatrix,
     ],
   );
 
@@ -298,6 +339,7 @@ const RolesPage = memo(() => {
       <Tab label="Admin Roles" value="admin" sx={styles.tab} />
       <Tab label="Standard Roles" value="standard" sx={styles.tab} />
       <Tab label="Public Project" value="public" sx={styles.tab} />
+      <Tab label="Support Project" value="support" sx={styles.tab} />
     </Tabs>
   );
 
