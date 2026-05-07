@@ -6,37 +6,34 @@ import ResourceVersionRow from "@/components/SchemaForm/ResourceVersionRow";
 const ResourceCard = memo(props => {
   const { card, values, onChange, systemInfo } = props;
 
-  const enabledKey = `resources_${card.id}_enabled`;
-  const titleKey = `resources_${card.id}_title`;
-  const descriptionKey = `resources_${card.id}_description`;
-  const linksKey = `resources_${card.id}_links`;
-  const versionValueKey = `resources_${card.id}_version`;
-  const upgradeDateKey = `resources_${card.id}_upgrade_date`;
+  const key = field => `resources_${card.id}_${field}`;
+  const getCardValue = (field, defaultValue) => values?.[key(field)] ?? defaultValue;
 
-  const enabled = values?.[enabledKey] ?? true;
-  const title = values?.[titleKey] ?? "";
-  const description = values?.[descriptionKey] ?? "";
-  const links = values?.[linksKey] ?? [];
-  const versionValue = values?.[versionValueKey] ?? "";
-  const upgradeDateValue = values?.[upgradeDateKey] ?? "";
+  const enabled = getCardValue("enabled", true);
+  const title = getCardValue("title", "");
+  const description = getCardValue("description", "");
+  const links = getCardValue("links", []);
+  const versionValue = getCardValue("version", "");
+  const upgradeDateValue = getCardValue("upgrade_date", "");
 
   const handleToggle = () => {
-    onChange(enabledKey, !enabled);
+    onChange(key("enabled"), !enabled);
   };
 
   const handleTitleChange = event => {
-    onChange(titleKey, event.target.value);
+    onChange(key("title"), event.target.value);
   };
 
   const handleDescriptionChange = event => {
-    onChange(descriptionKey, event.target.value);
+    onChange(key("description"), event.target.value);
   };
 
   const handleLinksChange = useCallback(
     newLinks => {
-      onChange(linksKey, newLinks);
+      onChange(key("links"), newLinks);
     },
-    [linksKey, onChange],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [card.id, onChange],
   );
 
   const versionRows = useMemo(() => {
@@ -49,7 +46,7 @@ const ResourceCard = memo(props => {
       label: "Release Version",
       value: versionValue,
       labelKey: null,
-      valueKey: versionValueKey,
+      valueKey: key("version"),
     });
 
     rows.push({
@@ -57,7 +54,7 @@ const ResourceCard = memo(props => {
       label: "Released on",
       value: upgradeDateValue,
       labelKey: null,
-      valueKey: upgradeDateKey,
+      valueKey: key("upgrade_date"),
     });
 
     for (const plugin of systemInfo?.plugins ?? []) {
@@ -73,11 +70,10 @@ const ResourceCard = memo(props => {
     return rows;
   }, [
     card.hasVersionLabels,
+    card.id,
     systemInfo,
     versionValue,
-    versionValueKey,
     upgradeDateValue,
-    upgradeDateKey,
   ]);
 
   return (

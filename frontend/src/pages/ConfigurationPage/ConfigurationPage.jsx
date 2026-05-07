@@ -91,7 +91,7 @@ function ConfigurationPage() {
     if (sections.length > 0 && !activeSection) setActiveSection(sections[0].id);
   }, [sections, activeSection, schemasLoading]);
 
-  const { data: valuesData, isFetching: valuesFetching } = useConfigValuesQuery(
+  const { data: valuesData, isFetching: valuesFetching, isLoading: valuesLoading } = useConfigValuesQuery(
     { sectionId: activeSection },
     { skip: !activeSection, refetchOnMountOrArgChange: true },
   );
@@ -153,15 +153,30 @@ function ConfigurationPage() {
 
   const handleSave = useCallback(async () => {
     try {
+      const cleanedValues = Object.fromEntries(
+        Object.entries(localValues).map(([key, value]) => {
+          if (key.endsWith("_links") && Array.isArray(value)) {
+            return [
+              key,
+              value.filter(
+                (link) =>
+                  link.title?.trim() !== "" || link.url?.trim() !== "",
+              ),
+            ];
+          }
+          return [key, value];
+        }),
+      );
+
       const result = await saveValues({
         sectionId: activeSection,
-        values: localValues,
+        values: cleanedValues,
       }).unwrap();
 
       // Update server baseline immediately so isDirty resets without
       // waiting for the async re-fetch (remote_runtimes cache may be stale).
-      serverValuesRef.current = localValues;
-      setLocalValues({ ...localValues });
+      serverValuesRef.current = cleanedValues;
+      setLocalValues({ ...cleanedValues });
 
       if (result.requires_restart?.length > 0) {
         // Normalize: v1 returns flat strings, v2 returns {pylon_id, plugins}
@@ -286,7 +301,7 @@ function ConfigurationPage() {
                   </Box>
                 );
               case "resources":
-                return valuesFetching ? (
+                return valuesLoading ? (
                   <Box sx={styles.loadingContainer}>
                     <CircularProgress size={24} />
                   </Box>
@@ -325,7 +340,7 @@ function ConfigurationPage() {
                   </Box>
                 );
               case "guardrails":
-                return valuesFetching ? (
+                return valuesLoading ? (
                   <Box sx={styles.loadingContainer}>
                     <CircularProgress size={24} />
                   </Box>
