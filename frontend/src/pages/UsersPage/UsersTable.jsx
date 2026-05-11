@@ -32,6 +32,7 @@ const STATUS_CONFIG = {
 };
 
 const ADMIN_ROLE_OPTIONS = [
+  { value: ADMIN_ROLES.NONE, label: "None" },
   { value: ADMIN_ROLES.VIEWER, label: "Viewer" },
   { value: ADMIN_ROLES.EDITOR, label: "Editor" },
   { value: ADMIN_ROLES.ADMIN, label: "Admin" },
