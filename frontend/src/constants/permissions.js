@@ -108,6 +108,7 @@ export const ADMIN_ROLES = {
   ADMIN: "admin",
   EDITOR: "editor",
   VIEWER: "viewer",
+  NONE: "",
 };
 
 export const SIDEBAR_PERMISSIONS = {
