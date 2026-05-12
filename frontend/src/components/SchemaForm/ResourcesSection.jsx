@@ -51,6 +51,14 @@ const CARDS = [
     hasLinks: true,
     hasContent: true,
   },
+  {
+    id: "interactive_tours",
+    label: "Interactive Tours",
+    icon: VideoLibraryOutlinedIcon,
+    hint: "Links to guided tours for exploring key features and workflows.",
+    hasLinks: true,
+    hasContent: true,
+  },
 ];
 
 const getSettingsCount = card => {
