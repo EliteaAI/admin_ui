@@ -43,10 +43,19 @@ export const projectsApi = adminApi.injectEndpoints({
     }),
 
     projectAddAdmin: build.mutation({
-      query: ({ projectId, email }) => ({
+      query: ({ projectId, email, roles = ["admin"] }) => ({
         url: `/admin/users/administration/${projectId}`,
         method: "POST",
-        body: { emails: [email], roles: ["admin"] },
+        body: { emails: [email], roles },
+      }),
+      invalidatesTags: ["Projects"],
+    }),
+
+    projectUpdateUserRole: build.mutation({
+      query: ({ projectId, userId, roles }) => ({
+        url: `/admin/users/administration/${projectId}`,
+        method: "PUT",
+        body: { id: userId, roles },
       }),
       invalidatesTags: ["Projects"],
     }),
@@ -85,6 +94,7 @@ export const {
   useProjectCreateMutation,
   useProjectDeleteMutation,
   useProjectAddAdminMutation,
+  useProjectUpdateUserRoleMutation,
   useProjectSuspendMutation,
   useProjectUserListQuery,
   useProjectUserActivityQuery,
