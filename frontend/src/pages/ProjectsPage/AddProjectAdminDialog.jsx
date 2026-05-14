@@ -45,7 +45,7 @@ function AddProjectAdminDialog({ open, onClose, project }) {
   const existingUser = useMemo(() => {
     if (!email.trim() || !projectUsers) return null;
     const normalizedEmail = email.trim().toLowerCase();
-    return projectUsers.find((u) => u.email?.toLowerCase() === normalizedEmail) ?? null;
+    return projectUsers.rows?.find((u) => u.email?.toLowerCase() === normalizedEmail) ?? null;
   }, [email, projectUsers]);
 
   const isExistingUser = Boolean(existingUser);
