@@ -54,7 +54,9 @@ const SECTION_ICONS = {
 };
 
 function ConfigurationPage() {
-  const [activeSection, setActiveSection] = useState(null);
+  const [activeSection, setActiveSection] = useState(
+    () => window.location.hash.slice(1) || null,
+  );
   const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
   const [pendingRestarts, setPendingRestarts] = useState([]);
@@ -85,10 +87,19 @@ function ConfigurationPage() {
     });
   }, [schemasData, hasAnyPermission]);
 
-  // Set default section on load
+  // Sync active section to URL hash
   useEffect(() => {
-    if (schemasLoading) return;
-    if (sections.length > 0 && !activeSection) setActiveSection(sections[0].id);
+    if (activeSection) window.location.hash = activeSection;
+  }, [activeSection]);
+
+  // Set default section on load, validate hash section exists
+  useEffect(() => {
+    if (schemasLoading || sections.length === 0) return;
+    if (!activeSection) {
+      setActiveSection(sections[0].id);
+    } else if (!sections.find((s) => s.id === activeSection)) {
+      setActiveSection(sections[0].id);
+    }
   }, [sections, activeSection, schemasLoading]);
 
   const { data: valuesData, isFetching: valuesFetching, isLoading: valuesLoading } = useConfigValuesQuery(
