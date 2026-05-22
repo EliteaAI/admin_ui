@@ -19,6 +19,7 @@ import ScheduleIcon from "@mui/icons-material/ScheduleOutlined";
 import SettingsIcon from "@mui/icons-material/SettingsOutlined";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 import ModelTrainingIcon from "@mui/icons-material/ModelTrainingOutlined";
+import AssignmentIcon from "@mui/icons-material/AssignmentOutlined";
 
 import ThemeModeToggle from "@/components/ThemeModeToggle";
 import UserAvatar from "@/components/UserAvatar";
@@ -64,6 +65,12 @@ const topMenuItems = [
     label: "LiteLLM",
     icon: ModelTrainingIcon,
     url: RouteDefinitions.LiteLLM,
+  },
+  {
+    id: "app-requests",
+    label: "App Requests",
+    icon: AssignmentIcon,
+    url: RouteDefinitions.AppRequests,
   },
 ];
 

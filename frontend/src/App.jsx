@@ -19,6 +19,7 @@ import SchedulesTasksPage from "@/pages/SchedulesTasksPage/SchedulesTasksPage";
 import ConfigurationPage from "@/pages/ConfigurationPage/ConfigurationPage";
 import SecretsPage from "@/pages/SecretsPage/SecretsPage";
 import LiteLLMPage from "@/pages/LiteLLMPage/LiteLLMPage";
+import AppRequestsPage from "@/pages/AppRequestsPage/AppRequestsPage";
 import { RouteDefinitions } from "@/routes";
 import { useCheckPermission } from "@/hooks/useCheckPermission";
 import { SIDEBAR_PERMISSIONS } from "@/constants/permissions";
@@ -85,6 +86,10 @@ const router = createBrowserRouter(
       <Route
         path={RouteDefinitions.LiteLLM}
         element={guard(RouteDefinitions.LiteLLM, <LiteLLMPage />)}
+      />
+      <Route
+        path={RouteDefinitions.AppRequests}
+        element={guard(RouteDefinitions.AppRequests, <AppRequestsPage />)}
       />
       <Route
         path={RouteDefinitions.AuditTrail}
