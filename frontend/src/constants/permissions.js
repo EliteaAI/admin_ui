@@ -117,6 +117,7 @@ export const SIDEBAR_PERMISSIONS = {
   projects: [PERMISSIONS.projects.section, PERMISSIONS.projects.list],
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
+  "app-requests": [PERMISSIONS.users.section],
   configuration: [
     PERMISSIONS.configuration.section,
     PERMISSIONS.runtime.plugins,
@@ -146,6 +147,7 @@ export const ROUTE_PERMISSIONS = {
   "/projects": SIDEBAR_PERMISSIONS.projects,
   "/secrets": SIDEBAR_PERMISSIONS.secrets,
   "/litellm": SIDEBAR_PERMISSIONS.litellm,
+  "/app-requests": SIDEBAR_PERMISSIONS["app-requests"],
   "/configuration": SIDEBAR_PERMISSIONS.configuration,
   "/audit-trail": SIDEBAR_PERMISSIONS["audit-trail"],
   "/schedules-tasks": SIDEBAR_PERMISSIONS["schedules-tasks"],
