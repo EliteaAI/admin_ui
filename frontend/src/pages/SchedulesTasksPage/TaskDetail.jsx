@@ -198,9 +198,21 @@ const TaskDetail = memo(function TaskDetail({
   return (
     <Box sx={styles.container}>
       <Box sx={styles.header}>
-        <Box sx={styles.headerLeft}>
+        <Box sx={styles.headerTop}>
           <Typography sx={styles.title}>{taskName}</Typography>
-          {taskDescription && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<PlayArrowOutlined />}
+            onClick={handleStart}
+            disabled={isStarting}
+            sx={styles.startButton}
+          >
+            Start
+          </Button>
+        </Box>
+        {taskDescription && (
+          <Box sx={styles.descriptionArea}>
             <Typography
               variant="bodySmall"
               color="text.metrics"
@@ -208,18 +220,8 @@ const TaskDetail = memo(function TaskDetail({
             >
               {taskDescription}
             </Typography>
-          )}
-        </Box>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<PlayArrowOutlined />}
-          onClick={handleStart}
-          disabled={isStarting}
-          sx={styles.startButton}
-        >
-          Start
-        </Button>
+          </Box>
+        )}
       </Box>
 
       <Box sx={styles.editorArea}>
@@ -290,23 +292,29 @@ const styles = {
   },
   header: {
     display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+    flexDirection: "column",
     padding: "0.75rem 1.5rem 0",
     flexShrink: 0,
   },
-  headerLeft: {
+  headerTop: {
     display: "flex",
-    flexDirection: "column",
-    gap: "0.125rem",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "0.5rem",
   },
   title: {
     fontSize: "0.875rem",
     fontWeight: 600,
   },
+  descriptionArea: {
+    maxHeight: "16rem",
+    overflowY: "auto",
+    marginTop: "0.25rem",
+  },
   description: {
-    fontSize: "0.75rem",
+    fontSize: '0.75rem',
     lineHeight: 1.4,
+    whiteSpace: 'pre-line',
   },
   startButton: {
     textTransform: "none",
