@@ -34,6 +34,7 @@ const EMPTY_DATA = { names: [], tasks: [] };
 const TasksTab = memo(function TasksTab() {
   const { data: taskNamesData = EMPTY_DATA, isLoading: namesLoading } = useTaskNamesQuery();
   const taskNames = taskNamesData.names;
+  const groupsMap = taskNamesData.groupsMap || {};
   const taskDescriptions = useMemo(() => {
     const map = {};
     (taskNamesData.tasks || []).forEach((t) => {
@@ -148,6 +149,7 @@ const TasksTab = memo(function TasksTab() {
         <TaskNamesList
           taskNames={taskNames}
           taskDescriptions={taskDescriptions}
+          groupsMap={groupsMap}
           selectedTask={selectedTask}
           onSelect={setSelectedTask}
           isLoading={namesLoading}
