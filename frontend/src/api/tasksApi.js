@@ -7,10 +7,18 @@ export const tasksApi = adminApi.injectEndpoints({
         url: '/admin/tasks/administration/',
         params: { action: 'names' },
       }),
-      transformResponse: (response) => ({
-        names: response.names || [],
-        tasks: response.tasks || [],
-      }),
+      transformResponse: (response) => {
+        const tasks = response.tasks || [];
+        const groupsMap = {};
+        tasks.forEach((t) => {
+          if (t.group) groupsMap[t.name] = t.group;
+        });
+        return {
+          names: response.names || [],
+          tasks,
+          groupsMap,
+        };
+      },
       providesTags: ['TaskNames'],
     }),
 
