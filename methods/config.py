@@ -21,7 +21,7 @@ class Method:  # pylint: disable=E1101,R0903
             flask.url_for(
                 "admin_ui.route_admin_ui",
                 _external=True,
-            ).rstrip("/").replace("/admin/app", "/api/v1"),
+            ).rstrip("/").replace("/admin/app", "/api/v2"),
         )
         #
         admin_ui_config_data = {
