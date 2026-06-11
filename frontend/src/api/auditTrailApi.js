@@ -1,5 +1,4 @@
 import { adminApi } from './adminApi';
-import { VITE_SERVER_URL } from '@/utils/env';
 
 export const auditTrailApi = adminApi.injectEndpoints({
   endpoints: (build) => ({
@@ -21,7 +20,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
         duration_min,
         duration_max,
       } = {}) => ({
-        url: `${VITE_SERVER_URL}/elitea_core/audit/administration`,
+        url: `/elitea_core/audit/administration`,
         params: {
           limit,
           offset,
@@ -54,7 +53,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
         project_id,
         trace_id,
       } = {}) => ({
-        url: `${VITE_SERVER_URL}/elitea_core/audit_heatmap/administration`,
+        url: `/elitea_core/audit_heatmap/administration`,
         params: {
           ...(date_from && { date_from }),
           ...(date_to && { date_to }),
@@ -86,7 +85,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
         duration_min,
         duration_max,
       } = {}) => ({
-        url: `${VITE_SERVER_URL}/elitea_core/audit_traces/administration`,
+        url: `/elitea_core/audit_traces/administration`,
         params: {
           limit,
           offset,
@@ -118,7 +117,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
         project_id,
         trace_id,
       } = {}) => ({
-        url: `${VITE_SERVER_URL}/elitea_core/audit_trace_heatmap/administration`,
+        url: `/elitea_core/audit_trace_heatmap/administration`,
         params: {
           ...(date_from && { date_from }),
           ...(date_to && { date_to }),

@@ -1,5 +1,4 @@
 import { adminApi } from "./adminApi";
-import { VITE_SERVER_URL } from "@/utils/env";
 
 export const usersApi = adminApi.injectEndpoints({
   endpoints: (build) => ({
@@ -12,7 +11,7 @@ export const usersApi = adminApi.injectEndpoints({
         sort_by,
         sort_order,
       } = {}) => ({
-        url: `${VITE_SERVER_URL}/admin/auth_users/administration`,
+        url: `/admin/auth_users/administration`,
         params: {
           limit,
           offset,
@@ -65,7 +64,7 @@ export const usersApi = adminApi.injectEndpoints({
 
     userSuspend: build.mutation({
       query: ({ userId, suspended }) => ({
-        url: `${VITE_SERVER_URL}/admin/user_suspend/administration/${userId}`,
+        url: `/admin/user_suspend/administration/${userId}`,
         method: "PUT",
         body: { suspended },
       }),
