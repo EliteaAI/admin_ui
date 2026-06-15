@@ -21,7 +21,7 @@ const ThemeWrapper = memo(({ children }) => {
 
   useEffect(() => {
     const socketServer = VITE_SERVER_URL
-      ? VITE_SERVER_URL.replace(/\/api\/v1\/?$/, "")
+      ? VITE_SERVER_URL.replace(/\/api\/v\d+\/?$/, "")
       : window.location.origin;
 
     const ioOptions = {
