@@ -8,4 +8,5 @@ export const RouteDefinitions = {
   AuditTrail: "/audit-trail",
   SchedulesTasks: "/schedules-tasks",
   Configuration: "/configuration",
+  Features: "/features",
 };

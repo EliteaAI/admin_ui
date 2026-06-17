@@ -20,6 +20,7 @@ import ConfigurationPage from "@/pages/ConfigurationPage/ConfigurationPage";
 import SecretsPage from "@/pages/SecretsPage/SecretsPage";
 import LiteLLMPage from "@/pages/LiteLLMPage/LiteLLMPage";
 import AppRequestsPage from "@/pages/AppRequestsPage/AppRequestsPage";
+import FeaturesPage from "@/pages/FeaturesPage/FeaturesPage";
 import { RouteDefinitions } from "@/routes";
 import { useCheckPermission } from "@/hooks/useCheckPermission";
 import { SIDEBAR_PERMISSIONS } from "@/constants/permissions";
@@ -36,7 +37,10 @@ function NotFound() {
         height: "100%",
       }}
     >
-      <Typography variant="headingLarge" color="text.secondary">
+      <Typography
+        variant="headingLarge"
+        color="text.secondary"
+      >
         404 — Page not found
       </Typography>
     </Box>
@@ -47,9 +51,7 @@ const DefaultRedirect = () => {
   const { hasAnyPermission } = useCheckPermission();
 
   const sidebarKeys = Object.keys(SIDEBAR_PERMISSIONS);
-  const firstAllowed = sidebarKeys.find((key) =>
-    hasAnyPermission(SIDEBAR_PERMISSIONS[key]),
-  );
+  const firstAllowed = sidebarKeys.find(key => hasAnyPermission(SIDEBAR_PERMISSIONS[key]));
 
   return (
     <Navigate
@@ -66,7 +68,10 @@ const guard = (path, element) => {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
-      <Route index element={<DefaultRedirect />} />
+      <Route
+        index
+        element={<DefaultRedirect />}
+      />
       <Route
         path={RouteDefinitions.Users}
         element={guard(RouteDefinitions.Users, <UsersPage />)}
@@ -103,7 +108,14 @@ const router = createBrowserRouter(
         path={RouteDefinitions.Configuration}
         element={guard(RouteDefinitions.Configuration, <ConfigurationPage />)}
       />
-      <Route path="*" element={<NotFound />} />
+      <Route
+        path={RouteDefinitions.Features}
+        element={guard(RouteDefinitions.Features, <FeaturesPage />)}
+      />
+      <Route
+        path="*"
+        element={<NotFound />}
+      />
     </Route>,
   ),
   { basename },

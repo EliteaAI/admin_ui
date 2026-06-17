@@ -162,11 +162,15 @@ const CollapsibleSection = (props) => {
 };
 
 const GuardrailsSection = memo((props) => {
-  const { fields, values, sectionDescription, onChange } = props;
+  const { fields, values, sectionDescription, onChange, defaultExpanded = false } = props;
 
   const styles = guardRailsStyles();
 
-  const [expandedSections, setExpandedSections] = useState({});
+  const [expandedSections, setExpandedSections] = useState(
+    () => defaultExpanded
+      ? Object.fromEntries(SECTION_CONFIG.map((s) => [s.id, true]))
+      : {},
+  );
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({

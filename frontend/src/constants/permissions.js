@@ -118,10 +118,8 @@ export const SIDEBAR_PERMISSIONS = {
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
   "app-requests": [PERMISSIONS.users.section],
-  configuration: [
-    PERMISSIONS.configuration.section,
-    PERMISSIONS.runtime.plugins,
-  ],
+  configuration: [PERMISSIONS.configuration.section, PERMISSIONS.runtime.plugins],
+  features: [PERMISSIONS.configuration.section, PERMISSIONS.runtime.plugins],
   "audit-trail": [PERMISSIONS.auditTrail.view],
   "schedules-tasks": [PERMISSIONS.scheduling.view, PERMISSIONS.runtime.plugins],
 };
@@ -149,6 +147,7 @@ export const ROUTE_PERMISSIONS = {
   "/litellm": SIDEBAR_PERMISSIONS.litellm,
   "/app-requests": SIDEBAR_PERMISSIONS["app-requests"],
   "/configuration": SIDEBAR_PERMISSIONS.configuration,
+  "/features": SIDEBAR_PERMISSIONS.configuration,
   "/audit-trail": SIDEBAR_PERMISSIONS["audit-trail"],
   "/schedules-tasks": SIDEBAR_PERMISSIONS["schedules-tasks"],
 };

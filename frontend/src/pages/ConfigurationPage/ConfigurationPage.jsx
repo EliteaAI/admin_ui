@@ -14,9 +14,6 @@ import LockIcon from "@mui/icons-material/LockOutlined";
 import CodeIcon from "@mui/icons-material/CodeOutlined";
 import ConstructionIcon from "@mui/icons-material/ConstructionOutlined";
 import CampaignIcon from "@mui/icons-material/CampaignOutlined";
-import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
-import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
-import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SettingsInputComponentIcon from "@mui/icons-material/SettingsInputComponent";
 import DrawerPage from "@/components/DrawerPage";
@@ -26,6 +23,7 @@ import AdvancedSection from "@/components/SchemaForm/AdvancedSection";
 import MaintenanceSection from "@/components/SchemaForm/MaintenanceSection";
 import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
 import ServiceDescriptorsSection from "../ServiceDescriptorsPage/ServiceDescriptorsSection";
+import DedicatedBanner from "@/components/SchemaForm/DedicatedBanner";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useCheckPermission } from "@/hooks/useCheckPermission";
 import { CONFIG_SECTION_PERMISSIONS } from "@/constants/permissions";
@@ -35,31 +33,28 @@ import {
   useConfigValuesSaveMutation,
   useConfigRestartMutation,
 } from "@/api/configurationApi";
-import DedicatedBanner from "@/components/SchemaForm/DedicatedBanner";
-import ResourcesSection from "@/components/SchemaForm/ResourcesSection";
-import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
-import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
 
 const SECTION_ICONS = {
   guardrails: SecurityIcon,
   mcp_servers: DnsIcon,
   observability: MonitorHeartIcon,
-  resources: MenuBookIcon,
   runtime: SettingsIcon,
   admin_panel: AdminPanelSettingsIcon,
   auth: LockIcon,
   service_descriptors: SettingsInputComponentIcon,
   maintenance: ConstructionIcon,
   dedicated_banner: CampaignIcon,
-  support_assistant: SupportAgentIcon,
-  voice_features: RecordVoiceOverOutlinedIcon,
   advanced: CodeIcon,
 };
 
+const MOVED_TO_FEATURES = ["resources", "support_assistant", "voice_features"];
+const FEATURES_GUARDRAILS_KEYS = [
+  "mcp_enabled", "mcp_in_menu",
+  "is_publish_blocked", "publish_whitelist_project_ids", "publish_validation_rules",
+];
+
 function ConfigurationPage() {
-  const [activeSection, setActiveSection] = useState(
-    () => window.location.hash.slice(1) || null,
-  );
+  const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);
   const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
   const [pendingRestarts, setPendingRestarts] = useState([]);
@@ -70,20 +65,16 @@ function ConfigurationPage() {
   });
   const serverValuesRef = useRef({});
 
-  const { data: schemasData, isLoading: schemasLoading } =
-    useConfigSchemasQuery();
+  const { data: schemasData, isLoading: schemasLoading } = useConfigSchemasQuery();
 
   const sections = useMemo(() => {
     const serverSections = (schemasData?.sections || []).filter(
-      (s) => s.id !== "litellm",
+      s => s.id !== "litellm" && !MOVED_TO_FEATURES.includes(s.id),
     );
 
-    const allSections = [
-      ...serverSections,
-      { id: "service_descriptors", title: "Service Descriptors" },
-    ];
+    const allSections = [...serverSections, { id: "service_descriptors", title: "Service Descriptors" }];
 
-    return allSections.filter((s) => {
+    return allSections.filter(s => {
       const requiredPerms = CONFIG_SECTION_PERMISSIONS[s.id];
       if (!requiredPerms) return true;
       return hasAnyPermission(requiredPerms);
@@ -100,12 +91,16 @@ function ConfigurationPage() {
     if (schemasLoading || sections.length === 0) return;
     if (!activeSection) {
       setActiveSection(sections[0].id);
-    } else if (!sections.find((s) => s.id === activeSection)) {
+    } else if (!sections.find(s => s.id === activeSection)) {
       setActiveSection(sections[0].id);
     }
   }, [sections, activeSection, schemasLoading]);
 
-  const { data: valuesData, isFetching: valuesFetching, isLoading: valuesLoading } = useConfigValuesQuery(
+  const {
+    data: valuesData,
+    isFetching: valuesFetching,
+    isLoading: valuesLoading,
+  } = useConfigValuesQuery(
     { sectionId: activeSection },
     { skip: !activeSection, refetchOnMountOrArgChange: true },
   );
@@ -122,13 +117,11 @@ function ConfigurationPage() {
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
 
   const isDirty = useMemo(() => {
-    return (
-      JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current)
-    );
+    return JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current);
   }, [localValues]);
 
   const activeSection_ = useMemo(() => {
-    return sections.find((s) => s.id === activeSection);
+    return sections.find(s => s.id === activeSection);
   }, [sections, activeSection]);
 
   const activeFields = activeSection_?.fields || [];
@@ -144,15 +137,13 @@ function ConfigurationPage() {
   usePageTitle(pageTitle);
 
   const handleFieldChange = useCallback((key, value) => {
-    setLocalValues((prev) => ({ ...prev, [key]: value }));
+    setLocalValues(prev => ({ ...prev, [key]: value }));
   }, []);
 
   const handleSectionChange = useCallback(
-    (sectionId) => {
+    sectionId => {
       if (isDirty) {
-        const confirmed = window.confirm(
-          "You have unsaved changes. Discard them?",
-        );
+        const confirmed = window.confirm("You have unsaved changes. Discard them?");
         if (!confirmed) return;
       }
       setActiveSection(sectionId);
@@ -170,13 +161,7 @@ function ConfigurationPage() {
       const cleanedValues = Object.fromEntries(
         Object.entries(localValues).map(([key, value]) => {
           if (key.endsWith("_links") && Array.isArray(value)) {
-            return [
-              key,
-              value.filter(
-                (link) =>
-                  link.title?.trim() !== "" || link.url?.trim() !== "",
-              ),
-            ];
+            return [key, value.filter(link => link.title?.trim() !== "" || link.url?.trim() !== "")];
           }
           return [key, value];
         }),
@@ -194,16 +179,12 @@ function ConfigurationPage() {
 
       if (result.requires_restart?.length > 0) {
         // Normalize: v1 returns flat strings, v2 returns {pylon_id, plugins}
-        const normalized = result.requires_restart.map((r) =>
+        const normalized = result.requires_restart.map(r =>
           typeof r === "string" ? { pylon_id: r, plugins: [] } : r,
         );
         setPendingRestarts(normalized);
         const summary = normalized
-          .map((r) =>
-            r.plugins?.length
-              ? `${r.plugins.join(", ")} on ${r.pylon_id}`
-              : r.pylon_id,
-          )
+          .map(r => (r.plugins?.length ? `${r.plugins.join(", ")} on ${r.pylon_id}` : r.pylon_id))
           .join("; ");
         setSnackbar({
           open: true,
@@ -231,9 +212,7 @@ function ConfigurationPage() {
     async (pylonId, plugins) => {
       try {
         await restartPylon({ pylonId, plugins }).unwrap();
-        setPendingRestarts((prev) =>
-          prev.filter((r) => r.pylon_id !== pylonId),
-        );
+        setPendingRestarts(prev => prev.filter(r => r.pylon_id !== pylonId));
         const label = plugins?.length
           ? `Reload signal sent for ${plugins.join(", ")} on ${pylonId}`
           : `Restart signal sent to ${pylonId}`;
@@ -250,13 +229,16 @@ function ConfigurationPage() {
   );
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   if (schemasLoading) {
     return (
       <DrawerPage>
-        <DrawerPageHeader title="Configuration" showBorder />
+        <DrawerPageHeader
+          title="Configuration"
+          showBorder
+        />
         <Box sx={styles.loadingContainer}>
           <CircularProgress size={32} />
         </Box>
@@ -266,12 +248,15 @@ function ConfigurationPage() {
 
   return (
     <DrawerPage sx={{ overflow: "hidden" }}>
-      <DrawerPageHeader title="Configuration" showBorder />
+      <DrawerPageHeader
+        title="Configuration"
+        showBorder
+      />
 
       <Box sx={styles.content}>
         {/* Section sidebar */}
         <Box sx={styles.sectionSidebar}>
-          {sections.map((section) => {
+          {sections.map(section => {
             const IconComponent = SECTION_ICONS[section.id] || SettingsIcon;
             const isActive = activeSection === section.id;
             return (
@@ -314,19 +299,6 @@ function ConfigurationPage() {
                     <ServiceDescriptorsSection />
                   </Box>
                 );
-              case "resources":
-                return valuesLoading ? (
-                  <Box sx={styles.loadingContainer}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.formScroll}>
-                    <ResourcesSection
-                      values={localValues}
-                      onChange={handleFieldChange}
-                    />
-                  </Box>
-                );
               case "dedicated_banner":
                 return valuesFetching ? (
                   <Box sx={styles.loadingContainer}>
@@ -340,33 +312,8 @@ function ConfigurationPage() {
                     />
                   </Box>
                 );
-              case "support_assistant":
-                return valuesFetching ? (
-                  <Box sx={styles.loadingContainer}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.formScroll}>
-                    <SupportAssistant
-                      values={localValues}
-                      onChange={handleFieldChange}
-                    />
-                  </Box>
-                );
-              case "voice_features":
-                return valuesFetching ? (
-                  <Box sx={styles.loadingContainer}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.formScroll}>
-                    <VoiceFeatures
-                      values={localValues}
-                      onChange={handleFieldChange}
-                    />
-                  </Box>
-                );
-              case "guardrails":
+              case "guardrails": {
+                const guardrailsFields = activeFields.filter(f => !FEATURES_GUARDRAILS_KEYS.includes(f.key));
                 return valuesLoading ? (
                   <Box sx={styles.loadingContainer}>
                     <CircularProgress size={24} />
@@ -374,13 +321,14 @@ function ConfigurationPage() {
                 ) : (
                   <Box sx={styles.formScroll}>
                     <GuardrailsSection
-                      fields={activeFields}
+                      fields={guardrailsFields}
                       values={localValues}
                       sectionDescription={activeSectionDescription}
                       onChange={handleFieldChange}
                     />
                   </Box>
                 );
+              }
               default:
                 return valuesFetching ? (
                   <Box sx={styles.loadingContainer}>
@@ -400,9 +348,7 @@ function ConfigurationPage() {
           })()}
 
           {/* Action bar */}
-          {!["advanced", "maintenance", "service_descriptors"].includes(
-            activeSection,
-          ) && (
+          {!["advanced", "maintenance", "service_descriptors"].includes(activeSection) && (
             <Box sx={styles.actionBar}>
               <Box sx={styles.actionButtons}>
                 <Button
@@ -427,27 +373,24 @@ function ConfigurationPage() {
 
               {pendingRestarts.length > 0 && (
                 <Box sx={styles.restartBar}>
-                  <Typography variant="caption" sx={styles.restartLabel}>
+                  <Typography
+                    variant="caption"
+                    sx={styles.restartLabel}
+                  >
                     Reload required:
                   </Typography>
-                  {pendingRestarts.map((entry) => (
+                  {pendingRestarts.map(entry => (
                     <Button
                       key={entry.pylon_id}
                       size="small"
                       variant="outlined"
                       color="warning"
-                      startIcon={
-                        <RestartAltIcon sx={{ fontSize: "0.875rem" }} />
-                      }
-                      onClick={() =>
-                        handleReload(entry.pylon_id, entry.plugins)
-                      }
+                      startIcon={<RestartAltIcon sx={{ fontSize: "0.875rem" }} />}
+                      onClick={() => handleReload(entry.pylon_id, entry.plugins)}
                       disabled={restarting}
                       sx={styles.restartButton}
                     >
-                      {entry.plugins?.length
-                        ? entry.plugins.join(", ")
-                        : entry.pylon_id}
+                      {entry.plugins?.length ? entry.plugins.join(", ") : entry.pylon_id}
                     </Button>
                   ))}
                 </Box>
@@ -494,7 +437,7 @@ const styles = {
     overflowY: "auto",
   }),
   sectionItem:
-    (isActive) =>
+    isActive =>
     ({ palette }) => ({
       display: "flex",
       alignItems: "center",
@@ -503,9 +446,7 @@ const styles = {
       borderRadius: "0.375rem",
       cursor: "pointer",
       transition: "all 0.15s ease",
-      backgroundColor: isActive
-        ? palette.background.userInputBackgroundActive
-        : "transparent",
+      backgroundColor: isActive ? palette.background.userInputBackgroundActive : "transparent",
       color: isActive ? palette.text.secondary : palette.text.metrics,
       "&:hover": {
         backgroundColor: isActive
@@ -514,7 +455,7 @@ const styles = {
       },
     }),
   sectionItemText:
-    (isActive) =>
+    isActive =>
     ({ palette }) => ({
       fontSize: "0.8125rem",
       fontWeight: isActive ? 600 : 400,
