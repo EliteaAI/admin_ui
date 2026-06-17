@@ -66,7 +66,7 @@ const FEATURES_SECTIONS = [
   },
 ];
 
-function FeaturesPage() {
+const FeaturesPage = memo(() => {
   const [activeSection, setActiveSection] = useState(
     () => window.location.hash.slice(1) || FEATURES_SECTIONS[0].id,
   );
@@ -369,7 +369,7 @@ function FeaturesPage() {
       </Snackbar>
     </DrawerPage>
   );
-}
+});
 
 const styles = {
   content: {
