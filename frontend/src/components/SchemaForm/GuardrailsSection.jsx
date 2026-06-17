@@ -33,19 +33,22 @@ const SECTION_CONFIG = [
     id: "mcp_configuration",
     title: "MCP Configuration",
     icon: ExtensionIcon,
-    fields: ["mcp_enabled", "mcp_in_menu"],
+    // pathPrefix claims every field under this config namespace, so new
+    // mcp_exposure.* fields nest here automatically.
+    pathPrefix: "mcp_exposure.",
   },
   {
     id: "block_agent_publishing",
     title: "Agent Publishing",
     icon: PublishIcon,
-    fields: [
-      "is_publish_blocked",
-      "publish_whitelist_project_ids",
-      "publish_validation_rules",
-    ],
+    pathPrefix: "publishing_guardrail.",
   },
 ];
+
+// Does a section claim a given field? By explicit key list, or by config-path prefix.
+const sectionClaimsField = (section, field) =>
+  (section.fields?.includes(field.key) ?? false) ||
+  (section.pathPrefix ? field.path?.startsWith(section.pathPrefix) : false);
 
 const FieldCard = memo((props) => {
   const { field, values, onChange } = props;
@@ -199,25 +202,28 @@ const GuardrailsSection = memo((props) => {
     });
   }, [fields, values]);
 
-  // Group fields by section
+  // Group fields by section (explicit key list or config-path prefix)
   const groupedSections = useMemo(() => {
     const fieldsByKey = {};
-
     visibleFields.forEach((field) => {
       fieldsByKey[field.key] = field;
     });
 
     return SECTION_CONFIG.map((section) => ({
       ...section,
-      fields: section.fields.map((key) => fieldsByKey[key]).filter(Boolean),
+      // Key-based sections keep their declared field order; prefix-based sections
+      // take whatever order the backend returns.
+      fields: section.fields
+        ? section.fields.map((key) => fieldsByKey[key]).filter(Boolean)
+        : visibleFields.filter((field) => sectionClaimsField(section, field)),
     })).filter((section) => section.fields.length > 0);
   }, [visibleFields]);
 
-  // Find fields not in any section
+  // Find fields not claimed by any section
   const ungroupedFields = useMemo(() => {
-    const groupedKeys = new Set(SECTION_CONFIG.flatMap((s) => s.fields));
-
-    return visibleFields.filter((field) => !groupedKeys.has(field.key));
+    return visibleFields.filter(
+      (field) => !SECTION_CONFIG.some((section) => sectionClaimsField(section, field)),
+    );
   }, [visibleFields]);
 
   if (visibleFields.length === 0) {

@@ -25,44 +25,45 @@ import {
   useConfigRestartMutation,
 } from "@/api/configurationApi";
 
-const MCP_KEYS = ["mcp_enabled", "mcp_in_menu"];
-const AGENT_KEYS = ["is_publish_blocked", "publish_whitelist_project_ids", "publish_validation_rules"];
-
+// Sections sourced from the shared "guardrails" backend section are selected by
+// config-path prefix (e.g. "publishing_guardrail.*"), so any new field added to
+// admin_schema.json under that namespace shows up here automatically — no key list
+// to maintain. Sections with their own backend section use pathPrefix: null.
 const FEATURES_SECTIONS = [
   {
     id: "mcp_configuration",
     title: "MCP Configuration",
     icon: ExtensionIcon,
     backendSectionId: "guardrails",
-    fieldKeys: MCP_KEYS,
+    pathPrefix: "mcp_exposure.",
   },
   {
     id: "agent_publishing",
     title: "Agent Publishing",
     icon: PublishIcon,
     backendSectionId: "guardrails",
-    fieldKeys: AGENT_KEYS,
+    pathPrefix: "publishing_guardrail.",
   },
   {
     id: "resources",
     title: "Resources",
     icon: MenuBookIcon,
     backendSectionId: "resources",
-    fieldKeys: null,
+    pathPrefix: null,
   },
   {
     id: "support_assistant",
     title: "Support Assistant",
     icon: SupportAgentIcon,
     backendSectionId: "support_assistant",
-    fieldKeys: null,
+    pathPrefix: null,
   },
   {
     id: "voice_features",
     title: "Voice Features",
     icon: RecordVoiceOverOutlinedIcon,
     backendSectionId: "voice_features",
-    fieldKeys: null,
+    pathPrefix: null,
   },
 ];
 
@@ -115,9 +116,9 @@ const FeaturesPage = memo(() => {
   usePageTitle(pageTitle);
 
   const guardrailsFields = useMemo(() => {
-    if (!activeDef.fieldKeys) return [];
+    if (!activeDef.pathPrefix) return [];
     const guardrailsSchema = schemasData?.sections?.find(s => s.id === "guardrails");
-    return (guardrailsSchema?.fields || []).filter(f => activeDef.fieldKeys.includes(f.key));
+    return (guardrailsSchema?.fields || []).filter(f => f.path?.startsWith(activeDef.pathPrefix));
   }, [activeDef, schemasData]);
 
   const handleFieldChange = useCallback((key, value) => {
@@ -214,7 +215,7 @@ const FeaturesPage = memo(() => {
   }, []);
 
   const renderContent = () => {
-    const isLoading = activeDef.fieldKeys ? valuesLoading : valuesFetching;
+    const isLoading = activeDef.pathPrefix ? valuesLoading : valuesFetching;
     if (isLoading) {
       return (
         <Box sx={styles.loadingContainer}>

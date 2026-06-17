@@ -48,10 +48,11 @@ const SECTION_ICONS = {
 };
 
 const MOVED_TO_FEATURES = ["resources", "support_assistant", "voice_features"];
-const FEATURES_GUARDRAILS_KEYS = [
-  "mcp_enabled", "mcp_in_menu",
-  "is_publish_blocked", "publish_whitelist_project_ids", "publish_validation_rules",
-];
+// Guardrails-section fields whose config path starts with one of these prefixes have
+// been relocated to the Features page (see FeaturesPage FEATURES_SECTIONS), so they are
+// hidden here. Prefix-based so new publishing_guardrail.*/mcp_exposure.* fields added to
+// admin_schema.json stay out of Guardrails automatically.
+const FEATURES_GUARDRAILS_PREFIXES = ["mcp_exposure.", "publishing_guardrail."];
 
 function ConfigurationPage() {
   const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);
@@ -313,7 +314,9 @@ function ConfigurationPage() {
                   </Box>
                 );
               case "guardrails": {
-                const guardrailsFields = activeFields.filter(f => !FEATURES_GUARDRAILS_KEYS.includes(f.key));
+                const guardrailsFields = activeFields.filter(
+                  f => !FEATURES_GUARDRAILS_PREFIXES.some(p => f.path?.startsWith(p)),
+                );
                 return valuesLoading ? (
                   <Box sx={styles.loadingContainer}>
                     <CircularProgress size={24} />
