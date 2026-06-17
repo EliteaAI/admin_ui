@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
@@ -13,6 +13,8 @@ import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import CodeMirror from '@uiw/react-codemirror';
 import { yaml } from '@codemirror/lang-yaml';
 import { EditorView } from '@codemirror/view';
+import { lintGutter } from '@codemirror/lint';
+import jsYaml from 'js-yaml';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {
@@ -20,6 +22,7 @@ import {
   useRuntimeRemoteConfigSaveMutation,
   useConfigRestartMutation,
 } from '@/api/configurationApi';
+import { yamlLinter } from '@/utils/yamlLinter';
 
 const PluginConfigDrawer = memo(function PluginConfigDrawer({ open, plugin, onClose }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -28,6 +31,7 @@ const PluginConfigDrawer = memo(function PluginConfigDrawer({ open, plugin, onCl
   const [isDirty, setIsDirty] = useState(false);
   const [needsReload, setNeedsReload] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [hasYamlError, setHasYamlError] = useState(false);
 
   const [fetchConfig, { isFetching }] = useLazyRuntimeRemoteConfigQuery();
   const [saveConfig, { isLoading: saving }] = useRuntimeRemoteConfigSaveMutation();
@@ -45,6 +49,7 @@ const PluginConfigDrawer = memo(function PluginConfigDrawer({ open, plugin, onCl
     setActiveTab(0);
     setIsDirty(false);
     setNeedsReload(false);
+    setHasYamlError(false);
 
     fetchConfig({ pluginId, raw: true })
       .unwrap()
@@ -57,12 +62,35 @@ const PluginConfigDrawer = memo(function PluginConfigDrawer({ open, plugin, onCl
       .catch(() => setMergedContent('# Failed to load merged config'));
   }, [open, pluginId, fetchConfig]);
 
+  const validateYaml = useCallback((content) => {
+    try {
+      jsYaml.load(content);
+      setHasYamlError(false);
+      return true;
+    } catch {
+      setHasYamlError(true);
+      return false;
+    }
+  }, []);
+
   const handleRawChange = useCallback((val) => {
     setRawContent(val);
     setIsDirty(true);
-  }, []);
+    validateYaml(val);
+  }, [validateYaml]);
+
+  const rawExtensions = useMemo(
+    () => [yaml(), EditorView.lineWrapping, yamlLinter, lintGutter()],
+    []
+  );
+  const readOnlyExtensions = useMemo(
+    () => [yaml(), EditorView.lineWrapping],
+    []
+  );
 
   const handleSave = useCallback(async () => {
+    if (!validateYaml(rawContent)) return;
+
     try {
       await saveConfig({ pluginId, data: rawContent }).unwrap();
       setIsDirty(false);
@@ -76,7 +104,7 @@ const PluginConfigDrawer = memo(function PluginConfigDrawer({ open, plugin, onCl
         severity: 'error',
       });
     }
-  }, [pluginId, rawContent, saveConfig, isPylon, plugin?.name]);
+  }, [validateYaml, pluginId, rawContent, saveConfig, isPylon, plugin?.name]);
 
   const handleReload = useCallback(async () => {
     try {
@@ -148,7 +176,7 @@ const PluginConfigDrawer = memo(function PluginConfigDrawer({ open, plugin, onCl
                 <CodeMirror
                   value={activeTab === 0 ? rawContent : mergedContent}
                   height="100%"
-                  extensions={[yaml(), EditorView.lineWrapping]}
+                  extensions={activeTab === 0 ? rawExtensions : readOnlyExtensions}
                   onChange={activeTab === 0 ? handleRawChange : undefined}
                   readOnly={activeTab === 1}
                   theme="dark"
@@ -160,6 +188,12 @@ const PluginConfigDrawer = memo(function PluginConfigDrawer({ open, plugin, onCl
           {/* Footer */}
           {activeTab === 0 && (
             <Box sx={styles.footer}>
+              {hasYamlError && (
+                <Typography variant="caption" color="error" sx={{ mr: 1 }}>
+                  Fix YAML errors before saving
+                </Typography>
+              )}
+
               {needsReload && (
                 <Button
                   size="small"
@@ -180,7 +214,7 @@ const PluginConfigDrawer = memo(function PluginConfigDrawer({ open, plugin, onCl
                 size="small"
                 variant="contained"
                 onClick={handleSave}
-                disabled={!isDirty || saving}
+                disabled={!isDirty || saving || hasYamlError}
                 sx={styles.saveButton}
               >
                 {saving ? 'Saving...' : 'Save'}
