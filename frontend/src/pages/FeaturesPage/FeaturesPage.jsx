@@ -14,7 +14,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
 import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
-import ResourcesSection from "@/components/SchemaForm/ResourcesSection";
+import HelpCenterSection from "@/components/SchemaForm/HelpCenterSection";
 import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
 import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -45,8 +45,8 @@ const FEATURES_SECTIONS = [
     pathPrefix: "publishing_guardrail.",
   },
   {
-    id: "resources",
-    title: "Resources",
+    id: "help_center",
+    title: "Help Center",
     icon: MenuBookIcon,
     backendSectionId: "resources",
     pathPrefix: null,
@@ -81,7 +81,9 @@ const FeaturesPage = memo(() => {
   const serverValuesRef = useRef({});
 
   const activeDef = useMemo(
-    () => FEATURES_SECTIONS.find(s => s.id === activeSection) ?? FEATURES_SECTIONS[0],
+    () =>
+      FEATURES_SECTIONS.find((s) => s.id === activeSection) ??
+      FEATURES_SECTIONS[0],
     [activeSection],
   );
 
@@ -91,7 +93,10 @@ const FeaturesPage = memo(() => {
     data: valuesData,
     isFetching: valuesFetching,
     isLoading: valuesLoading,
-  } = useConfigValuesQuery({ sectionId: activeDef.backendSectionId }, { refetchOnMountOrArgChange: true });
+  } = useConfigValuesQuery(
+    { sectionId: activeDef.backendSectionId },
+    { refetchOnMountOrArgChange: true },
+  );
 
   useEffect(() => {
     if (valuesData?.values) {
@@ -108,7 +113,8 @@ const FeaturesPage = memo(() => {
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
 
   const isDirty = useMemo(
-    () => JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current),
+    () =>
+      JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current),
     [localValues],
   );
 
@@ -117,18 +123,24 @@ const FeaturesPage = memo(() => {
 
   const guardrailsFields = useMemo(() => {
     if (!activeDef.pathPrefix) return [];
-    const guardrailsSchema = schemasData?.sections?.find(s => s.id === "guardrails");
-    return (guardrailsSchema?.fields || []).filter(f => f.path?.startsWith(activeDef.pathPrefix));
+    const guardrailsSchema = schemasData?.sections?.find(
+      (s) => s.id === "guardrails",
+    );
+    return (guardrailsSchema?.fields || []).filter((f) =>
+      f.path?.startsWith(activeDef.pathPrefix),
+    );
   }, [activeDef, schemasData]);
 
   const handleFieldChange = useCallback((key, value) => {
-    setLocalValues(prev => ({ ...prev, [key]: value }));
+    setLocalValues((prev) => ({ ...prev, [key]: value }));
   }, []);
 
   const handleSectionChange = useCallback(
-    sectionId => {
+    (sectionId) => {
       if (isDirty) {
-        const confirmed = window.confirm("You have unsaved changes. Discard them?");
+        const confirmed = window.confirm(
+          "You have unsaved changes. Discard them?",
+        );
         if (!confirmed) return;
       }
       setActiveSection(sectionId);
@@ -146,7 +158,12 @@ const FeaturesPage = memo(() => {
       const cleanedValues = Object.fromEntries(
         Object.entries(localValues).map(([key, value]) => {
           if (key.endsWith("_links") && Array.isArray(value)) {
-            return [key, value.filter(link => link.title?.trim() !== "" || link.url?.trim() !== "")];
+            return [
+              key,
+              value.filter(
+                (link) => link.title?.trim() !== "" || link.url?.trim() !== "",
+              ),
+            ];
           }
           return [key, value];
         }),
@@ -161,12 +178,16 @@ const FeaturesPage = memo(() => {
       setLocalValues({ ...cleanedValues });
 
       if (result.requires_restart?.length > 0) {
-        const normalized = result.requires_restart.map(r =>
+        const normalized = result.requires_restart.map((r) =>
           typeof r === "string" ? { pylon_id: r, plugins: [] } : r,
         );
         setPendingRestarts(normalized);
         const summary = normalized
-          .map(r => (r.plugins?.length ? `${r.plugins.join(", ")} on ${r.pylon_id}` : r.pylon_id))
+          .map((r) =>
+            r.plugins?.length
+              ? `${r.plugins.join(", ")} on ${r.pylon_id}`
+              : r.pylon_id,
+          )
           .join("; ");
         setSnackbar({
           open: true,
@@ -194,7 +215,9 @@ const FeaturesPage = memo(() => {
     async (pylonId, plugins) => {
       try {
         await restartPylon({ pylonId, plugins }).unwrap();
-        setPendingRestarts(prev => prev.filter(r => r.pylon_id !== pylonId));
+        setPendingRestarts((prev) =>
+          prev.filter((r) => r.pylon_id !== pylonId),
+        );
         const label = plugins?.length
           ? `Reload signal sent for ${plugins.join(", ")} on ${pylonId}`
           : `Restart signal sent to ${pylonId}`;
@@ -211,7 +234,7 @@ const FeaturesPage = memo(() => {
   );
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+    setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
   const renderContent = () => {
@@ -238,10 +261,10 @@ const FeaturesPage = memo(() => {
             />
           </Box>
         );
-      case "resources":
+      case "help_center":
         return (
           <Box sx={styles.formScroll}>
-            <ResourcesSection
+            <HelpCenterSection
               values={localValues}
               onChange={handleFieldChange}
             />
@@ -259,10 +282,7 @@ const FeaturesPage = memo(() => {
       case "voice_features":
         return (
           <Box sx={styles.formScroll}>
-            <VoiceFeatures
-              values={localValues}
-              onChange={handleFieldChange}
-            />
+            <VoiceFeatures values={localValues} onChange={handleFieldChange} />
           </Box>
         );
       default:
@@ -272,14 +292,11 @@ const FeaturesPage = memo(() => {
 
   return (
     <DrawerPage sx={{ overflow: "hidden" }}>
-      <DrawerPageHeader
-        title="Features"
-        showBorder
-      />
+      <DrawerPageHeader title="Features" showBorder />
 
       <Box sx={styles.content}>
         <Box sx={styles.sectionSidebar}>
-          {FEATURES_SECTIONS.map(section => {
+          {FEATURES_SECTIONS.map((section) => {
             const IconComponent = section.icon;
             const isActive = activeSection === section.id;
             return (
@@ -327,13 +344,10 @@ const FeaturesPage = memo(() => {
 
             {pendingRestarts.length > 0 && (
               <Box sx={styles.restartBar}>
-                <Typography
-                  variant="caption"
-                  sx={styles.restartLabel}
-                >
+                <Typography variant="caption" sx={styles.restartLabel}>
                   Reload required:
                 </Typography>
-                {pendingRestarts.map(entry => (
+                {pendingRestarts.map((entry) => (
                   <Button
                     key={entry.pylon_id}
                     size="small"
@@ -344,7 +358,9 @@ const FeaturesPage = memo(() => {
                     disabled={restarting}
                     sx={styles.restartButton}
                   >
-                    {entry.plugins?.length ? entry.plugins.join(", ") : entry.pylon_id}
+                    {entry.plugins?.length
+                      ? entry.plugins.join(", ")
+                      : entry.pylon_id}
                   </Button>
                 ))}
               </Box>
@@ -389,7 +405,7 @@ const styles = {
     overflowY: "auto",
   }),
   sectionItem:
-    isActive =>
+    (isActive) =>
     ({ palette }) => ({
       display: "flex",
       alignItems: "center",
@@ -398,7 +414,9 @@ const styles = {
       borderRadius: "0.375rem",
       cursor: "pointer",
       transition: "all 0.15s ease",
-      backgroundColor: isActive ? palette.background.userInputBackgroundActive : "transparent",
+      backgroundColor: isActive
+        ? palette.background.userInputBackgroundActive
+        : "transparent",
       color: isActive ? palette.text.secondary : palette.text.metrics,
       "&:hover": {
         backgroundColor: isActive
@@ -407,7 +425,7 @@ const styles = {
       },
     }),
   sectionItemText:
-    isActive =>
+    (isActive) =>
     ({ palette }) => ({
       fontSize: "0.8125rem",
       fontWeight: isActive ? 600 : 400,

@@ -7,7 +7,7 @@ import VideoLibraryOutlinedIcon from "@mui/icons-material/VideoLibraryOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import { useSystemInfoQuery } from "@/api/configurationApi";
 import CollapsibleSection from "@/components/CollapsibleSection";
-import ResourceCard from "./ResourceCard";
+import HelpCenterCard from "./HelpCenterCard";
 
 const CARDS = [
   {
@@ -61,7 +61,7 @@ const CARDS = [
   },
 ];
 
-const getSettingsCount = card => {
+const getSettingsCount = (card) => {
   let count = 1; // enabled toggle
   if (card.hasVersionLabels) count += 2; // version + upgrade_date
   if (card.hasContent) count += 2; // title + description
@@ -69,15 +69,15 @@ const getSettingsCount = card => {
   return count;
 };
 
-const ResourcesSection = memo(props => {
+const HelpCenterSection = memo((props) => {
   const { values, onChange } = props;
 
   const { data: systemInfo } = useSystemInfoQuery();
 
   const [expandedSections, setExpandedSections] = useState({});
 
-  const toggleSection = useCallback(sectionId => {
-    setExpandedSections(prev => ({
+  const toggleSection = useCallback((sectionId) => {
+    setExpandedSections((prev) => ({
       ...prev,
       [sectionId]: !prev[sectionId],
     }));
@@ -85,15 +85,13 @@ const ResourcesSection = memo(props => {
 
   return (
     <Box sx={styles.root}>
-      <Typography
-        variant="body2"
-        sx={styles.description}
-      >
-        Configure the resource cards displayed on the environment-wide Resources page. Enable or disable each
-        card and manage the title, description, and links shown inside it.
+      <Typography variant="body2" sx={styles.description}>
+        Configure the resource cards displayed on the environment-wide Help
+        Center page. Enable or disable each card and manage the title,
+        description, and links shown inside it.
       </Typography>
 
-      {CARDS.map(card => (
+      {CARDS.map((card) => (
         <CollapsibleSection
           key={card.id}
           icon={card.icon}
@@ -102,7 +100,7 @@ const ResourcesSection = memo(props => {
           expanded={!!expandedSections[card.id]}
           onToggle={() => toggleSection(card.id)}
         >
-          <ResourceCard
+          <HelpCenterCard
             card={card}
             values={values}
             onChange={onChange}
@@ -114,7 +112,7 @@ const ResourcesSection = memo(props => {
   );
 });
 
-ResourcesSection.displayName = "ResourcesSection";
+HelpCenterSection.displayName = "HelpCenterSection";
 
 const styles = {
   root: {
@@ -131,4 +129,4 @@ const styles = {
   }),
 };
 
-export default ResourcesSection;
+export default HelpCenterSection;
