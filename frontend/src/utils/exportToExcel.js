@@ -1,30 +1,44 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
-export const exportToExcel = (fileName, sheets) => {
-  const workbook = XLSX.utils.book_new();
+export const exportToExcel = async (fileName, sheets) => {
+  const workbook = new ExcelJS.Workbook();
 
   for (const { sheetName, columns, rows } of sheets) {
-    const header = columns.map((c) => c.header);
-    const data = rows.map((row) =>
-      columns.map((col) => {
+    const worksheet = workbook.addWorksheet(sheetName);
+
+    worksheet.columns = columns.map((col) => {
+      const values = rows.map((row) => {
         const value = row[col.key];
         return col.transform ? col.transform(value, row) : (value ?? "");
-      }),
-    );
-
-    const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
-
-    // Auto-size columns based on content
-    worksheet["!cols"] = columns.map((col, i) => {
+      });
       const maxLen = Math.max(
         col.header.length,
-        ...data.map((r) => String(r[i] ?? "").length),
+        ...values.map((v) => String(v).length),
       );
-      return { wch: Math.min(maxLen + 2, 50) };
+      return {
+        header: col.header,
+        width: Math.min(maxLen + 2, 50),
+      };
     });
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    for (const row of rows) {
+      worksheet.addRow(
+        columns.map((col) => {
+          const value = row[col.key];
+          return col.transform ? col.transform(value, row) : (value ?? "");
+        }),
+      );
+    }
   }
 
-  XLSX.writeFile(workbook, fileName);
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
 };

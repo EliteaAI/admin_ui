@@ -202,7 +202,7 @@ const ProjectsPage = memo(() => {
         fetchAll("personal"),
       ]);
 
-      exportToExcel("Projects.xlsx", [
+      await exportToExcel("Projects.xlsx", [
         { sheetName: "Team Projects", columns: EXPORT_COLUMNS, rows: teamRows },
         {
           sheetName: "Personal Projects",

@@ -205,7 +205,7 @@ const UsersPage = memo(() => {
         fetchAll("system"),
       ]);
 
-      exportToExcel("Users.xlsx", [
+      await exportToExcel("Users.xlsx", [
         {
           sheetName: "Platform Users",
           columns: EXPORT_COLUMNS,
