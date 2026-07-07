@@ -23,7 +23,7 @@ import AuditTrailTable from "./AuditTrailTable";
 import AuditTraceTable from "./AuditTraceTable";
 
 const USER_EVENT_TYPES = ["api", "socketio", "rpc", "agent", "tool", "llm"];
-const SYSTEM_EVENT_TYPES = ["schedule", "admin_task"];
+const SYSTEM_EVENT_TYPES = ["schedule", "admin_task", "lifecycle"];
 
 const USER_EVENT_TYPE_OPTIONS = [
   { value: "", label: "All" },
@@ -39,6 +39,7 @@ const SYSTEM_EVENT_TYPE_OPTIONS = [
   { value: "", label: "All" },
   { value: "schedule", label: "Schedule" },
   { value: "admin_task", label: "Admin Task" },
+  { value: "lifecycle", label: "Lifecycle" },
 ];
 
 function getTodayRange() {
