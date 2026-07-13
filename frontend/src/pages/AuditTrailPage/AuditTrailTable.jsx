@@ -14,6 +14,7 @@ import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import HelpOutlineOutlined from '@mui/icons-material/HelpOutlineOutlined';
+import PowerSettingsNewOutlined from '@mui/icons-material/PowerSettingsNewOutlined';
 
 import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
 import {
@@ -35,6 +36,7 @@ const EVENT_TYPE_CONFIG = {
   llm: { icon: AutoAwesomeOutlined, color: '#ec4899', label: 'LLM' },
   schedule: { icon: ScheduleOutlined, color: '#f59e0b', label: 'Schedule' },
   admin_task: { icon: AssignmentOutlined, color: '#06b6d4', label: 'Admin Task' },
+  lifecycle: { icon: PowerSettingsNewOutlined, color: '#22c55e', label: 'Lifecycle' },
 };
 
 const DEFAULT_EVENT_CONFIG = { icon: HelpOutlineOutlined, color: '#94a3b8', label: 'Unknown' };
@@ -139,7 +141,7 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
         display = `${value} [${row.tool_name || row.model_name}]`;
       }
       return (
-        <Tooltip title={hasTrace ? `trace: ${row.trace_id}` : ''} placement="top">
+        <Tooltip title={hasTrace ? `trace: ${row.trace_id}` : display} placement="top">
           <Typography
             variant="bodyMedium"
             sx={{
