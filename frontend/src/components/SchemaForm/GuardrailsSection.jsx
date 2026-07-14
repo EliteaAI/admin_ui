@@ -10,6 +10,7 @@ import BlockIcon from "@mui/icons-material/BlockOutlined";
 import GppMaybeIcon from "@mui/icons-material/GppMaybeOutlined";
 import ExtensionIcon from "@mui/icons-material/ExtensionOutlined";
 import PublishIcon from "@mui/icons-material/PublishOutlined";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import SchemaField from "./SchemaField";
 
 const SECTION_CONFIG = [
@@ -42,6 +43,12 @@ const SECTION_CONFIG = [
     title: "Agent Publishing",
     icon: PublishIcon,
     pathPrefix: "publishing_guardrail.",
+  },
+  {
+    id: "skill_publishing",
+    title: "Skill Publishing",
+    icon: AutoAwesomeIcon,
+    pathPrefix: "skill_publishing_guardrail.",
   },
 ];
 
