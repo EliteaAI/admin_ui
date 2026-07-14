@@ -7,7 +7,7 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import ExtensionIcon from "@mui/icons-material/ExtensionOutlined";
 import PublishIcon from "@mui/icons-material/PublishOutlined";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import BoltIcon from "@mui/icons-material/BoltOutlined";
 import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
 import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
@@ -48,7 +48,7 @@ const FEATURES_SECTIONS = [
   {
     id: "skill_publishing",
     title: "Skill Publishing",
-    icon: AutoAwesomeIcon,
+    icon: BoltIcon,
     backendSectionId: "guardrails",
     pathPrefix: "skill_publishing_guardrail.",
   },
