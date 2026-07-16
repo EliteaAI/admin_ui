@@ -52,7 +52,7 @@ const MOVED_TO_FEATURES = ["resources", "support_assistant", "voice_features"];
 // been relocated to the Features page (see FeaturesPage FEATURES_SECTIONS), so they are
 // hidden here. Prefix-based so new publishing_guardrail.*/mcp_exposure.* fields added to
 // admin_schema.json stay out of Guardrails automatically.
-const FEATURES_GUARDRAILS_PREFIXES = ["mcp_exposure.", "publishing_guardrail."];
+const FEATURES_GUARDRAILS_PREFIXES = ["mcp_exposure.", "publishing_guardrail.", "skill_publishing_guardrail."];
 
 function ConfigurationPage() {
   const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);

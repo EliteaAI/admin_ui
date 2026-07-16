@@ -7,6 +7,7 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import ExtensionIcon from "@mui/icons-material/ExtensionOutlined";
 import PublishIcon from "@mui/icons-material/PublishOutlined";
+import BoltIcon from "@mui/icons-material/BoltOutlined";
 import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
 import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
@@ -43,6 +44,13 @@ const FEATURES_SECTIONS = [
     icon: PublishIcon,
     backendSectionId: "guardrails",
     pathPrefix: "publishing_guardrail.",
+  },
+  {
+    id: "skill_publishing",
+    title: "Skill Publishing",
+    icon: BoltIcon,
+    backendSectionId: "guardrails",
+    pathPrefix: "skill_publishing_guardrail.",
   },
   {
     id: "help_center",
@@ -250,6 +258,7 @@ const FeaturesPage = memo(() => {
     switch (activeSection) {
       case "mcp_configuration":
       case "agent_publishing":
+      case "skill_publishing":
         return (
           <Box sx={styles.formScroll}>
             <GuardrailsSection
