@@ -83,7 +83,7 @@ function NodeCard({
   refreshingScope,
 }) {
   const [expanded, setExpanded] = useState(true);
-  const [poolExpanded, setPoolExpanded] = useState(true);
+  const [poolExpanded, setPoolExpanded] = useState(false);
   const [tasksExpanded, setTasksExpanded] = useState(true);
   const totalRunning = node.tasks?.length || 0;
   const totalCapacity = (node.pools || []).reduce(
@@ -274,71 +274,6 @@ function NodeCard({
 
       <Collapse in={expanded}>
         <Box sx={styles.nodeBody}>
-          {/* Pool State */}
-          {node.pools?.length > 0 && (
-            <Box sx={styles.tableSection}>
-              <Box sx={styles.subSectionHeader}>
-                <Box
-                  sx={styles.subSectionToggle}
-                  onClick={() => setPoolExpanded((v) => !v)}
-                >
-                  <ExpandMoreIcon
-                    sx={[
-                      styles.subExpandIcon,
-                      !poolExpanded && styles.expandIconCollapsed,
-                    ]}
-                  />
-                  <Typography variant="caption" sx={styles.tableSectionTitle}>
-                    Pool State
-                  </Typography>
-                  <Chip
-                    label={node.pools.length}
-                    size="small"
-                    variant="outlined"
-                    sx={styles.subCountChip}
-                  />
-                </Box>
-                <Tooltip title="Refresh pool state">
-                  <IconButton
-                    size="small"
-                    onClick={() => onRefreshScope(node.node, "pool")}
-                    disabled={refreshingScope === "pool"}
-                    sx={styles.subRefreshButton}
-                  >
-                    {refreshingScope === "pool" ? (
-                      <CircularProgress size={12} />
-                    ) : (
-                      <RefreshIcon sx={{ fontSize: "0.875rem" }} />
-                    )}
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Collapse in={poolExpanded}>
-                <Box sx={styles.tableScroll}>
-                  <GridTableContainer isLoading={false} isEmpty={false}>
-                    <GridTableHeader
-                      columns={poolColumns.visibleColumns}
-                      gridTemplateColumns={poolColumns.gridTemplateColumns}
-                      showCheckbox={false}
-                    />
-                    <GridTableBody>
-                      {node.pools.map((pool, idx) => (
-                        <GridTableRow
-                          key={pool.ident || idx}
-                          row={pool}
-                          columns={poolColumns.dataColumns}
-                          gridTemplateColumns={poolColumns.gridTemplateColumns}
-                          showCheckbox={false}
-                          renderCell={renderPoolCell}
-                        />
-                      ))}
-                    </GridTableBody>
-                  </GridTableContainer>
-                </Box>
-              </Collapse>
-            </Box>
-          )}
-
           {/* Active Tasks */}
           <Box sx={styles.tableSection}>
             <Box sx={styles.subSectionHeader}>
@@ -409,6 +344,71 @@ function NodeCard({
               )}
             </Collapse>
           </Box>
+
+          {/* Pool State */}
+          {node.pools?.length > 0 && (
+            <Box sx={styles.tableSection}>
+              <Box sx={styles.subSectionHeader}>
+                <Box
+                  sx={styles.subSectionToggle}
+                  onClick={() => setPoolExpanded((v) => !v)}
+                >
+                  <ExpandMoreIcon
+                    sx={[
+                      styles.subExpandIcon,
+                      !poolExpanded && styles.expandIconCollapsed,
+                    ]}
+                  />
+                  <Typography variant="caption" sx={styles.tableSectionTitle}>
+                    Pool State
+                  </Typography>
+                  <Chip
+                    label={node.pools.length}
+                    size="small"
+                    variant="outlined"
+                    sx={styles.subCountChip}
+                  />
+                </Box>
+                <Tooltip title="Refresh pool state">
+                  <IconButton
+                    size="small"
+                    onClick={() => onRefreshScope(node.node, "pool")}
+                    disabled={refreshingScope === "pool"}
+                    sx={styles.subRefreshButton}
+                  >
+                    {refreshingScope === "pool" ? (
+                      <CircularProgress size={12} />
+                    ) : (
+                      <RefreshIcon sx={{ fontSize: "0.875rem" }} />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Collapse in={poolExpanded}>
+                <Box sx={styles.tableScroll}>
+                  <GridTableContainer isLoading={false} isEmpty={false}>
+                    <GridTableHeader
+                      columns={poolColumns.visibleColumns}
+                      gridTemplateColumns={poolColumns.gridTemplateColumns}
+                      showCheckbox={false}
+                    />
+                    <GridTableBody>
+                      {node.pools.map((pool, idx) => (
+                        <GridTableRow
+                          key={pool.ident || idx}
+                          row={pool}
+                          columns={poolColumns.dataColumns}
+                          gridTemplateColumns={poolColumns.gridTemplateColumns}
+                          showCheckbox={false}
+                          renderCell={renderPoolCell}
+                        />
+                      ))}
+                    </GridTableBody>
+                  </GridTableContainer>
+                </Box>
+              </Collapse>
+            </Box>
+          )}
         </Box>
       </Collapse>
     </Box>
