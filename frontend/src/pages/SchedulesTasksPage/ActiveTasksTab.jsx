@@ -15,6 +15,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import StopOutlined from "@mui/icons-material/StopOutlined";
 import HubOutlined from "@mui/icons-material/HubOutlined";
+import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
 
 import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import { useTableSort } from "@/hooks/useTableSort";
@@ -137,6 +139,55 @@ function taskMatchesSearch(task, lowerQuery) {
   return haystack.includes(lowerQuery);
 }
 
+// Cell that shows truncated text with a click-to-copy affordance for the full
+// value (Task ID / Meta / Runner). Copy feedback swaps the icon for ~1.2s.
+function CopyableCell({ display, full, mono }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(
+    async (e) => {
+      e.stopPropagation();
+      if (!full) return;
+      try {
+        await navigator.clipboard.writeText(String(full));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1200);
+      } catch {
+        // clipboard unavailable (e.g. insecure context) — no-op
+      }
+    },
+    [full],
+  );
+  return (
+    <Box sx={styles.copyCell}>
+      <Tooltip title={full || ""}>
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          sx={mono ? styles.cellTextMono : styles.cellText}
+        >
+          {display}
+        </Typography>
+      </Tooltip>
+      {full ? (
+        <Tooltip title={copied ? "Copied" : "Copy"}>
+          <IconButton
+            size="small"
+            onClick={handleCopy}
+            className="copy-btn"
+            sx={styles.copyButton}
+          >
+            {copied ? (
+              <CheckOutlined sx={styles.copyIcon} color="success" />
+            ) : (
+              <ContentCopyOutlined sx={styles.copyIcon} />
+            )}
+          </IconButton>
+        </Tooltip>
+      ) : null}
+    </Box>
+  );
+}
+
 function NodeCard({
   node,
   onRefresh,
@@ -222,15 +273,11 @@ function NodeCard({
   const renderTaskCell = useCallback((column, value, row) => {
     if (column.field === "task_id") {
       return (
-        <Tooltip title={value || ""}>
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            sx={styles.cellTextMono}
-          >
-            {value ? value.substring(0, 12) + "..." : "\u2014"}
-          </Typography>
-        </Tooltip>
+        <CopyableCell
+          display={value ? value.substring(0, 12) + "..." : "\u2014"}
+          full={value}
+          mono
+        />
       );
     }
     if (column.field === "status") {
@@ -249,33 +296,20 @@ function NodeCard({
       );
     }
     if (column.field === "meta") {
-      return (
-        <Tooltip title={value || ""}>
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            sx={styles.cellText}
-          >
-            {parseMeta(value)}
-          </Typography>
-        </Tooltip>
-      );
+      return <CopyableCell display={parseMeta(value)} full={value} />;
     }
     if (column.field === "runner") {
       return (
-        <Tooltip title={value || ""}>
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            sx={styles.cellText}
-          >
-            {value
+        <CopyableCell
+          display={
+            value
               ? value.length > 20
                 ? value.substring(0, 20) + "..."
                 : value
-              : "\u2014"}
-          </Typography>
-        </Tooltip>
+              : "\u2014"
+          }
+          full={value}
+        />
       );
     }
     if (column.field === "started_at") {
@@ -840,6 +874,22 @@ const styles = {
     whiteSpace: "nowrap",
     fontFamily: "monospace",
     fontSize: "0.75rem",
+  },
+  copyCell: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.25rem",
+    minWidth: 0,
+    "&:hover .copy-btn": { opacity: 1 },
+  },
+  copyButton: {
+    padding: "0.125rem",
+    opacity: 0.35,
+    transition: "opacity 0.15s",
+    flexShrink: 0,
+  },
+  copyIcon: {
+    fontSize: "0.875rem",
   },
 };
 
