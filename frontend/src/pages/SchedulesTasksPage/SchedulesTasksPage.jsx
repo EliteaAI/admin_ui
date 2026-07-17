@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
@@ -15,13 +15,33 @@ import TasksTab from "./TasksTab";
 import ActiveTasksTab from "./ActiveTasksTab";
 import { useMemo } from "react";
 
+const TABS = ["schedules", "tasks", "active-tasks"];
+const DEFAULT_TAB = "schedules";
+
+// Ignore unknown hashes so a bogus/stale URL falls back to the default tab.
+const tabFromHash = () => {
+  const hash = window.location.hash.slice(1);
+  return TABS.includes(hash) ? hash : DEFAULT_TAB;
+};
+
 const SchedulesTasksPage = memo(() => {
   usePageTitle("Schedules & Tasks");
 
   const { hasPermission } = useCheckPermission();
 
-  const [activeTab, setActiveTab] = useState("schedules");
+  const [activeTab, setActiveTab] = useState(() => tabFromHash());
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    window.location.hash = activeTab;
+  }, [activeTab]);
+
+  // Keep the tab in sync with browser back/forward.
+  useEffect(() => {
+    const onHashChange = () => setActiveTab(tabFromHash());
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
   const canEditSchedules = useMemo(
     () => hasPermission(PERMISSIONS.scheduling.edit),
