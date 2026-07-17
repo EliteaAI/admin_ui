@@ -10,6 +10,10 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Checkbox from "@mui/material/Checkbox";
+import ListItemText from "@mui/material/ListItemText";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -17,6 +21,7 @@ import StopOutlined from "@mui/icons-material/StopOutlined";
 import HubOutlined from "@mui/icons-material/HubOutlined";
 import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import ViewColumnOutlined from "@mui/icons-material/ViewColumnOutlined";
 
 import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import { useTableSort } from "@/hooks/useTableSort";
@@ -77,6 +82,13 @@ const TASK_COLUMNS = [
   { field: "actions", label: "", width: "7rem", sortable: false },
 ];
 
+// User-toggleable columns (the wide/opaque ones). All shown by default.
+const TOGGLEABLE_COLUMNS = [
+  { field: "task_id", label: "Task ID" },
+  { field: "meta", label: "Meta" },
+  { field: "runner", label: "Runner" },
+];
+
 const STATUS_CONFIG = {
   running: { label: "Running", color: "success" },
   done: { label: "Done", color: "default" },
@@ -119,20 +131,22 @@ function formatUtc(value) {
   );
 }
 
-// Case-insensitive match across every displayed task field, including the
-// UTC-formatted time so searching the value the user sees works.
-function taskMatchesSearch(task, lowerQuery) {
+// Case-insensitive match across every visible task field, including the
+// UTC-formatted time so searching the value the user sees works. Hidden columns
+// are excluded so search matches only what's on screen.
+function taskMatchesSearch(task, lowerQuery, hidden) {
   if (!lowerQuery) return true;
-  const haystack = [
+  const parts = [
     task.project_id,
     task.user_id,
     formatUtc(task.started_at),
     task.status,
     task.user_input_preview,
-    task.task_id,
-    task.meta,
-    task.runner,
-  ]
+  ];
+  if (!hidden?.task_id) parts.push(task.task_id);
+  if (!hidden?.meta) parts.push(task.meta);
+  if (!hidden?.runner) parts.push(task.runner);
+  const haystack = parts
     .map((v) => (v == null ? "" : String(v)))
     .join(" ")
     .toLowerCase();
@@ -197,6 +211,7 @@ function NodeCard({
   refreshing,
   refreshingScope,
   searching,
+  hiddenColumns,
 }) {
   const [expanded, setExpanded] = useState(true);
   const [poolExpanded, setPoolExpanded] = useState(false);
@@ -235,8 +250,13 @@ function NodeCard({
     actionsColumnWidth: "0",
   });
 
+  const visibleTaskColumns = useMemo(
+    () => TASK_COLUMNS.filter((c) => !hiddenColumns?.[c.field]),
+    [hiddenColumns],
+  );
+
   const taskColumns = useResponsiveColumns({
-    columns: TASK_COLUMNS,
+    columns: visibleTaskColumns,
     containerWidth: window.innerWidth,
     showCheckbox: false,
     actionsColumnWidth: "7rem",
@@ -573,6 +593,8 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     severity: "success",
   });
   const [logTaskId, setLogTaskId] = useState(null);
+  const [hiddenColumns, setHiddenColumns] = useState({});
+  const [columnMenuAnchor, setColumnMenuAnchor] = useState(null);
 
   const nodes = useMemo(() => {
     const all = data?.nodes || [];
@@ -580,9 +602,15 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     if (!lower) return all;
     return all.map((node) => ({
       ...node,
-      tasks: (node.tasks || []).filter((t) => taskMatchesSearch(t, lower)),
+      tasks: (node.tasks || []).filter((t) =>
+        taskMatchesSearch(t, lower, hiddenColumns),
+      ),
     }));
-  }, [data, search]);
+  }, [data, search, hiddenColumns]);
+
+  const toggleColumn = useCallback((field) => {
+    setHiddenColumns((prev) => ({ ...prev, [field]: !prev[field] }));
+  }, []);
 
   const handleOpenLogs = useCallback((taskId) => {
     setLogTaskId(taskId);
@@ -673,8 +701,42 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     );
   }
 
+  const hiddenCount = TOGGLEABLE_COLUMNS.filter(
+    (c) => hiddenColumns[c.field],
+  ).length;
+
   return (
     <Box sx={styles.root}>
+      <Box sx={styles.toolbar}>
+        <Button
+          size="small"
+          startIcon={<ViewColumnOutlined sx={{ fontSize: "1rem" }} />}
+          onClick={(e) => setColumnMenuAnchor(e.currentTarget)}
+          sx={styles.columnsButton}
+        >
+          Columns{hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ""}
+        </Button>
+        <Menu
+          anchorEl={columnMenuAnchor}
+          open={Boolean(columnMenuAnchor)}
+          onClose={() => setColumnMenuAnchor(null)}
+        >
+          {TOGGLEABLE_COLUMNS.map((col) => (
+            <MenuItem
+              key={col.field}
+              onClick={() => toggleColumn(col.field)}
+              dense
+            >
+              <Checkbox
+                size="small"
+                checked={!hiddenColumns[col.field]}
+                disableRipple
+              />
+              <ListItemText primary={col.label} />
+            </MenuItem>
+          ))}
+        </Menu>
+      </Box>
       <Box sx={styles.scrollArea}>
         {nodes.map((node) => (
           <NodeCard
@@ -691,6 +753,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
                 : null
             }
             searching={Boolean(search.trim())}
+            hiddenColumns={hiddenColumns}
           />
         ))}
       </Box>
@@ -726,6 +789,16 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
+  },
+  toolbar: {
+    display: "flex",
+    justifyContent: "flex-end",
+    padding: "0.5rem 1.5rem 0",
+  },
+  columnsButton: {
+    textTransform: "none",
+    fontSize: "0.75rem",
+    minWidth: "auto",
   },
   scrollArea: {
     flex: 1,
