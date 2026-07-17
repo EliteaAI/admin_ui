@@ -217,10 +217,12 @@ function NodeCard({
   onOpenLogs,
   searching,
   hiddenColumns,
+  onToggleColumn,
 }) {
   const [expanded, setExpanded] = useState(true);
   const [poolExpanded, setPoolExpanded] = useState(false);
   const [tasksExpanded, setTasksExpanded] = useState(true);
+  const [columnMenuAnchor, setColumnMenuAnchor] = useState(null);
 
   // Default view: Running first, Pending last, newest within a group first.
   // Sorting Status uses the same rank; other columns sort naturally.
@@ -259,6 +261,9 @@ function NodeCard({
     () => TASK_COLUMNS.filter((c) => !hiddenColumns?.[c.field]),
     [hiddenColumns],
   );
+  const hiddenCount = TOGGLEABLE_COLUMNS.filter(
+    (c) => hiddenColumns?.[c.field],
+  ).length;
 
   const taskColumns = useResponsiveColumns({
     columns: visibleTaskColumns,
@@ -445,6 +450,34 @@ function NodeCard({
                   sx={styles.subCountChip}
                 />
               </Box>
+              <Button
+                size="small"
+                startIcon={<ViewColumnOutlined sx={{ fontSize: "1rem" }} />}
+                onClick={(e) => setColumnMenuAnchor(e.currentTarget)}
+                sx={styles.columnsButton}
+              >
+                Columns{hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ""}
+              </Button>
+              <Menu
+                anchorEl={columnMenuAnchor}
+                open={Boolean(columnMenuAnchor)}
+                onClose={() => setColumnMenuAnchor(null)}
+              >
+                {TOGGLEABLE_COLUMNS.map((col) => (
+                  <MenuItem
+                    key={col.field}
+                    onClick={() => onToggleColumn(col.field)}
+                    dense
+                  >
+                    <Checkbox
+                      size="small"
+                      checked={!hiddenColumns[col.field]}
+                      disableRipple
+                    />
+                    <ListItemText primary={col.label} />
+                  </MenuItem>
+                ))}
+              </Menu>
             </Box>
             <Collapse in={tasksExpanded}>
               {sortedTasks.length > 0 ? (
@@ -548,7 +581,6 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
   });
   const [logTaskId, setLogTaskId] = useState(null);
   const [hiddenColumns, setHiddenColumns] = useState({});
-  const [columnMenuAnchor, setColumnMenuAnchor] = useState(null);
 
   const nodes = useMemo(() => {
     const all = data?.nodes || [];
@@ -662,10 +694,6 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     );
   }
 
-  const hiddenCount = TOGGLEABLE_COLUMNS.filter(
-    (c) => hiddenColumns[c.field],
-  ).length;
-
   const lastRefreshed = formatClockUtc(fulfilledTimeStamp);
 
   return (
@@ -695,34 +723,6 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
             </Button>
           </span>
         </Tooltip>
-        <Button
-          size="small"
-          startIcon={<ViewColumnOutlined sx={{ fontSize: "1rem" }} />}
-          onClick={(e) => setColumnMenuAnchor(e.currentTarget)}
-          sx={styles.columnsButton}
-        >
-          Columns{hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ""}
-        </Button>
-        <Menu
-          anchorEl={columnMenuAnchor}
-          open={Boolean(columnMenuAnchor)}
-          onClose={() => setColumnMenuAnchor(null)}
-        >
-          {TOGGLEABLE_COLUMNS.map((col) => (
-            <MenuItem
-              key={col.field}
-              onClick={() => toggleColumn(col.field)}
-              dense
-            >
-              <Checkbox
-                size="small"
-                checked={!hiddenColumns[col.field]}
-                disableRipple
-              />
-              <ListItemText primary={col.label} />
-            </MenuItem>
-          ))}
-        </Menu>
       </Box>
       {isError && (
         <Alert severity="error" sx={styles.errorBanner}>
@@ -739,6 +739,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
             onOpenLogs={handleOpenLogs}
             searching={Boolean(search.trim())}
             hiddenColumns={hiddenColumns}
+            onToggleColumn={toggleColumn}
           />
         ))}
       </Box>
