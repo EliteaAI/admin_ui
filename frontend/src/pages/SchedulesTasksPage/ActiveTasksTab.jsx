@@ -40,9 +40,30 @@ const POOL_COLUMNS = [
 ];
 
 const TASK_COLUMNS = [
-  { field: "task_id", label: "Task ID", width: "1fr", sortable: false },
+  { field: "project_id", label: "Project ID", width: "8rem", sortable: false },
+  {
+    field: "user_id",
+    label: "User ID",
+    width: "8rem",
+    sortable: false,
+    hideBelow: 1100,
+  },
+  { field: "started_at", label: "Time", width: "13rem", sortable: false },
   { field: "status", label: "Status", width: "7rem", sortable: false },
-  { field: "meta", label: "Meta", width: "1fr", sortable: false },
+  {
+    field: "user_input_preview",
+    label: "User input",
+    width: "1fr",
+    sortable: false,
+  },
+  {
+    field: "task_id",
+    label: "Task ID",
+    width: "1fr",
+    sortable: false,
+    hideBelow: 1000,
+  },
+  { field: "meta", label: "Meta", width: "1fr", sortable: false, hideBelow: 1300 },
   {
     field: "runner",
     label: "Runner",
@@ -71,6 +92,20 @@ function parseMeta(meta) {
   return String(meta).length > 60
     ? String(meta).substring(0, 60) + "..."
     : String(meta);
+}
+
+// Backend timestamp is naive UTC (server wall-clock); force UTC parse and read
+// UTC components so display matches the stored time regardless of viewer tz.
+function formatUtc(value) {
+  if (!value) return "—";
+  const iso = /[zZ]|[+-]\d{2}:?\d{2}$/.test(value) ? value : `${value}Z`;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return value;
+  const p = (n, w = 2) => String(n).padStart(w, "0");
+  return (
+    `${d.getUTCFullYear()}.${p(d.getUTCMonth() + 1)}.${p(d.getUTCDate())} ` +
+    `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} UTC`
+  );
 }
 
 function NodeCard({
@@ -188,6 +223,30 @@ function NodeCard({
                 ? value.substring(0, 20) + "..."
                 : value
               : "\u2014"}
+          </Typography>
+        </Tooltip>
+      );
+    }
+    if (column.field === "started_at") {
+      return (
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          sx={styles.cellText}
+        >
+          {formatUtc(value)}
+        </Typography>
+      );
+    }
+    if (column.field === "user_input_preview") {
+      return (
+        <Tooltip title={value || ""}>
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.cellText}
+          >
+            {value || "\u2014"}
           </Typography>
         </Tooltip>
       );
@@ -315,28 +374,26 @@ function NodeCard({
             </Box>
             <Collapse in={tasksExpanded}>
               {node.tasks?.length > 0 ? (
-                <Box sx={styles.tableScroll}>
-                  <GridTableContainer isLoading={false} isEmpty={false}>
-                    <GridTableHeader
-                      columns={taskColumns.visibleColumns}
-                      gridTemplateColumns={taskColumns.gridTemplateColumns}
-                      showCheckbox={false}
-                    />
-                    <GridTableBody>
-                      {node.tasks.map((task) => (
-                        <GridTableRow
-                          key={task.task_id}
-                          row={task}
-                          columns={taskColumns.dataColumns}
-                          gridTemplateColumns={taskColumns.gridTemplateColumns}
-                          showCheckbox={false}
-                          renderCell={renderTaskCell}
-                          renderActions={renderTaskActions}
-                        />
-                      ))}
-                    </GridTableBody>
-                  </GridTableContainer>
-                </Box>
+                <GridTableContainer isLoading={false} isEmpty={false}>
+                  <GridTableHeader
+                    columns={taskColumns.visibleColumns}
+                    gridTemplateColumns={taskColumns.gridTemplateColumns}
+                    showCheckbox={false}
+                  />
+                  <GridTableBody minHeight="0" sx={styles.tableBodyScroll}>
+                    {node.tasks.map((task) => (
+                      <GridTableRow
+                        key={task.task_id}
+                        row={task}
+                        columns={taskColumns.dataColumns}
+                        gridTemplateColumns={taskColumns.gridTemplateColumns}
+                        showCheckbox={false}
+                        renderCell={renderTaskCell}
+                        renderActions={renderTaskActions}
+                      />
+                    ))}
+                  </GridTableBody>
+                </GridTableContainer>
               ) : (
                 <Typography variant="caption" sx={styles.emptyTasks}>
                   No active tasks
@@ -691,6 +748,10 @@ const styles = {
     },
   },
   tableScroll: {
+    maxHeight: "18rem",
+    overflowY: "auto",
+  },
+  tableBodyScroll: {
     maxHeight: "18rem",
     overflowY: "auto",
   },
