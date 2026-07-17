@@ -108,6 +108,26 @@ function formatUtc(value) {
   );
 }
 
+// Case-insensitive match across every displayed task field, including the
+// UTC-formatted time so searching the value the user sees works.
+function taskMatchesSearch(task, lowerQuery) {
+  if (!lowerQuery) return true;
+  const haystack = [
+    task.project_id,
+    task.user_id,
+    formatUtc(task.started_at),
+    task.status,
+    task.user_input_preview,
+    task.task_id,
+    task.meta,
+    task.runner,
+  ]
+    .map((v) => (v == null ? "" : String(v)))
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(lowerQuery);
+}
+
 function NodeCard({
   node,
   onRefresh,
@@ -116,6 +136,7 @@ function NodeCard({
   onOpenLogs,
   refreshing,
   refreshingScope,
+  searching,
 }) {
   const [expanded, setExpanded] = useState(true);
   const [poolExpanded, setPoolExpanded] = useState(false);
@@ -396,7 +417,7 @@ function NodeCard({
                 </GridTableContainer>
               ) : (
                 <Typography variant="caption" sx={styles.emptyTasks}>
-                  No active tasks
+                  {searching ? "No matching active tasks" : "No active tasks"}
                 </Typography>
               )}
             </Collapse>
@@ -472,7 +493,7 @@ function NodeCard({
   );
 }
 
-const ActiveTasksTab = memo(function ActiveTasksTab() {
+const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
   const { data, isLoading } = useActiveTasksListQuery(undefined, {
     pollingInterval: 15000,
   });
@@ -487,7 +508,15 @@ const ActiveTasksTab = memo(function ActiveTasksTab() {
   });
   const [logTaskId, setLogTaskId] = useState(null);
 
-  const nodes = useMemo(() => data?.nodes || [], [data]);
+  const nodes = useMemo(() => {
+    const all = data?.nodes || [];
+    const lower = search.trim().toLowerCase();
+    if (!lower) return all;
+    return all.map((node) => ({
+      ...node,
+      tasks: (node.tasks || []).filter((t) => taskMatchesSearch(t, lower)),
+    }));
+  }, [data, search]);
 
   const handleOpenLogs = useCallback((taskId) => {
     setLogTaskId(taskId);
@@ -595,6 +624,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab() {
                 ? refreshingScopeKey.split("::")[1]
                 : null
             }
+            searching={Boolean(search.trim())}
           />
         ))}
       </Box>
