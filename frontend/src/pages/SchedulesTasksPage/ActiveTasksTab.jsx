@@ -131,6 +131,15 @@ function formatUtc(value) {
   );
 }
 
+// Clock time (UTC) of an epoch ms value, for the "last refreshed" indicator.
+function formatClockUtc(ts) {
+  if (!ts) return null;
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return null;
+  const p = (n) => String(n).padStart(2, "0");
+  return `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} UTC`;
+}
+
 // Case-insensitive match across every visible task field, including the
 // UTC-formatted time so searching the value the user sees works. Hidden columns
 // are excluded so search matches only what's on screen.
@@ -204,12 +213,8 @@ function CopyableCell({ display, full, mono }) {
 
 function NodeCard({
   node,
-  onRefresh,
-  onRefreshScope,
   onStop,
   onOpenLogs,
-  refreshing,
-  refreshingScope,
   searching,
   hiddenColumns,
 }) {
@@ -261,10 +266,6 @@ function NodeCard({
     showCheckbox: false,
     actionsColumnWidth: "7rem",
   });
-
-  const handleRefresh = useCallback(() => {
-    onRefresh(node.node);
-  }, [node.node, onRefresh]);
 
   const renderPoolCell = useCallback((column, value) => {
     if (column.field === "running_tasks") {
@@ -416,24 +417,6 @@ function NodeCard({
             </Typography>
           )}
         </Box>
-        <Button
-          size="small"
-          startIcon={
-            refreshing ? (
-              <CircularProgress size={12} />
-            ) : (
-              <RefreshIcon sx={{ fontSize: "0.875rem" }} />
-            )
-          }
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRefresh();
-          }}
-          disabled={refreshing}
-          sx={styles.refreshButton}
-        >
-          Refresh
-        </Button>
       </Box>
 
       <Collapse in={expanded}>
@@ -462,20 +445,6 @@ function NodeCard({
                   sx={styles.subCountChip}
                 />
               </Box>
-              <Tooltip title="Refresh task state">
-                <IconButton
-                  size="small"
-                  onClick={() => onRefreshScope(node.node, "task")}
-                  disabled={refreshingScope === "task"}
-                  sx={styles.subRefreshButton}
-                >
-                  {refreshingScope === "task" ? (
-                    <CircularProgress size={12} />
-                  ) : (
-                    <RefreshIcon sx={{ fontSize: "0.875rem" }} />
-                  )}
-                </IconButton>
-              </Tooltip>
             </Box>
             <Collapse in={tasksExpanded}>
               {sortedTasks.length > 0 ? (
@@ -533,20 +502,6 @@ function NodeCard({
                     sx={styles.subCountChip}
                   />
                 </Box>
-                <Tooltip title="Refresh pool state">
-                  <IconButton
-                    size="small"
-                    onClick={() => onRefreshScope(node.node, "pool")}
-                    disabled={refreshingScope === "pool"}
-                    sx={styles.subRefreshButton}
-                  >
-                    {refreshingScope === "pool" ? (
-                      <CircularProgress size={12} />
-                    ) : (
-                      <RefreshIcon sx={{ fontSize: "0.875rem" }} />
-                    )}
-                  </IconButton>
-                </Tooltip>
               </Box>
               <Collapse in={poolExpanded}>
                 <Box sx={styles.tableScroll}>
@@ -580,13 +535,12 @@ function NodeCard({
 }
 
 const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
-  const { data, isLoading } = useActiveTasksListQuery(undefined, {
-    pollingInterval: 15000,
-  });
+  const { data, isLoading, isFetching, isError, error, refetch, fulfilledTimeStamp } =
+    useActiveTasksListQuery(undefined, {
+      pollingInterval: 15000,
+    });
   const [refreshNode] = useActiveTasksRefreshMutation();
   const [stopTask] = useActiveTasksStopMutation();
-  const [refreshingNode, setRefreshingNode] = useState(null);
-  const [refreshingScopeKey, setRefreshingScopeKey] = useState(null); // "node::scope"
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -612,6 +566,34 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     setHiddenColumns((prev) => ({ ...prev, [field]: !prev[field] }));
   }, []);
 
+  // Global refresh: ask every node to re-broadcast pool + task state (the real
+  // refresh, not just a cache re-read), then let the list refetch. Guarded
+  // against overlap by globalRefreshing.
+  const [globalRefreshing, setGlobalRefreshing] = useState(false);
+  const handleManualRefresh = useCallback(async () => {
+    if (globalRefreshing) return;
+    const targets = (data?.nodes || []).map((n) => n.node);
+    if (targets.length === 0) {
+      refetch();
+      return;
+    }
+    setGlobalRefreshing(true);
+    try {
+      for (const nodeStr of targets) {
+        await refreshNode({ node: nodeStr, scope: "pool" }).unwrap();
+        await refreshNode({ node: nodeStr, scope: "task" }).unwrap();
+      }
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: `Refresh failed: ${err?.message || "Unknown error"}`,
+        severity: "error",
+      });
+    } finally {
+      setGlobalRefreshing(false);
+    }
+  }, [globalRefreshing, data, refreshNode, refetch]);
+
   const handleOpenLogs = useCallback((taskId) => {
     setLogTaskId(taskId);
   }, []);
@@ -619,44 +601,6 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
   const handleCloseLogs = useCallback(() => {
     setLogTaskId(null);
   }, []);
-
-  const handleRefresh = useCallback(
-    async (nodeStr) => {
-      setRefreshingNode(nodeStr);
-      try {
-        await refreshNode({ node: nodeStr, scope: "pool" }).unwrap();
-        await refreshNode({ node: nodeStr, scope: "task" }).unwrap();
-      } catch (err) {
-        setSnackbar({
-          open: true,
-          message: `Refresh failed: ${err?.message || "Unknown error"}`,
-          severity: "error",
-        });
-      } finally {
-        setRefreshingNode(null);
-      }
-    },
-    [refreshNode],
-  );
-
-  const handleRefreshScope = useCallback(
-    async (nodeStr, scope) => {
-      const key = `${nodeStr}::${scope}`;
-      setRefreshingScopeKey(key);
-      try {
-        await refreshNode({ node: nodeStr, scope }).unwrap();
-      } catch (err) {
-        setSnackbar({
-          open: true,
-          message: `Refresh failed: ${err?.message || "Unknown error"}`,
-          severity: "error",
-        });
-      } finally {
-        setRefreshingScopeKey(null);
-      }
-    },
-    [refreshNode],
-  );
 
   const handleStop = useCallback(
     async (nodeStr, taskId) => {
@@ -695,8 +639,25 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
       <Box sx={styles.emptyState}>
         <HubOutlined sx={styles.emptyIcon} />
         <Typography variant="bodyMedium" color="text.disabled">
-          No task nodes available
+          {isError
+            ? "Could not load active tasks"
+            : "No task nodes available"}
         </Typography>
+        <Button
+          size="small"
+          startIcon={
+            isFetching ? (
+              <CircularProgress size={12} />
+            ) : (
+              <RefreshIcon sx={{ fontSize: "1rem" }} />
+            )
+          }
+          onClick={() => refetch()}
+          disabled={isFetching}
+          sx={styles.columnsButton}
+        >
+          Retry
+        </Button>
       </Box>
     );
   }
@@ -705,9 +666,35 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     (c) => hiddenColumns[c.field],
   ).length;
 
+  const lastRefreshed = formatClockUtc(fulfilledTimeStamp);
+
   return (
     <Box sx={styles.root}>
       <Box sx={styles.toolbar}>
+        {lastRefreshed && (
+          <Typography variant="caption" sx={styles.lastRefreshed}>
+            Last refreshed {lastRefreshed}
+          </Typography>
+        )}
+        <Tooltip title="Refresh all nodes">
+          <span>
+            <Button
+              size="small"
+              startIcon={
+                globalRefreshing ? (
+                  <CircularProgress size={12} />
+                ) : (
+                  <RefreshIcon sx={{ fontSize: "1rem" }} />
+                )
+              }
+              onClick={handleManualRefresh}
+              disabled={globalRefreshing}
+              sx={styles.columnsButton}
+            >
+              Refresh
+            </Button>
+          </span>
+        </Tooltip>
         <Button
           size="small"
           startIcon={<ViewColumnOutlined sx={{ fontSize: "1rem" }} />}
@@ -737,21 +724,19 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
           ))}
         </Menu>
       </Box>
+      {isError && (
+        <Alert severity="error" sx={styles.errorBanner}>
+          Could not refresh active tasks
+          {error?.status ? ` (${error.status})` : ""}. Showing last known data.
+        </Alert>
+      )}
       <Box sx={styles.scrollArea}>
         {nodes.map((node) => (
           <NodeCard
             key={node.node}
             node={node}
-            onRefresh={handleRefresh}
-            onRefreshScope={handleRefreshScope}
             onStop={handleStop}
             onOpenLogs={handleOpenLogs}
-            refreshing={refreshingNode === node.node}
-            refreshingScope={
-              refreshingScopeKey?.startsWith(`${node.node}::`)
-                ? refreshingScopeKey.split("::")[1]
-                : null
-            }
             searching={Boolean(search.trim())}
             hiddenColumns={hiddenColumns}
           />
@@ -792,8 +777,18 @@ const styles = {
   },
   toolbar: {
     display: "flex",
+    alignItems: "center",
     justifyContent: "flex-end",
+    gap: "0.5rem",
     padding: "0.5rem 1.5rem 0",
+  },
+  lastRefreshed: ({ palette }) => ({
+    color: palette.text.metrics,
+    fontSize: "0.6875rem",
+    marginRight: "auto",
+  }),
+  errorBanner: {
+    margin: "0.5rem 1.5rem 0",
   },
   columnsButton: {
     textTransform: "none",
@@ -872,11 +867,6 @@ const styles = {
     color: palette.text.metrics,
     fontSize: "0.6875rem",
   }),
-  refreshButton: {
-    textTransform: "none",
-    fontSize: "0.75rem",
-    minWidth: "auto",
-  },
   nodeBody: ({ palette }) => ({
     borderTop: `1px solid ${palette.border.table}`,
     display: "flex",
@@ -900,9 +890,6 @@ const styles = {
     gap: "0.375rem",
     cursor: "pointer",
     userSelect: "none",
-  },
-  subRefreshButton: {
-    padding: "0.125rem",
   },
   subExpandIcon: {
     fontSize: "1rem",
