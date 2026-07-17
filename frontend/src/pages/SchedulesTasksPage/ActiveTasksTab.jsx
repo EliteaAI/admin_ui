@@ -17,6 +17,7 @@ import StopOutlined from "@mui/icons-material/StopOutlined";
 import HubOutlined from "@mui/icons-material/HubOutlined";
 
 import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
+import { useTableSort } from "@/hooks/useTableSort";
 import {
   GridTableContainer,
   GridTableHeader,
@@ -40,16 +41,16 @@ const POOL_COLUMNS = [
 ];
 
 const TASK_COLUMNS = [
-  { field: "project_id", label: "Project ID", width: "8rem", sortable: false },
+  { field: "project_id", label: "Project ID", width: "8rem", sortable: true },
   {
     field: "user_id",
     label: "User ID",
     width: "8rem",
-    sortable: false,
+    sortable: true,
     hideBelow: 1100,
   },
-  { field: "started_at", label: "Time", width: "13rem", sortable: false },
-  { field: "status", label: "Status", width: "7rem", sortable: false },
+  { field: "started_at", label: "Time", width: "13rem", sortable: true },
+  { field: "status", label: "Status", width: "7rem", sortable: true },
   {
     field: "user_input_preview",
     label: "User input",
@@ -79,6 +80,14 @@ const STATUS_CONFIG = {
   done: { label: "Done", color: "default" },
   error: { label: "Error", color: "error" },
   stopped: { label: "Stopped", color: "warning" },
+};
+
+// Default ordering priority: actionable Running first, Pending sunk to the
+// bottom (never hidden), everything else in between. Lower = higher up.
+const STATUS_RANK = { running: 0, error: 1, done: 2, pending: 3 };
+const statusRank = (status) => {
+  const rank = STATUS_RANK[(status || "").toLowerCase()];
+  return rank == null ? 2 : rank;
 };
 
 function parseMeta(meta) {
@@ -141,6 +150,27 @@ function NodeCard({
   const [expanded, setExpanded] = useState(true);
   const [poolExpanded, setPoolExpanded] = useState(false);
   const [tasksExpanded, setTasksExpanded] = useState(true);
+
+  // Default view: Running first, Pending last, newest within a group first.
+  // Sorting Status uses the same rank; other columns sort naturally.
+  const { sortConfig, handleSort, sortData } = useTableSort({
+    defaultField: "status",
+    defaultDirection: "asc",
+    comparators: {
+      status: (_a, _b, rowA, rowB) => {
+        const byRank = statusRank(rowA.status) - statusRank(rowB.status);
+        if (byRank !== 0) return byRank;
+        return String(rowB.started_at || "").localeCompare(
+          String(rowA.started_at || ""),
+        );
+      },
+    },
+  });
+  const sortedTasks = useMemo(
+    () => sortData(node.tasks || []),
+    [sortData, node.tasks],
+  );
+
   const totalRunning = node.tasks?.length || 0;
   const totalCapacity = (node.pools || []).reduce(
     (sum, p) => sum + (p.task_limit || 0),
@@ -394,15 +424,17 @@ function NodeCard({
               </Tooltip>
             </Box>
             <Collapse in={tasksExpanded}>
-              {node.tasks?.length > 0 ? (
+              {sortedTasks.length > 0 ? (
                 <GridTableContainer isLoading={false} isEmpty={false}>
                   <GridTableHeader
                     columns={taskColumns.visibleColumns}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
                     gridTemplateColumns={taskColumns.gridTemplateColumns}
                     showCheckbox={false}
                   />
                   <GridTableBody minHeight="0" sx={styles.tableBodyScroll}>
-                    {node.tasks.map((task) => (
+                    {sortedTasks.map((task) => (
                       <GridTableRow
                         key={task.task_id}
                         row={task}
