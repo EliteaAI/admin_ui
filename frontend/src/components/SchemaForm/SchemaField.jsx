@@ -147,16 +147,17 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
         return <PasswordField value={value} onChange={onChange} />;
       }
       if (format === 'textarea') {
+        const builtinDefault = field.builtin_default;
         return (
           <TextField
             fullWidth
             size="small"
             multiline
-            minRows={4}
-            maxRows={12}
+            minRows={builtinDefault ? 10 : 4}
+            maxRows={builtinDefault ? 24 : 12}
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Enter value..."
+            placeholder={builtinDefault || 'Enter value...'}
             sx={styles.textField}
           />
         );
