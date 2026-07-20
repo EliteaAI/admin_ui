@@ -59,7 +59,7 @@ const ServiceDescriptorsSection = memo(() => {
             <Input
               disableUnderline
               variant="standard"
-              placeholder="Search providers or URLs"
+              placeholder="Search project IDs, providers, or URLs"
               value={search}
               onChange={handleSearchChange}
               sx={styles.searchInputField}
