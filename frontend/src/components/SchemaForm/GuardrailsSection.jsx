@@ -3,9 +3,11 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import Switch from "@mui/material/Switch";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import RestoreIcon from "@mui/icons-material/RestoreOutlined";
 import BlockIcon from "@mui/icons-material/BlockOutlined";
 import GppMaybeIcon from "@mui/icons-material/GppMaybeOutlined";
 import ExtensionIcon from "@mui/icons-material/ExtensionOutlined";
@@ -62,6 +64,10 @@ const FieldCard = memo((props) => {
   const styles = guardRailsStyles();
 
   const isBoolean = field.type === "boolean";
+  const hasBuiltinDefault =
+    typeof field.builtin_default === "string" && field.builtin_default.length > 0;
+  const atBuiltinDefault =
+    hasBuiltinDefault && (values[field.key] || "") === field.builtin_default;
   const expandable = useMemo(() => {
     if (field.type === "object" && !field.additionalProperties?.type)
       return true;
@@ -100,6 +106,27 @@ const FieldCard = memo((props) => {
             onChange={(e) => onChange(field.key, e.target.checked)}
             size="small"
           />
+        )}
+        {!isBoolean && hasBuiltinDefault && (
+          <Tooltip
+            title={
+              atBuiltinDefault
+                ? "Already matches the built-in defaults"
+                : "Restore to built-in defaults"
+            }
+            placement="top"
+          >
+            <Box component="span">
+              <IconButton
+                size="small"
+                disabled={atBuiltinDefault}
+                onClick={() => onChange(field.key, field.builtin_default)}
+                aria-label={`restore-default-${field.key}`}
+              >
+                <RestoreIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          </Tooltip>
         )}
       </Box>
       {field.description && (
