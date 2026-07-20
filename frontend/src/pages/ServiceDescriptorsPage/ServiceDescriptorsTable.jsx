@@ -35,7 +35,8 @@ const ServiceDescriptorsTable = memo(function ServiceDescriptorsTable({ descript
   const filteredDescriptors = useMemo(() => {
     if (!search) return descriptors;
     const lowerSearch = search.toLowerCase();
-    return descriptors.filter((d) => 
+    return descriptors.filter((d) =>
+      String(d.project_id ?? '').toLowerCase().includes(lowerSearch) ||
       (d.provider_name || '').toLowerCase().includes(lowerSearch) ||
       (d.service_location_url || '').toLowerCase().includes(lowerSearch)
     );

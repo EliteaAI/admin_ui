@@ -37,7 +37,7 @@ function ServiceDescriptorsPage() {
         showSearchInput
         search={search}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search providers or URLs"
+        searchPlaceholder="Search project IDs, providers, or URLs"
       />
       <ServiceDescriptorsTable 
         descriptors={descriptors} 
