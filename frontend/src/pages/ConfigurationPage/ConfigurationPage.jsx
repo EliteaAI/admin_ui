@@ -68,6 +68,18 @@ function ConfigurationPage() {
 
   const { data: schemasData, isLoading: schemasLoading } = useConfigSchemasQuery();
 
+  const SECTION_ORDER = [
+    "advanced",
+    "maintenance",
+    "dedicated_banner",
+    "mcp_servers",
+    "guardrails",
+    "observability",
+    "runtime",
+    "auth",
+    "service_descriptors",
+  ];
+
   const sections = useMemo(() => {
     const serverSections = (schemasData?.sections || []).filter(
       s => s.id !== "litellm" && !MOVED_TO_FEATURES.includes(s.id),
@@ -75,10 +87,16 @@ function ConfigurationPage() {
 
     const allSections = [...serverSections, { id: "service_descriptors", title: "Service Descriptors" }];
 
-    return allSections.filter(s => {
+    const filtered = allSections.filter(s => {
       const requiredPerms = CONFIG_SECTION_PERMISSIONS[s.id];
       if (!requiredPerms) return true;
       return hasAnyPermission(requiredPerms);
+    });
+
+    return filtered.sort((a, b) => {
+      const indexA = SECTION_ORDER.indexOf(a.id);
+      const indexB = SECTION_ORDER.indexOf(b.id);
+      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
     });
   }, [schemasData, hasAnyPermission]);
 
@@ -87,13 +105,15 @@ function ConfigurationPage() {
     if (activeSection) window.location.hash = activeSection;
   }, [activeSection]);
 
-  // Set default section on load, validate hash section exists
+  // Set Advanced as default on load, validate hash section exists
   useEffect(() => {
     if (schemasLoading || sections.length === 0) return;
     if (!activeSection) {
-      setActiveSection(sections[0].id);
+      const advancedSection = sections.find(s => s.id === "advanced");
+      setActiveSection(advancedSection?.id || sections[0].id);
     } else if (!sections.find(s => s.id === activeSection)) {
-      setActiveSection(sections[0].id);
+      const advancedSection = sections.find(s => s.id === "advanced");
+      setActiveSection(advancedSection?.id || sections[0].id);
     }
   }, [sections, activeSection, schemasLoading]);
 
