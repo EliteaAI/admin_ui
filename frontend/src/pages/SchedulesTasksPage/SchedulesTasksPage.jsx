@@ -15,8 +15,8 @@ import TasksTab from "./TasksTab";
 import ActiveTasksTab from "./ActiveTasksTab";
 import { useMemo } from "react";
 
-const TABS = ["schedules", "tasks", "active-tasks"];
-const DEFAULT_TAB = "schedules";
+const TABS = ["active-tasks", "tasks", "schedules"];
+const DEFAULT_TAB = "active-tasks";
 
 // Ignore unknown hashes so a bogus/stale URL falls back to the default tab.
 const tabFromHash = () => {
@@ -59,9 +59,9 @@ const SchedulesTasksPage = memo(() => {
 
   const tabsElement = (
     <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
-      <Tab label="Schedules" value="schedules" sx={styles.tab} />
-      <Tab label="Tasks" value="tasks" sx={styles.tab} />
       <Tab label="Active Tasks" value="active-tasks" sx={styles.tab} />
+      <Tab label="Tasks" value="tasks" sx={styles.tab} />
+      <Tab label="Schedules" value="schedules" sx={styles.tab} />
     </Tabs>
   );
 
