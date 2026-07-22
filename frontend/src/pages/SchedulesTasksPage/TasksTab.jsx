@@ -31,7 +31,7 @@ function parseTaskName(meta) {
 
 const EMPTY_DATA = { names: [], tasks: [] };
 
-const TasksTab = memo(function TasksTab() {
+const TasksTab = memo(function TasksTab({ search = '' }) {
   const { data: taskNamesData = EMPTY_DATA, isLoading: namesLoading } = useTaskNamesQuery();
   const taskNames = taskNamesData.names;
   const groupsMap = taskNamesData.groupsMap || {};
@@ -154,6 +154,7 @@ const TasksTab = memo(function TasksTab() {
           onSelect={setSelectedTask}
           isLoading={namesLoading}
           runningCounts={runningCounts}
+          search={search}
         />
       </Box>
 

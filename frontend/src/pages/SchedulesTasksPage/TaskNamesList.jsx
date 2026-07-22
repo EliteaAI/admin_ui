@@ -17,12 +17,32 @@ const TaskNamesList = memo(function TaskNamesList({
   onSelect,
   isLoading,
   runningCounts,
+  search = '',
 }) {
   const [expanded, setExpanded] = useState({ General: true });
 
+  const lowerSearch = search.trim().toLowerCase();
+
+  const filteredGroups = useMemo(() => {
+    const allGroups = groupTasks(taskNames, groupsMap);
+    if (!lowerSearch) return allGroups;
+    return allGroups
+      .map(({ group, items }) => ({
+        group,
+        items: items.filter((name) => {
+          const nameMatch = name.toLowerCase().includes(lowerSearch);
+          const descMatch = (taskDescriptions[name] || '')
+            .toLowerCase()
+            .includes(lowerSearch);
+          return nameMatch || descMatch;
+        }),
+      }))
+      .filter(({ items }) => items.length > 0);
+  }, [taskNames, groupsMap, taskDescriptions, lowerSearch]);
+
   const groups = useMemo(
-    () => groupTasks(taskNames, groupsMap),
-    [taskNames, groupsMap],
+    () => (lowerSearch ? filteredGroups : groupTasks(taskNames, groupsMap)),
+    [taskNames, groupsMap, lowerSearch, filteredGroups],
   );
 
   const toggleGroup = useCallback((group) => {
@@ -45,13 +65,20 @@ const TaskNamesList = memo(function TaskNamesList({
                 sx={{ mb: '0.25rem', borderRadius: '0.25rem' }}
               />
             ))
-          : groups.map(({ group, items }) => {
-              const isOpen = !!expanded[group];
+          : groups.length === 0
+            ? (
+              <Typography variant="caption" sx={styles.emptyState}>
+                {lowerSearch ? 'No matching tasks' : 'No tasks available'}
+              </Typography>
+            )
+            : groups.map(({ group, items }) => {
+              const isOpen = lowerSearch ? true : !!expanded[group];
               return (
                 <Box key={group} sx={styles.groupContainer}>
                   <Box
                     sx={styles.groupHeader}
-                    onClick={() => toggleGroup(group)}
+                    onClick={() => !lowerSearch && toggleGroup(group)}
+                    role={lowerSearch ? undefined : 'button'}
                   >
                     {isOpen ? (
                       <KeyboardArrowDown sx={styles.chevron} />
@@ -194,6 +221,11 @@ const styles = {
     fontWeight: 600,
     flexShrink: 0,
     marginLeft: '0.5rem',
+  }),
+  emptyState: ({ palette }) => ({
+    color: palette.text.disabled,
+    fontSize: '0.75rem',
+    padding: '0.75rem 0.25rem',
   }),
 };
 
