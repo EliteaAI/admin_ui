@@ -71,23 +71,18 @@ const SchedulesTasksPage = memo(() => {
         title="System"
         tabs={tabsElement}
         showBorder
-        showSearchInput={activeTab === "schedules" || activeTab === "active-tasks"}
+        showSearchInput={activeTab === "schedules" || activeTab === "tasks" || activeTab === "active-tasks"}
         search={search}
         onSearchChange={handleSearchChange}
         searchPlaceholder={
-          activeTab === "active-tasks" ? "Search tasks" : "Search schedules"
-        }
-        extraContent={
-          activeTab === "tasks" ? (
-            <Box sx={{ width: "15rem", flexShrink: 0 }} />
-          ) : undefined
+          activeTab === "schedules" ? "Search schedules" : "Search tasks"
         }
       />
 
       {activeTab === "schedules" && (
         <SchedulesTab search={search} readOnly={!canEditSchedules} />
       )}
-      {activeTab === "tasks" && <TasksTab />}
+      {activeTab === "tasks" && <TasksTab search={search} />}
       {activeTab === "active-tasks" && <ActiveTasksTab search={search} />}
     </DrawerPage>
   );
