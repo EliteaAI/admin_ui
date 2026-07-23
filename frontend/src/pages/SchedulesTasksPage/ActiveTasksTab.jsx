@@ -5,6 +5,11 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Collapse from "@mui/material/Collapse";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
@@ -22,6 +27,8 @@ import HubOutlined from "@mui/icons-material/HubOutlined";
 import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import ViewColumnOutlined from "@mui/icons-material/ViewColumnOutlined";
+import PauseCircleOutlined from "@mui/icons-material/PauseCircleOutlined";
+import PlayCircleOutlined from "@mui/icons-material/PlayCircleOutlined";
 
 import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import { useTableSort } from "@/hooks/useTableSort";
@@ -37,6 +44,10 @@ import {
   useActiveTasksRefreshMutation,
   useActiveTasksStopMutation,
 } from "@/api/tasksApi";
+import {
+  useMaintenanceQuery,
+  useMaintenanceSaveMutation,
+} from "@/api/configurationApi";
 
 import { TaskLogDrawer } from "@/components/LogViewerDrawer";
 
@@ -581,6 +592,13 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
   });
   const [logTaskId, setLogTaskId] = useState(null);
   const [hiddenColumns, setHiddenColumns] = useState({});
+  const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
+
+  const { data: maintenanceData, isSuccess: maintenanceLoaded } =
+    useMaintenanceQuery();
+  const [saveMaintenance, { isLoading: pauseSaving }] =
+    useMaintenanceSaveMutation();
+  const tasksPaused = Boolean(maintenanceData?.tasks_paused);
 
   const nodes = useMemo(() => {
     const all = data?.nodes || [];
@@ -658,6 +676,35 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
+  const handleTogglePauseClick = useCallback(() => {
+    setPauseConfirmOpen(true);
+  }, []);
+
+  const handleCancelPause = useCallback(() => {
+    setPauseConfirmOpen(false);
+  }, []);
+
+  const handleConfirmPause = useCallback(async () => {
+    const newValue = !tasksPaused;
+    setPauseConfirmOpen(false);
+    try {
+      await saveMaintenance({ tasks_paused: newValue }).unwrap();
+      setSnackbar({
+        open: true,
+        message: newValue
+          ? "New tasks are now paused. Running tasks are unaffected."
+          : "New tasks are accepted again.",
+        severity: newValue ? "warning" : "success",
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: `Failed to toggle: ${err?.data?.error || err?.message || "Unknown error"}`,
+        severity: "error",
+      });
+    }
+  }, [tasksPaused, saveMaintenance]);
+
   if (isLoading) {
     return (
       <Box sx={styles.loading}>
@@ -704,6 +751,42 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
             Last refreshed {lastRefreshed}
           </Typography>
         )}
+        {tasksPaused && (
+          <Chip
+            label="New tasks paused"
+            size="small"
+            color="warning"
+            variant="outlined"
+            icon={<PauseCircleOutlined sx={{ fontSize: "1rem" }} />}
+          />
+        )}
+        <Tooltip
+          title={
+            tasksPaused
+              ? "Resume accepting new tasks"
+              : "Reject new tasks; running tasks are unaffected"
+          }
+        >
+          <Box component="span">
+            <Button
+              size="small"
+              startIcon={
+                pauseSaving ? (
+                  <CircularProgress size={12} />
+                ) : tasksPaused ? (
+                  <PlayCircleOutlined sx={{ fontSize: "1rem" }} />
+                ) : (
+                  <PauseCircleOutlined sx={{ fontSize: "1rem" }} />
+                )
+              }
+              onClick={handleTogglePauseClick}
+              disabled={pauseSaving || !maintenanceLoaded}
+              sx={styles.columnsButton}
+            >
+              {tasksPaused ? "Resume new tasks" : "Pause new tasks"}
+            </Button>
+          </Box>
+        </Tooltip>
         <Tooltip title="Refresh all nodes">
           <span>
             <Button
@@ -765,6 +848,30 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
         taskId={logTaskId}
         onClose={handleCloseLogs}
       />
+
+      <Dialog open={pauseConfirmOpen} onClose={handleCancelPause}>
+        <DialogTitle>
+          {tasksPaused ? "Resume new tasks?" : "Pause new tasks?"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {tasksPaused
+              ? "New tasks (predicts, index jobs, pipelines) will be accepted again on every node."
+              : "New tasks (predicts, index jobs, pipelines) will be rejected on every node until resumed. Already-running tasks are left to finish; this does not show the maintenance splash to other users."}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelPause}>Cancel</Button>
+          <Button
+            onClick={handleConfirmPause}
+            color={tasksPaused ? "primary" : "warning"}
+            variant="contained"
+            disabled={pauseSaving}
+          >
+            {tasksPaused ? "Resume" : "Pause"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 });
