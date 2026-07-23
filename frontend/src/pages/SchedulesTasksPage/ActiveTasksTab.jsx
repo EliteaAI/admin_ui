@@ -594,7 +594,8 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
   const [hiddenColumns, setHiddenColumns] = useState({});
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
-  const { data: maintenanceData } = useMaintenanceQuery();
+  const { data: maintenanceData, isSuccess: maintenanceLoaded } =
+    useMaintenanceQuery();
   const [saveMaintenance, { isLoading: pauseSaving }] =
     useMaintenanceSaveMutation();
   const tasksPaused = Boolean(maintenanceData?.tasks_paused);
@@ -766,7 +767,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
               : "Reject new tasks; running tasks are unaffected"
           }
         >
-          <span>
+          <Box component="span">
             <Button
               size="small"
               startIcon={
@@ -779,12 +780,12 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
                 )
               }
               onClick={handleTogglePauseClick}
-              disabled={pauseSaving}
+              disabled={pauseSaving || !maintenanceLoaded}
               sx={styles.columnsButton}
             >
               {tasksPaused ? "Resume new tasks" : "Pause new tasks"}
             </Button>
-          </span>
+          </Box>
         </Tooltip>
         <Tooltip title="Refresh all nodes">
           <span>
@@ -865,6 +866,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
             onClick={handleConfirmPause}
             color={tasksPaused ? "primary" : "warning"}
             variant="contained"
+            disabled={pauseSaving}
           >
             {tasksPaused ? "Resume" : "Pause"}
           </Button>
