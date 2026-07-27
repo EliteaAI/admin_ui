@@ -123,7 +123,8 @@ export default function BudgetEditDialog(props) {
             type="number"
             size="small"
             fullWidth
-            inputProps={{ min: 0, step: "0.01" }}
+            sx={styles.limitField}
+            inputProps={{ min: 0, step: "0.01", inputMode: "decimal" }}
             error={!!validationError && limit.trim() !== ""}
             helperText={
               unlimited
@@ -170,5 +171,16 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  // Native number spinners render unstyled and clash with the dark theme
+  limitField: {
+    "& input[type=number]": {
+      MozAppearance: "textfield",
+    },
+    "& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button":
+      {
+        WebkitAppearance: "none",
+        margin: 0,
+      },
   },
 };

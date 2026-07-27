@@ -31,10 +31,12 @@ export default function UserBudgetsDrawer(props) {
   return (
     <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: styles.paper }}>
       <Box sx={styles.header}>
-        <Box>
-          <Typography variant="titleMedium">Per-user budgets</Typography>
-          <Typography variant="bodySmall" color="text.secondary">
-            {project?.name}
+        <Box sx={styles.headerText}>
+          <Typography variant="titleMedium" component="div">
+            Per-user budgets
+          </Typography>
+          <Typography variant="bodySmall" component="div" color="text.secondary">
+            {project?.display_name || project?.name}
           </Typography>
         </Box>
         <IconButton size="small" onClick={onClose}>
@@ -119,6 +121,12 @@ const styles = {
     alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: "1rem",
+  },
+  headerText: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.125rem",
+    minWidth: 0,
   },
   body: {
     display: "flex",

@@ -42,7 +42,7 @@ const SOURCE_CONFIG = {
 };
 
 const BUDGETS_COLUMNS = [
-  { field: "name", label: "Project", width: "1.2fr", sortable: true },
+  { field: "name", label: "Project / User", width: "1.2fr", sortable: true },
   {
     field: "is_personal",
     label: "Type",
@@ -106,14 +106,35 @@ const BudgetsTable = memo(function BudgetsTable(props) {
   );
 
   const renderCell = useCallback((column, value, row) => {
+    if (column.field === "name") {
+      // Personal projects are really a user's own budget, so show who it belongs to
+      const label = row?.display_name || value;
+      return (
+        <Tooltip title={row?.is_personal ? `Personal project: ${value}` : ""} placement="top">
+          <Typography variant="bodyMedium" sx={styles.cellText}>
+            {label || "-"}
+          </Typography>
+        </Tooltip>
+      );
+    }
+
     if (column.field === "is_personal") {
       return (
-        <Chip
-          label={value ? "Personal" : "Team"}
-          size="small"
-          variant="outlined"
-          color={value ? "default" : "primary"}
-        />
+        <Tooltip
+          title={
+            value
+              ? "This user's own budget — API and token calls without a project land here"
+              : "A shared team project"
+          }
+          placement="top"
+        >
+          <Chip
+            label={value ? "User" : "Team"}
+            size="small"
+            variant="outlined"
+            color={value ? "secondary" : "primary"}
+          />
+        </Tooltip>
       );
     }
 

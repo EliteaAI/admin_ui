@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import DrawerPage from "@/components/DrawerPage";
@@ -145,17 +146,25 @@ export default function BudgetsPage() {
         sx={styles.tab}
       />
       <Tab
-        label={counts.personal ? `Personal (${counts.personal})` : "Personal"}
+        label={counts.personal ? `Users (${counts.personal})` : "Users"}
         sx={styles.tab}
       />
     </Tabs>
   );
 
   const periodNote = (
-    <Typography variant="bodySmall" color="text.secondary">
-      Current month, updated within a minute of each call.
-      {data?.sorted_within_page ? " Spend sorting applies to this page." : ""}
-    </Typography>
+    <Tooltip
+      title={
+        "User rows are each user's own budget — API and token calls made without a project " +
+        "are billed there. Team rows cap a shared project; open a team project to also set " +
+        "per-member limits inside it."
+      }
+    >
+      <Typography variant="bodySmall" color="text.secondary">
+        Current month, updated within a minute of each call.
+        {data?.sorted_within_page ? " Spend sorting applies to this page." : ""}
+      </Typography>
+    </Tooltip>
   );
 
   return (

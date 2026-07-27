@@ -11,6 +11,7 @@ import BoltIcon from "@mui/icons-material/BoltOutlined";
 import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
 import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
@@ -18,6 +19,7 @@ import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
 import HelpCenterSection from "@/components/SchemaForm/HelpCenterSection";
 import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
 import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
+import CostBudgets from "@/components/SchemaForm/CostBudgets";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   useConfigSchemasQuery,
@@ -71,6 +73,13 @@ const FEATURES_SECTIONS = [
     title: "Voice Features",
     icon: RecordVoiceOverOutlinedIcon,
     backendSectionId: "voice_features",
+    pathPrefix: null,
+  },
+  {
+    id: "cost_budgets",
+    title: "Cost Budgets",
+    icon: AccountBalanceWalletOutlinedIcon,
+    backendSectionId: "cost_budgets",
     pathPrefix: null,
   },
 ];
@@ -292,6 +301,12 @@ const FeaturesPage = memo(() => {
         return (
           <Box sx={styles.formScroll}>
             <VoiceFeatures values={localValues} onChange={handleFieldChange} />
+          </Box>
+        );
+      case "cost_budgets":
+        return (
+          <Box sx={styles.formScroll}>
+            <CostBudgets values={localValues} onChange={handleFieldChange} />
           </Box>
         );
       default:
