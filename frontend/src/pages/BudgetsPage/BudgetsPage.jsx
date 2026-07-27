@@ -3,6 +3,8 @@ import { useCallback, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 
 import DrawerPage from "@/components/DrawerPage";
@@ -22,6 +24,9 @@ import BudgetsTable from "./BudgetsTable";
 import BudgetEditDialog from "./BudgetEditDialog";
 import UserBudgetsDrawer from "./UserBudgetsDrawer";
 
+// Tab index -> project_type filter; undefined means no filter
+const TAB_TYPES = [undefined, "team", "personal"];
+
 export default function BudgetsPage() {
   usePageTitle("Budgets");
 
@@ -35,6 +40,9 @@ export default function BudgetsPage() {
   const debouncedSearch = useDebounceValue(search, 300);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [activeTab, setActiveTab] = useState(0);
 
   const [editTarget, setEditTarget] = useState(null);
   const [drawerProject, setDrawerProject] = useState(null);
@@ -44,11 +52,16 @@ export default function BudgetsPage() {
     severity: "success",
   });
 
+  const projectType = TAB_TYPES[activeTab];
+
   const { data, isFetching, isError } = useProjectBudgetListQuery(
     {
       limit: pageSize,
       offset: page * pageSize,
       search: debouncedSearch || undefined,
+      sort_by: sortBy,
+      sort_order: sortOrder,
+      project_type: projectType,
     },
     { refetchOnMountOrArgChange: true },
   );
@@ -61,13 +74,31 @@ export default function BudgetsPage() {
   const rows = data?.rows || [];
   const total = data?.total || 0;
 
-  const handleSearchChange = useCallback((event) => {
-    setSearch(event.target.value);
+  // DrawerPageHeader passes the raw value, not the change event
+  const handleSearchChange = useCallback((value) => {
+    setSearch(value);
     setPage(0);
   }, []);
 
   const handlePageSizeChange = useCallback((size) => {
     setPageSize(size);
+    setPage(0);
+  }, []);
+
+  const handleSort = useCallback((field) => {
+    setSortBy((prev) => {
+      if (prev === field) {
+        setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
+        return prev;
+      }
+      setSortOrder("asc");
+      return field;
+    });
+    setPage(0);
+  }, []);
+
+  const handleTabChange = useCallback((_event, value) => {
+    setActiveTab(value);
     setPage(0);
   }, []);
 
@@ -104,9 +135,26 @@ export default function BudgetsPage() {
     setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
+  const counts = data?.counts || {};
+
+  const tabsElement = (
+    <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
+      <Tab label="All" sx={styles.tab} />
+      <Tab
+        label={counts.team ? `Team (${counts.team})` : "Team"}
+        sx={styles.tab}
+      />
+      <Tab
+        label={counts.personal ? `Personal (${counts.personal})` : "Personal"}
+        sx={styles.tab}
+      />
+    </Tabs>
+  );
+
   const periodNote = (
     <Typography variant="bodySmall" color="text.secondary">
       Current month, updated within a minute of each call.
+      {data?.sorted_within_page ? " Spend sorting applies to this page." : ""}
     </Typography>
   );
 
@@ -115,6 +163,7 @@ export default function BudgetsPage() {
       <DrawerPage>
         <DrawerPageHeader
           title="Budgets"
+          tabs={tabsElement}
           showSearchInput
           search={search}
           onSearchChange={handleSearchChange}
@@ -134,6 +183,8 @@ export default function BudgetsPage() {
               pageSize={pageSize}
               onPageChange={setPage}
               onPageSizeChange={handlePageSizeChange}
+              sortConfig={{ field: sortBy, direction: sortOrder }}
+              onSort={handleSort}
               isFetching={isFetching}
               canEdit={canEdit}
               onEdit={setEditTarget}
@@ -179,6 +230,23 @@ export default function BudgetsPage() {
 }
 
 const styles = {
+  tabs: ({ palette }) => ({
+    minHeight: "2.5rem",
+    "& .MuiTabs-indicator": {
+      backgroundColor: palette.text.secondary,
+    },
+  }),
+  tab: ({ palette }) => ({
+    textTransform: "none",
+    minHeight: "2.5rem",
+    padding: "0.5rem 1rem",
+    fontSize: "0.8125rem",
+    fontWeight: 500,
+    color: palette.text.metrics,
+    "&.Mui-selected": {
+      color: palette.text.secondary,
+    },
+  }),
   tableContainer: {
     flexGrow: 1,
     minHeight: 0,

@@ -50,9 +50,9 @@ const BUDGETS_COLUMNS = [
     sortable: false,
     hideBelow: 900,
   },
-  { field: "effective_limit", label: "Limit", width: "8rem", sortable: false },
-  { field: "spend", label: "Spend", width: "8rem", sortable: false },
-  { field: "percent_used", label: "Used", width: "10rem", sortable: false },
+  { field: "effective_limit", label: "Limit", width: "8rem", sortable: true },
+  { field: "spend", label: "Spend", width: "8rem", sortable: true },
+  { field: "percent_used", label: "Used", width: "10rem", sortable: true },
   {
     field: "limit_source",
     label: "Source",
