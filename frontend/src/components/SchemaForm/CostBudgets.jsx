@@ -1,5 +1,23 @@
 import { memo, useCallback } from "react";
-import { Box, Switch, TextField, Typography } from "@mui/material";
+import { Box, MenuItem, Select, Switch, TextField, Typography } from "@mui/material";
+
+const MODE_OPTIONS = [
+  {
+    value: "off",
+    label: "Off",
+    hint: "Requests are left untouched and nothing is tracked or blocked. This is a true rollback to pre-feature behaviour.",
+  },
+  {
+    value: "observe",
+    label: "Observe (track only)",
+    hint: "Spend is tracked per project and per user, but no call is ever blocked. Use this to measure real usage before choosing limits.",
+  },
+  {
+    value: "enforce",
+    label: "Enforce (track and block)",
+    hint: "Spend is tracked and calls are rejected once a limit is exceeded.",
+  },
+];
 
 const DEFAULT_LIMIT_FIELDS = [
   {
@@ -22,11 +40,14 @@ const DEFAULT_LIMIT_FIELDS = [
 const CostBudgets = memo((props) => {
   const { values, onChange } = props;
 
-  const enabled = !!values?.cost_budgets_enabled;
+  const mode = values?.cost_budgets_mode || "off";
+  const enforcing = mode === "enforce";
   const defaultsEnabled = !!values?.cost_budgets_defaults_enabled;
 
-  const handleToggleEnabled = useCallback(
-    (e) => onChange("cost_budgets_enabled", e.target.checked),
+  const activeMode = MODE_OPTIONS.find((o) => o.value === mode) || MODE_OPTIONS[0];
+
+  const handleModeChange = useCallback(
+    (e) => onChange("cost_budgets_mode", e.target.value),
     [onChange],
   );
 
@@ -55,41 +76,49 @@ const CostBudgets = memo((props) => {
 
       <Box sx={styles.card}>
         <Box sx={styles.cardRow}>
-          <Box sx={styles.cardLabel}>
+          <Box sx={[styles.cardLabel, { width: "100%" }]}>
             <Typography variant="body2" sx={styles.cardTitle}>
-              Cost Budgets Enabled
+              Cost Budgets Mode
             </Typography>
             <Typography variant="caption" sx={styles.cardHint}>
-              Master switch for per-project and per-user spend limits. When
-              disabled, no spend is tracked or blocked and calls behave exactly
-              as before.
+              {activeMode.hint}
             </Typography>
+            <Select
+              size="small"
+              value={mode}
+              onChange={handleModeChange}
+              sx={styles.select}
+              fullWidth
+            >
+              {MODE_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
           </Box>
-          <Switch checked={enabled} onChange={handleToggleEnabled} />
         </Box>
       </Box>
 
-      <Box sx={styles.card}>
-        <Box sx={styles.cardRow}>
-          <Box sx={styles.cardLabel}>
-            <Typography variant="body2" sx={styles.cardTitle}>
-              Apply Default Limits
-            </Typography>
-            <Typography variant="caption" sx={styles.cardHint}>
-              Apply the limits below to projects and users with no limit set
-              explicitly. When disabled, anything without an explicit limit
-              stays unlimited.
-            </Typography>
+      {enforcing && (
+        <Box sx={styles.card}>
+          <Box sx={styles.cardRow}>
+            <Box sx={styles.cardLabel}>
+              <Typography variant="body2" sx={styles.cardTitle}>
+                Apply Default Limits
+              </Typography>
+              <Typography variant="caption" sx={styles.cardHint}>
+                Apply the limits below to projects and users with no limit set
+                explicitly. When disabled, anything without an explicit limit
+                stays unlimited.
+              </Typography>
+            </Box>
+            <Switch checked={defaultsEnabled} onChange={handleToggleDefaults} />
           </Box>
-          <Switch
-            checked={defaultsEnabled}
-            disabled={!enabled}
-            onChange={handleToggleDefaults}
-          />
         </Box>
-      </Box>
+      )}
 
-      {enabled &&
+      {enforcing &&
         defaultsEnabled &&
         DEFAULT_LIMIT_FIELDS.map((field) => (
           <Box key={field.key} sx={styles.card}>
@@ -159,6 +188,12 @@ const styles = {
     color: palette.text.metrics,
     fontSize: "0.75rem",
   }),
+  select: {
+    marginTop: "0.75rem",
+    "& .MuiSelect-select": {
+      fontSize: "0.875rem",
+    },
+  },
   textField: {
     marginTop: "0.75rem",
     "& .MuiInputBase-input": {

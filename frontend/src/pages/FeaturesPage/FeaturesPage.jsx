@@ -77,7 +77,7 @@ const FEATURES_SECTIONS = [
   },
   {
     id: "cost_budgets",
-    title: "Cost Budgets",
+    title: "Cost Budgets (Beta)",
     icon: AccountBalanceWalletOutlinedIcon,
     backendSectionId: "cost_budgets",
     pathPrefix: null,
