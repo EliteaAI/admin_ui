@@ -98,6 +98,12 @@ export const PERMISSIONS = {
   auditTrail: {
     view: "models.admin.audit_trail.view",
   },
+
+  // Project / user LLM spend budgets
+  budgets: {
+    view: "models.admin.project_budgets.view",
+    edit: "models.admin.project_budgets.edit",
+  },
 };
 
 /**
@@ -115,6 +121,7 @@ export const SIDEBAR_PERMISSIONS = {
   users: [PERMISSIONS.users.section],
   roles: [PERMISSIONS.roles.section, PERMISSIONS.roles.permissions.view],
   projects: [PERMISSIONS.projects.section, PERMISSIONS.projects.list],
+  budgets: [PERMISSIONS.budgets.view],
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
   "app-requests": [PERMISSIONS.users.section],
@@ -143,6 +150,7 @@ export const ROUTE_PERMISSIONS = {
   "/users": SIDEBAR_PERMISSIONS.users,
   "/roles": SIDEBAR_PERMISSIONS.roles,
   "/projects": SIDEBAR_PERMISSIONS.projects,
+  "/budgets": SIDEBAR_PERMISSIONS.budgets,
   "/secrets": SIDEBAR_PERMISSIONS.secrets,
   "/litellm": SIDEBAR_PERMISSIONS.litellm,
   "/app-requests": SIDEBAR_PERMISSIONS["app-requests"],

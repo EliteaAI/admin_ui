@@ -28,6 +28,7 @@ export const adminApi = createApi({
     "Secrets",
     "ServiceDescriptors",
     "AppRequests",
+    "Budgets",
   ],
   endpoints: () => ({}),
 });

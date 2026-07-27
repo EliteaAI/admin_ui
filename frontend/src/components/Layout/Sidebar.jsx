@@ -21,6 +21,7 @@ import TuneIcon from "@mui/icons-material/TuneOutlined";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 import ModelTrainingIcon from "@mui/icons-material/ModelTrainingOutlined";
 import AssignmentIcon from "@mui/icons-material/AssignmentOutlined";
+import BudgetsIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 
 import ThemeModeToggle from "@/components/ThemeModeToggle";
 import UserAvatar from "@/components/UserAvatar";
@@ -54,6 +55,12 @@ const topMenuItems = [
     label: "Projects",
     icon: FolderIcon,
     url: RouteDefinitions.Projects,
+  },
+  {
+    id: "budgets",
+    label: "Budgets",
+    icon: BudgetsIcon,
+    url: RouteDefinitions.Budgets,
   },
   {
     id: "secrets",
