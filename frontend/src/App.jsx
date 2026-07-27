@@ -14,6 +14,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import UsersPage from "@/pages/UsersPage/UsersPage";
 import RolesPage from "@/pages/RolesPage/RolesPage";
 import ProjectsPage from "@/pages/ProjectsPage/ProjectsPage";
+import BudgetsPage from "@/pages/BudgetsPage/BudgetsPage";
 import AuditTrailPage from "@/pages/AuditTrailPage/AuditTrailPage";
 import SchedulesTasksPage from "@/pages/SchedulesTasksPage/SchedulesTasksPage";
 import ConfigurationPage from "@/pages/ConfigurationPage/ConfigurationPage";
@@ -83,6 +84,10 @@ const router = createBrowserRouter(
       <Route
         path={RouteDefinitions.Projects}
         element={guard(RouteDefinitions.Projects, <ProjectsPage />)}
+      />
+      <Route
+        path={RouteDefinitions.Budgets}
+        element={guard(RouteDefinitions.Budgets, <BudgetsPage />)}
       />
       <Route
         path={RouteDefinitions.Secrets}
