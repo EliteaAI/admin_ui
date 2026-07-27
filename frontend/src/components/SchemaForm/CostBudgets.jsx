@@ -1,24 +1,21 @@
 import { memo, useCallback } from "react";
-import Box from "@mui/material/Box";
-import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+import { Box, Switch, TextField, Typography } from "@mui/material";
 
 const DEFAULT_LIMIT_FIELDS = [
   {
     key: "cost_budgets_project_monthly_limit",
-    title: "Team project limit",
-    hint: "Applies to team projects with no limit set explicitly.",
+    title: "Default Team Project Limit",
+    hint: "Monthly limit in USD for team projects with no limit set explicitly. Leave empty for unlimited.",
   },
   {
     key: "cost_budgets_personal_project_monthly_limit",
-    title: "User limit",
-    hint: "Each user's own budget. API and token calls made without a project are billed here.",
+    title: "Default User Limit",
+    hint: "Monthly limit in USD for each user's own budget. API and token calls made without a project are billed here. Leave empty for unlimited.",
   },
   {
     key: "cost_budgets_user_monthly_limit",
-    title: "Per-member limit inside a project",
-    hint: "Caps one member's spend within a project, so a single member cannot consume the whole project budget.",
+    title: "Default Per-Member Limit Inside A Project",
+    hint: "Monthly limit in USD for a single member's spend within a project, so one member cannot consume the whole project budget. Leave empty for unlimited.",
   },
 ];
 
@@ -41,8 +38,8 @@ const CostBudgets = memo((props) => {
   // An empty field means "no default for this scope", which is unlimited
   const handleLimitChange = useCallback(
     (key) => (e) => {
-      const raw = e.target.value;
-      onChange(key, raw.trim() === "" ? null : Number(raw));
+      const val = e.target.value;
+      onChange(key, val === "" ? null : Number(val));
     },
     [onChange],
   );
@@ -56,31 +53,32 @@ const CostBudgets = memo((props) => {
         here apply only where nothing has been set explicitly.
       </Typography>
 
-      <Box sx={styles.toggleCard}>
-        <Box sx={styles.toggleRow}>
-          <Box sx={styles.toggleLabel}>
-            <Typography variant="body2" sx={styles.toggleTitle}>
-              Cost budgets enabled
+      <Box sx={styles.card}>
+        <Box sx={styles.cardRow}>
+          <Box sx={styles.cardLabel}>
+            <Typography variant="body2" sx={styles.cardTitle}>
+              Cost Budgets Enabled
             </Typography>
-            <Typography variant="caption" sx={styles.toggleHint}>
-              When disabled, no spend is tracked or blocked and calls behave
-              exactly as before.
+            <Typography variant="caption" sx={styles.cardHint}>
+              Master switch for per-project and per-user spend limits. When
+              disabled, no spend is tracked or blocked and calls behave exactly
+              as before.
             </Typography>
           </Box>
           <Switch checked={enabled} onChange={handleToggleEnabled} />
         </Box>
+      </Box>
 
-        <Box sx={styles.toggleRow}>
-          <Box sx={styles.toggleLabel}>
-            <Typography
-              variant="body2"
-              sx={enabled ? styles.toggleTitle : styles.disabledTitle}
-            >
-              Apply default limits
+      <Box sx={styles.card}>
+        <Box sx={styles.cardRow}>
+          <Box sx={styles.cardLabel}>
+            <Typography variant="body2" sx={styles.cardTitle}>
+              Apply Default Limits
             </Typography>
-            <Typography variant="caption" sx={styles.toggleHint}>
-              Without defaults, anything without an explicit limit stays
-              unlimited.
+            <Typography variant="caption" sx={styles.cardHint}>
+              Apply the limits below to projects and users with no limit set
+              explicitly. When disabled, anything without an explicit limit
+              stays unlimited.
             </Typography>
           </Box>
           <Switch
@@ -91,96 +89,82 @@ const CostBudgets = memo((props) => {
         </Box>
       </Box>
 
-      {enabled && defaultsEnabled && (
-        <Box sx={styles.limitsCard}>
-          <Typography variant="caption" sx={styles.toggleHint}>
-            Leave a field empty for unlimited.
-          </Typography>
-
-          {DEFAULT_LIMIT_FIELDS.map((field) => (
-            <Box key={field.key} sx={styles.limitRow}>
-              <Box sx={styles.toggleLabel}>
-                <Typography variant="body2" sx={styles.toggleTitle}>
+      {enabled &&
+        defaultsEnabled &&
+        DEFAULT_LIMIT_FIELDS.map((field) => (
+          <Box key={field.key} sx={styles.card}>
+            <Box sx={styles.cardRow}>
+              <Box sx={[styles.cardLabel, { width: "100%" }]}>
+                <Typography variant="body2" sx={styles.cardTitle}>
                   {field.title}
                 </Typography>
-                <Typography variant="caption" sx={styles.toggleHint}>
+                <Typography variant="caption" sx={styles.cardHint}>
                   {field.hint}
                 </Typography>
+                <TextField
+                  size="small"
+                  type="number"
+                  value={values?.[field.key] ?? ""}
+                  onChange={handleLimitChange(field.key)}
+                  placeholder="Unlimited"
+                  sx={styles.textField}
+                  inputProps={{ min: 0, step: "1", inputMode: "decimal" }}
+                  fullWidth
+                />
               </Box>
-              <TextField
-                value={values?.[field.key] ?? ""}
-                onChange={handleLimitChange(field.key)}
-                type="number"
-                size="small"
-                placeholder="Unlimited"
-                sx={styles.limitInput}
-                inputProps={{ min: 0, step: "1", inputMode: "decimal" }}
-              />
             </Box>
-          ))}
-        </Box>
-      )}
+          </Box>
+        ))}
     </Box>
   );
 });
+
+CostBudgets.displayName = "CostBudgets";
 
 const styles = {
   root: {
     display: "flex",
     flexDirection: "column",
-    gap: "1rem",
-    padding: "1rem",
+    gap: "1.25rem",
+    padding: "1.5rem",
   },
   description: ({ palette }) => ({
-    color: palette.text.secondary,
+    color: palette.text.metrics,
+    fontSize: "0.8125rem",
+    lineHeight: 1.6,
   }),
-  toggleCard: ({ palette }) => ({
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-    padding: "1rem",
+  card: ({ palette }) => ({
+    border: `1px solid ${palette.border.table}`,
     borderRadius: "0.5rem",
-    border: `1px solid ${palette.divider}`,
+    overflow: "hidden",
   }),
-  limitsCard: ({ palette }) => ({
+  cardRow: ({ palette }) => ({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "1rem 1.25rem",
+    backgroundColor:
+      palette.background.tabPanel || palette.background.userInputBackground,
+  }),
+  cardLabel: {
     display: "flex",
     flexDirection: "column",
-    gap: "1rem",
-    padding: "1rem",
-    borderRadius: "0.5rem",
-    border: `1px solid ${palette.divider}`,
+    gap: "0.125rem",
+  },
+  cardTitle: {
+    fontWeight: 600,
+    fontSize: "0.875rem",
+  },
+  cardHint: ({ palette }) => ({
+    color: palette.text.metrics,
+    fontSize: "0.75rem",
   }),
-  toggleRow: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: "1rem",
-  },
-  limitRow: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: "1rem",
-  },
-  toggleLabel: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.25rem",
-    maxWidth: "32rem",
-  },
-  toggleTitle: {
-    fontWeight: 500,
-  },
-  disabledTitle: ({ palette }) => ({
-    fontWeight: 500,
-    color: palette.text.disabled,
-  }),
-  toggleHint: ({ palette }) => ({
-    color: palette.text.secondary,
-  }),
-  limitInput: {
-    width: "10rem",
-    flexShrink: 0,
+  textField: {
+    marginTop: "0.75rem",
+    "& .MuiInputBase-input": {
+      fontSize: "0.875rem",
+    },
+    // The native spinner renders unstyled against the dark theme
     "& input[type=number]": {
       MozAppearance: "textfield",
     },
@@ -191,7 +175,5 @@ const styles = {
       },
   },
 };
-
-CostBudgets.displayName = "CostBudgets";
 
 export default CostBudgets;
