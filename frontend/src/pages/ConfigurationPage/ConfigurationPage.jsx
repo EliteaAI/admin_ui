@@ -47,7 +47,7 @@ const SECTION_ICONS = {
   advanced: CodeIcon,
 };
 
-const MOVED_TO_FEATURES = ["resources", "support_assistant", "voice_features"];
+const MOVED_TO_FEATURES = ["resources", "support_assistant", "voice_features", "cost_budgets"];
 // Guardrails-section fields whose config path starts with one of these prefixes have
 // been relocated to the Features page (see FeaturesPage FEATURES_SECTIONS), so they are
 // hidden here. Prefix-based so new publishing_guardrail.*/mcp_exposure.* fields added to
