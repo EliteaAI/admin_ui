@@ -22,6 +22,7 @@ import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 import ModelTrainingIcon from "@mui/icons-material/ModelTrainingOutlined";
 import AssignmentIcon from "@mui/icons-material/AssignmentOutlined";
 import BudgetsIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 
 import ThemeModeToggle from "@/components/ThemeModeToggle";
 import UserAvatar from "@/components/UserAvatar";
@@ -80,6 +81,12 @@ const topMenuItems = [
     icon: AssignmentIcon,
     url: RouteDefinitions.AppRequests,
   },
+  {
+    id: "reports",
+    label: "Reports",
+    icon: SummarizeOutlinedIcon,
+    url: RouteDefinitions.Reports,
+  },
 ];
 
 const bottomMenuItems = [
@@ -113,16 +120,20 @@ const Sidebar = memo(() => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
-  const socketConnected = useSelector(state => state.settings.socketConnected);
-  const user = useSelector(state => state.user.user);
+  const sideBarCollapsed = useSelector(
+    (state) => state.settings.sideBarCollapsed,
+  );
+  const socketConnected = useSelector(
+    (state) => state.settings.socketConnected,
+  );
+  const user = useSelector((state) => state.user.user);
   const { hasAnyPermission } = useCheckPermission();
   const styles = getStyles(sideBarCollapsed, socketConnected);
   const [anchorEl, setAnchorEl] = useState(null);
 
   const filteredTopMenuItems = useMemo(
     () =>
-      topMenuItems.filter(item => {
+      topMenuItems.filter((item) => {
         const required = SIDEBAR_PERMISSIONS[item.id];
         return !required || hasAnyPermission(required);
       }),
@@ -131,7 +142,7 @@ const Sidebar = memo(() => {
 
   const filteredBottomMenuItems = useMemo(
     () =>
-      bottomMenuItems.filter(item => {
+      bottomMenuItems.filter((item) => {
         const required = SIDEBAR_PERMISSIONS[item.id];
         return !required || hasAnyPermission(required);
       }),
@@ -139,7 +150,7 @@ const Sidebar = memo(() => {
   );
 
   const isActiveTab = useCallback(
-    tabId => {
+    (tabId) => {
       const pathSegments = location.pathname.split("/");
       const lastSegment = pathSegments[pathSegments.length - 1];
       return lastSegment === tabId;
@@ -148,13 +159,13 @@ const Sidebar = memo(() => {
   );
 
   const handleItemClick = useCallback(
-    url => {
+    (url) => {
       navigate(url);
     },
     [navigate],
   );
 
-  const handleUserMenuOpen = useCallback(event => {
+  const handleUserMenuOpen = useCallback((event) => {
     setAnchorEl(event.currentTarget);
   }, []);
 
@@ -164,7 +175,8 @@ const Sidebar = memo(() => {
 
   const handleLogout = useCallback(() => {
     handleUserMenuClose();
-    window.location.href = window.location.origin.toString() + "/forward-auth/logout";
+    window.location.href =
+      window.location.origin.toString() + "/forward-auth/logout";
   }, [handleUserMenuClose]);
 
   const handleToggleCollapse = useCallback(() => {
@@ -172,7 +184,7 @@ const Sidebar = memo(() => {
   }, [dispatch]);
 
   const renderMenuItem = useCallback(
-    tab => {
+    (tab) => {
       const IconComponent = tab.icon;
       const isActive = isActiveTab(tab.id);
       return (
@@ -185,10 +197,7 @@ const Sidebar = memo(() => {
             <IconComponent sx={{ fontSize: "0.875rem" }} />
           </Box>
           {!sideBarCollapsed && (
-            <Typography
-              variant="labelSmall"
-              sx={styles.menuItemText(isActive)}
-            >
+            <Typography variant="labelSmall" sx={styles.menuItemText(isActive)}>
               {tab.label}
             </Typography>
           )}
@@ -229,10 +238,7 @@ const Sidebar = memo(() => {
               </Tooltip>
             </IconButton>
             {!sideBarCollapsed && (
-              <Typography
-                variant="headingSmall"
-                sx={styles.headerText}
-              >
+              <Typography variant="headingSmall" sx={styles.headerText}>
                 Elitea Admin
               </Typography>
             )}
@@ -254,10 +260,7 @@ const Sidebar = memo(() => {
               disableRipple
             >
               <Box sx={styles.userButtonContent}>
-                <UserAvatar
-                  name={userName}
-                  size={16}
-                />
+                <UserAvatar name={userName} size={16} />
                 {!sideBarCollapsed && (
                   <>
                     <Typography
@@ -293,10 +296,7 @@ const Sidebar = memo(() => {
           </Box>
         </Box>
       </Box>
-      <Box
-        onClick={handleToggleCollapse}
-        sx={styles.collapseButton}
-      >
+      <Box onClick={handleToggleCollapse} sx={styles.collapseButton}>
         {sideBarCollapsed ? <ArrowRightIcon /> : <ArrowLeftIcon />}
       </Box>
     </Box>
@@ -314,7 +314,8 @@ const getStyles = (collapsed, socketConnected) => ({
     width: collapsed ? COLLAPSED_DRAWER_WIDTH : DRAWER_WIDTH,
     minWidth: collapsed ? COLLAPSED_DRAWER_WIDTH : DRAWER_WIDTH,
     maxWidth: collapsed ? COLLAPSED_DRAWER_WIDTH : DRAWER_WIDTH,
-    transition: "width 0.2s ease-in-out, min-width 0.2s ease-in-out, max-width 0.2s ease-in-out",
+    transition:
+      "width 0.2s ease-in-out, min-width 0.2s ease-in-out, max-width 0.2s ease-in-out",
     borderRight: `0.0625rem solid ${palette.border.table}`,
     backgroundColor: palette.background.tabPanel,
     display: "flex",
@@ -364,7 +365,9 @@ const getStyles = (collapsed, socketConnected) => ({
     background: "transparent",
     position: "relative",
     "&:hover": {
-      backgroundColor: palette.background.conversation?.hover || palette.background.tabButton?.hover,
+      backgroundColor:
+        palette.background.conversation?.hover ||
+        palette.background.tabButton?.hover,
     },
   }),
 
@@ -434,7 +437,9 @@ const getStyles = (collapsed, socketConnected) => ({
     padding: "0.5rem",
     borderRadius: "0.375rem",
     "&:hover": {
-      backgroundColor: palette.background.conversation?.hover || palette.background.tabButton.hover,
+      backgroundColor:
+        palette.background.conversation?.hover ||
+        palette.background.tabButton.hover,
     },
   }),
 
@@ -473,7 +478,7 @@ const getStyles = (collapsed, socketConnected) => ({
   },
 
   menuItem:
-    isActive =>
+    (isActive) =>
     ({ palette }) => ({
       padding: collapsed ? "0.5rem" : "0.5rem 1rem",
       justifyContent: collapsed ? "center" : "flex-start",
@@ -496,19 +501,23 @@ const getStyles = (collapsed, socketConnected) => ({
     }),
 
   iconWrapper:
-    isActive =>
+    (isActive) =>
     ({ palette }) => ({
       display: "flex",
       alignItems: "center",
       minWidth: "0.875rem",
-      color: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
+      color: isActive
+        ? palette.text.secondary
+        : palette.icon.fill.stateButtonHover,
       "& svg": {
-        fill: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
+        fill: isActive
+          ? palette.text.secondary
+          : palette.icon.fill.stateButtonHover,
       },
     }),
 
   menuItemText:
-    isActive =>
+    (isActive) =>
     ({ palette }) => ({
       color: isActive ? palette.text.secondary : palette.text.metrics,
     }),

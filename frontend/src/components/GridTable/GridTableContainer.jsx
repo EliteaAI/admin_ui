@@ -1,7 +1,7 @@
-import { memo } from 'react';
+import { memo } from "react";
 
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const GridTableContainer = memo(function GridTableContainer(props) {
   const {
@@ -9,8 +9,8 @@ const GridTableContainer = memo(function GridTableContainer(props) {
     toolbar,
     isLoading = false,
     isEmpty = false,
-    emptyMessage = 'No data',
-    loadingMessage = 'Loading...',
+    emptyMessage = "No data",
+    loadingMessage = "Loading...",
     sx = {},
   } = props;
 
@@ -44,30 +44,30 @@ const GridTableContainer = memo(function GridTableContainer(props) {
 const gridTableContainerStyles = () => ({
   root: {
     flex: 1,
-    display: 'flex',
-    height: '100%',
-    flexDirection: 'column',
-    gap: '0.3rem',
+    display: "flex",
+    height: "100%",
+    flexDirection: "column",
+    gap: "0.3rem",
   },
   toolbar: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0.7rem 1.5rem',
+    display: "flex",
+    alignItems: "center",
+    padding: "0.7rem 1.5rem",
   },
   tableWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
     flex: 1,
     minHeight: 0,
-    gap: '0.75rem',
-    overflow: 'hidden',
-    padding: '0 1.5rem 1rem',
+    gap: "0.75rem",
+    overflow: "hidden",
+    padding: "0 1.5rem 1rem",
   },
   stateContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '3rem',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "3rem",
   },
 });
 

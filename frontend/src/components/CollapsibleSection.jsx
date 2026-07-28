@@ -5,20 +5,28 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-const CollapsibleSection = memo(props => {
-  const { icon: IconComponent, title, count, expanded, onToggle, children } = props;
+const CollapsibleSection = memo((props) => {
+  const {
+    icon: IconComponent,
+    title,
+    count,
+    expanded,
+    onToggle,
+    children,
+  } = props;
 
   const handleChevronClick = useCallback(
-    e => {
+    (e) => {
       e.stopPropagation();
       onToggle();
     },
     [onToggle],
   );
 
-  const countLabel = count !== undefined
-    ? `${count} ${count === 1 ? "setting" : "settings"}`
-    : null;
+  const countLabel =
+    count !== undefined
+      ? `${count} ${count === 1 ? "setting" : "settings"}`
+      : null;
 
   return (
     <Box sx={styles.sectionContainer}>
@@ -34,7 +42,11 @@ const CollapsibleSection = memo(props => {
             </Typography>
           )}
         </Box>
-        <IconButton size="small" sx={styles.expandIcon(expanded)} onClick={handleChevronClick}>
+        <IconButton
+          size="small"
+          sx={styles.expandIcon(expanded)}
+          onClick={handleChevronClick}
+        >
           <ExpandMoreIcon />
         </IconButton>
       </Box>
@@ -54,7 +66,7 @@ const styles = {
     overflow: "visible",
   }),
   sectionHeader:
-    expanded =>
+    (expanded) =>
     ({ palette }) => ({
       display: "flex",
       alignItems: "center",
@@ -96,7 +108,7 @@ const styles = {
     whiteSpace: "nowrap",
     flexShrink: 0,
   }),
-  expandIcon: expanded => ({
+  expandIcon: (expanded) => ({
     transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
     transition: "transform 0.2s ease",
     flexShrink: 0,

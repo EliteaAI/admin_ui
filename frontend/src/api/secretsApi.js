@@ -1,12 +1,12 @@
-import { adminApi } from './adminApi';
+import { adminApi } from "./adminApi";
 
 export const secretsApi = adminApi.injectEndpoints({
   endpoints: (build) => ({
     secretList: build.query({
       query: () => ({
-        url: '/secrets/secrets/administration/0',
+        url: "/secrets/secrets/administration/0",
       }),
-      providesTags: ['Secrets'],
+      providesTags: ["Secrets"],
     }),
 
     secretReveal: build.query({
@@ -18,27 +18,27 @@ export const secretsApi = adminApi.injectEndpoints({
     secretCreate: build.mutation({
       query: ({ name, value }) => ({
         url: `/secrets/secret/administration/0/${encodeURIComponent(name)}`,
-        method: 'POST',
+        method: "POST",
         body: { secret: value },
       }),
-      invalidatesTags: ['Secrets'],
+      invalidatesTags: ["Secrets"],
     }),
 
     secretUpdate: build.mutation({
       query: ({ name, value }) => ({
         url: `/secrets/secret/administration/0/${encodeURIComponent(name)}`,
-        method: 'PUT',
+        method: "PUT",
         body: { secret: { old_name: name, value } },
       }),
-      invalidatesTags: ['Secrets'],
+      invalidatesTags: ["Secrets"],
     }),
 
     secretDelete: build.mutation({
       query: ({ name }) => ({
         url: `/secrets/secret/administration/0/${encodeURIComponent(name)}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Secrets'],
+      invalidatesTags: ["Secrets"],
     }),
   }),
 });

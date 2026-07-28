@@ -1,82 +1,142 @@
-import { Fragment, memo, useCallback, useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useMemo, useState } from "react";
 
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import Skeleton from '@mui/material/Skeleton';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import Skeleton from "@mui/material/Skeleton";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
-import HttpOutlined from '@mui/icons-material/HttpOutlined';
-import CableOutlined from '@mui/icons-material/CableOutlined';
-import SyncAltOutlined from '@mui/icons-material/SyncAltOutlined';
-import SmartToyOutlined from '@mui/icons-material/SmartToyOutlined';
-import BuildOutlined from '@mui/icons-material/BuildOutlined';
-import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
-import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
-import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
-import HelpOutlineOutlined from '@mui/icons-material/HelpOutlineOutlined';
+import HttpOutlined from "@mui/icons-material/HttpOutlined";
+import CableOutlined from "@mui/icons-material/CableOutlined";
+import SyncAltOutlined from "@mui/icons-material/SyncAltOutlined";
+import SmartToyOutlined from "@mui/icons-material/SmartToyOutlined";
+import BuildOutlined from "@mui/icons-material/BuildOutlined";
+import AutoAwesomeOutlined from "@mui/icons-material/AutoAwesomeOutlined";
+import ScheduleOutlined from "@mui/icons-material/ScheduleOutlined";
+import AssignmentOutlined from "@mui/icons-material/AssignmentOutlined";
+import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 
-import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
-import { useAuditTrailListQuery } from '@/api/auditTrailApi';
+import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
+import { useAuditTrailListQuery } from "@/api/auditTrailApi";
 import {
   GridTableContainer,
   GridTableHeader,
   GridTableBody,
   GridTablePagination,
-} from '@/components/GridTable';
+} from "@/components/GridTable";
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
 
 const EVENT_TYPE_CONFIG = {
-  api: { icon: HttpOutlined, color: '#3b82f6', label: 'API' },
-  socketio: { icon: CableOutlined, color: '#8b5cf6', label: 'Socket.IO' },
-  rpc: { icon: SyncAltOutlined, color: '#6366f1', label: 'RPC' },
-  agent: { icon: SmartToyOutlined, color: '#f59e0b', label: 'Agent' },
-  tool: { icon: BuildOutlined, color: '#10b981', label: 'Tool' },
-  llm: { icon: AutoAwesomeOutlined, color: '#ec4899', label: 'LLM' },
-  schedule: { icon: ScheduleOutlined, color: '#f59e0b', label: 'Schedule' },
-  admin_task: { icon: AssignmentOutlined, color: '#06b6d4', label: 'Admin Task' },
+  api: { icon: HttpOutlined, color: "#3b82f6", label: "API" },
+  socketio: { icon: CableOutlined, color: "#8b5cf6", label: "Socket.IO" },
+  rpc: { icon: SyncAltOutlined, color: "#6366f1", label: "RPC" },
+  agent: { icon: SmartToyOutlined, color: "#f59e0b", label: "Agent" },
+  tool: { icon: BuildOutlined, color: "#10b981", label: "Tool" },
+  llm: { icon: AutoAwesomeOutlined, color: "#ec4899", label: "LLM" },
+  schedule: { icon: ScheduleOutlined, color: "#f59e0b", label: "Schedule" },
+  admin_task: {
+    icon: AssignmentOutlined,
+    color: "#06b6d4",
+    label: "Admin Task",
+  },
 };
 
-const DEFAULT_EVENT_CONFIG = { icon: HelpOutlineOutlined, color: '#94a3b8', label: 'Unknown' };
+const DEFAULT_EVENT_CONFIG = {
+  icon: HelpOutlineOutlined,
+  color: "#94a3b8",
+  label: "Unknown",
+};
 
 const TRACE_COLUMNS = [
-  { field: 'expand', label: '', width: '2.5rem', sortable: false },
-  { field: 'start_time', label: 'Time', width: '9rem', sortable: true },
-  { field: 'root_event_type', label: 'Type', width: '3rem', sortable: false },
-  { field: 'root_action', label: 'Action', width: 'minmax(0, 1fr)', sortable: false },
-  { field: 'user_email', label: 'User', width: '10rem', sortable: true, hideBelow: 800 },
-  { field: 'duration_ms', label: 'Duration', width: '5.5rem', sortable: true, hideBelow: 900 },
-  { field: 'span_count', label: 'Spans', width: '3.5rem', sortable: true },
-  { field: 'project_id', label: 'Project', width: '4.5rem', sortable: true, hideBelow: 1000 },
+  { field: "expand", label: "", width: "2.5rem", sortable: false },
+  { field: "start_time", label: "Time", width: "9rem", sortable: true },
+  { field: "root_event_type", label: "Type", width: "3rem", sortable: false },
+  {
+    field: "root_action",
+    label: "Action",
+    width: "minmax(0, 1fr)",
+    sortable: false,
+  },
+  {
+    field: "user_email",
+    label: "User",
+    width: "10rem",
+    sortable: true,
+    hideBelow: 800,
+  },
+  {
+    field: "duration_ms",
+    label: "Duration",
+    width: "5.5rem",
+    sortable: true,
+    hideBelow: 900,
+  },
+  { field: "span_count", label: "Spans", width: "3.5rem", sortable: true },
+  {
+    field: "project_id",
+    label: "Project",
+    width: "4.5rem",
+    sortable: true,
+    hideBelow: 1000,
+  },
 ];
 
 // Span columns for expanded view (no expand icon column)
 const SPAN_COLUMNS = [
-  { field: 'timestamp', label: 'Time', width: '9rem', sortable: false },
-  { field: 'event_type', label: 'Type', width: '3rem', sortable: false },
-  { field: 'action', label: 'Action', width: 'minmax(0, 1fr)', sortable: false },
-  { field: 'user_email', label: 'User', width: '10rem', sortable: false, hideBelow: 800 },
-  { field: 'status_code', label: 'Status', width: '3rem', sortable: false, hideBelow: 900 },
-  { field: 'duration_ms', label: 'Duration', width: '5.5rem', sortable: false, hideBelow: 900 },
-  { field: 'project_id', label: 'Project', width: '4.5rem', sortable: false, hideBelow: 1000 },
+  { field: "timestamp", label: "Time", width: "9rem", sortable: false },
+  { field: "event_type", label: "Type", width: "3rem", sortable: false },
+  {
+    field: "action",
+    label: "Action",
+    width: "minmax(0, 1fr)",
+    sortable: false,
+  },
+  {
+    field: "user_email",
+    label: "User",
+    width: "10rem",
+    sortable: false,
+    hideBelow: 800,
+  },
+  {
+    field: "status_code",
+    label: "Status",
+    width: "3rem",
+    sortable: false,
+    hideBelow: 900,
+  },
+  {
+    field: "duration_ms",
+    label: "Duration",
+    width: "5.5rem",
+    sortable: false,
+    hideBelow: 900,
+  },
+  {
+    field: "project_id",
+    label: "Project",
+    width: "4.5rem",
+    sortable: false,
+    hideBelow: 1000,
+  },
 ];
 
 function formatTimestamp(value) {
-  if (!value) return '-';
+  if (!value) return "-";
   try {
     const d = new Date(value);
     return d.toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
   } catch {
     return String(value);
@@ -84,12 +144,11 @@ function formatTimestamp(value) {
 }
 
 function formatDuration(ms) {
-  if (ms == null) return '-';
-  if (ms < 1) return '<1ms';
+  if (ms == null) return "-";
+  if (ms < 1) return "<1ms";
   if (ms < 1000) return `${Math.round(ms)}ms`;
   return `${(ms / 1000).toFixed(1)}s`;
 }
-
 
 /**
  * Lazy-loaded expanded spans for a single trace.
@@ -97,7 +156,7 @@ function formatDuration(ms) {
  */
 const TraceSpans = memo(function TraceSpans({ traceId }) {
   const { data, isFetching } = useAuditTrailListQuery(
-    { trace_id: traceId, limit: 200, sort_by: 'timestamp', sort_order: 'asc' },
+    { trace_id: traceId, limit: 200, sort_by: "timestamp", sort_order: "asc" },
     { skip: !traceId },
   );
 
@@ -107,14 +166,19 @@ const TraceSpans = memo(function TraceSpans({ traceId }) {
   }, []);
 
   const gridTemplateColumns = useMemo(
-    () => `2.5rem ${spanColumns.map((c) => c.width).join(' ')}`,
+    () => `2.5rem ${spanColumns.map((c) => c.width).join(" ")}`,
     [spanColumns],
   );
 
   if (isFetching) {
     return (
       <Box sx={styles.spanLoadingRow}>
-        <Skeleton variant="rectangular" width="100%" height="2rem" sx={{ borderRadius: '0.25rem' }} />
+        <Skeleton
+          variant="rectangular"
+          width="100%"
+          height="2rem"
+          sx={{ borderRadius: "0.25rem" }}
+        />
       </Box>
     );
   }
@@ -137,32 +201,38 @@ const TraceSpans = memo(function TraceSpans({ traceId }) {
       {spanColumns.map((column) => {
         const value = span[column.field];
 
-        if (column.field === 'timestamp') {
+        if (column.field === "timestamp") {
           return (
             <Box key={column.field} sx={styles.spanCell}>
-              <Typography variant="bodySmall" color="text.metrics" sx={styles.cellText}>
+              <Typography
+                variant="bodySmall"
+                color="text.metrics"
+                sx={styles.cellText}
+              >
                 {formatTimestamp(value)}
               </Typography>
             </Box>
           );
         }
 
-        if (column.field === 'event_type') {
+        if (column.field === "event_type") {
           const config = EVENT_TYPE_CONFIG[value] || DEFAULT_EVENT_CONFIG;
           const IconComponent = config.icon;
           return (
             <Box key={column.field} sx={styles.spanCell}>
               <Tooltip title={config.label} placement="top" arrow>
                 <Box sx={styles.iconCell}>
-                  <IconComponent sx={{ fontSize: '0.9375rem', color: config.color }} />
+                  <IconComponent
+                    sx={{ fontSize: "0.9375rem", color: config.color }}
+                  />
                 </Box>
               </Tooltip>
             </Box>
           );
         }
 
-        if (column.field === 'action') {
-          let display = value || '-';
+        if (column.field === "action") {
+          let display = value || "-";
           if (span.tool_name || span.model_name) {
             display = `${value} [${span.tool_name || span.model_name}]`;
           }
@@ -172,7 +242,7 @@ const TraceSpans = memo(function TraceSpans({ traceId }) {
                 variant="bodySmall"
                 sx={{
                   ...styles.cellText,
-                  color: span.is_error ? 'error.main' : 'text.metrics',
+                  color: span.is_error ? "error.main" : "text.metrics",
                 }}
               >
                 {display}
@@ -181,13 +251,21 @@ const TraceSpans = memo(function TraceSpans({ traceId }) {
           );
         }
 
-        if (column.field === 'status_code') {
-          if (value == null) return <Box key={column.field} sx={styles.spanCell}>-</Box>;
+        if (column.field === "status_code") {
+          if (value == null)
+            return (
+              <Box key={column.field} sx={styles.spanCell}>
+                -
+              </Box>
+            );
           return (
             <Box key={column.field} sx={styles.spanCell}>
               <Typography
                 variant="bodySmall"
-                sx={{ ...styles.cellText, color: value >= 400 ? 'error.main' : 'text.metrics' }}
+                sx={{
+                  ...styles.cellText,
+                  color: value >= 400 ? "error.main" : "text.metrics",
+                }}
               >
                 {value}
               </Typography>
@@ -195,10 +273,14 @@ const TraceSpans = memo(function TraceSpans({ traceId }) {
           );
         }
 
-        if (column.field === 'duration_ms') {
+        if (column.field === "duration_ms") {
           return (
             <Box key={column.field} sx={styles.spanCell}>
-              <Typography variant="bodySmall" color="text.metrics" sx={styles.cellText}>
+              <Typography
+                variant="bodySmall"
+                color="text.metrics"
+                sx={styles.cellText}
+              >
                 {formatDuration(value)}
               </Typography>
             </Box>
@@ -207,8 +289,12 @@ const TraceSpans = memo(function TraceSpans({ traceId }) {
 
         return (
           <Box key={column.field} sx={styles.spanCell}>
-            <Typography variant="bodySmall" color="text.metrics" sx={styles.cellText}>
-              {value != null ? String(value) : '-'}
+            <Typography
+              variant="bodySmall"
+              color="text.metrics"
+              sx={styles.cellText}
+            >
+              {value != null ? String(value) : "-"}
             </Typography>
           </Box>
         );
@@ -216,7 +302,6 @@ const TraceSpans = memo(function TraceSpans({ traceId }) {
     </Box>
   ));
 });
-
 
 /**
  * AuditTraceTable — shows traces (grouped by trace_id) with expand/collapse.
@@ -258,15 +343,21 @@ const AuditTraceTable = memo(function AuditTraceTable(props) {
     });
   }, []);
 
-  const handlePageChange = useCallback((newPage) => {
-    setExpandedTraces(new Set());
-    onPageChange(newPage);
-  }, [onPageChange]);
+  const handlePageChange = useCallback(
+    (newPage) => {
+      setExpandedTraces(new Set());
+      onPageChange(newPage);
+    },
+    [onPageChange],
+  );
 
-  const handlePageSizeChange = useCallback((newSize) => {
-    setExpandedTraces(new Set());
-    onPageSizeChange(newSize);
-  }, [onPageSizeChange]);
+  const handlePageSizeChange = useCallback(
+    (newSize) => {
+      setExpandedTraces(new Set());
+      onPageSizeChange(newSize);
+    },
+    [onPageSizeChange],
+  );
 
   const paginationProps = useMemo(
     () => ({
@@ -284,92 +375,116 @@ const AuditTraceTable = memo(function AuditTraceTable(props) {
     [total, page, pageSize, handlePageChange, handlePageSizeChange],
   );
 
-  const renderTraceCell = useCallback((column, value, row) => {
-    if (column.field === 'expand') {
-      const isExpanded = expandedTraces.has(row.trace_id);
-      return (
-        <IconButton
-          size="small"
-          onClick={(e) => { e.stopPropagation(); toggleExpand(row.trace_id); }}
-          sx={styles.expandButton}
-        >
-          {isExpanded ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
-        </IconButton>
-      );
-    }
+  const renderTraceCell = useCallback(
+    (column, value, row) => {
+      if (column.field === "expand") {
+        const isExpanded = expandedTraces.has(row.trace_id);
+        return (
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleExpand(row.trace_id);
+            }}
+            sx={styles.expandButton}
+          >
+            {isExpanded ? (
+              <ExpandMoreIcon fontSize="small" />
+            ) : (
+              <ChevronRightIcon fontSize="small" />
+            )}
+          </IconButton>
+        );
+      }
 
-    if (column.field === 'start_time') {
-      return (
-        <Typography variant="bodySmall" color="text.secondary" sx={styles.cellText}>
-          {formatTimestamp(value)}
-        </Typography>
-      );
-    }
+      if (column.field === "start_time") {
+        return (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            sx={styles.cellText}
+          >
+            {formatTimestamp(value)}
+          </Typography>
+        );
+      }
 
-    if (column.field === 'root_event_type') {
-      const config = EVENT_TYPE_CONFIG[value] || DEFAULT_EVENT_CONFIG;
-      const IconComponent = config.icon;
-      return (
-        <Tooltip title={config.label} placement="top" arrow>
-          <Box sx={styles.iconCell}>
-            <IconComponent sx={{ fontSize: '1.125rem', color: config.color }} />
-          </Box>
-        </Tooltip>
-      );
-    }
+      if (column.field === "root_event_type") {
+        const config = EVENT_TYPE_CONFIG[value] || DEFAULT_EVENT_CONFIG;
+        const IconComponent = config.icon;
+        return (
+          <Tooltip title={config.label} placement="top" arrow>
+            <Box sx={styles.iconCell}>
+              <IconComponent
+                sx={{ fontSize: "1.125rem", color: config.color }}
+              />
+            </Box>
+          </Tooltip>
+        );
+      }
 
-    if (column.field === 'root_action') {
-      const display = value || '-';
-      return (
-        <Tooltip title={`trace: ${row.trace_id}`} placement="top">
+      if (column.field === "root_action") {
+        const display = value || "-";
+        return (
+          <Tooltip title={`trace: ${row.trace_id}`} placement="top">
+            <Typography
+              variant="bodyMedium"
+              sx={{
+                ...styles.cellText,
+                color: row.has_error ? "error.main" : "text.secondary",
+                cursor: onTraceClick ? "pointer" : "default",
+                "&:hover": onTraceClick ? { textDecoration: "underline" } : {},
+              }}
+              onClick={
+                onTraceClick ? () => onTraceClick(row.trace_id) : undefined
+              }
+            >
+              {display}
+            </Typography>
+          </Tooltip>
+        );
+      }
+
+      if (column.field === "duration_ms") {
+        return (
           <Typography
             variant="bodyMedium"
-            sx={{
-              ...styles.cellText,
-              color: row.has_error ? 'error.main' : 'text.secondary',
-              cursor: onTraceClick ? 'pointer' : 'default',
-              '&:hover': onTraceClick ? { textDecoration: 'underline' } : {},
-            }}
-            onClick={onTraceClick ? () => onTraceClick(row.trace_id) : undefined}
+            color="text.secondary"
+            sx={styles.cellText}
           >
-            {display}
+            {formatDuration(value)}
           </Typography>
-        </Tooltip>
-      );
-    }
+        );
+      }
 
-    if (column.field === 'duration_ms') {
+      if (column.field === "span_count") {
+        return <Chip label={value} size="small" sx={styles.spanCountChip} />;
+      }
+
+      if (column.field === "user_email") {
+        return (
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.cellText}
+          >
+            {value || "-"}
+          </Typography>
+        );
+      }
+
       return (
-        <Typography variant="bodyMedium" color="text.secondary" sx={styles.cellText}>
-          {formatDuration(value)}
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          sx={styles.cellText}
+        >
+          {value != null ? String(value) : "-"}
         </Typography>
       );
-    }
-
-    if (column.field === 'span_count') {
-      return (
-        <Chip
-          label={value}
-          size="small"
-          sx={styles.spanCountChip}
-        />
-      );
-    }
-
-    if (column.field === 'user_email') {
-      return (
-        <Typography variant="bodyMedium" color="text.secondary" sx={styles.cellText}>
-          {value || '-'}
-        </Typography>
-      );
-    }
-
-    return (
-      <Typography variant="bodyMedium" color="text.secondary" sx={styles.cellText}>
-        {value != null ? String(value) : '-'}
-      </Typography>
-    );
-  }, [expandedTraces, toggleExpand, onTraceClick]);
+    },
+    [expandedTraces, toggleExpand, onTraceClick],
+  );
 
   return (
     <Box sx={styles.tableContainer}>
@@ -397,7 +512,11 @@ const AuditTraceTable = memo(function AuditTraceTable(props) {
             return (
               <Fragment key={trace.trace_id}>
                 <Box
-                  sx={styles.traceRow(gridTemplateColumns, isExpanded, hoveredTraceId === trace.trace_id)}
+                  sx={styles.traceRow(
+                    gridTemplateColumns,
+                    isExpanded,
+                    hoveredTraceId === trace.trace_id,
+                  )}
                   onMouseEnter={() => setHoveredTraceId(trace.trace_id)}
                   onMouseLeave={() => setHoveredTraceId(null)}
                   onClick={() => toggleExpand(trace.trace_id)}
@@ -426,89 +545,93 @@ const AuditTraceTable = memo(function AuditTraceTable(props) {
 
 const styles = {
   tableContainer: {
-    height: '100%',
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
+    height: "100%",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
   },
   loadingOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.04)",
     zIndex: 2,
-    pointerEvents: 'none',
+    pointerEvents: "none",
   },
-  traceRow: (gridTemplateColumns, isExpanded, isHovered) => ({ palette }) => ({
-    display: 'grid',
-    gridTemplateColumns,
-    alignItems: 'center',
-    width: '100%',
-    minHeight: '2.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: isExpanded
-      ? palette.background.tabPanel
-      : isHovered
-        ? palette.background.userInputBackground
-        : 'transparent',
-    transition: 'background-color 0.2s ease',
-    cursor: 'pointer',
-  }),
-  spanRow: (gridTemplateColumns) => ({ palette }) => ({
-    display: 'grid',
-    gridTemplateColumns,
-    alignItems: 'center',
-    width: '100%',
-    minHeight: '2rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.userInputBackground,
-  }),
+  traceRow:
+    (gridTemplateColumns, isExpanded, isHovered) =>
+    ({ palette }) => ({
+      display: "grid",
+      gridTemplateColumns,
+      alignItems: "center",
+      width: "100%",
+      minHeight: "2.5rem",
+      borderBottom: `0.0625rem solid ${palette.border.table}`,
+      backgroundColor: isExpanded
+        ? palette.background.tabPanel
+        : isHovered
+          ? palette.background.userInputBackground
+          : "transparent",
+      transition: "background-color 0.2s ease",
+      cursor: "pointer",
+    }),
+  spanRow:
+    (gridTemplateColumns) =>
+    ({ palette }) => ({
+      display: "grid",
+      gridTemplateColumns,
+      alignItems: "center",
+      width: "100%",
+      minHeight: "2rem",
+      borderBottom: `0.0625rem solid ${palette.border.table}`,
+      backgroundColor: palette.background.userInputBackground,
+    }),
   spanLoadingRow: ({ palette }) => ({
-    padding: '0.5rem 1rem 0.5rem 3.5rem',
+    padding: "0.5rem 1rem 0.5rem 3.5rem",
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     backgroundColor: palette.background.userInputBackground,
   }),
   spanEmptyRow: ({ palette }) => ({
-    padding: '0.75rem 1rem 0.75rem 3.5rem',
+    padding: "0.75rem 1rem 0.75rem 3.5rem",
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     backgroundColor: palette.background.userInputBackground,
   }),
   dataCell: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0.5rem 0.5rem',
+    display: "flex",
+    alignItems: "center",
+    padding: "0.5rem 0.5rem",
     minWidth: 0,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   spanCell: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0.25rem 0.5rem',
+    display: "flex",
+    alignItems: "center",
+    padding: "0.25rem 0.5rem",
     minWidth: 0,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   cellText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   iconCell: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   expandButton: {
-    padding: '0.125rem',
+    padding: "0.125rem",
   },
   spanCountChip: ({ palette }) => ({
-    height: '1.25rem',
-    fontSize: '0.6875rem',
+    height: "1.25rem",
+    fontSize: "0.6875rem",
     fontWeight: 600,
     backgroundColor: palette.background.tabPanel,
     color: palette.text.secondary,

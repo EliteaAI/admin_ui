@@ -65,7 +65,8 @@ const FieldCard = memo((props) => {
 
   const isBoolean = field.type === "boolean";
   const hasBuiltinDefault =
-    typeof field.builtin_default === "string" && field.builtin_default.length > 0;
+    typeof field.builtin_default === "string" &&
+    field.builtin_default.length > 0;
   const atBuiltinDefault =
     hasBuiltinDefault && (values[field.key] || "") === field.builtin_default;
   const expandable = useMemo(() => {
@@ -199,12 +200,18 @@ const CollapsibleSection = (props) => {
 };
 
 const GuardrailsSection = memo((props) => {
-  const { fields, values, sectionDescription, onChange, defaultExpanded = false } = props;
+  const {
+    fields,
+    values,
+    sectionDescription,
+    onChange,
+    defaultExpanded = false,
+  } = props;
 
   const styles = guardRailsStyles();
 
-  const [expandedSections, setExpandedSections] = useState(
-    () => defaultExpanded
+  const [expandedSections, setExpandedSections] = useState(() =>
+    defaultExpanded
       ? Object.fromEntries(SECTION_CONFIG.map((s) => [s.id, true]))
       : {},
   );
@@ -256,7 +263,8 @@ const GuardrailsSection = memo((props) => {
   // Find fields not claimed by any section
   const ungroupedFields = useMemo(() => {
     return visibleFields.filter(
-      (field) => !SECTION_CONFIG.some((section) => sectionClaimsField(section, field)),
+      (field) =>
+        !SECTION_CONFIG.some((section) => sectionClaimsField(section, field)),
     );
   }, [visibleFields]);
 

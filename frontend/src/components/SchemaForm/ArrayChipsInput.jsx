@@ -1,14 +1,20 @@
-import { memo, useCallback, useMemo, useState } from 'react';
-import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import TextField from '@mui/material/TextField';
+import { memo, useCallback, useMemo, useState } from "react";
+import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import TextField from "@mui/material/TextField";
 
 const defaultFilter = createFilterOptions();
 const MAX_DROPDOWN_OPTIONS = 50;
 
-const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggestions, labels, placeholder }) {
-  const [inputValue, setInputValue] = useState('');
+const ArrayChipsInput = memo(function ArrayChipsInput({
+  value,
+  onChange,
+  suggestions,
+  labels,
+  placeholder,
+}) {
+  const [inputValue, setInputValue] = useState("");
 
   const getLabel = useCallback(
     (item) => labels?.[String(item)] || String(item),
@@ -52,7 +58,11 @@ const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggest
           renderInput={(params) => (
             <TextField
               {...params}
-              placeholder={value.length === 0 ? (placeholder || 'Type to search and filter...') : ''}
+              placeholder={
+                value.length === 0
+                  ? placeholder || "Type to search and filter..."
+                  : ""
+              }
               sx={styles.input}
             />
           )}
@@ -81,22 +91,22 @@ const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggest
 
   // Fallback: plain text input with Enter/comma to add
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      const trimmed = inputValue.trim().replace(/,+$/, '');
+      const trimmed = inputValue.trim().replace(/,+$/, "");
       if (trimmed && !value.includes(trimmed)) {
         onChange([...value, trimmed]);
       }
-      setInputValue('');
+      setInputValue("");
     }
   };
 
   const handleBlur = () => {
-    const trimmed = inputValue.trim().replace(/,+$/, '');
+    const trimmed = inputValue.trim().replace(/,+$/, "");
     if (trimmed && !value.includes(trimmed)) {
       onChange([...value, trimmed]);
     }
-    setInputValue('');
+    setInputValue("");
   };
 
   return (
@@ -104,7 +114,7 @@ const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggest
       <TextField
         fullWidth
         size="small"
-        placeholder={placeholder || 'Type and press Enter to add'}
+        placeholder={placeholder || "Type and press Enter to add"}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -130,30 +140,31 @@ const ArrayChipsInput = memo(function ArrayChipsInput({ value, onChange, suggest
 
 const styles = {
   input: ({ palette }) => ({
-    '& .MuiOutlinedInput-root': {
-      fontSize: '0.8125rem',
+    "& .MuiOutlinedInput-root": {
+      fontSize: "0.8125rem",
       backgroundColor: palette.background.default,
     },
   }),
   autocomplete: {
-    '& .MuiOutlinedInput-root': {
-      padding: '2px 8px',
+    "& .MuiOutlinedInput-root": {
+      padding: "2px 8px",
     },
   },
   popper: {
-    '& .MuiAutocomplete-option': {
-      fontSize: '0.8125rem',
+    "& .MuiAutocomplete-option": {
+      fontSize: "0.8125rem",
     },
   },
   chipsContainer: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.375rem',
-    marginTop: '0.5rem',
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "0.375rem",
+    marginTop: "0.5rem",
   },
   chip: ({ palette }) => ({
-    fontSize: '0.75rem',
-    backgroundColor: palette.background.tabButton?.active || palette.action.selected,
+    fontSize: "0.75rem",
+    backgroundColor:
+      palette.background.tabButton?.active || palette.action.selected,
   }),
 };
 

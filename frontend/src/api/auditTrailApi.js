@@ -1,4 +1,4 @@
-import { adminApi } from './adminApi';
+import { adminApi } from "./adminApi";
 
 export const auditTrailApi = adminApi.injectEndpoints({
   endpoints: (build) => ({
@@ -39,7 +39,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
           ...(duration_max != null && { duration_max }),
         },
       }),
-      providesTags: ['AuditTrail'],
+      providesTags: ["AuditTrail"],
     }),
 
     auditHeatmap: build.query({
@@ -65,7 +65,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
           ...(trace_id && { trace_id }),
         },
       }),
-      providesTags: ['AuditHeatmap'],
+      providesTags: ["AuditHeatmap"],
     }),
 
     auditTraceList: build.query({
@@ -103,7 +103,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
           ...(duration_max != null && { duration_max }),
         },
       }),
-      providesTags: ['AuditTraceList'],
+      providesTags: ["AuditTraceList"],
     }),
 
     auditTraceHeatmap: build.query({
@@ -129,7 +129,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
           ...(trace_id && { trace_id }),
         },
       }),
-      providesTags: ['AuditTraceHeatmap'],
+      providesTags: ["AuditTraceHeatmap"],
     }),
   }),
 });

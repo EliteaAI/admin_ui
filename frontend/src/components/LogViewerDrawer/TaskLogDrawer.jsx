@@ -66,9 +66,8 @@ const TaskLogDrawer = memo((props) => {
     return "default";
   })();
 
-  const placeholder = !connected && taskId
-    ? "Loading logs..."
-    : "Waiting for log output...";
+  const placeholder =
+    !connected && taskId ? "Loading logs..." : "Waiting for log output...";
 
   const headerExtra = (
     <Chip
@@ -89,20 +88,12 @@ const TaskLogDrawer = memo((props) => {
         variant="outlined"
       />
       {taskMeta.user && (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={styles.metaItem}
-        >
+        <Typography variant="body2" color="text.secondary" sx={styles.metaItem}>
           User: {taskMeta.user}
         </Typography>
       )}
       {taskMeta.started_at && (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={styles.metaItem}
-        >
+        <Typography variant="body2" color="text.secondary" sx={styles.metaItem}>
           Started: {new Date(taskMeta.started_at).toLocaleString()}
         </Typography>
       )}

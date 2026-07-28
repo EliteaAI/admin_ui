@@ -1,4 +1,4 @@
-export default function SunIcon({ fill = 'currentColor', ...props }) {
+export default function SunIcon({ fill = "currentColor", ...props }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

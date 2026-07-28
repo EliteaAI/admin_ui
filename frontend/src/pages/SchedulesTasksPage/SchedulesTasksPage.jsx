@@ -71,7 +71,11 @@ const SchedulesTasksPage = memo(() => {
         title="System"
         tabs={tabsElement}
         showBorder
-        showSearchInput={activeTab === "schedules" || activeTab === "tasks" || activeTab === "active-tasks"}
+        showSearchInput={
+          activeTab === "schedules" ||
+          activeTab === "tasks" ||
+          activeTab === "active-tasks"
+        }
         search={search}
         onSearchChange={handleSearchChange}
         searchPlaceholder={

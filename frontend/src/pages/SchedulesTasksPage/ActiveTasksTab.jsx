@@ -82,7 +82,13 @@ const TASK_COLUMNS = [
     sortable: false,
     hideBelow: 1000,
   },
-  { field: "meta", label: "Meta", width: "1fr", sortable: false, hideBelow: 1300 },
+  {
+    field: "meta",
+    label: "Meta",
+    width: "1fr",
+    sortable: false,
+    hideBelow: 1300,
+  },
   {
     field: "runner",
     label: "Runner",
@@ -579,10 +585,17 @@ function NodeCard({
 }
 
 const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
-  const { data, isLoading, isFetching, isError, error, refetch, fulfilledTimeStamp } =
-    useActiveTasksListQuery(undefined, {
-      pollingInterval: 15000,
-    });
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+    fulfilledTimeStamp,
+  } = useActiveTasksListQuery(undefined, {
+    pollingInterval: 15000,
+  });
   const [refreshNode] = useActiveTasksRefreshMutation();
   const [stopTask] = useActiveTasksStopMutation();
   const [snackbar, setSnackbar] = useState({
@@ -718,9 +731,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
       <Box sx={styles.emptyState}>
         <HubOutlined sx={styles.emptyIcon} />
         <Typography variant="bodyMedium" color="text.disabled">
-          {isError
-            ? "Could not load active tasks"
-            : "No task nodes available"}
+          {isError ? "Could not load active tasks" : "No task nodes available"}
         </Typography>
         <Button
           size="small"

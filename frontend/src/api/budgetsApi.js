@@ -41,7 +41,13 @@ export const budgetsApi = adminApi.injectEndpoints({
     }),
 
     userBudgetUpdate: build.mutation({
-      query: ({ projectId, userId, monthly_limit, enabled, currency = "USD" }) => ({
+      query: ({
+        projectId,
+        userId,
+        monthly_limit,
+        enabled,
+        currency = "USD",
+      }) => ({
         url: `/elitea_core/user_budget/administration/${projectId}/user_budget/${userId}`,
         method: "PUT",
         body: { monthly_limit, enabled, currency },

@@ -29,13 +29,22 @@ export default function UserBudgetsDrawer(props) {
   const rows = data?.rows || [];
 
   return (
-    <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: styles.paper }}>
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      PaperProps={{ sx: styles.paper }}
+    >
       <Box sx={styles.header}>
         <Box sx={styles.headerText}>
           <Typography variant="titleMedium" component="div">
             Per-user budgets
           </Typography>
-          <Typography variant="bodySmall" component="div" color="text.secondary">
+          <Typography
+            variant="bodySmall"
+            component="div"
+            color="text.secondary"
+          >
             {project?.display_name || project?.name}
           </Typography>
         </Box>
@@ -79,21 +88,29 @@ export default function UserBudgetsDrawer(props) {
                   </Typography>
                   {row.limit_source === "default" && (
                     <Tooltip title="Inherited from the platform default">
-                      <Chip label="Default" size="small" variant="outlined" color="info" />
+                      <Chip
+                        label="Default"
+                        size="small"
+                        variant="outlined"
+                        color="info"
+                      />
                     </Tooltip>
                   )}
                 </Box>
-                {row.percent_used !== null && row.percent_used !== undefined && (
-                  <LinearProgress
-                    variant="determinate"
-                    value={Math.min(100, row.percent_used)}
-                    color={usageColor(row.percent_used)}
-                    sx={styles.bar}
-                  />
-                )}
+                {row.percent_used !== null &&
+                  row.percent_used !== undefined && (
+                    <LinearProgress
+                      variant="determinate"
+                      value={Math.min(100, row.percent_used)}
+                      color={usageColor(row.percent_used)}
+                      sx={styles.bar}
+                    />
+                  )}
               </Box>
 
-              <Tooltip title={canEdit ? "Edit user budget" : "No permission to edit"}>
+              <Tooltip
+                title={canEdit ? "Edit user budget" : "No permission to edit"}
+              >
                 <span>
                   <IconButton
                     size="small"

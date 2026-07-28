@@ -1,78 +1,96 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from "react";
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import FormControl from '@mui/material/FormControl';
-import IconButton from '@mui/material/IconButton';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import Switch from '@mui/material/Switch';
-import TextField from '@mui/material/TextField';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import FormControl from "@mui/material/FormControl";
+import IconButton from "@mui/material/IconButton";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import Switch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 
-import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
-import SearchOutlined from '@mui/icons-material/SearchOutlined';
+import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
 
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
 const ALL_EVENT_TYPES = [
-  { value: '', label: 'All' },
-  { value: 'api', label: 'API' },
-  { value: 'socketio', label: 'Socket.IO' },
-  { value: 'rpc', label: 'RPC' },
-  { value: 'agent', label: 'Agent' },
-  { value: 'tool', label: 'Tool' },
-  { value: 'llm', label: 'LLM' },
-  { value: 'schedule', label: 'Schedule' },
-  { value: 'admin_task', label: 'Admin Task' },
+  { value: "", label: "All" },
+  { value: "api", label: "API" },
+  { value: "socketio", label: "Socket.IO" },
+  { value: "rpc", label: "RPC" },
+  { value: "agent", label: "Agent" },
+  { value: "tool", label: "Tool" },
+  { value: "llm", label: "LLM" },
+  { value: "schedule", label: "Schedule" },
+  { value: "admin_task", label: "Admin Task" },
 ];
 
 const DATE_PRESETS = [
-  { label: '30m', getRange: () => {
-    const to = new Date();
-    const from = new Date(to.getTime() - 30 * 60 * 1000);
-    return { from, to };
-  }},
-  { label: '1h', getRange: () => {
-    const to = new Date();
-    const from = new Date(to.getTime() - 60 * 60 * 1000);
-    return { from, to };
-  }},
-  { label: 'Today', getRange: () => {
-    const from = new Date();
-    from.setHours(0, 0, 0, 0);
-    const to = new Date();
-    to.setHours(23, 59, 59, 999);
-    return { from, to };
-  }},
-  { label: 'Yesterday', getRange: () => {
-    const from = new Date();
-    from.setDate(from.getDate() - 1);
-    from.setHours(0, 0, 0, 0);
-    const to = new Date();
-    to.setDate(to.getDate() - 1);
-    to.setHours(23, 59, 59, 999);
-    return { from, to };
-  }},
-  { label: '7d', getRange: () => {
-    const to = new Date();
-    to.setHours(23, 59, 59, 999);
-    const from = new Date();
-    from.setDate(from.getDate() - 7);
-    from.setHours(0, 0, 0, 0);
-    return { from, to };
-  }},
-  { label: '30d', getRange: () => {
-    const to = new Date();
-    to.setHours(23, 59, 59, 999);
-    const from = new Date();
-    from.setDate(from.getDate() - 30);
-    from.setHours(0, 0, 0, 0);
-    return { from, to };
-  }},
+  {
+    label: "30m",
+    getRange: () => {
+      const to = new Date();
+      const from = new Date(to.getTime() - 30 * 60 * 1000);
+      return { from, to };
+    },
+  },
+  {
+    label: "1h",
+    getRange: () => {
+      const to = new Date();
+      const from = new Date(to.getTime() - 60 * 60 * 1000);
+      return { from, to };
+    },
+  },
+  {
+    label: "Today",
+    getRange: () => {
+      const from = new Date();
+      from.setHours(0, 0, 0, 0);
+      const to = new Date();
+      to.setHours(23, 59, 59, 999);
+      return { from, to };
+    },
+  },
+  {
+    label: "Yesterday",
+    getRange: () => {
+      const from = new Date();
+      from.setDate(from.getDate() - 1);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date();
+      to.setDate(to.getDate() - 1);
+      to.setHours(23, 59, 59, 999);
+      return { from, to };
+    },
+  },
+  {
+    label: "7d",
+    getRange: () => {
+      const to = new Date();
+      to.setHours(23, 59, 59, 999);
+      const from = new Date();
+      from.setDate(from.getDate() - 7);
+      from.setHours(0, 0, 0, 0);
+      return { from, to };
+    },
+  },
+  {
+    label: "30d",
+    getRange: () => {
+      const to = new Date();
+      to.setHours(23, 59, 59, 999);
+      const from = new Date();
+      from.setDate(from.getDate() - 30);
+      from.setHours(0, 0, 0, 0);
+      return { from, to };
+    },
+  },
 ];
 
 const AuditTrailFilters = memo(function AuditTrailFilters({
@@ -86,14 +104,14 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
 }) {
   const handleEventTypeChange = useCallback(
     (event) => {
-      onFieldChange('event_type', event.target.value);
+      onFieldChange("event_type", event.target.value);
     },
     [onFieldChange],
   );
 
   const handleDateFromChange = useCallback(
     (value) => {
-      onFieldChange('date_from', value);
+      onFieldChange("date_from", value);
       onPresetChange(null);
     },
     [onFieldChange, onPresetChange],
@@ -101,29 +119,26 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
 
   const handleDateToChange = useCallback(
     (value) => {
-      onFieldChange('date_to', value);
+      onFieldChange("date_to", value);
       onPresetChange(null);
     },
     [onFieldChange, onPresetChange],
   );
 
-  const handleErrorToggle = useCallback(
-    () => {
-      onFieldChange('is_error', !filters.is_error);
-    },
-    [filters.is_error, onFieldChange],
-  );
+  const handleErrorToggle = useCallback(() => {
+    onFieldChange("is_error", !filters.is_error);
+  }, [filters.is_error, onFieldChange]);
 
   const handleProjectIdChange = useCallback(
     (e) => {
-      onFieldChange('project_id', e.target.value);
+      onFieldChange("project_id", e.target.value);
     },
     [onFieldChange],
   );
 
   const handleUserIdChange = useCallback(
     (e) => {
-      onFieldChange('user_id', e.target.value);
+      onFieldChange("user_id", e.target.value);
     },
     [onFieldChange],
   );
@@ -133,8 +148,8 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
       const preset = DATE_PRESETS.find((p) => p.label === presetLabel);
       if (!preset) return;
       const { from, to } = preset.getRange();
-      onFieldChange('date_from', from);
-      onFieldChange('date_to', to);
+      onFieldChange("date_from", from);
+      onFieldChange("date_to", to);
       onPresetChange(presetLabel);
     },
     [onFieldChange, onPresetChange],
@@ -142,7 +157,7 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
 
   const handleKeyDown = useCallback(
     (e) => {
-      if (e.key === 'Enter') onApply();
+      if (e.key === "Enter") onApply();
     },
     [onApply],
   );
@@ -157,8 +172,8 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
               key={preset.label}
               label={preset.label}
               size="small"
-              variant={activePreset === preset.label ? 'filled' : 'outlined'}
-              color={activePreset === preset.label ? 'primary' : 'default'}
+              variant={activePreset === preset.label ? "filled" : "outlined"}
+              color={activePreset === preset.label ? "primary" : "default"}
               onClick={() => handlePresetClick(preset.label)}
               sx={styles.presetChip}
             />
@@ -170,8 +185,8 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
           value={filters.date_from}
           onChange={handleDateFromChange}
           slotProps={{
-            textField: { size: 'small', sx: styles.dateField },
-            actionBar: { actions: ['clear', 'accept'] },
+            textField: { size: "small", sx: styles.dateField },
+            actionBar: { actions: ["clear", "accept"] },
           }}
           maxDateTime={filters.date_to || undefined}
           ampm={false}
@@ -182,8 +197,8 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
           value={filters.date_to}
           onChange={handleDateToChange}
           slotProps={{
-            textField: { size: 'small', sx: styles.dateField },
-            actionBar: { actions: ['clear', 'accept'] },
+            textField: { size: "small", sx: styles.dateField },
+            actionBar: { actions: ["clear", "accept"] },
           }}
           minDateTime={filters.date_from || undefined}
           ampm={false}
@@ -200,7 +215,11 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
         </Button>
 
         <Tooltip title="Refresh" placement="top">
-          <IconButton size="small" onClick={onRefresh} sx={styles.refreshButton}>
+          <IconButton
+            size="small"
+            onClick={onRefresh}
+            sx={styles.refreshButton}
+          >
             <RefreshOutlined fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -217,7 +236,9 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
             sx={styles.selectInput}
           >
             {eventTypes.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+              <MenuItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -225,18 +246,18 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
         <TextField
           label="Project"
           size="small"
-          value={filters.project_id || ''}
+          value={filters.project_id || ""}
           onChange={handleProjectIdChange}
-          inputProps={{ inputMode: 'numeric' }}
+          inputProps={{ inputMode: "numeric" }}
           sx={styles.idField}
         />
 
         <TextField
           label="User"
           size="small"
-          value={filters.user_id || ''}
+          value={filters.user_id || ""}
           onChange={handleUserIdChange}
-          inputProps={{ inputMode: 'numeric' }}
+          inputProps={{ inputMode: "numeric" }}
           sx={styles.idField}
         />
 
@@ -257,59 +278,59 @@ const AuditTrailFilters = memo(function AuditTrailFilters({
 
 const styles = {
   wrapper: ({ palette }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.375rem',
-    padding: '0.5rem 1.5rem',
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.375rem",
+    padding: "0.5rem 1.5rem",
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   row: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.625rem',
-    flexWrap: 'wrap',
+    display: "flex",
+    alignItems: "center",
+    gap: "0.625rem",
+    flexWrap: "wrap",
   },
   presetsRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
+    display: "flex",
+    alignItems: "center",
+    gap: "0.25rem",
   },
   presetChip: {
-    fontSize: '0.6875rem',
-    height: '1.5rem',
+    fontSize: "0.6875rem",
+    height: "1.5rem",
   },
   select: {
-    minWidth: '6rem',
+    minWidth: "6rem",
   },
   selectInput: {
-    fontSize: '0.8125rem',
+    fontSize: "0.8125rem",
   },
   inputLabel: {
-    fontSize: '0.8125rem',
+    fontSize: "0.8125rem",
   },
   dateField: {
-    width: '13rem',
-    '& input': { fontSize: '0.8125rem' },
-    '& label': { fontSize: '0.8125rem' },
+    width: "13rem",
+    "& input": { fontSize: "0.8125rem" },
+    "& label": { fontSize: "0.8125rem" },
   },
   idField: {
-    width: '6.5rem',
-    '& input': { fontSize: '0.8125rem' },
-    '& label': { fontSize: '0.8125rem' },
+    width: "6.5rem",
+    "& input": { fontSize: "0.8125rem" },
+    "& label": { fontSize: "0.8125rem" },
   },
   errorToggle: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.125rem',
+    display: "flex",
+    alignItems: "center",
+    gap: "0.125rem",
   },
   applyButton: {
-    fontSize: '0.75rem',
-    textTransform: 'none',
-    minWidth: 'auto',
-    padding: '0.25rem 0.75rem',
+    fontSize: "0.75rem",
+    textTransform: "none",
+    minWidth: "auto",
+    padding: "0.25rem 0.75rem",
   },
   refreshButton: {
-    color: 'text.secondary',
+    color: "text.secondary",
   },
 };
 

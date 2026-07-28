@@ -104,6 +104,12 @@ export const PERMISSIONS = {
     view: "models.admin.project_budgets.view",
     edit: "models.admin.project_budgets.edit",
   },
+
+  // Surveys
+  surveys: {
+    manage: "models.admin.surveys.manage",
+    reports: "models.admin.surveys.reports.view",
+  },
 };
 
 /**
@@ -125,10 +131,14 @@ export const SIDEBAR_PERMISSIONS = {
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
   "app-requests": [PERMISSIONS.users.section],
-  configuration: [PERMISSIONS.configuration.section, PERMISSIONS.runtime.plugins],
+  configuration: [
+    PERMISSIONS.configuration.section,
+    PERMISSIONS.runtime.plugins,
+  ],
   features: [PERMISSIONS.configuration.section, PERMISSIONS.runtime.plugins],
   "audit-trail": [PERMISSIONS.auditTrail.view],
   "schedules-tasks": [PERMISSIONS.scheduling.view, PERMISSIONS.runtime.plugins],
+  reports: [PERMISSIONS.surveys.reports],
 };
 
 /**
@@ -158,6 +168,7 @@ export const ROUTE_PERMISSIONS = {
   "/features": SIDEBAR_PERMISSIONS.configuration,
   "/audit-trail": SIDEBAR_PERMISSIONS["audit-trail"],
   "/schedules-tasks": SIDEBAR_PERMISSIONS["schedules-tasks"],
+  "/reports": SIDEBAR_PERMISSIONS.reports,
 };
 
 export default PERMISSIONS;

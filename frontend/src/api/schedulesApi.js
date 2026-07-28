@@ -1,26 +1,23 @@
-import { adminApi } from './adminApi';
+import { adminApi } from "./adminApi";
 
 export const schedulesApi = adminApi.injectEndpoints({
   endpoints: (build) => ({
     scheduleList: build.query({
       query: () => ({
-        url: '/scheduling/schedules/administration/0',
+        url: "/scheduling/schedules/administration/0",
       }),
-      providesTags: ['Schedules'],
+      providesTags: ["Schedules"],
     }),
 
     scheduleUpdate: build.mutation({
       query: ({ id, ...body }) => ({
-        url: '/scheduling/schedules/administration/0',
-        method: 'PUT',
+        url: "/scheduling/schedules/administration/0",
+        method: "PUT",
         body: { id, ...body },
       }),
-      invalidatesTags: ['Schedules'],
+      invalidatesTags: ["Schedules"],
     }),
   }),
 });
 
-export const {
-  useScheduleListQuery,
-  useScheduleUpdateMutation,
-} = schedulesApi;
+export const { useScheduleListQuery, useScheduleUpdateMutation } = schedulesApi;

@@ -1,14 +1,14 @@
-import { memo, useCallback, useState } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { memo, useCallback, useState } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 /**
  * Edits an array of user objects shaped as:
@@ -20,7 +20,10 @@ const UsersTableEditor = memo(function UsersTableEditor({ value, onChange }) {
   const users = Array.isArray(value) ? value : [];
 
   const handleAdd = useCallback(() => {
-    onChange([...users, { login: '', password: '', attributes: { email: '' } }]);
+    onChange([
+      ...users,
+      { login: "", password: "", attributes: { email: "" } },
+    ]);
   }, [users, onChange]);
 
   const handleDelete = useCallback(
@@ -34,7 +37,7 @@ const UsersTableEditor = memo(function UsersTableEditor({ value, onChange }) {
     (index, field, val) => {
       const updated = users.map((user, i) => {
         if (i !== index) return user;
-        if (field === 'email') {
+        if (field === "email") {
           return {
             ...user,
             attributes: { ...(user.attributes || {}), email: val },
@@ -60,7 +63,7 @@ const UsersTableEditor = memo(function UsersTableEditor({ value, onChange }) {
         <Typography variant="caption" sx={[styles.headerCell, { flex: 1.2 }]}>
           Password
         </Typography>
-        <Box sx={{ width: '2rem' }} />
+        <Box sx={{ width: "2rem" }} />
       </Box>
 
       {/* Rows */}
@@ -96,30 +99,30 @@ const UsersTableEditor = memo(function UsersTableEditor({ value, onChange }) {
 
 const UserRow = memo(function UserRow({ user, index, onChange, onDelete }) {
   const [showPassword, setShowPassword] = useState(false);
-  const email = user?.attributes?.email || '';
+  const email = user?.attributes?.email || "";
 
   return (
     <Box sx={styles.row}>
       <TextField
         size="small"
         placeholder="login"
-        value={user.login || ''}
-        onChange={(e) => onChange(index, 'login', e.target.value)}
+        value={user.login || ""}
+        onChange={(e) => onChange(index, "login", e.target.value)}
         sx={[styles.field, { flex: 1.2 }]}
       />
       <TextField
         size="small"
         placeholder="user@example.com"
         value={email}
-        onChange={(e) => onChange(index, 'email', e.target.value)}
+        onChange={(e) => onChange(index, "email", e.target.value)}
         sx={[styles.field, { flex: 1.5 }]}
       />
       <TextField
         size="small"
         placeholder="password"
-        type={showPassword ? 'text' : 'password'}
-        value={user.password || ''}
-        onChange={(e) => onChange(index, 'password', e.target.value)}
+        type={showPassword ? "text" : "password"}
+        value={user.password || ""}
+        onChange={(e) => onChange(index, "password", e.target.value)}
         slotProps={{
           input: {
             endAdornment: (
@@ -131,9 +134,9 @@ const UserRow = memo(function UserRow({ user, index, onChange, onDelete }) {
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <VisibilityOff sx={{ fontSize: '0.875rem' }} />
+                    <VisibilityOff sx={{ fontSize: "0.875rem" }} />
                   ) : (
-                    <Visibility sx={{ fontSize: '0.875rem' }} />
+                    <Visibility sx={{ fontSize: "0.875rem" }} />
                   )}
                 </IconButton>
               </InputAdornment>
@@ -142,8 +145,12 @@ const UserRow = memo(function UserRow({ user, index, onChange, onDelete }) {
         }}
         sx={[styles.field, { flex: 1.2 }]}
       />
-      <IconButton size="small" onClick={() => onDelete(index)} sx={styles.deleteBtn}>
-        <DeleteOutlineIcon sx={{ fontSize: '1rem' }} />
+      <IconButton
+        size="small"
+        onClick={() => onDelete(index)}
+        sx={styles.deleteBtn}
+      >
+        <DeleteOutlineIcon sx={{ fontSize: "1rem" }} />
       </IconButton>
     </Box>
   );
@@ -151,28 +158,28 @@ const UserRow = memo(function UserRow({ user, index, onChange, onDelete }) {
 
 const styles = {
   headerRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.25rem',
-    paddingLeft: '0.125rem',
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    marginBottom: "0.25rem",
+    paddingLeft: "0.125rem",
   },
   headerCell: ({ palette }) => ({
-    fontSize: '0.6875rem',
+    fontSize: "0.6875rem",
     fontWeight: 600,
     color: palette.text.metrics,
-    textTransform: 'uppercase',
-    letterSpacing: '0.03em',
+    textTransform: "uppercase",
+    letterSpacing: "0.03em",
   }),
   row: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.375rem',
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    marginBottom: "0.375rem",
   },
   field: ({ palette }) => ({
-    '& .MuiOutlinedInput-root': {
-      fontSize: '0.8125rem',
+    "& .MuiOutlinedInput-root": {
+      fontSize: "0.8125rem",
       backgroundColor: palette.background.default,
     },
   }),
@@ -181,15 +188,15 @@ const styles = {
     flexShrink: 0,
   }),
   emptyHint: ({ palette }) => ({
-    display: 'block',
+    display: "block",
     color: palette.text.metrics,
-    padding: '0.5rem 0',
-    fontSize: '0.75rem',
+    padding: "0.5rem 0",
+    fontSize: "0.75rem",
   }),
   addButton: {
-    textTransform: 'none',
-    fontSize: '0.8125rem',
-    marginTop: '0.25rem',
+    textTransform: "none",
+    fontSize: "0.8125rem",
+    marginTop: "0.25rem",
   },
 };
 

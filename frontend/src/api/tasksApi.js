@@ -1,11 +1,11 @@
-import { adminApi } from './adminApi';
+import { adminApi } from "./adminApi";
 
 export const tasksApi = adminApi.injectEndpoints({
   endpoints: (build) => ({
     taskNames: build.query({
       query: () => ({
-        url: '/admin/tasks/administration/',
-        params: { action: 'names' },
+        url: "/admin/tasks/administration/",
+        params: { action: "names" },
       }),
       transformResponse: (response) => {
         const tasks = response.tasks || [];
@@ -19,62 +19,62 @@ export const tasksApi = adminApi.injectEndpoints({
           groupsMap,
         };
       },
-      providesTags: ['TaskNames'],
+      providesTags: ["TaskNames"],
     }),
 
     taskList: build.query({
       query: () => ({
-        url: '/admin/tasks/administration/',
-        params: { action: 'list', scope: 'task' },
+        url: "/admin/tasks/administration/",
+        params: { action: "list", scope: "task" },
       }),
-      providesTags: ['Tasks'],
+      providesTags: ["Tasks"],
     }),
 
     taskStart: build.mutation({
-      query: ({ name, param = '' }) => ({
-        url: '/admin/tasks/administration/',
-        params: { action: 'start', scope: `${name}:${param}` },
+      query: ({ name, param = "" }) => ({
+        url: "/admin/tasks/administration/",
+        params: { action: "start", scope: `${name}:${param}` },
       }),
-      invalidatesTags: ['Tasks'],
+      invalidatesTags: ["Tasks"],
     }),
 
     taskStop: build.mutation({
       query: ({ taskId }) => ({
-        url: '/admin/tasks/administration/',
-        params: { action: 'stop', scope: taskId },
+        url: "/admin/tasks/administration/",
+        params: { action: "stop", scope: taskId },
       }),
-      invalidatesTags: ['Tasks'],
+      invalidatesTags: ["Tasks"],
     }),
 
     taskLogs: build.query({
       query: (taskId) => ({
-        url: '/admin/tasks/administration/',
-        params: { action: 'logs', scope: taskId },
+        url: "/admin/tasks/administration/",
+        params: { action: "logs", scope: taskId },
       }),
       transformResponse: (response) => response.lines || [],
     }),
 
     activeTasksList: build.query({
       query: () => ({
-        url: '/admin/active_tasks/administration',
+        url: "/admin/active_tasks/administration",
       }),
-      providesTags: ['ActiveTasks'],
+      providesTags: ["ActiveTasks"],
     }),
 
     activeTasksRefresh: build.mutation({
       query: ({ node, scope }) => ({
-        url: '/admin/active_tasks/administration',
-        params: { action: 'refresh', node, scope },
+        url: "/admin/active_tasks/administration",
+        params: { action: "refresh", node, scope },
       }),
-      invalidatesTags: ['ActiveTasks'],
+      invalidatesTags: ["ActiveTasks"],
     }),
 
     activeTasksStop: build.mutation({
       query: ({ node, taskId }) => ({
-        url: '/admin/active_tasks/administration',
-        params: { action: 'stop', node, scope: taskId },
+        url: "/admin/active_tasks/administration",
+        params: { action: "stop", node, scope: taskId },
       }),
-      invalidatesTags: ['ActiveTasks'],
+      invalidatesTags: ["ActiveTasks"],
     }),
   }),
 });

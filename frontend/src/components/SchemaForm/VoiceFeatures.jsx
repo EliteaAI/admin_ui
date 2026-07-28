@@ -7,7 +7,8 @@ const VoiceFeatures = memo((props) => {
   const { values, onChange } = props;
 
   const enabled = !!values?.vite_voice_features_enabled;
-  const temporarilyDisabled = !!values?.vite_voice_features_temporarily_disabled;
+  const temporarilyDisabled =
+    !!values?.vite_voice_features_temporarily_disabled;
 
   const handleToggleEnabled = useCallback(
     (e) => onChange("vite_voice_features_enabled", e.target.checked),
@@ -15,7 +16,8 @@ const VoiceFeatures = memo((props) => {
   );
 
   const handleToggleTemporarilyDisabled = useCallback(
-    (e) => onChange("vite_voice_features_temporarily_disabled", e.target.checked),
+    (e) =>
+      onChange("vite_voice_features_temporarily_disabled", e.target.checked),
     [onChange],
   );
 

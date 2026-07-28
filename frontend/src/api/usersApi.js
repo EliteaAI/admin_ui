@@ -56,7 +56,7 @@ export const usersApi = adminApi.injectEndpoints({
         body: {
           action: "set_admin_role",
           user_id: userId,
-          role_name: roleName,  // Can be null to remove all admin roles
+          role_name: roleName, // Can be null to remove all admin roles
         },
       }),
       invalidatesTags: ["Users"],

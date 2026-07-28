@@ -1,32 +1,32 @@
-import { useCallback, useState } from 'react';
-import PropTypes from 'prop-types';
+import { useCallback, useState } from "react";
+import PropTypes from "prop-types";
 
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import TextField from '@mui/material/TextField';
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
 
-import { useSecretCreateMutation } from '@/api/secretsApi';
-import { SECRET_NAME_REGEX } from './constants';
+import { useSecretCreateMutation } from "@/api/secretsApi";
+import { SECRET_NAME_REGEX } from "./constants";
 
 function CreateSecretDialog({ open, onClose, existingNames }) {
-  const [name, setName] = useState('');
-  const [value, setValue] = useState('');
-  const [error, setError] = useState('');
+  const [name, setName] = useState("");
+  const [value, setValue] = useState("");
+  const [error, setError] = useState("");
   const [createSecret, { isLoading }] = useSecretCreateMutation();
 
   const handleCreate = useCallback(async () => {
-    setError('');
+    setError("");
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError('Secret name is required.');
+      setError("Secret name is required.");
       return;
     }
     if (!SECRET_NAME_REGEX.test(trimmedName)) {
-      setError('Name must contain only letters, digits, and underscores.');
+      setError("Name must contain only letters, digits, and underscores.");
       return;
     }
     if (existingNames?.has(trimmedName)) {
@@ -34,23 +34,28 @@ function CreateSecretDialog({ open, onClose, existingNames }) {
       return;
     }
     if (!value) {
-      setError('Secret value is required.');
+      setError("Secret value is required.");
       return;
     }
     try {
       await createSecret({ name: trimmedName, value }).unwrap();
-      setName('');
-      setValue('');
+      setName("");
+      setValue("");
       onClose();
     } catch (err) {
-      setError(err?.data?.error ?? err?.data?.message ?? err?.error ?? 'Failed to create secret.');
+      setError(
+        err?.data?.error ??
+          err?.data?.message ??
+          err?.error ??
+          "Failed to create secret.",
+      );
     }
   }, [name, value, existingNames, createSecret, onClose]);
 
   const handleClose = useCallback(() => {
-    setName('');
-    setValue('');
-    setError('');
+    setName("");
+    setValue("");
+    setError("");
     onClose();
   }, [onClose]);
 
@@ -58,7 +63,11 @@ function CreateSecretDialog({ open, onClose, existingNames }) {
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Create Secret</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <TextField
           autoFocus
           margin="dense"
@@ -86,7 +95,7 @@ function CreateSecretDialog({ open, onClose, existingNames }) {
           Cancel
         </Button>
         <Button onClick={handleCreate} variant="contained" disabled={isLoading}>
-          {isLoading ? 'Creating...' : 'Create'}
+          {isLoading ? "Creating..." : "Create"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,38 +1,39 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import AssignmentOutlined from "@mui/icons-material/AssignmentOutlined";
 
 import {
   useTaskNamesQuery,
   useTaskListQuery,
   useTaskStartMutation,
   useTaskStopMutation,
-} from '@/api/tasksApi';
+} from "@/api/tasksApi";
 
-import TaskNamesList from './TaskNamesList';
-import TaskDetail from './TaskDetail';
-import TasksTable from './TasksTable';
+import TaskNamesList from "./TaskNamesList";
+import TaskDetail from "./TaskDetail";
+import TasksTable from "./TasksTable";
 import { TaskLogDrawer } from "@/components/LogViewerDrawer";
 
 const COMPLETION_DELAY_MS = 15_000;
 
 function parseTaskName(meta) {
-  if (!meta) return '';
+  if (!meta) return "";
   try {
     const match = meta.match(/'task':\s*'([^']+)'/);
     if (match) return match[1];
   } catch {
     // ignore
   }
-  return '';
+  return "";
 }
 
 const EMPTY_DATA = { names: [], tasks: [] };
 
-const TasksTab = memo(function TasksTab({ search = '' }) {
-  const { data: taskNamesData = EMPTY_DATA, isLoading: namesLoading } = useTaskNamesQuery();
+const TasksTab = memo(function TasksTab({ search = "" }) {
+  const { data: taskNamesData = EMPTY_DATA, isLoading: namesLoading } =
+    useTaskNamesQuery();
   const taskNames = taskNamesData.names;
   const groupsMap = taskNamesData.groupsMap || {};
   const taskDescriptions = useMemo(() => {
@@ -57,7 +58,10 @@ const TasksTab = memo(function TasksTab({ search = '' }) {
 
   // Find the task meta for the currently opened log drawer
   const logTaskMeta = useMemo(
-    () => (logTaskId ? allInstances.find((row) => row.task_id === logTaskId) || null : null),
+    () =>
+      logTaskId
+        ? allInstances.find((row) => row.task_id === logTaskId) || null
+        : null,
     [logTaskId, allInstances],
   );
 
@@ -65,9 +69,11 @@ const TasksTab = memo(function TasksTab({ search = '' }) {
   useEffect(() => {
     if (!logTaskId || !logTaskMeta) return;
 
-    const currentStatus = (logTaskMeta.status || '').toLowerCase();
-    const wasRunning = prevTaskStatusRef.current === 'running';
-    const isNowFinished = ['done', 'finished', 'error', 'stopped'].includes(currentStatus);
+    const currentStatus = (logTaskMeta.status || "").toLowerCase();
+    const wasRunning = prevTaskStatusRef.current === "running";
+    const isNowFinished = ["done", "finished", "error", "stopped"].includes(
+      currentStatus,
+    );
 
     if (wasRunning && isNowFinished) {
       // Task just completed — start auto-close timer
@@ -93,7 +99,7 @@ const TasksTab = memo(function TasksTab({ search = '' }) {
     const counts = {};
     allInstances.forEach((row) => {
       const name = parseTaskName(row.meta);
-      if (name && (row.status || '').toLowerCase() === 'running') {
+      if (name && (row.status || "").toLowerCase() === "running") {
         counts[name] = (counts[name] || 0) + 1;
       }
     });
@@ -102,7 +108,9 @@ const TasksTab = memo(function TasksTab({ search = '' }) {
 
   const filteredInstances = useMemo(() => {
     if (!selectedTask) return allInstances;
-    return allInstances.filter((row) => parseTaskName(row.meta) === selectedTask);
+    return allInstances.filter(
+      (row) => parseTaskName(row.meta) === selectedTask,
+    );
   }, [allInstances, selectedTask]);
 
   const handleStart = useCallback(
@@ -125,15 +133,18 @@ const TasksTab = memo(function TasksTab({ search = '' }) {
     [stopTask],
   );
 
-  const handleOpenLogs = useCallback((taskId) => {
-    if (autoCloseTimerRef.current) {
-      clearTimeout(autoCloseTimerRef.current);
-      autoCloseTimerRef.current = null;
-    }
-    const row = allInstances.find((r) => r.task_id === taskId);
-    prevTaskStatusRef.current = row ? (row.status || '').toLowerCase() : null;
-    setLogTaskId(taskId);
-  }, [allInstances]);
+  const handleOpenLogs = useCallback(
+    (taskId) => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+        autoCloseTimerRef.current = null;
+      }
+      const row = allInstances.find((r) => r.task_id === taskId);
+      prevTaskStatusRef.current = row ? (row.status || "").toLowerCase() : null;
+      setLogTaskId(taskId);
+    },
+    [allInstances],
+  );
 
   const handleCloseLogs = useCallback(() => {
     if (autoCloseTimerRef.current) {
@@ -161,15 +172,31 @@ const TasksTab = memo(function TasksTab({ search = '' }) {
       <Box sx={styles.rightPanel}>
         {!selectedTask && (
           <Box sx={styles.descriptionBox}>
-            <Typography variant="bodyMedium" color="text.secondary" sx={styles.descriptionTitle}>
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+              sx={styles.descriptionTitle}
+            >
               Admin Tasks
             </Typography>
-            <Typography variant="bodyMedium" color="text.metrics" component="div" sx={styles.descriptionText}>
-              One-off maintenance operations registered by platform plugins.<br />
-              Tasks include database migrations, data fixes, cache cleanup, and other admin utilities.<br />
-              Select a task from the left panel to see its details and run it.<br />
-              Each task can accept an optional parameter and streams live logs while running.<br />
-              Running tasks auto-refresh every 5 seconds and can be stopped at any time.
+            <Typography
+              variant="bodyMedium"
+              color="text.metrics"
+              component="div"
+              sx={styles.descriptionText}
+            >
+              One-off maintenance operations registered by platform plugins.
+              <br />
+              Tasks include database migrations, data fixes, cache cleanup, and
+              other admin utilities.
+              <br />
+              Select a task from the left panel to see its details and run it.
+              <br />
+              Each task can accept an optional parameter and streams live logs
+              while running.
+              <br />
+              Running tasks auto-refresh every 5 seconds and can be stopped at
+              any time.
             </Typography>
           </Box>
         )}
@@ -177,7 +204,7 @@ const TasksTab = memo(function TasksTab({ search = '' }) {
           <TaskDetail
             key={selectedTask}
             taskName={selectedTask}
-            taskDescription={taskDescriptions[selectedTask] || ''}
+            taskDescription={taskDescriptions[selectedTask] || ""}
             instances={filteredInstances}
             onStart={handleStart}
             onStop={handleStop}
@@ -216,57 +243,58 @@ const styles = {
   content: {
     flex: 1,
     minHeight: 0,
-    display: 'flex',
-    overflow: 'hidden',
+    display: "flex",
+    overflow: "hidden",
   },
   leftPanel: ({ palette }) => ({
-    width: '16rem',
+    width: "16rem",
     flexShrink: 0,
     borderRight: `0.0625rem solid ${palette.border.lines}`,
-    overflow: 'hidden',
+    overflow: "hidden",
   }),
   rightPanel: {
     flex: 1,
     minWidth: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
   },
   overviewPanel: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
   },
   emptyState: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.75rem',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.75rem",
   },
   emptyIcon: {
-    fontSize: '3rem',
-    color: 'text.disabled',
+    fontSize: "3rem",
+    color: "text.disabled",
   },
   descriptionBox: ({ palette }) => ({
-    padding: '0.75rem 1rem',
-    margin: '0.5rem 1.5rem 0.75rem',
-    borderRadius: '0.5rem',
-    backgroundColor: palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-    border: `1px solid ${palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+    padding: "0.75rem 1rem",
+    margin: "0.5rem 1.5rem 0.75rem",
+    borderRadius: "0.5rem",
+    backgroundColor:
+      palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+    border: `1px solid ${palette.mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
     flexShrink: 0,
   }),
   descriptionTitle: {
-    display: 'block',
+    display: "block",
     fontWeight: 600,
-    fontSize: '0.875rem',
-    marginBottom: '0.375rem',
+    fontSize: "0.875rem",
+    marginBottom: "0.375rem",
   },
   descriptionText: {
-    display: 'block',
-    fontSize: '0.8125rem',
+    display: "block",
+    fontSize: "0.8125rem",
     lineHeight: 1.6,
   },
 };

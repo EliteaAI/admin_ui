@@ -10,4 +10,5 @@ export const RouteDefinitions = {
   SchedulesTasks: "/schedules-tasks",
   Configuration: "/configuration",
   Features: "/features",
+  Reports: "/reports",
 };
