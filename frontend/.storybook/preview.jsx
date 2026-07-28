@@ -1,13 +1,13 @@
-import { enGB } from 'date-fns/locale/en-GB';
-import { Provider } from 'react-redux';
+import { enGB } from "date-fns/locale/en-GB";
+import { Provider } from "react-redux";
 
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 
-import getDesignTokens from '../src/MainTheme';
-import StorybookStore from './storybookStore';
+import getDesignTokens from "../src/MainTheme";
+import StorybookStore from "./storybookStore";
 
 /** @type { import('@storybook/react-vite').Preview } */
 const preview = {
@@ -18,19 +18,19 @@ const preview = {
         date: /Date$/,
       },
       expanded: true,
-      sort: 'requiredFirst',
+      sort: "requiredFirst",
     },
     docs: {
       toc: {
-        contentsSelector: '.sbdocs-content',
-        headingSelector: 'h1, h2, h3',
-        ignoreSelector: '#primary',
-        title: 'Table of Contents',
+        contentsSelector: ".sbdocs-content",
+        headingSelector: "h1, h2, h3",
+        ignoreSelector: "#primary",
+        title: "Table of Contents",
         disable: false,
       },
       source: {
-        type: 'dynamic',
-        language: 'jsx',
+        type: "dynamic",
+        language: "jsx",
         format: true,
         excludeDecorators: true,
       },
@@ -38,50 +38,52 @@ const preview = {
     backgrounds: {
       options: {
         light: {
-          name: 'light',
-          value: '#ffffff',
+          name: "light",
+          value: "#ffffff",
         },
 
         dark: {
-          name: 'dark',
-          value: '#121212',
+          name: "dark",
+          value: "#121212",
         },
 
         grey: {
-          name: 'grey',
-          value: '#f5f5f5',
+          name: "grey",
+          value: "#f5f5f5",
         },
       },
     },
     viewport: {
       options: {
         mobile: {
-          name: 'Mobile',
-          styles: { width: '375px', height: '667px' },
-          type: 'mobile',
+          name: "Mobile",
+          styles: { width: "375px", height: "667px" },
+          type: "mobile",
         },
         tablet: {
-          name: 'Tablet',
-          styles: { width: '768px', height: '1024px' },
-          type: 'tablet',
+          name: "Tablet",
+          styles: { width: "768px", height: "1024px" },
+          type: "tablet",
         },
         desktop: {
-          name: 'Desktop',
-          styles: { width: '1024px', height: '768px' },
-          type: 'desktop',
+          name: "Desktop",
+          styles: { width: "1024px", height: "768px" },
+          type: "desktop",
         },
       },
     },
     a11y: {
-      test: 'todo',
+      test: "todo",
     },
   },
 
   decorators: [
     (Story, context) => {
-      const isDark = context.globals.backgrounds?.value === '#121212' || context.globals.theme === 'dark';
+      const isDark =
+        context.globals.backgrounds?.value === "#121212" ||
+        context.globals.theme === "dark";
 
-      const theme = createTheme(getDesignTokens(isDark ? 'dark' : 'light'));
+      const theme = createTheme(getDesignTokens(isDark ? "dark" : "light"));
 
       return (
         <Provider store={StorybookStore}>
@@ -93,9 +95,9 @@ const preview = {
               <CssBaseline />
               <div
                 style={{
-                  padding: '16px',
+                  padding: "16px",
                   background: theme.palette.background.default,
-                  minHeight: '100vh',
+                  minHeight: "100vh",
                 }}
               >
                 <Story />
@@ -109,12 +111,12 @@ const preview = {
 
   globalTypes: {
     theme: {
-      name: 'Theme',
-      description: 'Global theme for components',
-      defaultValue: 'light',
+      name: "Theme",
+      description: "Global theme for components",
+      defaultValue: "light",
       toolbar: {
-        icon: 'circlehollow',
-        items: ['light', 'dark'],
+        icon: "circlehollow",
+        items: ["light", "dark"],
         showName: true,
       },
     },
@@ -122,7 +124,7 @@ const preview = {
 
   initialGlobals: {
     backgrounds: {
-      value: 'light',
+      value: "light",
     },
   },
 };

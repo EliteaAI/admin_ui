@@ -23,7 +23,7 @@ export function groupTasks(taskNames, groupsMap) {
   const buckets = {};
 
   taskNames.forEach((name) => {
-    const group = groupsMap[name] || 'General';
+    const group = groupsMap[name] || "General";
     if (!buckets[group]) buckets[group] = [];
     buckets[group].push(name);
   });
@@ -32,7 +32,7 @@ export function groupTasks(taskNames, groupsMap) {
   const otherGroups = [];
 
   Object.keys(buckets).forEach((g) => {
-    if (g === 'General' || g === 'Older') return;
+    if (g === "General" || g === "Older") return;
     const sv = parseSemver(g);
     if (sv) {
       releaseGroups.push({ group: g, sv, items: buckets[g] });
@@ -47,14 +47,14 @@ export function groupTasks(taskNames, groupsMap) {
   const result = [];
 
   if (buckets.General) {
-    result.push({ group: 'General', items: buckets.General });
+    result.push({ group: "General", items: buckets.General });
   }
 
   releaseGroups.forEach(({ group, items }) => result.push({ group, items }));
   otherGroups.forEach(({ group, items }) => result.push({ group, items }));
 
   if (buckets.Older) {
-    result.push({ group: 'Older', items: buckets.Older });
+    result.push({ group: "Older", items: buckets.Older });
   }
 
   return result;

@@ -1,10 +1,10 @@
 import { memo } from "react";
 import { Box, TextField, Typography } from "@mui/material";
 
-const ResourceVersionRow = memo(props => {
+const ResourceVersionRow = memo((props) => {
   const { row, onChange } = props;
 
-  const handleValueChange = event => {
+  const handleValueChange = (event) => {
     if (!row.valueKey) return;
     onChange(row.valueKey, event.target.value);
   };
@@ -13,10 +13,7 @@ const ResourceVersionRow = memo(props => {
   if (row.valueKey) {
     return (
       <Box sx={styles.editableRow}>
-        <Typography
-          variant="body2"
-          sx={styles.editableLabel}
-        >
+        <Typography variant="body2" sx={styles.editableLabel}>
           {row.label}
         </Typography>
         <TextField
@@ -33,16 +30,10 @@ const ResourceVersionRow = memo(props => {
   // Read-only rows (plugin versions): label + monospace value
   return (
     <Box sx={styles.readOnlyRow}>
-      <Typography
-        variant="body2"
-        sx={styles.readOnlyLabel}
-      >
+      <Typography variant="body2" sx={styles.readOnlyLabel}>
         {row.label}
       </Typography>
-      <Typography
-        variant="body2"
-        sx={styles.readOnlyValue}
-      >
+      <Typography variant="body2" sx={styles.readOnlyValue}>
         {row.value}
       </Typography>
     </Box>

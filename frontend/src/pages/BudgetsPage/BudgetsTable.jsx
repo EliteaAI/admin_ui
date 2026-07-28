@@ -110,7 +110,10 @@ const BudgetsTable = memo(function BudgetsTable(props) {
       // Personal projects are really a user's own budget, so show who it belongs to
       const label = row?.display_name || value;
       return (
-        <Tooltip title={row?.is_personal ? `Personal project: ${value}` : ""} placement="top">
+        <Tooltip
+          title={row?.is_personal ? `Personal project: ${value}` : ""}
+          placement="top"
+        >
           <Typography variant="bodyMedium" sx={styles.cellText}>
             {label || "-"}
           </Typography>

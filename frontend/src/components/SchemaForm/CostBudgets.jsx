@@ -1,5 +1,12 @@
 import { memo, useCallback } from "react";
-import { Box, MenuItem, Select, Switch, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  MenuItem,
+  Select,
+  Switch,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 const MODE_OPTIONS = [
   {
@@ -44,7 +51,8 @@ const CostBudgets = memo((props) => {
   const enforcing = mode === "enforce";
   const defaultsEnabled = !!values?.cost_budgets_defaults_enabled;
 
-  const activeMode = MODE_OPTIONS.find((o) => o.value === mode) || MODE_OPTIONS[0];
+  const activeMode =
+    MODE_OPTIONS.find((o) => o.value === mode) || MODE_OPTIONS[0];
 
   const handleModeChange = useCallback(
     (e) => onChange("cost_budgets_mode", e.target.value),
@@ -68,10 +76,10 @@ const CostBudgets = memo((props) => {
   return (
     <Box sx={styles.root}>
       <Typography variant="body2" sx={styles.description}>
-        Limit monthly spend on shared models per project and per user. Limits are
-        enforced before each call, so an over-budget project is blocked rather
-        than billed. Individual limits are set on the Budgets page; the values
-        here apply only where nothing has been set explicitly.
+        Limit monthly spend on shared models per project and per user. Limits
+        are enforced before each call, so an over-budget project is blocked
+        rather than billed. Individual limits are set on the Budgets page; the
+        values here apply only where nothing has been set explicitly.
       </Typography>
 
       <Box sx={styles.card}>

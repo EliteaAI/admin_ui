@@ -312,9 +312,9 @@ const styles = {
     marginTop: "0.25rem",
   },
   description: {
-    fontSize: '0.75rem',
+    fontSize: "0.75rem",
     lineHeight: 1.4,
-    whiteSpace: 'pre-line',
+    whiteSpace: "pre-line",
   },
   startButton: {
     textTransform: "none",

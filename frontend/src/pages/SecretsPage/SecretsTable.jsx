@@ -1,29 +1,29 @@
-import { memo, useCallback, useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+import { memo, useCallback, useEffect, useState } from "react";
+import PropTypes from "prop-types";
 
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
-import VisibilityOffOutlined from '@mui/icons-material/VisibilityOffOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 
-import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
+import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import {
   GridTableContainer,
   GridTableHeader,
   GridTableBody,
   GridTableRow,
   GridTablePagination,
-} from '@/components/GridTable';
-import { useLazySecretRevealQuery } from '@/api/secretsApi';
+} from "@/components/GridTable";
+import { useLazySecretRevealQuery } from "@/api/secretsApi";
 
 const COLUMNS = [
-  { field: 'name', label: 'Name', width: '1.5fr', sortable: true },
-  { field: 'value', label: 'Value', width: '2fr', sortable: false },
-  { field: 'actions', label: '', width: '8rem', sortable: false },
+  { field: "name", label: "Name", width: "1.5fr", sortable: true },
+  { field: "value", label: "Value", width: "2fr", sortable: false },
+  { field: "actions", label: "", width: "8rem", sortable: false },
 ];
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -50,12 +50,13 @@ const SecretsTable = memo(function SecretsTable({
     setRevealedSecrets({});
   }, [total]);
 
-  const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
-    columns: COLUMNS,
-    containerWidth: window.innerWidth,
-    showCheckbox: false,
-    actionsColumnWidth: '8rem',
-  });
+  const { visibleColumns, dataColumns, gridTemplateColumns } =
+    useResponsiveColumns({
+      columns: COLUMNS,
+      containerWidth: window.innerWidth,
+      showCheckbox: false,
+      actionsColumnWidth: "8rem",
+    });
 
   const handleRevealToggle = useCallback(
     async (name) => {
@@ -69,7 +70,10 @@ const SecretsTable = memo(function SecretsTable({
       }
       try {
         const result = await triggerReveal({ name }).unwrap();
-        setRevealedSecrets((prev) => ({ ...prev, [name]: result.secret ?? '' }));
+        setRevealedSecrets((prev) => ({
+          ...prev,
+          [name]: result.secret ?? "",
+        }));
       } catch {
         // silently fail
       }
@@ -79,28 +83,42 @@ const SecretsTable = memo(function SecretsTable({
 
   const renderCell = useCallback(
     (column, value, row) => {
-      if (column.field === 'name') {
+      if (column.field === "name") {
         return (
-          <Typography variant="bodyMedium" color="text.secondary" sx={styles.cellTextMono}>
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.cellTextMono}
+          >
             {value}
           </Typography>
         );
       }
-      if (column.field === 'value') {
+      if (column.field === "value") {
         const revealed = revealedSecrets[row.name];
         return (
           <Typography
             variant="bodyMedium"
             color="text.secondary"
-            sx={revealed !== undefined ? styles.cellTextMonoWrap : styles.cellTextMono}
+            sx={
+              revealed !== undefined
+                ? styles.cellTextMonoWrap
+                : styles.cellTextMono
+            }
           >
-            {revealed !== undefined ? revealed : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
+            {revealed !== undefined
+              ? revealed
+              : "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}
           </Typography>
         );
       }
       return (
-        <Typography variant="bodyMedium" color="text.secondary" sx={styles.cellText}>
-          {value ?? '\u2014'}
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          sx={styles.cellText}
+        >
+          {value ?? "\u2014"}
         </Typography>
       );
     },
@@ -112,8 +130,11 @@ const SecretsTable = memo(function SecretsTable({
       const isRevealed = revealedSecrets[row.name] !== undefined;
       return (
         <Box sx={styles.actions}>
-          <Tooltip title={isRevealed ? 'Hide value' : 'Reveal value'}>
-            <IconButton size="small" onClick={() => handleRevealToggle(row.name)}>
+          <Tooltip title={isRevealed ? "Hide value" : "Reveal value"}>
+            <IconButton
+              size="small"
+              onClick={() => handleRevealToggle(row.name)}
+            >
               {isRevealed ? (
                 <VisibilityOffOutlined fontSize="small" />
               ) : (
@@ -193,26 +214,26 @@ const SecretsTable = memo(function SecretsTable({
 
 const styles = {
   cellText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   cellTextMono: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    fontFamily: 'monospace',
-    fontSize: '0.8125rem',
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    fontFamily: "monospace",
+    fontSize: "0.8125rem",
   },
   cellTextMonoWrap: {
-    fontFamily: 'monospace',
-    fontSize: '0.8125rem',
-    wordBreak: 'break-all',
-    whiteSpace: 'normal',
+    fontFamily: "monospace",
+    fontSize: "0.8125rem",
+    wordBreak: "break-all",
+    whiteSpace: "normal",
   },
   actions: {
-    display: 'flex',
-    gap: '0.125rem',
+    display: "flex",
+    gap: "0.125rem",
   },
 };
 

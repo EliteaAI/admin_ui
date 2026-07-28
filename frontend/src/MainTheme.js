@@ -1,71 +1,71 @@
-import darkPalette, { darkBlue, white } from './darkPalette';
-import lightPalette from './lightPalette';
+import darkPalette, { darkBlue, white } from "./darkPalette";
+import lightPalette from "./lightPalette";
 
 export const typographyVariants = {
   headingLarge: {
-    color: theme => theme.palette.text.secondary,
-    fontStyle: 'semibold',
+    color: (theme) => theme.palette.text.secondary,
+    fontStyle: "semibold",
     fontWeight: 600,
-    fontSize: '1.25rem',
-    lineHeight: '2rem',
+    fontSize: "1.25rem",
+    lineHeight: "2rem",
   },
   headingMedium: {
-    color: theme => theme.palette.text.secondary,
-    fontStyle: 'normal',
+    color: (theme) => theme.palette.text.secondary,
+    fontStyle: "normal",
     fontWeight: 600,
-    fontSize: '16px',
-    lineHeight: '24px',
+    fontSize: "16px",
+    lineHeight: "24px",
   },
   headingSmall: {
-    color: theme => theme.palette.text.secondary,
-    fontStyle: 'normal',
+    color: (theme) => theme.palette.text.secondary,
+    fontStyle: "normal",
     fontWeight: 600,
-    fontSize: '14px',
-    lineHeight: '24px',
+    fontSize: "14px",
+    lineHeight: "24px",
   },
   labelMedium: {
-    fontStyle: 'normal',
+    fontStyle: "normal",
     fontWeight: 500,
-    fontSize: '14px',
-    lineHeight: '24px',
+    fontSize: "14px",
+    lineHeight: "24px",
   },
   labelSmall: {
-    fontStyle: 'normal',
+    fontStyle: "normal",
     fontWeight: 500,
-    fontSize: '12px',
-    lineHeight: '16px',
+    fontSize: "12px",
+    lineHeight: "16px",
   },
   labelTiny: {
-    fontStyle: 'normal',
+    fontStyle: "normal",
     fontWeight: 400,
-    fontSize: '10px',
-    lineHeight: '16px',
+    fontSize: "10px",
+    lineHeight: "16px",
   },
   bodyMedium: {
-    fontStyle: 'normal',
+    fontStyle: "normal",
     fontWeight: 400,
-    fontSize: '14px',
-    lineHeight: '24px',
+    fontSize: "14px",
+    lineHeight: "24px",
   },
   bodySmall: {
-    fontStyle: 'normal',
+    fontStyle: "normal",
     fontWeight: 400,
-    fontSize: '12px',
-    lineHeight: '16px',
+    fontSize: "12px",
+    lineHeight: "16px",
   },
   bodySmall2: {
-    fontStyle: 'normal',
+    fontStyle: "normal",
     fontWeight: 400,
-    fontSize: '12px',
-    lineHeight: '20px',
+    fontSize: "12px",
+    lineHeight: "20px",
   },
   subtitle: {
-    fontStyle: 'normal',
+    fontStyle: "normal",
     fontWeight: 500,
-    fontSize: '12px',
-    lineHeight: '16px',
-    letterSpacing: '0.72px',
-    textTransform: 'uppercase',
+    fontSize: "12px",
+    lineHeight: "16px",
+    letterSpacing: "0.72px",
+    textTransform: "uppercase",
   },
 };
 
@@ -73,30 +73,30 @@ const components = {
   MuiFormControl: {
     styleOverrides: {
       root: {
-        '&.Mui-error': {
-          boxShadow: 'none',
+        "&.Mui-error": {
+          boxShadow: "none",
         },
       },
     },
   },
   MuiCssBaseline: {
     styleOverrides: {
-      '*': {
-        scrollbarWidth: 'none',
+      "*": {
+        scrollbarWidth: "none",
       },
       body: {
-        caretColor: 'transparent',
-        height: '100%',
-        '::-webkit-scrollbar': {
-          display: 'none',
+        caretColor: "transparent",
+        height: "100%",
+        "::-webkit-scrollbar": {
+          display: "none",
         },
-        msOverflowStyle: 'none',
+        msOverflowStyle: "none",
       },
       input: {
-        caretColor: 'auto',
+        caretColor: "auto",
       },
       textArea: {
-        caretColor: 'auto',
+        caretColor: "auto",
       },
     },
   },
@@ -111,19 +111,20 @@ const components = {
   MuiChip: {
     styleOverrides: {
       root: ({ theme }) => ({
-        backgroundColor: theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.08)'
-          : theme.palette.background.avatar,
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "rgba(255, 255, 255, 0.08)"
+            : theme.palette.background.avatar,
         color: theme.palette.text.secondary,
       }),
       outlined: ({ theme }) => ({
-        backgroundColor: 'transparent',
+        backgroundColor: "transparent",
         borderColor: theme.palette.border.lines,
         color: theme.palette.text.secondary,
       }),
       deleteIcon: ({ theme }) => ({
         color: theme.palette.text.default,
-        '&:hover': {
+        "&:hover": {
           color: theme.palette.text.secondary,
         },
       }),
@@ -147,7 +148,7 @@ const components = {
     styleOverrides: {
       paper: ({ theme }) => ({
         background: theme.palette.background.secondary,
-        borderRadius: '0.5rem',
+        borderRadius: "0.5rem",
         border: `1px solid ${theme.palette.border.lines}`,
       }),
     },
@@ -155,9 +156,9 @@ const components = {
   MuiTablePagination: {
     styleOverrides: {
       root: ({ theme }) => ({
-        fontSize: '0.75rem',
+        fontSize: "0.75rem",
         color: theme.palette.text.default,
-        '& .MuiTablePagination-select.MuiSelect-standard': {
+        "& .MuiTablePagination-select.MuiSelect-standard": {
           color: theme.palette.text.default,
         },
       }),
@@ -170,17 +171,17 @@ const components = {
         color: theme.palette.text.default,
       }),
       menuItem: {
-        fontSize: '0.75rem',
+        fontSize: "0.75rem",
       },
     },
   },
   MuiTab: {
     styleOverrides: {
       root: ({ theme }) => ({
-        '&.MuiTab-textColorPrimary': {
+        "&.MuiTab-textColorPrimary": {
           color: theme.palette.text.default,
         },
-        '&.Mui-selected': {
+        "&.Mui-selected": {
           color: theme.palette.primary.main,
         },
       }),
@@ -189,13 +190,13 @@ const components = {
   MuiAlert: {
     styleOverrides: {
       filledSuccess: {
-        backgroundColor: 'green',
-        background: 'green',
+        backgroundColor: "green",
+        background: "green",
         color: white,
       },
       filledError: {
-        backgroundColor: 'red',
-        background: 'red',
+        backgroundColor: "red",
+        background: "red",
         color: white,
       },
       filledInfo: {
@@ -204,8 +205,8 @@ const components = {
         color: white,
       },
       filledWarning: {
-        backgroundColor: 'orange',
-        background: 'orange',
+        backgroundColor: "orange",
+        background: "orange",
         color: white,
       },
     },
@@ -215,10 +216,10 @@ const components = {
       root: ({ theme }) => ({
         size: 16,
         color: theme.palette.text.default,
-        '&.Mui-checked': {
+        "&.Mui-checked": {
           color: theme.palette.text.secondary,
         },
-        '& .MuiSvgIcon-root': {
+        "& .MuiSvgIcon-root": {
           fontSize: 20,
         },
       }),
@@ -227,50 +228,52 @@ const components = {
   MuiCheckbox: {
     styleOverrides: {
       root: ({ theme }) => ({
-        padding: '8px',
-        borderRadius: '3px',
-        '& .MuiSvgIcon-root': {
-          fontSize: '16px',
-          borderRadius: '3px',
+        padding: "8px",
+        borderRadius: "3px",
+        "& .MuiSvgIcon-root": {
+          fontSize: "16px",
+          borderRadius: "3px",
         },
-        '&:not(.Mui-checked):not(.MuiCheckbox-indeterminate)': {
-          '& .MuiSvgIcon-root': {
+        "&:not(.Mui-checked):not(.MuiCheckbox-indeterminate)": {
+          "& .MuiSvgIcon-root": {
             color: theme.palette.text.secondary,
           },
         },
-        '&.Mui-checked': {
-          '& .MuiSvgIcon-root': {
+        "&.Mui-checked": {
+          "& .MuiSvgIcon-root": {
             color: theme.palette.icon.fill.select || theme.palette.primary.main,
           },
         },
-        '&.MuiCheckbox-indeterminate': {
-          '& .MuiSvgIcon-root': {
+        "&.MuiCheckbox-indeterminate": {
+          "& .MuiSvgIcon-root": {
             color: theme.palette.icon.fill.select || theme.palette.primary.main,
           },
         },
-        '&:hover:not(.Mui-disabled)': {
-          backgroundColor: 'transparent',
-          '&:not(.Mui-checked):not(.MuiCheckbox-indeterminate) .MuiSvgIcon-root': {
-            color: theme.palette.text.primary,
-          },
-          '&.Mui-checked .MuiSvgIcon-root': {
+        "&:hover:not(.Mui-disabled)": {
+          backgroundColor: "transparent",
+          "&:not(.Mui-checked):not(.MuiCheckbox-indeterminate) .MuiSvgIcon-root":
+            {
+              color: theme.palette.text.primary,
+            },
+          "&.Mui-checked .MuiSvgIcon-root": {
             color: theme.palette.text.secondary,
           },
-          '&.MuiCheckbox-indeterminate .MuiSvgIcon-root': {
+          "&.MuiCheckbox-indeterminate .MuiSvgIcon-root": {
             color: theme.palette.text.secondary,
           },
         },
-        '&.Mui-focusVisible': {
-          backgroundColor: 'transparent',
+        "&.Mui-focusVisible": {
+          backgroundColor: "transparent",
         },
-        '&.Mui-disabled': {
-          '&:not(.Mui-checked):not(.MuiCheckbox-indeterminate) .MuiSvgIcon-root': {
+        "&.Mui-disabled": {
+          "&:not(.Mui-checked):not(.MuiCheckbox-indeterminate) .MuiSvgIcon-root":
+            {
+              color: theme.palette.text.disabled,
+            },
+          "&.Mui-checked .MuiSvgIcon-root": {
             color: theme.palette.text.disabled,
           },
-          '&.Mui-checked .MuiSvgIcon-root': {
-            color: theme.palette.text.disabled,
-          },
-          '&.MuiCheckbox-indeterminate .MuiSvgIcon-root': {
+          "&.MuiCheckbox-indeterminate .MuiSvgIcon-root": {
             color: theme.palette.text.disabled,
           },
         },
@@ -310,10 +313,10 @@ const components = {
       badge: ({ theme }) => ({
         ...typographyVariants.labelSmall,
         color: theme.palette.text.secondary,
-        height: '16px',
-        minWidth: '16px',
-        borderRadius: '8px',
-        padding: '0px 4.5px',
+        height: "16px",
+        minWidth: "16px",
+        borderRadius: "8px",
+        padding: "0px 4.5px",
         background: theme.palette.background.tabButton.active,
       }),
     },
@@ -324,7 +327,7 @@ const components = {
         backgroundColor: theme.palette.background.tooltip.default,
         color: theme.palette.text.button.primary,
         ...typographyVariants.labelSmall,
-        '& .MuiTooltip-arrow': {
+        "& .MuiTooltip-arrow": {
           color: theme.palette.background.tooltip.default,
         },
       }),
@@ -335,14 +338,14 @@ const components = {
       paper: ({ theme }) => ({
         backgroundColor: theme.palette.background.secondary,
         border: `1px solid ${theme.palette.border.lines}`,
-        borderRadius: '8px',
+        borderRadius: "8px",
         boxShadow: theme.palette.boxShadow.tagEditorPaper,
       }),
     },
   },
 };
 
-const getDesignTokens = mode => ({
+const getDesignTokens = (mode) => ({
   breakpoints: {
     values: {
       xs: 0,
@@ -358,7 +361,7 @@ const getDesignTokens = mode => ({
     fontFeatureSettings: '"clig" 0, "liga" 0',
     ...typographyVariants,
   },
-  palette: mode === 'dark' ? darkPalette : lightPalette,
+  palette: mode === "dark" ? darkPalette : lightPalette,
   components: {
     MuiButton: {
       defaultProps: {
@@ -366,37 +369,37 @@ const getDesignTokens = mode => ({
       },
       styleOverrides: {
         root: ({ theme }) => ({
-          textTransform: 'none',
+          textTransform: "none",
           fontFamily: '"Montserrat", Roboto, Arial, sans-serif',
           fontWeight: 500,
-          borderRadius: '28px',
-          gap: '8px',
-          border: 'none',
-          fontSize: '12px',
-          lineHeight: '16px',
-          padding: '6px 16px',
-          minWidth: '48px',
-          '& .MuiButton-startIcon, & .MuiButton-endIcon': {
-            '& > svg': {
-              width: '16px',
-              height: '16px',
+          borderRadius: "28px",
+          gap: "8px",
+          border: "none",
+          fontSize: "12px",
+          lineHeight: "16px",
+          padding: "6px 16px",
+          minWidth: "48px",
+          "& .MuiButton-startIcon, & .MuiButton-endIcon": {
+            "& > svg": {
+              width: "16px",
+              height: "16px",
             },
           },
-          '& .MuiCircularProgress-root': {
+          "& .MuiCircularProgress-root": {
             color: theme.palette.primary.main,
-            width: '16px !important',
-            height: '16px !important',
+            width: "16px !important",
+            height: "16px !important",
           },
         }),
         sizeSmall: {
-          fontSize: '10px',
-          lineHeight: '12px',
-          padding: '4px 12px',
+          fontSize: "10px",
+          lineHeight: "12px",
+          padding: "4px 12px",
         },
         sizeLarge: {
-          fontSize: '14px',
-          lineHeight: '18px',
-          padding: '8px 20px',
+          fontSize: "14px",
+          lineHeight: "18px",
+          padding: "8px 20px",
         },
       },
     },
@@ -404,10 +407,10 @@ const getDesignTokens = mode => ({
       styleOverrides: {
         paper: ({ theme }) => ({
           background: theme.palette.background.secondary,
-          borderRadius: '16px',
-          border: '1px solid',
+          borderRadius: "16px",
+          border: "1px solid",
           borderColor: theme.palette.border.lines,
-          boxShadow: '0px 0px 23.6px 0px #FFFFFF0D',
+          boxShadow: "0px 0px 23.6px 0px #FFFFFF0D",
         }),
       },
     },

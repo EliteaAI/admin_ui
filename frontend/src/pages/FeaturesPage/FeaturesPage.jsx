@@ -12,6 +12,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
 import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
@@ -20,6 +21,7 @@ import HelpCenterSection from "@/components/SchemaForm/HelpCenterSection";
 import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
 import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
 import CostBudgets from "@/components/SchemaForm/CostBudgets";
+import SurveysSection from "./SurveysSection/SurveysSection";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   useConfigSchemasQuery,
@@ -82,6 +84,13 @@ const FEATURES_SECTIONS = [
     backendSectionId: "cost_budgets",
     pathPrefix: null,
   },
+  {
+    id: "surveys",
+    title: "Surveys",
+    icon: PollOutlinedIcon,
+    backendSectionId: null,
+    pathPrefix: null,
+  },
 ];
 
 const FeaturesPage = memo(() => {
@@ -89,6 +98,7 @@ const FeaturesPage = memo(() => {
     () => window.location.hash.slice(1) || FEATURES_SECTIONS[0].id,
   );
   const [localValues, setLocalValues] = useState({});
+  const addSurveyRef = useRef(null);
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -112,7 +122,7 @@ const FeaturesPage = memo(() => {
     isLoading: valuesLoading,
   } = useConfigValuesQuery(
     { sectionId: activeDef.backendSectionId },
-    { refetchOnMountOrArgChange: true },
+    { refetchOnMountOrArgChange: true, skip: !activeDef.backendSectionId },
   );
 
   useEffect(() => {
@@ -255,16 +265,20 @@ const FeaturesPage = memo(() => {
   }, []);
 
   const renderContent = () => {
-    const isLoading = activeDef.pathPrefix ? valuesLoading : valuesFetching;
-    if (isLoading) {
+    const isLoading =
+      activeDef.backendSectionId &&
+      (activeDef.pathPrefix ? valuesLoading : valuesFetching);
+
+    if (isLoading)
       return (
         <Box sx={styles.loadingContainer}>
           <CircularProgress size={24} />
         </Box>
       );
-    }
 
     switch (activeSection) {
+      case "surveys":
+        return <SurveysSection addRef={addSurveyRef} />;
       case "mcp_configuration":
       case "agent_publishing":
       case "skill_publishing":
@@ -316,7 +330,13 @@ const FeaturesPage = memo(() => {
 
   return (
     <DrawerPage sx={{ overflow: "hidden" }}>
-      <DrawerPageHeader title="Features" showBorder />
+      <DrawerPageHeader
+        title="Features"
+        showBorder
+        showAddButton={activeSection === "surveys"}
+        onAdd={() => addSurveyRef.current?.()}
+        addButtonTooltip="Add survey"
+      />
 
       <Box sx={styles.content}>
         <Box sx={styles.sectionSidebar}>
@@ -344,52 +364,58 @@ const FeaturesPage = memo(() => {
         <Box sx={styles.formArea}>
           {renderContent()}
 
-          <Box sx={styles.actionBar}>
-            <Box sx={styles.actionButtons}>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={handleDiscard}
-                disabled={!isDirty || saving}
-                sx={styles.discardButton}
-              >
-                Discard
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                onClick={handleSave}
-                disabled={!isDirty || saving}
-                sx={styles.saveButton}
-              >
-                {saving ? "Saving..." : "Save"}
-              </Button>
-            </Box>
-
-            {pendingRestarts.length > 0 && (
-              <Box sx={styles.restartBar}>
-                <Typography variant="caption" sx={styles.restartLabel}>
-                  Reload required:
-                </Typography>
-                {pendingRestarts.map((entry) => (
-                  <Button
-                    key={entry.pylon_id}
-                    size="small"
-                    variant="outlined"
-                    color="warning"
-                    startIcon={<RestartAltIcon sx={{ fontSize: "0.875rem" }} />}
-                    onClick={() => handleReload(entry.pylon_id, entry.plugins)}
-                    disabled={restarting}
-                    sx={styles.restartButton}
-                  >
-                    {entry.plugins?.length
-                      ? entry.plugins.join(", ")
-                      : entry.pylon_id}
-                  </Button>
-                ))}
+          {activeSection !== "surveys" && (
+            <Box sx={styles.actionBar}>
+              <Box sx={styles.actionButtons}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleDiscard}
+                  disabled={!isDirty || saving}
+                  sx={styles.discardButton}
+                >
+                  Discard
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={handleSave}
+                  disabled={!isDirty || saving}
+                  sx={styles.saveButton}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </Button>
               </Box>
-            )}
-          </Box>
+
+              {pendingRestarts.length > 0 && (
+                <Box sx={styles.restartBar}>
+                  <Typography variant="caption" sx={styles.restartLabel}>
+                    Reload required:
+                  </Typography>
+                  {pendingRestarts.map((entry) => (
+                    <Button
+                      key={entry.pylon_id}
+                      size="small"
+                      variant="outlined"
+                      color="warning"
+                      startIcon={
+                        <RestartAltIcon sx={{ fontSize: "0.875rem" }} />
+                      }
+                      onClick={() =>
+                        handleReload(entry.pylon_id, entry.plugins)
+                      }
+                      disabled={restarting}
+                      sx={styles.restartButton}
+                    >
+                      {entry.plugins?.length
+                        ? entry.plugins.join(", ")
+                        : entry.pylon_id}
+                    </Button>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
       </Box>
 

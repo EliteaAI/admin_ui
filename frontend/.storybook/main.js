@@ -1,9 +1,9 @@
 /** @type { import('@storybook/react-vite').StorybookConfig } */
 const config = {
-  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
+  stories: ["../src/**/*.stories.@(js|jsx|ts|tsx)"],
   addons: [
     {
-      name: '@storybook/addon-docs',
+      name: "@storybook/addon-docs",
       options: {
         configureJSX: true,
         babelOptions: {},
@@ -11,30 +11,31 @@ const config = {
         transcludeMarkdown: true,
       },
     },
-    '@chromatic-com/storybook',
+    "@chromatic-com/storybook",
   ],
   framework: {
-    name: '@storybook/react-vite',
+    name: "@storybook/react-vite",
     options: {},
   },
   docs: {
-    defaultName: 'Documentation',
+    defaultName: "Documentation",
   },
   typescript: {
     check: false,
-    reactDocgen: 'react-docgen-typescript',
+    reactDocgen: "react-docgen-typescript",
     reactDocgenTypescriptOptions: {
       shouldExtractLiteralValuesFromEnum: true,
       shouldRemoveUndefinedFromOptional: true,
-      propFilter: prop => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
+      propFilter: (prop) =>
+        prop.parent ? !/node_modules/.test(prop.parent.fileName) : true,
     },
   },
-  viteFinal: async viteConfig => {
-    const { mergeConfig } = await import('vite');
+  viteFinal: async (viteConfig) => {
+    const { mergeConfig } = await import("vite");
 
     return mergeConfig(viteConfig, {
       define: {
-        global: 'globalThis',
+        global: "globalThis",
       },
     });
   },

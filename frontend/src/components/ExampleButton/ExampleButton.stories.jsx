@@ -1,58 +1,58 @@
-import ExampleButton from './ExampleButton';
+import ExampleButton from "./ExampleButton";
 
 export default {
-  title: 'Components/ExampleButton',
+  title: "Components/ExampleButton",
   component: ExampleButton,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
-    onClick: { action: 'clicked' },
+    onClick: { action: "clicked" },
   },
 };
 
 export const Primary = {
   args: {
-    label: 'Primary Button',
-    variant: 'contained',
-    color: 'primary',
+    label: "Primary Button",
+    variant: "contained",
+    color: "primary",
   },
 };
 
 export const Secondary = {
   args: {
-    label: 'Secondary Button',
-    variant: 'contained',
-    color: 'secondary',
+    label: "Secondary Button",
+    variant: "contained",
+    color: "secondary",
   },
 };
 
 export const Outlined = {
   args: {
-    label: 'Outlined Button',
-    variant: 'outlined',
-    color: 'primary',
+    label: "Outlined Button",
+    variant: "outlined",
+    color: "primary",
   },
 };
 
 export const Text = {
   args: {
-    label: 'Text Button',
-    variant: 'text',
-    color: 'primary',
+    label: "Text Button",
+    variant: "text",
+    color: "primary",
   },
 };
 
 export const Small = {
   args: {
-    label: 'Small Button',
-    variant: 'contained',
-    size: 'small',
+    label: "Small Button",
+    variant: "contained",
+    size: "small",
   },
 };
 
 export const Large = {
   args: {
-    label: 'Large Button',
-    variant: 'contained',
-    size: 'large',
+    label: "Large Button",
+    variant: "contained",
+    size: "large",
   },
 };

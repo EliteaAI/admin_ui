@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { io } from 'socket.io-client';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 
-import { useLazyTaskLogsQuery } from '@/api/tasksApi';
+import { useLazyTaskLogsQuery } from "@/api/tasksApi";
 
 /**
  * Custom hook for streaming task logs.
@@ -67,46 +67,51 @@ export function useTaskLogSocket(taskId, enabled) {
     socketConnectedRef.current = false;
 
     // eslint-disable-next-line no-console
-    console.log('[TaskLogs] Connecting Socket.IO for task:', taskId);
+    console.log("[TaskLogs] Connecting Socket.IO for task:", taskId);
 
     // Connect to the default namespace at same origin
     const socket = io({
-      path: '/socket.io/',
+      path: "/socket.io/",
       withCredentials: true,
-      transports: ['polling', 'websocket'],
+      transports: ["polling", "websocket"],
       reconnectionAttempts: 3,
       reconnectionDelay: 2000,
       timeout: 10000,
     });
     socketRef.current = socket;
 
-    socket.on('connect', () => {
+    socket.on("connect", () => {
       // eslint-disable-next-line no-console
-      console.log('[TaskLogs] Socket.IO connected, subscribing to task:', taskId);
+      console.log(
+        "[TaskLogs] Socket.IO connected, subscribing to task:",
+        taskId,
+      );
       if (cancelled) return;
       socketConnectedRef.current = true;
       setConnected(true);
 
-      socket.emit('task_logs_subscribe', {
+      socket.emit("task_logs_subscribe", {
         tasknode_task: `id:${taskId}`,
       });
     });
 
-    socket.on('disconnect', () => {
+    socket.on("disconnect", () => {
       // eslint-disable-next-line no-console
-      console.log('[TaskLogs] Socket.IO disconnected');
+      console.log("[TaskLogs] Socket.IO disconnected");
       if (cancelled) return;
       socketConnectedRef.current = false;
       setConnected(false);
     });
 
-    socket.on('log_data', (data) => {
+    socket.on("log_data", (data) => {
       if (cancelled) return;
       // eslint-disable-next-line no-console
-      console.log('[TaskLogs] Received log_data:', data?.length, 'records');
+      console.log("[TaskLogs] Received log_data:", data?.length, "records");
       if (Array.isArray(data)) {
         const newLines = data.map((entry) =>
-          typeof entry === 'string' ? entry : entry.line || JSON.stringify(entry),
+          typeof entry === "string"
+            ? entry
+            : entry.line || JSON.stringify(entry),
         );
         // Replace logs entirely — Socket.IO subscribe sends full cache + new entries
         setLogs((prev) => {
@@ -118,9 +123,9 @@ export function useTaskLogSocket(taskId, enabled) {
       }
     });
 
-    socket.on('connect_error', (err) => {
+    socket.on("connect_error", (err) => {
       // eslint-disable-next-line no-console
-      console.error('[TaskLogs] Socket.IO connect_error:', err?.message);
+      console.error("[TaskLogs] Socket.IO connect_error:", err?.message);
       if (cancelled) return;
       socketConnectedRef.current = false;
       setConnected(false);
@@ -129,10 +134,10 @@ export function useTaskLogSocket(taskId, enabled) {
     return () => {
       cancelled = true;
       // eslint-disable-next-line no-console
-      console.log('[TaskLogs] Cleaning up Socket.IO for task:', taskId);
+      console.log("[TaskLogs] Cleaning up Socket.IO for task:", taskId);
 
       if (socket.connected) {
-        socket.emit('task_logs_unsubscribe', {
+        socket.emit("task_logs_unsubscribe", {
           tasknode_task: `id:${taskId}`,
         });
       }

@@ -1,9 +1,9 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback } from "react";
 
-import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 
 const GridTableRow = memo(function GridTableRow(props) {
   const {
@@ -16,23 +16,35 @@ const GridTableRow = memo(function GridTableRow(props) {
     onMouseLeave,
     gridTemplateColumns,
     showCheckbox = true,
-    idField = 'id',
+    idField = "id",
     renderCell,
     renderActions,
     rowSx,
   } = props;
 
-  const styles = gridTableRowStyles(isSelected, isHovered, gridTemplateColumns, showCheckbox);
+  const styles = gridTableRowStyles(
+    isSelected,
+    isHovered,
+    gridTemplateColumns,
+    showCheckbox,
+  );
   const rowId = row[idField];
 
   const handleCheckboxChange = useCallback(() => {
     onSelect?.(rowId);
   }, [onSelect, rowId]);
 
-  const dataColumns = columns.filter((col) => col.field !== 'actions');
+  const dataColumns = columns.filter((col) => col.field !== "actions");
 
   return (
-    <Box sx={[styles.row, ...(Array.isArray(rowSx) ? rowSx : rowSx ? [rowSx] : [])]} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+    <Box
+      sx={[
+        styles.row,
+        ...(Array.isArray(rowSx) ? rowSx : rowSx ? [rowSx] : []),
+      ]}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       {showCheckbox && (
         <Box sx={styles.checkboxCell}>
           <Checkbox
@@ -51,13 +63,13 @@ const GridTableRow = memo(function GridTableRow(props) {
 
         if (renderCell) {
           cellContent = renderCell(column, value, row);
-        } else if (typeof column.format === 'function') {
+        } else if (typeof column.format === "function") {
           cellContent = column.format(value, row);
         } else {
-          cellContent = value ?? '-';
+          cellContent = value ?? "-";
         }
 
-        if (typeof cellContent === 'string') {
+        if (typeof cellContent === "string") {
           return (
             <Box key={column.field} sx={styles.dataCell(column)}>
               <Tooltip title={cellContent} placement="top" disableInteractive>
@@ -80,65 +92,72 @@ const GridTableRow = memo(function GridTableRow(props) {
         );
       })}
 
-      {renderActions && (
-        <Box sx={styles.actionsCell}>{renderActions(row)}</Box>
-      )}
+      {renderActions && <Box sx={styles.actionsCell}>{renderActions(row)}</Box>}
     </Box>
   );
 });
 
-const gridTableRowStyles = (isSelected, isHovered, gridTemplateColumns, showCheckbox) => ({
+const gridTableRowStyles = (
+  isSelected,
+  isHovered,
+  gridTemplateColumns,
+  showCheckbox,
+) => ({
   row: ({ palette }) => ({
-    display: 'grid',
-    gridTemplateColumns: gridTemplateColumns || (showCheckbox ? '3rem 1fr' : '1fr'),
-    alignItems: 'center',
-    width: '100%',
-    minHeight: '2.5rem',
+    display: "grid",
+    gridTemplateColumns:
+      gridTemplateColumns || (showCheckbox ? "3rem 1fr" : "1fr"),
+    alignItems: "center",
+    width: "100%",
+    minHeight: "2.5rem",
     borderBottom: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: isSelected || isHovered ? palette.background.userInputBackground : 'transparent',
-    transition: 'background-color 0.2s ease',
-    '&:first-of-type': {
-      borderTopLeftRadius: '0.5rem',
-      borderTopRightRadius: '0.5rem',
+    backgroundColor:
+      isSelected || isHovered
+        ? palette.background.userInputBackground
+        : "transparent",
+    transition: "background-color 0.2s ease",
+    "&:first-of-type": {
+      borderTopLeftRadius: "0.5rem",
+      borderTopRightRadius: "0.5rem",
     },
-    '&:last-of-type': {
-      borderBottom: 'none',
-      borderBottomLeftRadius: '0.5rem',
-      borderBottomRightRadius: '0.5rem',
+    "&:last-of-type": {
+      borderBottom: "none",
+      borderBottomLeftRadius: "0.5rem",
+      borderBottomRightRadius: "0.5rem",
     },
   }),
   checkboxCell: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     minWidth: 0,
   },
   checkbox: {
-    padding: '0.375rem',
+    padding: "0.375rem",
   },
   dataCell: (column) => ({
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     flex: 1,
-    padding: '0.5rem 1rem',
+    padding: "0.5rem 1rem",
     minWidth: 0,
-    overflow: 'hidden',
-    ...(column?.align === 'right' && { justifyContent: 'flex-end' }),
+    overflow: "hidden",
+    ...(column?.align === "right" && { justifyContent: "flex-end" }),
   }),
   cellText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
     flex: 1,
   },
   actionsCell: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: '0.5rem',
-    padding: '0.5rem 1rem',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: "0.5rem",
+    padding: "0.5rem 1rem",
     minWidth: 0,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
 });
 

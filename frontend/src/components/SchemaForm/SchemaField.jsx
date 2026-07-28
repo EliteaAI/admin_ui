@@ -1,19 +1,19 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
-import Typography from '@mui/material/Typography';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import CodeMirror from '@uiw/react-codemirror';
-import { json } from '@codemirror/lang-json';
-import ArrayChipsInput from './ArrayChipsInput';
-import MapEditor from './MapEditor';
-import UsersTableEditor from './UsersTableEditor';
-import { useConfigSuggestionsQuery } from '@/api/configurationApi';
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Typography from "@mui/material/Typography";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import CodeMirror from "@uiw/react-codemirror";
+import { json } from "@codemirror/lang-json";
+import ArrayChipsInput from "./ArrayChipsInput";
+import MapEditor from "./MapEditor";
+import UsersTableEditor from "./UsersTableEditor";
+import { useConfigSuggestionsQuery } from "@/api/configurationApi";
 
 function PasswordField({ value, onChange }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -22,16 +22,24 @@ function PasswordField({ value, onChange }) {
     <TextField
       fullWidth
       size="small"
-      type={showPassword ? 'text' : 'password'}
-      value={value || ''}
+      type={showPassword ? "text" : "password"}
+      value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       placeholder="Enter value..."
       slotProps={{
         input: {
           endAdornment: (
             <InputAdornment position="end">
-              <IconButton size="small" onClick={() => setShowPassword((s) => !s)} edge="end">
-                {showPassword ? <VisibilityOff sx={{ fontSize: '1rem' }} /> : <Visibility sx={{ fontSize: '1rem' }} />}
+              <IconButton
+                size="small"
+                onClick={() => setShowPassword((s) => !s)}
+                edge="end"
+              >
+                {showPassword ? (
+                  <VisibilityOff sx={{ fontSize: "1rem" }} />
+                ) : (
+                  <Visibility sx={{ fontSize: "1rem" }} />
+                )}
               </IconButton>
             </InputAdornment>
           ),
@@ -47,7 +55,7 @@ function JsonEditorField({ value, onChange }) {
     try {
       return JSON.stringify(value || {}, null, 2);
     } catch {
-      return '{}';
+      return "{}";
     }
   });
   const [parseError, setParseError] = useState(null);
@@ -124,13 +132,13 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
   const keySuggestions = keySuggestionsData?.values || [];
 
   switch (type) {
-    case 'string':
+    case "string":
       if (enumValues?.length) {
         return (
           <Select
             fullWidth
             size="small"
-            value={value || ''}
+            value={value || ""}
             onChange={(e) => onChange(e.target.value)}
             displayEmpty
             sx={styles.select}
@@ -143,10 +151,10 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
           </Select>
         );
       }
-      if (format === 'password') {
+      if (format === "password") {
         return <PasswordField value={value} onChange={onChange} />;
       }
-      if (format === 'textarea') {
+      if (format === "textarea") {
         const builtinDefault = field.builtin_default;
         return (
           <TextField
@@ -155,9 +163,9 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
             multiline
             minRows={builtinDefault ? 10 : 4}
             maxRows={builtinDefault ? 24 : 12}
-            value={value || ''}
+            value={value || ""}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={builtinDefault || 'Enter value...'}
+            placeholder={builtinDefault || "Enter value..."}
             sx={styles.textField}
           />
         );
@@ -166,21 +174,21 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
         <TextField
           fullWidth
           size="small"
-          value={value || ''}
+          value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Enter value..."
           sx={styles.textField}
         />
       );
 
-    case 'integer':
-    case 'number':
+    case "integer":
+    case "number":
       return (
         <TextField
           fullWidth
           size="small"
           type="number"
-          value={value ?? ''}
+          value={value ?? ""}
           onChange={(e) => onChange(Number(e.target.value))}
           inputProps={{ min: field.minimum, max: field.maximum }}
           placeholder="Enter number..."
@@ -188,8 +196,11 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
         />
       );
 
-    case 'array':
-      if (items?.type === 'string' || (items?.type === 'integer' && enumSource)) {
+    case "array":
+      if (
+        items?.type === "string" ||
+        (items?.type === "integer" && enumSource)
+      ) {
         return (
           <ArrayChipsInput
             value={Array.isArray(value) ? value : []}
@@ -199,7 +210,11 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
           />
         );
       }
-      if (items?.type === 'object' && items?.properties?.login && items?.properties?.password) {
+      if (
+        items?.type === "object" &&
+        items?.properties?.login &&
+        items?.properties?.password
+      ) {
         return (
           <UsersTableEditor
             value={Array.isArray(value) ? value : []}
@@ -209,8 +224,8 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
       }
       return <JsonEditorField value={value} onChange={onChange} />;
 
-    case 'object':
-      if (additionalProperties?.type === 'array') {
+    case "object":
+      if (additionalProperties?.type === "array") {
         return (
           <MapEditor
             value={value || {}}
@@ -227,7 +242,9 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
         <TextField
           fullWidth
           size="small"
-          value={typeof value === 'string' ? value : JSON.stringify(value ?? '')}
+          value={
+            typeof value === "string" ? value : JSON.stringify(value ?? "")
+          }
           onChange={(e) => onChange(e.target.value)}
           placeholder="Enter value..."
           sx={styles.textField}
@@ -238,42 +255,42 @@ const SchemaField = memo(function SchemaField({ field, value, onChange }) {
 
 const styles = {
   textField: ({ palette }) => ({
-    '& .MuiOutlinedInput-root': {
-      fontSize: '0.8125rem',
+    "& .MuiOutlinedInput-root": {
+      fontSize: "0.8125rem",
       backgroundColor: palette.background.default,
     },
   }),
   select: ({ palette }) => ({
-    fontSize: '0.8125rem',
+    fontSize: "0.8125rem",
     backgroundColor: palette.background.default,
   }),
   jsonEditorWrapper: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '300px',
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "300px",
   },
   editorContainer: ({ palette }) => ({
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    borderRadius: '0.375rem',
-    overflow: 'hidden',
-    '& .cm-theme-dark': {
+    display: "flex",
+    flexDirection: "column",
+    borderRadius: "0.375rem",
+    overflow: "hidden",
+    "& .cm-theme-dark": {
       flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
+      display: "flex",
+      flexDirection: "column",
       minHeight: 0,
     },
-    '& .cm-editor': {
+    "& .cm-editor": {
       flex: 1,
-      fontSize: '0.75rem',
+      fontSize: "0.75rem",
     },
-    '& .cm-scroller': {
-      overflow: 'auto',
+    "& .cm-scroller": {
+      overflow: "auto",
     },
-    '& .cm-gutters': {
-      fontSize: '0.75rem',
+    "& .cm-gutters": {
+      fontSize: "0.75rem",
     },
   }),
 };

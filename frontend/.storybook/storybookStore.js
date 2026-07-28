@@ -1,17 +1,17 @@
-import { configureStore, createSlice } from '@reduxjs/toolkit';
+import { configureStore, createSlice } from "@reduxjs/toolkit";
 
 const storybookSettingsSlice = createSlice({
-  name: 'settings',
+  name: "settings",
   initialState: {
-    mode: 'light',
+    mode: "light",
     socketConnected: false,
   },
   reducers: {
     setMode: (state, action) => {
       state.mode = action.payload;
     },
-    toggleMode: state => {
-      state.mode = state.mode === 'light' ? 'dark' : 'light';
+    toggleMode: (state) => {
+      state.mode = state.mode === "light" ? "dark" : "light";
     },
     setSocketConnected: (state, action) => {
       state.socketConnected = action.payload;
@@ -20,7 +20,7 @@ const storybookSettingsSlice = createSlice({
 });
 
 const storybookUserSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState: {
     user: null,
     permissions: [],
@@ -40,7 +40,7 @@ const StorybookStore = configureStore({
     settings: storybookSettingsSlice.reducer,
     user: storybookUserSlice.reducer,
   },
-  middleware: getDefaultMiddleware =>
+  middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [],
@@ -50,5 +50,6 @@ const StorybookStore = configureStore({
 });
 
 export default StorybookStore;
-export const { setMode, toggleMode, setSocketConnected } = storybookSettingsSlice.actions;
+export const { setMode, toggleMode, setSocketConnected } =
+  storybookSettingsSlice.actions;
 export const { setUser, setPermissions } = storybookUserSlice.actions;

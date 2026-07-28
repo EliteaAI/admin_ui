@@ -1,12 +1,12 @@
-import Avatar from '@mui/material/Avatar';
-import { useTheme } from '@mui/material/styles';
+import Avatar from "@mui/material/Avatar";
+import { useTheme } from "@mui/material/styles";
 
 function stringToColor(string) {
   let hash = 0;
   for (let i = 0; i < string.length; i += 1) {
     hash = string.charCodeAt(i) + ((hash << 5) - hash);
   }
-  let color = '#';
+  let color = "#";
   for (let i = 0; i < 3; i += 1) {
     const value = (hash >> (i * 8)) & 0xff;
     color += `00${value.toString(16)}`.slice(-2);
@@ -15,12 +15,12 @@ function stringToColor(string) {
 }
 
 function getInitials(name) {
-  const names = name.split(' ');
+  const names = name.split(" ");
   let firstName = names[0];
   let lastName = names[names.length - 1];
   if (names.length === 1) {
     firstName = name;
-    lastName = '';
+    lastName = "";
   }
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
@@ -32,7 +32,7 @@ export default function UserAvatar({ name, size = 20 }) {
     padding: 0,
     width: `${size}px`,
     height: `${size}px`,
-    backgroundColor: stringToColor(name || ''),
+    backgroundColor: stringToColor(name || ""),
     color: theme.palette.text.secondary,
     fontSize: `${Math.ceil(size / 2)}px`,
   };

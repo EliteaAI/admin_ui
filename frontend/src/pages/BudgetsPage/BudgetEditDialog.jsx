@@ -30,7 +30,9 @@ export default function BudgetEditDialog(props) {
   useEffect(() => {
     if (!open || !target) return;
     setError("");
-    setUnlimited(target.monthly_limit === null || target.monthly_limit === undefined);
+    setUnlimited(
+      target.monthly_limit === null || target.monthly_limit === undefined,
+    );
     setLimit(
       target.monthly_limit === null || target.monthly_limit === undefined
         ? ""
@@ -49,7 +51,8 @@ export default function BudgetEditDialog(props) {
     return "";
   }, [unlimited, limit, parsed]);
 
-  const willBlockNow = !unlimited && !validationError && parsed !== null && spend > parsed;
+  const willBlockNow =
+    !unlimited && !validationError && parsed !== null && spend > parsed;
 
   const handleSave = async () => {
     if (validationError) {

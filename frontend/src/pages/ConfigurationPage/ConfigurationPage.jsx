@@ -47,15 +47,26 @@ const SECTION_ICONS = {
   advanced: CodeIcon,
 };
 
-const MOVED_TO_FEATURES = ["resources", "support_assistant", "voice_features", "cost_budgets"];
+const MOVED_TO_FEATURES = [
+  "resources",
+  "support_assistant",
+  "voice_features",
+  "cost_budgets",
+];
 // Guardrails-section fields whose config path starts with one of these prefixes have
 // been relocated to the Features page (see FeaturesPage FEATURES_SECTIONS), so they are
 // hidden here. Prefix-based so new publishing_guardrail.*/mcp_exposure.* fields added to
 // admin_schema.json stay out of Guardrails automatically.
-const FEATURES_GUARDRAILS_PREFIXES = ["mcp_exposure.", "publishing_guardrail.", "skill_publishing_guardrail."];
+const FEATURES_GUARDRAILS_PREFIXES = [
+  "mcp_exposure.",
+  "publishing_guardrail.",
+  "skill_publishing_guardrail.",
+];
 
 function ConfigurationPage() {
-  const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);
+  const [activeSection, setActiveSection] = useState(
+    () => window.location.hash.slice(1) || null,
+  );
   const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
   const [pendingRestarts, setPendingRestarts] = useState([]);
@@ -66,7 +77,8 @@ function ConfigurationPage() {
   });
   const serverValuesRef = useRef({});
 
-  const { data: schemasData, isLoading: schemasLoading } = useConfigSchemasQuery();
+  const { data: schemasData, isLoading: schemasLoading } =
+    useConfigSchemasQuery();
 
   const SECTION_ORDER = [
     "advanced",
@@ -82,12 +94,15 @@ function ConfigurationPage() {
 
   const sections = useMemo(() => {
     const serverSections = (schemasData?.sections || []).filter(
-      s => s.id !== "litellm" && !MOVED_TO_FEATURES.includes(s.id),
+      (s) => s.id !== "litellm" && !MOVED_TO_FEATURES.includes(s.id),
     );
 
-    const allSections = [...serverSections, { id: "service_descriptors", title: "Service Descriptors" }];
+    const allSections = [
+      ...serverSections,
+      { id: "service_descriptors", title: "Service Descriptors" },
+    ];
 
-    const filtered = allSections.filter(s => {
+    const filtered = allSections.filter((s) => {
       const requiredPerms = CONFIG_SECTION_PERMISSIONS[s.id];
       if (!requiredPerms) return true;
       return hasAnyPermission(requiredPerms);
@@ -96,7 +111,10 @@ function ConfigurationPage() {
     return filtered.sort((a, b) => {
       const indexA = SECTION_ORDER.indexOf(a.id);
       const indexB = SECTION_ORDER.indexOf(b.id);
-      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+      return (
+        (indexA === -1 ? Infinity : indexA) -
+        (indexB === -1 ? Infinity : indexB)
+      );
     });
   }, [schemasData, hasAnyPermission]);
 
@@ -109,10 +127,10 @@ function ConfigurationPage() {
   useEffect(() => {
     if (schemasLoading || sections.length === 0) return;
     if (!activeSection) {
-      const advancedSection = sections.find(s => s.id === "advanced");
+      const advancedSection = sections.find((s) => s.id === "advanced");
       setActiveSection(advancedSection?.id || sections[0].id);
-    } else if (!sections.find(s => s.id === activeSection)) {
-      const advancedSection = sections.find(s => s.id === "advanced");
+    } else if (!sections.find((s) => s.id === activeSection)) {
+      const advancedSection = sections.find((s) => s.id === "advanced");
       setActiveSection(advancedSection?.id || sections[0].id);
     }
   }, [sections, activeSection, schemasLoading]);
@@ -138,11 +156,13 @@ function ConfigurationPage() {
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
 
   const isDirty = useMemo(() => {
-    return JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current);
+    return (
+      JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current)
+    );
   }, [localValues]);
 
   const activeSection_ = useMemo(() => {
-    return sections.find(s => s.id === activeSection);
+    return sections.find((s) => s.id === activeSection);
   }, [sections, activeSection]);
 
   const activeFields = activeSection_?.fields || [];
@@ -158,13 +178,15 @@ function ConfigurationPage() {
   usePageTitle(pageTitle);
 
   const handleFieldChange = useCallback((key, value) => {
-    setLocalValues(prev => ({ ...prev, [key]: value }));
+    setLocalValues((prev) => ({ ...prev, [key]: value }));
   }, []);
 
   const handleSectionChange = useCallback(
-    sectionId => {
+    (sectionId) => {
       if (isDirty) {
-        const confirmed = window.confirm("You have unsaved changes. Discard them?");
+        const confirmed = window.confirm(
+          "You have unsaved changes. Discard them?",
+        );
         if (!confirmed) return;
       }
       setActiveSection(sectionId);
@@ -182,7 +204,12 @@ function ConfigurationPage() {
       const cleanedValues = Object.fromEntries(
         Object.entries(localValues).map(([key, value]) => {
           if (key.endsWith("_links") && Array.isArray(value)) {
-            return [key, value.filter(link => link.title?.trim() !== "" || link.url?.trim() !== "")];
+            return [
+              key,
+              value.filter(
+                (link) => link.title?.trim() !== "" || link.url?.trim() !== "",
+              ),
+            ];
           }
           return [key, value];
         }),
@@ -200,12 +227,16 @@ function ConfigurationPage() {
 
       if (result.requires_restart?.length > 0) {
         // Normalize: v1 returns flat strings, v2 returns {pylon_id, plugins}
-        const normalized = result.requires_restart.map(r =>
+        const normalized = result.requires_restart.map((r) =>
           typeof r === "string" ? { pylon_id: r, plugins: [] } : r,
         );
         setPendingRestarts(normalized);
         const summary = normalized
-          .map(r => (r.plugins?.length ? `${r.plugins.join(", ")} on ${r.pylon_id}` : r.pylon_id))
+          .map((r) =>
+            r.plugins?.length
+              ? `${r.plugins.join(", ")} on ${r.pylon_id}`
+              : r.pylon_id,
+          )
           .join("; ");
         setSnackbar({
           open: true,
@@ -233,7 +264,9 @@ function ConfigurationPage() {
     async (pylonId, plugins) => {
       try {
         await restartPylon({ pylonId, plugins }).unwrap();
-        setPendingRestarts(prev => prev.filter(r => r.pylon_id !== pylonId));
+        setPendingRestarts((prev) =>
+          prev.filter((r) => r.pylon_id !== pylonId),
+        );
         const label = plugins?.length
           ? `Reload signal sent for ${plugins.join(", ")} on ${pylonId}`
           : `Restart signal sent to ${pylonId}`;
@@ -250,16 +283,13 @@ function ConfigurationPage() {
   );
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+    setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
   if (schemasLoading) {
     return (
       <DrawerPage>
-        <DrawerPageHeader
-          title="Configuration"
-          showBorder
-        />
+        <DrawerPageHeader title="Configuration" showBorder />
         <Box sx={styles.loadingContainer}>
           <CircularProgress size={32} />
         </Box>
@@ -269,15 +299,12 @@ function ConfigurationPage() {
 
   return (
     <DrawerPage sx={{ overflow: "hidden" }}>
-      <DrawerPageHeader
-        title="Configuration"
-        showBorder
-      />
+      <DrawerPageHeader title="Configuration" showBorder />
 
       <Box sx={styles.content}>
         {/* Section sidebar */}
         <Box sx={styles.sectionSidebar}>
-          {sections.map(section => {
+          {sections.map((section) => {
             const IconComponent = SECTION_ICONS[section.id] || SettingsIcon;
             const isActive = activeSection === section.id;
             return (
@@ -335,7 +362,10 @@ function ConfigurationPage() {
                 );
               case "guardrails": {
                 const guardrailsFields = activeFields.filter(
-                  f => !FEATURES_GUARDRAILS_PREFIXES.some(p => f.path?.startsWith(p)),
+                  (f) =>
+                    !FEATURES_GUARDRAILS_PREFIXES.some((p) =>
+                      f.path?.startsWith(p),
+                    ),
                 );
                 return valuesLoading ? (
                   <Box sx={styles.loadingContainer}>
@@ -371,7 +401,9 @@ function ConfigurationPage() {
           })()}
 
           {/* Action bar */}
-          {!["advanced", "maintenance", "service_descriptors"].includes(activeSection) && (
+          {!["advanced", "maintenance", "service_descriptors"].includes(
+            activeSection,
+          ) && (
             <Box sx={styles.actionBar}>
               <Box sx={styles.actionButtons}>
                 <Button
@@ -396,24 +428,27 @@ function ConfigurationPage() {
 
               {pendingRestarts.length > 0 && (
                 <Box sx={styles.restartBar}>
-                  <Typography
-                    variant="caption"
-                    sx={styles.restartLabel}
-                  >
+                  <Typography variant="caption" sx={styles.restartLabel}>
                     Reload required:
                   </Typography>
-                  {pendingRestarts.map(entry => (
+                  {pendingRestarts.map((entry) => (
                     <Button
                       key={entry.pylon_id}
                       size="small"
                       variant="outlined"
                       color="warning"
-                      startIcon={<RestartAltIcon sx={{ fontSize: "0.875rem" }} />}
-                      onClick={() => handleReload(entry.pylon_id, entry.plugins)}
+                      startIcon={
+                        <RestartAltIcon sx={{ fontSize: "0.875rem" }} />
+                      }
+                      onClick={() =>
+                        handleReload(entry.pylon_id, entry.plugins)
+                      }
                       disabled={restarting}
                       sx={styles.restartButton}
                     >
-                      {entry.plugins?.length ? entry.plugins.join(", ") : entry.pylon_id}
+                      {entry.plugins?.length
+                        ? entry.plugins.join(", ")
+                        : entry.pylon_id}
                     </Button>
                   ))}
                 </Box>
@@ -460,7 +495,7 @@ const styles = {
     overflowY: "auto",
   }),
   sectionItem:
-    isActive =>
+    (isActive) =>
     ({ palette }) => ({
       display: "flex",
       alignItems: "center",
@@ -469,7 +504,9 @@ const styles = {
       borderRadius: "0.375rem",
       cursor: "pointer",
       transition: "all 0.15s ease",
-      backgroundColor: isActive ? palette.background.userInputBackgroundActive : "transparent",
+      backgroundColor: isActive
+        ? palette.background.userInputBackgroundActive
+        : "transparent",
       color: isActive ? palette.text.secondary : palette.text.metrics,
       "&:hover": {
         backgroundColor: isActive
@@ -478,7 +515,7 @@ const styles = {
       },
     }),
   sectionItemText:
-    isActive =>
+    (isActive) =>
     ({ palette }) => ({
       fontSize: "0.8125rem",
       fontWeight: isActive ? 600 : 400,
