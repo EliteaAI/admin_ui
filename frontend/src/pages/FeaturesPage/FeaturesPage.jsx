@@ -162,6 +162,9 @@ const FeaturesPage = memo(() => {
     setLocalValues((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  // Sections with their own field validation report upwards so Save can block
+  const [sectionValid, setSectionValid] = useState(true);
+
   const handleSectionChange = useCallback(
     (sectionId) => {
       if (isDirty) {
@@ -172,6 +175,8 @@ const FeaturesPage = memo(() => {
       }
       setActiveSection(sectionId);
       setPendingRestarts([]);
+      // The unmounting section's validity must not keep blocking Save here
+      setSectionValid(true);
     },
     [isDirty],
   );
@@ -320,7 +325,11 @@ const FeaturesPage = memo(() => {
       case "cost_budgets":
         return (
           <Box sx={styles.formScroll}>
-            <CostBudgets values={localValues} onChange={handleFieldChange} />
+            <CostBudgets
+              values={localValues}
+              onChange={handleFieldChange}
+              onValidityChange={setSectionValid}
+            />
           </Box>
         );
       default:
@@ -380,7 +389,7 @@ const FeaturesPage = memo(() => {
                   size="small"
                   variant="contained"
                   onClick={handleSave}
-                  disabled={!isDirty || saving}
+                  disabled={!isDirty || saving || !sectionValid}
                   sx={styles.saveButton}
                 >
                   {saving ? "Saving..." : "Save"}
