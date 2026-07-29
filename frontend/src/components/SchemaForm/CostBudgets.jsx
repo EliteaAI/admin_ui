@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import {
   Box,
   MenuItem,
@@ -44,11 +44,43 @@ const DEFAULT_LIMIT_FIELDS = [
   },
 ];
 
+const WARNING_THRESHOLD_FIELDS = [
+  {
+    key: "cost_budgets_project_warning_pct",
+    title: "Team Project Budget Warning Threshold",
+    hint: "Show a usage alert when a team project's spend reaches this percentage of its budget limit.",
+  },
+  {
+    key: "cost_budgets_personal_project_warning_pct",
+    title: "Personal Project Budget Warning Threshold",
+    hint: "Show a usage alert when a user's own project spend reaches this percentage of its budget limit.",
+  },
+  {
+    key: "cost_budgets_user_warning_pct",
+    title: "Default Per-Member Budget Warning Threshold",
+    hint: "Show a usage alert when a member's spend inside a team project reaches this percentage of their own budget limit.",
+  },
+];
+
+const DEFAULT_WARNING_PCT = 80;
+
+/** Empty, non-numeric or out-of-range values must block Save rather than persist. */
+const warningPctError = (value) => {
+  if (value === "" || value === null || value === undefined)
+    return "Required (1-100)";
+
+  if (!Number.isInteger(Number(value))) return "Must be a whole number";
+  if (Number(value) < 1 || Number(value) > 100) return "Must be between 1 and 100";
+
+  return "";
+};
+
 const CostBudgets = memo((props) => {
-  const { values, onChange } = props;
+  const { values, onChange, onValidityChange } = props;
 
   const mode = values?.cost_budgets_mode || "off";
   const enforcing = mode === "enforce";
+  const budgetsOn = mode !== "off";
   const defaultsEnabled = !!values?.cost_budgets_defaults_enabled;
 
   const activeMode =
@@ -72,6 +104,33 @@ const CostBudgets = memo((props) => {
     },
     [onChange],
   );
+
+  const handleWarningPctChange = useCallback(
+    (key) => (e) => {
+      const val = e.target.value;
+      onChange(key, val === "" ? "" : Number(val));
+    },
+    [onChange],
+  );
+
+  const thresholdErrors = useMemo(
+    () =>
+      Object.fromEntries(
+        WARNING_THRESHOLD_FIELDS.map((field) => [
+          field.key,
+          warningPctError(values?.[field.key] ?? DEFAULT_WARNING_PCT),
+        ]),
+      ),
+    [values],
+  );
+
+  // Save lives in the parent, so invalid input has to be reported upwards
+  useEffect(() => {
+    if (!onValidityChange) return;
+
+    const invalid = budgetsOn && Object.values(thresholdErrors).some(Boolean);
+    onValidityChange(!invalid);
+  }, [budgetsOn, thresholdErrors, onValidityChange]);
 
   return (
     <Box sx={styles.root}>
@@ -146,6 +205,33 @@ const CostBudgets = memo((props) => {
                   placeholder="Unlimited"
                   sx={styles.textField}
                   inputProps={{ min: 0, step: "1", inputMode: "decimal" }}
+                  fullWidth
+                />
+              </Box>
+            </Box>
+          </Box>
+        ))}
+
+      {budgetsOn &&
+        WARNING_THRESHOLD_FIELDS.map((field) => (
+          <Box key={field.key} sx={styles.card}>
+            <Box sx={styles.cardRow}>
+              <Box sx={[styles.cardLabel, { width: "100%" }]}>
+                <Typography variant="body2" sx={styles.cardTitle}>
+                  {field.title}
+                </Typography>
+                <Typography variant="caption" sx={styles.cardHint}>
+                  {field.hint}
+                </Typography>
+                <TextField
+                  size="small"
+                  type="number"
+                  value={values?.[field.key] ?? DEFAULT_WARNING_PCT}
+                  onChange={handleWarningPctChange(field.key)}
+                  error={!!thresholdErrors[field.key]}
+                  helperText={thresholdErrors[field.key] || " "}
+                  sx={styles.textField}
+                  inputProps={{ min: 1, max: 100, step: "1" }}
                   fullWidth
                 />
               </Box>
