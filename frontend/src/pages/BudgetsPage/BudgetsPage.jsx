@@ -2,13 +2,17 @@ import { useCallback, useMemo, useState } from "react";
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Tooltip from "@mui/material/Tooltip";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
+
+import { exportToExcel } from "@/utils/exportToExcel";
 
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
@@ -18,6 +22,7 @@ import { useCheckPermission } from "@/hooks/useCheckPermission";
 import { PERMISSIONS } from "@/constants/permissions";
 
 import {
+  useLazyProjectBudgetListQuery,
   useProjectBudgetListQuery,
   useProjectBudgetUpdateMutation,
   useUserBudgetUpdateMutation,
@@ -37,6 +42,57 @@ const SEARCH_PLACEHOLDERS = {
   personal: "Search by Name, ID, Owner, or Email",
 };
 
+// Ceiling on one export, so "all records" cannot become an unbounded request
+const EXPORT_ROW_CAP = 1000;
+
+const CURRENCY_FMT = '$#,##0.00####';
+const PERCENT_FMT = '0.00"%"';
+
+const SOURCE_LABELS = {
+  explicit: "Explicit",
+  default: "Default",
+  unlimited: "Unlimited",
+};
+
+// Numeric cells stay numeric so the sheet can be summed and sorted; readability
+// comes from the Excel format, not from pre-formatted strings.
+const EXPORT_BUDGET_COLUMNS = [
+  {
+    header: "Limit (USD)",
+    key: "effective_limit",
+    numFmt: CURRENCY_FMT,
+    transform: (value) => (value === null || value === undefined ? "Unlimited" : value),
+  },
+  { header: "Spent (USD)", key: "spend", numFmt: CURRENCY_FMT },
+  {
+    header: "Used (%)",
+    key: "percent_used",
+    numFmt: PERCENT_FMT,
+    // Blank rather than 0: an unlimited budget has nothing to measure against, and 0
+    // would read as "nothing used"
+    transform: (value) => (value === null || value === undefined ? "" : value),
+  },
+  {
+    header: "Source",
+    key: "limit_source",
+    transform: (value) => SOURCE_LABELS[value] || value || "",
+  },
+];
+
+const TEAM_EXPORT_COLUMNS = [
+  { header: "Name", key: "name" },
+  { header: "ID", key: "project_id" },
+  ...EXPORT_BUDGET_COLUMNS,
+];
+
+const PERSONAL_EXPORT_COLUMNS = [
+  { header: "Name", key: "name" },
+  { header: "ID", key: "project_id" },
+  { header: "Owner", key: "owner_name" },
+  { header: "Email", key: "owner_email" },
+  ...EXPORT_BUDGET_COLUMNS,
+];
+
 export default function BudgetsPage() {
   usePageTitle("Budgets");
 
@@ -54,6 +110,7 @@ export default function BudgetsPage() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [activeTab, setActiveTab] = useState(0);
 
+  const [exporting, setExporting] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [drawerProject, setDrawerProject] = useState(null);
   const [snackbar, setSnackbar] = useState({
@@ -75,6 +132,8 @@ export default function BudgetsPage() {
     },
     { refetchOnMountOrArgChange: true },
   );
+
+  const [fetchBudgets] = useLazyProjectBudgetListQuery();
 
   const [updateProjectBudget, { isLoading: isSavingProject }] =
     useProjectBudgetUpdateMutation();
@@ -148,6 +207,62 @@ export default function BudgetsPage() {
     setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
+  // The report covers the whole environment, so it deliberately ignores the active tab,
+  // the search term, the sort and the current page.
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+
+    try {
+      const fetchAll = async (type) => {
+        const probe = await fetchBudgets({ limit: 1, offset: 0, project_type: type }).unwrap();
+        const total = probe?.total ?? 0;
+
+        if (!total) return { rows: [], truncated: false };
+
+        const page = await fetchBudgets({
+          limit: Math.min(total, EXPORT_ROW_CAP),
+          offset: 0,
+          project_type: type,
+        }).unwrap();
+
+        return { rows: page?.rows ?? [], truncated: total > EXPORT_ROW_CAP };
+      };
+
+      const [team, personal] = await Promise.all([
+        fetchAll("team"),
+        fetchAll("personal"),
+      ]);
+
+      await exportToExcel("Budgets.xlsx", [
+        { sheetName: "Team Projects", columns: TEAM_EXPORT_COLUMNS, rows: team.rows },
+        {
+          sheetName: "Personal Projects",
+          columns: PERSONAL_EXPORT_COLUMNS,
+          rows: personal.rows,
+        },
+      ]);
+
+      // A silently partial report would be read as the whole environment
+      const truncated = team.truncated || personal.truncated;
+
+      setSnackbar({
+        open: true,
+        message: truncated
+          ? `Exported the first ${EXPORT_ROW_CAP} projects per sheet. Narrow the environment or ask for a raw report to see the rest.`
+          : "Budgets exported.",
+        severity: truncated ? "warning" : "success",
+      });
+    } catch {
+      setSnackbar({
+        open: true,
+        message: "Export failed. Please try again.",
+        severity: "error",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }, [fetchBudgets]);
+
   const counts = data?.counts || {};
 
   const tabsElement = (
@@ -184,6 +299,17 @@ export default function BudgetsPage() {
         <span>
           <IconButton size="small" onClick={refetch} disabled={isFetching}>
             <RefreshOutlined fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title="Export to Excel">
+        <span>
+          <IconButton size="small" onClick={handleExport} disabled={exporting}>
+            {exporting ? (
+              <CircularProgress size={16} />
+            ) : (
+              <FileDownloadOutlined fontSize="small" />
+            )}
           </IconButton>
         </span>
       </Tooltip>
@@ -248,7 +374,7 @@ export default function BudgetsPage() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={5000}
+        autoHideDuration={snackbar.severity === "success" ? 5000 : 10000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >

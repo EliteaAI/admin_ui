@@ -18,6 +18,8 @@ export const exportToExcel = async (fileName, sheets) => {
       return {
         header: col.header,
         width: Math.min(maxLen + 2, 50),
+        // Formatting the cell rather than the value keeps numbers summable in Excel
+        ...(col.numFmt ? { style: { numFmt: col.numFmt } } : {}),
       };
     });
 
