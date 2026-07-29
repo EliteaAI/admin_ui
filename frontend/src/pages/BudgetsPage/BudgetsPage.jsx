@@ -2,11 +2,13 @@ import { useCallback, useMemo, useState } from "react";
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
@@ -25,8 +27,15 @@ import BudgetsTable from "./BudgetsTable";
 import BudgetEditDialog from "./BudgetEditDialog";
 import UserBudgetsDrawer from "./UserBudgetsDrawer";
 
-// Tab index -> project_type filter; undefined means no filter
-const TAB_TYPES = [undefined, "team", "personal"];
+// Tab index -> project_type filter
+const TAB_TYPES = ["team", "personal"];
+
+const PERIOD_NOTE = "Current month, updated within a minute of each call.";
+
+const SEARCH_PLACEHOLDERS = {
+  team: "Search by Name or ID",
+  personal: "Search by Name, ID, Owner, or Email",
+};
 
 export default function BudgetsPage() {
   usePageTitle("Budgets");
@@ -55,7 +64,7 @@ export default function BudgetsPage() {
 
   const projectType = TAB_TYPES[activeTab];
 
-  const { data, isFetching, isError } = useProjectBudgetListQuery(
+  const { data, isFetching, isError, refetch } = useProjectBudgetListQuery(
     {
       limit: pageSize,
       offset: page * pageSize,
@@ -86,7 +95,10 @@ export default function BudgetsPage() {
     setPage(0);
   }, []);
 
-  const handleSort = useCallback((field) => {
+  // The ID column reads row.project_id, but the API sorts on the project's own "id"
+  const handleSort = useCallback((column) => {
+    const field = column === "project_id" ? "id" : column;
+
     setSortBy((prev) => {
       if (prev === field) {
         setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
@@ -140,31 +152,42 @@ export default function BudgetsPage() {
 
   const tabsElement = (
     <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
-      <Tab label="All" sx={styles.tab} />
       <Tab
-        label={counts.team ? `Team (${counts.team})` : "Team"}
+        label={
+          counts.team ? `Team Projects (${counts.team})` : "Team Projects"
+        }
         sx={styles.tab}
       />
       <Tab
-        label={counts.personal ? `Users (${counts.personal})` : "Users"}
+        label={
+          counts.personal
+            ? `Personal Projects (${counts.personal})`
+            : "Personal Projects"
+        }
         sx={styles.tab}
       />
     </Tabs>
   );
 
-  const periodNote = (
-    <Tooltip
-      title={
-        "User rows are each user's own budget — API and token calls made without a project " +
-        "are billed there. Team rows cap a shared project; open a team project to also set " +
-        "per-member limits inside it."
-      }
-    >
-      <Typography variant="bodySmall" color="text.secondary">
-        Current month, updated within a minute of each call.
-        {data?.sorted_within_page ? " Spend sorting applies to this page." : ""}
-      </Typography>
-    </Tooltip>
+  const headerControls = (
+    <Box sx={styles.headerControls}>
+      <Tooltip
+        title={
+          data?.sorted_within_page
+            ? `${PERIOD_NOTE} Spend sorting applies to this page.`
+            : PERIOD_NOTE
+        }
+      >
+        <InfoOutlined sx={styles.infoIcon} />
+      </Tooltip>
+      <Tooltip title="Reload budget data">
+        <span>
+          <IconButton size="small" onClick={refetch} disabled={isFetching}>
+            <RefreshOutlined fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+    </Box>
   );
 
   return (
@@ -176,9 +199,9 @@ export default function BudgetsPage() {
           showSearchInput
           search={search}
           onSearchChange={handleSearchChange}
-          searchPlaceholder="Search by project name"
+          searchPlaceholder={SEARCH_PLACEHOLDERS[projectType]}
           searchInputSx={{ "& input::placeholder": { fontSize: "0.75rem" } }}
-          extraContent={periodNote}
+          extraContent={headerControls}
         />
 
         <Box sx={styles.tableContainer}>
@@ -192,9 +215,13 @@ export default function BudgetsPage() {
               pageSize={pageSize}
               onPageChange={setPage}
               onPageSizeChange={handlePageSizeChange}
-              sortConfig={{ field: sortBy, direction: sortOrder }}
+              sortConfig={{
+                field: sortBy === "id" ? "project_id" : sortBy,
+                direction: sortOrder,
+              }}
               onSort={handleSort}
               isFetching={isFetching}
+              isPersonal={projectType === "personal"}
               canEdit={canEdit}
               onEdit={setEditTarget}
               onUsers={setDrawerProject}
@@ -255,6 +282,15 @@ const styles = {
     "&.Mui-selected": {
       color: palette.text.secondary,
     },
+  }),
+  headerControls: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.25rem",
+  },
+  infoIcon: ({ palette }) => ({
+    fontSize: "1rem",
+    color: palette.text.metrics,
   }),
   tableContainer: {
     flexGrow: 1,

@@ -41,17 +41,10 @@ const SOURCE_CONFIG = {
   },
 };
 
-const BUDGETS_COLUMNS = [
-  { field: "name", label: "Project / User", width: "1.2fr", sortable: true },
-  {
-    field: "is_personal",
-    label: "Type",
-    width: "6rem",
-    sortable: false,
-    hideBelow: 900,
-  },
+// Budget columns are identical on both tabs; only the identity columns differ.
+const BUDGET_COLUMNS = [
   { field: "effective_limit", label: "Limit", width: "8rem", sortable: true },
-  { field: "spend", label: "Spend", width: "8rem", sortable: true },
+  { field: "spend", label: "Spent", width: "8rem", sortable: true },
   { field: "percent_used", label: "Used", width: "10rem", sortable: true },
   {
     field: "limit_source",
@@ -61,6 +54,35 @@ const BUDGETS_COLUMNS = [
     hideBelow: 1100,
   },
   { field: "actions", label: "Actions", width: "8rem", sortable: false },
+];
+
+const ID_COLUMN = {
+  field: "project_id",
+  label: "ID",
+  width: "5rem",
+  sortable: true,
+};
+
+const TEAM_COLUMNS = [
+  { field: "name", label: "Name", width: "1.2fr", sortable: true },
+  ID_COLUMN,
+  ...BUDGET_COLUMNS,
+];
+
+// Owner and email are not columns on the project table, so neither can be sorted.
+// Email drops out first on narrow screens: the owner name already identifies the row.
+const PERSONAL_COLUMNS = [
+  { field: "name", label: "Name", width: "1fr", sortable: true },
+  ID_COLUMN,
+  { field: "owner_name", label: "Owner", width: "1fr", sortable: false },
+  {
+    field: "owner_email",
+    label: "Email",
+    width: "1fr",
+    sortable: false,
+    hideBelow: 1500,
+  },
+  ...BUDGET_COLUMNS,
 ];
 
 const BudgetsTable = memo(function BudgetsTable(props) {
@@ -74,6 +96,7 @@ const BudgetsTable = memo(function BudgetsTable(props) {
     sortConfig,
     onSort,
     isFetching,
+    isPersonal,
     canEdit,
     onEdit,
     onUsers,
@@ -83,7 +106,7 @@ const BudgetsTable = memo(function BudgetsTable(props) {
 
   const { visibleColumns, dataColumns, gridTemplateColumns } =
     useResponsiveColumns({
-      columns: BUDGETS_COLUMNS,
+      columns: isPersonal ? PERSONAL_COLUMNS : TEAM_COLUMNS,
       containerWidth: window.innerWidth,
       showCheckbox: false,
       actionsColumnWidth: "8rem",
@@ -107,36 +130,29 @@ const BudgetsTable = memo(function BudgetsTable(props) {
 
   const renderCell = useCallback((column, value, row) => {
     if (column.field === "name") {
-      // Personal projects are really a user's own budget, so show who it belongs to
-      const label = row?.display_name || value;
       return (
         <Tooltip
-          title={row?.is_personal ? `Personal project: ${value}` : ""}
+          title={
+            row?.is_personal
+              ? "This user's own budget — API and token calls without a project land here"
+              : value || ""
+          }
           placement="top"
         >
           <Typography variant="bodyMedium" sx={styles.cellText}>
-            {label || "-"}
+            {value || "-"}
           </Typography>
         </Tooltip>
       );
     }
 
-    if (column.field === "is_personal") {
+    // Long identities need the full value on hover, since the cell ellipsises
+    if (column.field === "owner_name" || column.field === "owner_email") {
       return (
-        <Tooltip
-          title={
-            value
-              ? "This user's own budget — API and token calls without a project land here"
-              : "A shared team project"
-          }
-          placement="top"
-        >
-          <Chip
-            label={value ? "User" : "Team"}
-            size="small"
-            variant="outlined"
-            color={value ? "secondary" : "primary"}
-          />
+        <Tooltip title={value || ""} placement="top">
+          <Typography variant="bodyMedium" sx={styles.cellText}>
+            {value || "-"}
+          </Typography>
         </Tooltip>
       );
     }
