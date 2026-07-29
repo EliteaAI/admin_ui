@@ -59,6 +59,7 @@ export const budgetsApi = adminApi.injectEndpoints({
 
 export const {
   useProjectBudgetListQuery,
+  useLazyProjectBudgetListQuery,
   useProjectBudgetUpdateMutation,
   useUserBudgetListQuery,
   useUserBudgetUpdateMutation,
