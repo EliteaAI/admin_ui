@@ -15,7 +15,7 @@ import Typography from "@mui/material/Typography";
 import { formatMoney, formatLimit } from "./format";
 
 /**
- * Edit a project or per-user monthly limit.
+ * Edit a project or member monthly limit.
  *
  * Current spend is shown next to the input because lowering a limit below what
  * has already been spent blocks the scope immediately.
@@ -80,7 +80,7 @@ export default function BudgetEditDialog(props) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>
-        {target?.user_id ? "Edit user budget" : "Edit project budget"}
+        {target?.user_id ? "Edit member budget" : "Edit project budget"}
       </DialogTitle>
 
       <DialogContent>

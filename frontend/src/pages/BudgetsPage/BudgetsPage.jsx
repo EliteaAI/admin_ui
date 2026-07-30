@@ -173,6 +173,10 @@ export default function BudgetsPage() {
   const handleTabChange = useCallback((_event, value) => {
     setActiveTab(value);
     setPage(0);
+    // Defensive: the drawer is modal today so a tab cannot be clicked behind it, but
+    // personal projects have no member budgets and it must not survive a switch if that
+    // ever changes
+    setDrawerProject(null);
   }, []);
 
   const handleSave = useCallback(

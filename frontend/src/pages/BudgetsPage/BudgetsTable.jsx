@@ -228,11 +228,16 @@ const BudgetsTable = memo(function BudgetsTable(props) {
   const renderActions = useCallback(
     (row) => (
       <Box sx={styles.actionsRow}>
-        <Tooltip title="Per-user limits">
-          <IconButton size="small" onClick={() => onUsers(row)}>
-            <PeopleOutlined fontSize="small" />
-          </IconButton>
-        </Tooltip>
+        {/* A personal project's only member is its owner, so its project budget already
+            is that person's budget — offering a separate member budget would be two ways
+            to set one limit. */}
+        {!isPersonal && (
+          <Tooltip title="Manage member budgets">
+            <IconButton size="small" onClick={() => onUsers(row)}>
+              <PeopleOutlined fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
         <Tooltip title={canEdit ? "Edit budget" : "No permission to edit"}>
           <span>
             <IconButton
@@ -246,7 +251,7 @@ const BudgetsTable = memo(function BudgetsTable(props) {
         </Tooltip>
       </Box>
     ),
-    [canEdit, onEdit, onUsers],
+    [canEdit, isPersonal, onEdit, onUsers],
   );
 
   if (isFetching) {

@@ -15,7 +15,7 @@ import { useUserBudgetListQuery } from "@/api/budgetsApi";
 import { formatMoney, formatLimit, usageColor } from "./format";
 
 /**
- * Per-user limits within one project. A user sub-limit stops a single member
+ * Member limits within one project. A member sub-limit stops a single member
  * consuming the whole project budget.
  */
 export default function UserBudgetsDrawer(props) {
@@ -38,7 +38,7 @@ export default function UserBudgetsDrawer(props) {
       <Box sx={styles.header}>
         <Box sx={styles.headerText}>
           <Typography variant="titleMedium" component="div">
-            Per-user budgets
+            Member budgets
           </Typography>
           <Typography
             variant="bodySmall"
@@ -55,13 +55,11 @@ export default function UserBudgetsDrawer(props) {
 
       <Box sx={styles.body}>
         <Alert severity="info" sx={styles.note}>
-          A call is blocked when either the project limit or the member's own
-          limit is exceeded.
+          A call is blocked when either the project budget or the member&apos;s
+          budget is exceeded.
         </Alert>
 
-        {error && (
-          <Alert severity="error">Failed to load per-user budgets.</Alert>
-        )}
+        {error && <Alert severity="error">Failed to load member budgets.</Alert>}
 
         {isFetching &&
           Array.from({ length: 5 }).map((_, index) => (
@@ -109,7 +107,7 @@ export default function UserBudgetsDrawer(props) {
               </Box>
 
               <Tooltip
-                title={canEdit ? "Edit user budget" : "No permission to edit"}
+                title={canEdit ? "Edit member budget" : "No permission to edit"}
               >
                 <span>
                   <IconButton
