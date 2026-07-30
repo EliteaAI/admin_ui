@@ -42,10 +42,13 @@ const SOURCE_CONFIG = {
 };
 
 // Budget columns are identical on both tabs; only the identity columns differ.
+// None of these three is a project column — they come from stored budgets, config
+// defaults and LiteLLM — so ordering by them could only ever sort the fetched page.
+// Ranking by cost belongs in the Excel export, which holds every record.
 const BUDGET_COLUMNS = [
-  { field: "effective_limit", label: "Limit", width: "8rem", sortable: true },
-  { field: "spend", label: "Spent", width: "8rem", sortable: true },
-  { field: "percent_used", label: "Used", width: "10rem", sortable: true },
+  { field: "effective_limit", label: "Limit", width: "8rem", sortable: false },
+  { field: "spend", label: "Spent", width: "8rem", sortable: false },
+  { field: "percent_used", label: "Used", width: "10rem", sortable: false },
   {
     field: "limit_source",
     label: "Source",
