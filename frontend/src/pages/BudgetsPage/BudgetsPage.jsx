@@ -35,7 +35,8 @@ import UserBudgetsDrawer from "./UserBudgetsDrawer";
 // Tab index -> project_type filter
 const TAB_TYPES = ["team", "personal"];
 
-const PERIOD_NOTE = "Current month, updated within a minute of each call.";
+const PERIOD_NOTE =
+  "Current month, updated within a minute of each call. Export to Excel to rank projects by limit, spend or usage.";
 
 const SEARCH_PLACEHOLDERS = {
   team: "Search by Name or ID",
@@ -286,13 +287,7 @@ export default function BudgetsPage() {
 
   const headerControls = (
     <Box sx={styles.headerControls}>
-      <Tooltip
-        title={
-          data?.sorted_within_page
-            ? `${PERIOD_NOTE} Spend sorting applies to this page.`
-            : PERIOD_NOTE
-        }
-      >
+      <Tooltip title={PERIOD_NOTE}>
         <InfoOutlined sx={styles.infoIcon} />
       </Tooltip>
       <Tooltip title="Reload budget data">
