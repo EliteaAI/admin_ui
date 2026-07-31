@@ -201,7 +201,7 @@ export default function BudgetsPage() {
         open: true,
         message: payload.enabled
           ? "Budget saved."
-          : "Budget removed — this scope is now unlimited.",
+          : "Budget removed — this scope's own limit no longer applies.",
         severity: "success",
       });
     },

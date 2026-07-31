@@ -14,6 +14,18 @@ import { useUserBudgetListQuery } from "@/api/budgetsApi";
 
 import { formatMoney, formatLimit, usageColor } from "./format";
 
+// Only inherited limits get a chip — an explicit one is already visible as the number
+const SOURCE_CHIPS = {
+  default: {
+    label: "Default",
+    hint: "Inherited from the platform default",
+  },
+  project_default: {
+    label: "Project default",
+    hint: "Inherited from this project's member default",
+  },
+};
+
 /**
  * Member limits within one project. A member sub-limit stops a single member
  * consuming the whole project budget.
@@ -27,6 +39,7 @@ export default function UserBudgetsDrawer(props) {
   );
 
   const rows = data?.rows || [];
+  const memberDefault = data?.member_default_limit;
 
   return (
     <Drawer
@@ -57,6 +70,14 @@ export default function UserBudgetsDrawer(props) {
         <Alert severity="info" sx={styles.note}>
           A call is blocked when either the project budget or the member&apos;s
           budget is exceeded.
+          {memberDefault !== null && memberDefault !== undefined && (
+            <>
+              {" "}
+              Members with no budget of their own inherit this project&apos;s
+              default of {formatMoney(memberDefault, rows[0]?.currency)}, set on
+              the project&apos;s budget.
+            </>
+          )}
         </Alert>
 
         {error && <Alert severity="error">Failed to load member budgets.</Alert>}
@@ -84,10 +105,10 @@ export default function UserBudgetsDrawer(props) {
                     {formatMoney(row.spend, row.currency)} of{" "}
                     {formatLimit(row.effective_limit, row.currency)}
                   </Typography>
-                  {row.limit_source === "default" && (
-                    <Tooltip title="Inherited from the platform default">
+                  {SOURCE_CHIPS[row.limit_source] && (
+                    <Tooltip title={SOURCE_CHIPS[row.limit_source].hint}>
                       <Chip
-                        label="Default"
+                        label={SOURCE_CHIPS[row.limit_source].label}
                         size="small"
                         variant="outlined"
                         color="info"
@@ -113,7 +134,9 @@ export default function UserBudgetsDrawer(props) {
                   <IconButton
                     size="small"
                     disabled={!canEdit}
-                    onClick={() => onEdit(row)}
+                    onClick={() =>
+                      onEdit({ ...row, project_member_default: memberDefault })
+                    }
                   >
                     <EditOutlined fontSize="small" />
                   </IconButton>
