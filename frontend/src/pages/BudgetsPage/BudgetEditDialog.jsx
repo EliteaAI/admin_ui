@@ -14,8 +14,14 @@ import Typography from "@mui/material/Typography";
 
 import { formatMoney, formatLimit } from "./format";
 
+// An inherited limit isn't set here, so where it came from decides where to change it
+const INHERITED_SUFFIX = {
+  default: " (platform default)",
+  project_default: " (project member default)",
+};
+
 /**
- * Edit a project or per-user monthly limit.
+ * Edit a project or member monthly limit.
  *
  * Current spend is shown next to the input because lowering a limit below what
  * has already been spent blocks the scope immediately.
@@ -25,7 +31,13 @@ export default function BudgetEditDialog(props) {
 
   const [unlimited, setUnlimited] = useState(false);
   const [limit, setLimit] = useState("");
+  const [memberDefault, setMemberDefault] = useState("");
   const [error, setError] = useState("");
+
+  const isProject = !target?.user_id;
+  const hasProjectDefault =
+    target?.project_member_default !== null &&
+    target?.project_member_default !== undefined;
 
   useEffect(() => {
     if (!open || !target) return;
@@ -38,18 +50,32 @@ export default function BudgetEditDialog(props) {
         ? ""
         : String(target.monthly_limit),
     );
+    setMemberDefault(
+      target.member_default_limit === null ||
+        target.member_default_limit === undefined
+        ? ""
+        : String(target.member_default_limit),
+    );
   }, [open, target]);
 
   const spend = Number(target?.spend || 0);
   const parsed = limit.trim() === "" ? null : Number(limit);
+  const parsedMemberDefault =
+    memberDefault.trim() === "" ? null : Number(memberDefault);
 
   const validationError = useMemo(() => {
+    if (
+      parsedMemberDefault !== null &&
+      (Number.isNaN(parsedMemberDefault) || parsedMemberDefault < 0)
+    ) {
+      return "Member default must be zero or more.";
+    }
     if (unlimited) return "";
     if (limit.trim() === "") return "Enter a limit or switch to unlimited.";
     if (Number.isNaN(parsed)) return "Limit must be a number.";
     if (parsed < 0) return "Limit must be zero or more.";
     return "";
-  }, [unlimited, limit, parsed]);
+  }, [unlimited, limit, parsed, parsedMemberDefault]);
 
   const willBlockNow =
     !unlimited && !validationError && parsed !== null && spend > parsed;
@@ -66,6 +92,7 @@ export default function BudgetEditDialog(props) {
       await onSave({
         monthly_limit: unlimited ? null : parsed,
         enabled: !unlimited,
+        ...(isProject && { member_default_limit: parsedMemberDefault }),
       });
       onClose();
     } catch (err) {
@@ -80,7 +107,7 @@ export default function BudgetEditDialog(props) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>
-        {target?.user_id ? "Edit user budget" : "Edit project budget"}
+        {target?.user_id ? "Edit member budget" : "Edit project budget"}
       </DialogTitle>
 
       <DialogContent>
@@ -104,7 +131,7 @@ export default function BudgetEditDialog(props) {
             </Typography>
             <Typography variant="bodyMedium">
               {formatLimit(target?.effective_limit, target?.currency)}
-              {target?.limit_source === "default" ? " (default)" : ""}
+              {INHERITED_SUFFIX[target?.limit_source] || ""}
             </Typography>
           </Box>
 
@@ -115,8 +142,21 @@ export default function BudgetEditDialog(props) {
                 onChange={(event) => setUnlimited(event.target.checked)}
               />
             }
-            label="Unlimited (exempt from platform defaults)"
+            label={
+              isProject
+                ? "Unlimited (exempt from platform defaults)"
+                : "Unlimited (exempt from the platform default)"
+            }
           />
+
+          {!isProject && unlimited && hasProjectDefault && (
+            <Alert severity="info">
+              This project sets a default of{" "}
+              {formatMoney(target.project_member_default, target?.currency)} for
+              members with no limit of their own, and it still applies here.
+              Enter a limit above to override it for this member.
+            </Alert>
+          )}
 
           <TextField
             label="Monthly limit (USD)"
@@ -135,6 +175,24 @@ export default function BudgetEditDialog(props) {
                 : validationError || "Set 0 to block all shared-model usage."
             }
           />
+
+          {isProject && (
+            <TextField
+              label="Member default limit (USD)"
+              value={memberDefault}
+              onChange={(event) => setMemberDefault(event.target.value)}
+              type="number"
+              size="small"
+              fullWidth
+              sx={styles.limitField}
+              inputProps={{ min: 0, step: "0.01", inputMode: "decimal" }}
+              error={
+                parsedMemberDefault !== null &&
+                (Number.isNaN(parsedMemberDefault) || parsedMemberDefault < 0)
+              }
+              helperText="Applies to every member with no limit of their own, now and in future. Members with their own limit are unaffected, and this applies even when the project is unlimited. Leave blank for none."
+            />
+          )}
 
           {willBlockNow && (
             <Alert severity="warning">

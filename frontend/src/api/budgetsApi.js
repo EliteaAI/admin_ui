@@ -25,10 +25,23 @@ export const budgetsApi = adminApi.injectEndpoints({
     }),
 
     projectBudgetUpdate: build.mutation({
-      query: ({ projectId, monthly_limit, enabled, currency = "USD" }) => ({
+      query: ({
+        projectId,
+        monthly_limit,
+        enabled,
+        currency = "USD",
+        member_default_limit,
+      }) => ({
         url: `/elitea_core/project_budget/administration/${projectId}/budget`,
         method: "PUT",
-        body: { monthly_limit, enabled, currency },
+        body: {
+          monthly_limit,
+          enabled,
+          currency,
+          // Omitted rather than nulled when undefined: the backend leaves an absent
+          // field alone, so a caller that doesn't manage it can't clear every member's default
+          ...(member_default_limit !== undefined && { member_default_limit }),
+        },
       }),
       invalidatesTags: ["Budgets"],
     }),
