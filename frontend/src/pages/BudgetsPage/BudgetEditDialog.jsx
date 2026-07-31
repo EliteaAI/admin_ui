@@ -35,6 +35,9 @@ export default function BudgetEditDialog(props) {
   const [error, setError] = useState("");
 
   const isProject = !target?.user_id;
+  // A personal project has one member, so a "default for members" is a second way to set
+  // that one person's limit — and it is not enforced there
+  const showsMemberDefault = isProject && !target?.is_personal;
   const hasProjectDefault =
     target?.project_member_default !== null &&
     target?.project_member_default !== undefined;
@@ -63,19 +66,21 @@ export default function BudgetEditDialog(props) {
   const parsedMemberDefault =
     memberDefault.trim() === "" ? null : Number(memberDefault);
 
+  const memberDefaultError =
+    showsMemberDefault &&
+    parsedMemberDefault !== null &&
+    (Number.isNaN(parsedMemberDefault) || parsedMemberDefault < 0);
+
   const validationError = useMemo(() => {
-    if (
-      parsedMemberDefault !== null &&
-      (Number.isNaN(parsedMemberDefault) || parsedMemberDefault < 0)
-    ) {
-      return "Member default must be zero or more.";
-    }
+    // Only when the field is on screen: a hidden value is never sent, so it must not
+    // block Save
+    if (memberDefaultError) return "Member default must be zero or more.";
     if (unlimited) return "";
     if (limit.trim() === "") return "Enter a limit or switch to unlimited.";
     if (Number.isNaN(parsed)) return "Limit must be a number.";
     if (parsed < 0) return "Limit must be zero or more.";
     return "";
-  }, [unlimited, limit, parsed, parsedMemberDefault]);
+  }, [unlimited, limit, parsed, memberDefaultError]);
 
   const willBlockNow =
     !unlimited && !validationError && parsed !== null && spend > parsed;
@@ -92,7 +97,9 @@ export default function BudgetEditDialog(props) {
       await onSave({
         monthly_limit: unlimited ? null : parsed,
         enabled: !unlimited,
-        ...(isProject && { member_default_limit: parsedMemberDefault }),
+        // Omitted when the field is hidden, so saving a personal project cannot clear a
+        // value it never showed
+        ...(showsMemberDefault && { member_default_limit: parsedMemberDefault }),
       });
       onClose();
     } catch (err) {
@@ -176,7 +183,7 @@ export default function BudgetEditDialog(props) {
             }
           />
 
-          {isProject && (
+          {showsMemberDefault && (
             <TextField
               label="Member default limit (USD)"
               value={memberDefault}
@@ -186,10 +193,7 @@ export default function BudgetEditDialog(props) {
               fullWidth
               sx={styles.limitField}
               inputProps={{ min: 0, step: "0.01", inputMode: "decimal" }}
-              error={
-                parsedMemberDefault !== null &&
-                (Number.isNaN(parsedMemberDefault) || parsedMemberDefault < 0)
-              }
+              error={memberDefaultError}
               helperText="Applies to every member with no limit of their own, now and in future. Members with their own limit are unaffected, and this applies even when the project is unlimited. Leave blank for none."
             />
           )}
