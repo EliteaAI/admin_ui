@@ -12,6 +12,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
 import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DrawerPage from "@/components/DrawerPage";
@@ -83,6 +84,13 @@ const FEATURES_SECTIONS = [
     icon: AccountBalanceWalletOutlinedIcon,
     backendSectionId: "cost_budgets",
     pathPrefix: null,
+  },
+  {
+    id: "midturn_injection",
+    title: "Mid-turn Input (Beta)",
+    icon: ForumOutlinedIcon,
+    backendSectionId: "guardrails",
+    pathPrefix: "midturn_injection_guardrail.",
   },
   {
     id: "surveys",
@@ -287,6 +295,7 @@ const FeaturesPage = memo(() => {
       case "mcp_configuration":
       case "agent_publishing":
       case "skill_publishing":
+      case "midturn_injection":
         return (
           <Box sx={styles.formScroll}>
             <GuardrailsSection
