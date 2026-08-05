@@ -61,6 +61,8 @@ const FEATURES_GUARDRAILS_PREFIXES = [
   "mcp_exposure.",
   "publishing_guardrail.",
   "skill_publishing_guardrail.",
+  "midturn_injection_guardrail.",
+  "next_input_suggestion_guardrail.",
 ];
 
 function ConfigurationPage() {
