@@ -14,6 +14,7 @@ import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutl
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
+import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
@@ -91,6 +92,13 @@ const FEATURES_SECTIONS = [
     icon: ForumOutlinedIcon,
     backendSectionId: "guardrails",
     pathPrefix: "midturn_injection_guardrail.",
+  },
+  {
+    id: "next_input_suggestion",
+    title: "Next-Input Suggestions (Beta)",
+    icon: LightbulbOutlinedIcon,
+    backendSectionId: "guardrails",
+    pathPrefix: "next_input_suggestion_guardrail.",
   },
   {
     id: "surveys",
@@ -296,6 +304,7 @@ const FeaturesPage = memo(() => {
       case "agent_publishing":
       case "skill_publishing":
       case "midturn_injection":
+      case "next_input_suggestion":
         return (
           <Box sx={styles.formScroll}>
             <GuardrailsSection
