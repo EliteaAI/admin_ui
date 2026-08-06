@@ -20,6 +20,7 @@ import SchedulesTasksPage from "@/pages/SchedulesTasksPage/SchedulesTasksPage";
 import ConfigurationPage from "@/pages/ConfigurationPage/ConfigurationPage";
 import SecretsPage from "@/pages/SecretsPage/SecretsPage";
 import LiteLLMPage from "@/pages/LiteLLMPage/LiteLLMPage";
+import ModelPricesPage from "@/pages/ModelPricesPage/ModelPricesPage";
 import AppRequestsPage from "@/pages/AppRequestsPage/AppRequestsPage";
 import FeaturesPage from "@/pages/FeaturesPage/FeaturesPage";
 import ReportsPage from "@/pages/ReportsPage/ReportsPage";
@@ -93,6 +94,10 @@ const router = createBrowserRouter(
       <Route
         path={RouteDefinitions.LiteLLM}
         element={guard(RouteDefinitions.LiteLLM, <LiteLLMPage />)}
+      />
+      <Route
+        path={RouteDefinitions.ModelPrices}
+        element={guard(RouteDefinitions.ModelPrices, <ModelPricesPage />)}
       />
       <Route
         path={RouteDefinitions.AppRequests}
