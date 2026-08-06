@@ -1,6 +1,7 @@
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
@@ -19,6 +20,7 @@ import { useTheme } from "@mui/material/styles";
 import CodeMirror from "@uiw/react-codemirror";
 import { EditorView, keymap } from "@codemirror/view";
 import { search, searchKeymap } from "@codemirror/search";
+import { LOG_LEVELS, LEVEL_COLORS, filterLogsByLevel } from "./logLevels";
 
 const LogViewerDrawer = memo((props) => {
   const {
@@ -39,9 +41,28 @@ const LogViewerDrawer = memo((props) => {
 
   const [downloadAnchor, setDownloadAnchor] = useState(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [activeLevels, setActiveLevels] = useState(() => new Set(LOG_LEVELS));
   const editorViewRef = useRef(null);
   const muiTheme = useTheme();
   const cmTheme = muiTheme.palette.mode === "dark" ? "dark" : "light";
+
+  useEffect(() => {
+    if (open) setActiveLevels(new Set(LOG_LEVELS));
+  }, [open]);
+
+  const toggleLevel = useCallback((level) => {
+    setActiveLevels((prev) => {
+      const next = new Set(prev);
+      if (next.has(level)) next.delete(level);
+      else next.add(level);
+      return next;
+    });
+  }, []);
+
+  const filteredLogs = useMemo(
+    () => filterLogsByLevel(logs, activeLevels),
+    [logs, activeLevels],
+  );
 
   const extensions = useMemo(
     () => [
@@ -95,7 +116,7 @@ const LogViewerDrawer = memo((props) => {
   );
 
   const hasLogs = logs && logs.length > 0;
-  const lineCount = hasLogs ? logs.split("\n").length : 0;
+  const lineCount = hasLogs ? filteredLogs.split("\n").length : 0;
 
   return (
     <Drawer
@@ -143,6 +164,23 @@ const LogViewerDrawer = memo((props) => {
         {/* Optional meta bar */}
         {metaBar}
 
+        {/* Level filter chips */}
+        {hasLogs && (
+          <Box sx={styles.levelFilterBar}>
+            {LOG_LEVELS.map((level) => (
+              <Chip
+                key={level}
+                label={level}
+                size="small"
+                color={LEVEL_COLORS[level]}
+                variant={activeLevels.has(level) ? "filled" : "outlined"}
+                onClick={() => toggleLevel(level)}
+                sx={styles.levelChip}
+              />
+            ))}
+          </Box>
+        )}
+
         {/* Log display area */}
         <Box sx={styles.logsArea}>
           {loading ? (
@@ -154,7 +192,7 @@ const LogViewerDrawer = memo((props) => {
               {hasLogs ? (
                 <>
                   <CodeMirror
-                    value={logs}
+                    value={filteredLogs}
                     height="100%"
                     theme={cmTheme}
                     extensions={extensions}
@@ -281,6 +319,18 @@ const styles = {
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
+  },
+  levelFilterBar: ({ palette }) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: "0.375rem",
+    padding: "0.5rem 1.5rem",
+    borderBottom: `0.0625rem solid ${palette.border.table}`,
+  }),
+  levelChip: {
+    fontSize: "0.6875rem",
+    height: "1.375rem",
+    cursor: "pointer",
   },
   logsArea: {
     flex: 1,
