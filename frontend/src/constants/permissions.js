@@ -94,6 +94,7 @@ export const PERMISSIONS = {
     create: "configuration.model_prices.prices.create",
     edit: "configuration.model_prices.prices.edit",
     delete: "configuration.model_prices.prices.delete",
+    reimport: "configuration.model_prices.prices.reimport",
   },
 
   // Scheduling section

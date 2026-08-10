@@ -48,6 +48,22 @@ export const modelPricesApi = adminApi.injectEndpoints({
       }),
       invalidatesTags: ["ModelPrices"],
     }),
+
+    modelPriceSources: build.query({
+      query: () => ({
+        url: "/costs/sources/administration/0",
+      }),
+      providesTags: ["ModelPrices"],
+    }),
+
+    modelPriceReimport: build.mutation({
+      query: ({ source_id }) => ({
+        url: "/costs/sources/administration/0",
+        method: "POST",
+        body: { source_id },
+      }),
+      invalidatesTags: ["ModelPrices"],
+    }),
   }),
 });
 
@@ -58,4 +74,6 @@ export const {
   useModelPriceCreateMutation,
   useModelPriceUpdateMutation,
   useModelPriceResetMutation,
+  useModelPriceSourcesQuery,
+  useModelPriceReimportMutation,
 } = modelPricesApi;
