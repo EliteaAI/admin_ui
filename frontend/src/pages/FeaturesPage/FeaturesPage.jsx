@@ -12,7 +12,10 @@ import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
 import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
+import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
+import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
@@ -21,6 +24,7 @@ import HelpCenterSection from "@/components/SchemaForm/HelpCenterSection";
 import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
 import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
 import CostBudgets from "@/components/SchemaForm/CostBudgets";
+import ModelPricesSource from "@/components/SchemaForm/ModelPricesSource";
 import SurveysSection from "./SurveysSection/SurveysSection";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
@@ -83,6 +87,27 @@ const FEATURES_SECTIONS = [
     icon: AccountBalanceWalletOutlinedIcon,
     backendSectionId: "cost_budgets",
     pathPrefix: null,
+  },
+  {
+    id: "model_prices_source",
+    title: "Model Prices Source",
+    icon: PaidOutlinedIcon,
+    backendSectionId: null,
+    pathPrefix: null,
+  },
+  {
+    id: "midturn_injection",
+    title: "Mid-turn Input (Beta)",
+    icon: ForumOutlinedIcon,
+    backendSectionId: "guardrails",
+    pathPrefix: "midturn_injection_guardrail.",
+  },
+  {
+    id: "next_input_suggestion",
+    title: "Next-Input Suggestions (Beta)",
+    icon: LightbulbOutlinedIcon,
+    backendSectionId: "guardrails",
+    pathPrefix: "next_input_suggestion_guardrail.",
   },
   {
     id: "surveys",
@@ -284,9 +309,13 @@ const FeaturesPage = memo(() => {
     switch (activeSection) {
       case "surveys":
         return <SurveysSection addRef={addSurveyRef} />;
+      case "model_prices_source":
+        return <ModelPricesSource />;
       case "mcp_configuration":
       case "agent_publishing":
       case "skill_publishing":
+      case "midturn_injection":
+      case "next_input_suggestion":
         return (
           <Box sx={styles.formScroll}>
             <GuardrailsSection
@@ -373,7 +402,8 @@ const FeaturesPage = memo(() => {
         <Box sx={styles.formArea}>
           {renderContent()}
 
-          {activeSection !== "surveys" && (
+          {activeSection !== "surveys" &&
+            activeSection !== "model_prices_source" && (
             <Box sx={styles.actionBar}>
               <Box sx={styles.actionButtons}>
                 <Button
