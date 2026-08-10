@@ -43,9 +43,6 @@ const SEARCH_PLACEHOLDERS = {
   personal: "Search by Name, ID, Owner, or Email",
 };
 
-// Ceiling on one export, so "all records" cannot become an unbounded request
-const EXPORT_ROW_CAP = 1000;
-
 const CURRENCY_FMT = '$#,##0.00####';
 const PERCENT_FMT = '0.00"%"';
 
@@ -212,8 +209,6 @@ export default function BudgetsPage() {
     setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
-  // The report covers the whole environment, so it deliberately ignores the active tab,
-  // the search term, the sort and the current page.
   const handleExport = useCallback(async () => {
     setExporting(true);
 
@@ -222,40 +217,35 @@ export default function BudgetsPage() {
         const probe = await fetchBudgets({ limit: 1, offset: 0, project_type: type }).unwrap();
         const total = probe?.total ?? 0;
 
-        if (!total) return { rows: [], truncated: false };
+        if (!total) return [];
 
-        const page = await fetchBudgets({
-          limit: Math.min(total, EXPORT_ROW_CAP),
+        const result = await fetchBudgets({
+          limit: total,
           offset: 0,
           project_type: type,
         }).unwrap();
 
-        return { rows: page?.rows ?? [], truncated: total > EXPORT_ROW_CAP };
+        return result?.rows ?? [];
       };
 
-      const [team, personal] = await Promise.all([
+      const [teamRows, personalRows] = await Promise.all([
         fetchAll("team"),
         fetchAll("personal"),
       ]);
 
       await exportToExcel("Budgets.xlsx", [
-        { sheetName: "Team Projects", columns: TEAM_EXPORT_COLUMNS, rows: team.rows },
+        { sheetName: "Team Projects", columns: TEAM_EXPORT_COLUMNS, rows: teamRows },
         {
           sheetName: "Personal Projects",
           columns: PERSONAL_EXPORT_COLUMNS,
-          rows: personal.rows,
+          rows: personalRows,
         },
       ]);
 
-      // A silently partial report would be read as the whole environment
-      const truncated = team.truncated || personal.truncated;
-
       setSnackbar({
         open: true,
-        message: truncated
-          ? `Exported the first ${EXPORT_ROW_CAP} projects per sheet. Narrow the environment or ask for a raw report to see the rest.`
-          : "Budgets exported.",
-        severity: truncated ? "warning" : "success",
+        message: "Budgets exported.",
+        severity: "success",
       });
     } catch {
       setSnackbar({
