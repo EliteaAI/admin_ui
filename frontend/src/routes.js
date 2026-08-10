@@ -5,6 +5,7 @@ export const RouteDefinitions = {
   Budgets: "/budgets",
   Secrets: "/secrets",
   LiteLLM: "/litellm",
+  ModelPrices: "/model-prices",
   AppRequests: "/app-requests",
   AuditTrail: "/audit-trail",
   SchedulesTasks: "/schedules-tasks",

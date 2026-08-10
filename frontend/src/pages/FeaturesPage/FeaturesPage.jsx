@@ -15,6 +15,7 @@ import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalance
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
 import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
+import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
@@ -23,6 +24,7 @@ import HelpCenterSection from "@/components/SchemaForm/HelpCenterSection";
 import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
 import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
 import CostBudgets from "@/components/SchemaForm/CostBudgets";
+import ModelPricesSource from "@/components/SchemaForm/ModelPricesSource";
 import SurveysSection from "./SurveysSection/SurveysSection";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
@@ -84,6 +86,13 @@ const FEATURES_SECTIONS = [
     title: "Cost Budgets (Beta)",
     icon: AccountBalanceWalletOutlinedIcon,
     backendSectionId: "cost_budgets",
+    pathPrefix: null,
+  },
+  {
+    id: "model_prices_source",
+    title: "Model Prices Source",
+    icon: PaidOutlinedIcon,
+    backendSectionId: null,
     pathPrefix: null,
   },
   {
@@ -300,6 +309,8 @@ const FeaturesPage = memo(() => {
     switch (activeSection) {
       case "surveys":
         return <SurveysSection addRef={addSurveyRef} />;
+      case "model_prices_source":
+        return <ModelPricesSource />;
       case "mcp_configuration":
       case "agent_publishing":
       case "skill_publishing":
@@ -391,7 +402,8 @@ const FeaturesPage = memo(() => {
         <Box sx={styles.formArea}>
           {renderContent()}
 
-          {activeSection !== "surveys" && (
+          {activeSection !== "surveys" &&
+            activeSection !== "model_prices_source" && (
             <Box sx={styles.actionBar}>
               <Box sx={styles.actionButtons}>
                 <Button

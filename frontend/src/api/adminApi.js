@@ -30,6 +30,7 @@ export const adminApi = createApi({
     "AppRequests",
     "Budgets",
     "Surveys",
+    "ModelPrices",
   ],
   endpoints: () => ({}),
 });
