@@ -1,13 +1,16 @@
 import { memo, useCallback } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import FormControl from "@mui/material/FormControl";
-import IconButton from "@mui/material/IconButton";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+import {
+  Box,
+  Button,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
@@ -26,7 +29,7 @@ const DEFAULT_OPTIONS = {
 };
 
 const QuestionEditor = memo((props) => {
-  const { question, index, onChange, onDelete } = props;
+  const { question, index, onChange, onDelete, positionError } = props;
 
   const handleField = useCallback(
     (field, value) => {
@@ -97,6 +100,10 @@ const QuestionEditor = memo((props) => {
   }, [index, onDelete]);
 
   const type = question.question_type || "open";
+  const sliderMinMaxError =
+    type === "slider" &&
+    question.options != null &&
+    question.options.min >= question.options.max;
 
   return (
     <Box sx={styles.card}>
@@ -142,9 +149,13 @@ const QuestionEditor = memo((props) => {
           label="Position"
           type="number"
           value={question.position ?? 0}
-          onChange={(e) =>
-            handleField("position", parseInt(e.target.value, 10) || 0)
-          }
+          onChange={(e) => {
+            const val = parseInt(e.target.value, 10);
+            handleField("position", Number.isNaN(val) ? 0 : Math.max(0, val));
+          }}
+          slotProps={{ htmlInput: { min: 0 } }}
+          error={!!positionError}
+          helperText={positionError || ""}
           sx={styles.positionField}
         />
       </Box>
@@ -199,6 +210,8 @@ const QuestionEditor = memo((props) => {
               onChange={(e) =>
                 handleOptionField("min", parseInt(e.target.value, 10) || 0)
               }
+              error={sliderMinMaxError}
+              helperText={sliderMinMaxError ? "Must be less than Max" : ""}
               sx={styles.numberField}
             />
             <TextField
@@ -209,6 +222,7 @@ const QuestionEditor = memo((props) => {
               onChange={(e) =>
                 handleOptionField("max", parseInt(e.target.value, 10) || 0)
               }
+              error={sliderMinMaxError}
               sx={styles.numberField}
             />
           </Box>
