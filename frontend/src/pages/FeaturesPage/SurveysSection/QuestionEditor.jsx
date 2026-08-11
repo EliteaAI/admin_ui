@@ -25,8 +25,24 @@ const DEFAULT_OPTIONS = {
   slider: { min: 0, max: 10, min_label: "", max_label: "" },
 };
 
+const getPositionError = (question, allQuestions, index) => {
+  const pos = question.position ?? 0;
+  if (pos < 0) return "No negatives";
+  if (allQuestions.some((q, i) => i !== index && (q.position ?? 0) === pos))
+    return "Duplicate";
+  return undefined;
+};
+
+const getSliderError = (question) => {
+  if (question.question_type !== "slider" || question.options == null)
+    return undefined;
+  const { min, max } = question.options;
+  if (min != null && max != null && min >= max) return "Min ≥ Max";
+  return undefined;
+};
+
 const QuestionEditor = memo((props) => {
-  const { question, index, onChange, onDelete } = props;
+  const { question, index, onChange, onDelete, allQuestions = [] } = props;
 
   const handleField = useCallback(
     (field, value) => {
@@ -102,6 +118,8 @@ const QuestionEditor = memo((props) => {
   }, [index, onDelete]);
 
   const type = question.question_type || "open";
+  const positionError = getPositionError(question, allQuestions, index);
+  const sliderError = getSliderError(question);
 
   return (
     <Box sx={styles.card}>
@@ -152,6 +170,8 @@ const QuestionEditor = memo((props) => {
           onChange={(e) =>
             handleField("position", parseInt(e.target.value, 10) || 0)
           }
+          error={!!positionError}
+          helperText={positionError}
           sx={styles.positionField}
         />
       </Box>
@@ -213,6 +233,8 @@ const QuestionEditor = memo((props) => {
               onChange={(e) =>
                 handleOptionField("min", parseInt(e.target.value, 10) || 0)
               }
+              error={!!sliderError}
+              helperText={sliderError}
               sx={styles.numberField}
             />
             <TextField
@@ -223,6 +245,7 @@ const QuestionEditor = memo((props) => {
               onChange={(e) =>
                 handleOptionField("max", parseInt(e.target.value, 10) || 0)
               }
+              error={!!sliderError}
               sx={styles.numberField}
             />
           </Box>
@@ -293,6 +316,7 @@ const styles = {
     width: "5rem",
     "& .MuiInputBase-input": { fontSize: "0.8125rem" },
     "& .MuiInputLabel-root": { fontSize: "0.8125rem" },
+    "& .MuiFormHelperText-root": { fontSize: "0.625rem", margin: "2px 0 0" },
   },
   optionsSection: {
     display: "flex",
@@ -322,6 +346,7 @@ const styles = {
     width: "6rem",
     "& .MuiInputBase-input": { fontSize: "0.8125rem" },
     "& .MuiInputLabel-root": { fontSize: "0.8125rem" },
+    "& .MuiFormHelperText-root": { fontSize: "0.625rem", margin: "2px 0 0" },
   },
   labelField: {
     flex: 1,
