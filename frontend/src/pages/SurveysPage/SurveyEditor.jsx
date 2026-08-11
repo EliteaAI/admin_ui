@@ -1,9 +1,6 @@
-import { memo, useCallback } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+import { memo, useCallback, useMemo } from "react";
+import { Box, Button, Switch, TextField, Typography } from "@mui/material/Box";
+
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import QuestionEditor from "./QuestionEditor";
@@ -56,6 +53,36 @@ const SurveyEditor = memo((props) => {
       ],
     });
   }, [survey, onChange]);
+
+  const questions = survey?.questions || [];
+
+  const duplicatePositions = useMemo(() => {
+    const counts = {};
+
+    for (const q of questions) {
+      const pos = q.position ?? 0;
+      counts[pos] = (counts[pos] || 0) + 1;
+    }
+
+    const dupes = new Set();
+
+    for (const [pos, count] of Object.entries(counts)) {
+      if (count > 1) dupes.add(Number(pos));
+    }
+
+    return dupes;
+  }, [questions]);
+
+  const hasValidationErrors = useMemo(() => {
+    if (duplicatePositions.size > 0) return true;
+
+    return questions.some(
+      (q) =>
+        q.question_type === "slider" &&
+        q.options != null &&
+        q.options.min >= q.options.max,
+    );
+  }, [questions, duplicatePositions]);
 
   if (!survey) {
     return (
@@ -122,13 +149,18 @@ const SurveyEditor = memo((props) => {
             </Typography>
           </Box>
 
-          {(survey.questions || []).map((question, index) => (
+          {questions.map((question, index) => (
             <QuestionEditor
               key={question.id ?? `new-${index}`}
               question={question}
               index={index}
               onChange={handleQuestionChange}
               onDelete={handleQuestionDelete}
+              positionError={
+                duplicatePositions.has(question.position ?? 0)
+                  ? "Duplicate position"
+                  : ""
+              }
             />
           ))}
 
@@ -163,7 +195,7 @@ const SurveyEditor = memo((props) => {
           size="small"
           variant="contained"
           onClick={onSave}
-          disabled={saving || !survey.name?.trim()}
+          disabled={saving || !survey.name?.trim() || hasValidationErrors}
           sx={styles.actionBtn}
         >
           {saving ? "Saving..." : isNew ? "Create" : "Save"}
