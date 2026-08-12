@@ -29,6 +29,7 @@ import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import ViewColumnOutlined from "@mui/icons-material/ViewColumnOutlined";
 import PauseCircleOutlined from "@mui/icons-material/PauseCircleOutlined";
 import PlayCircleOutlined from "@mui/icons-material/PlayCircleOutlined";
+import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
 
 import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import { useTableSort } from "@/hooks/useTableSort";
@@ -49,7 +50,7 @@ import {
   useMaintenanceSaveMutation,
 } from "@/api/configurationApi";
 
-import { TaskLogDrawer } from "@/components/LogViewerDrawer";
+import { TaskLogDrawer, StackDumpDrawer } from "@/components/LogViewerDrawer";
 
 const POOL_COLUMNS = [
   { field: "pool", label: "Pool", width: "1fr", sortable: false },
@@ -96,7 +97,7 @@ const TASK_COLUMNS = [
     sortable: false,
     hideBelow: 900,
   },
-  { field: "actions", label: "", width: "7rem", sortable: false },
+  { field: "actions", label: "", width: "9rem", sortable: false },
 ];
 
 // User-toggleable columns (the wide/opaque ones). All shown by default.
@@ -232,6 +233,7 @@ function NodeCard({
   node,
   onStop,
   onOpenLogs,
+  onDump,
   searching,
   hiddenColumns,
   onToggleColumn,
@@ -286,7 +288,7 @@ function NodeCard({
     columns: visibleTaskColumns,
     containerWidth: window.innerWidth,
     showCheckbox: false,
-    actionsColumnWidth: "7rem",
+    actionsColumnWidth: "9rem",
   });
 
   const renderPoolCell = useCallback((column, value) => {
@@ -401,6 +403,13 @@ function NodeCard({
             </IconButton>
           </Tooltip>
           {status === "running" && (
+            <Tooltip title="Dump stack (see where the task is stuck)">
+              <IconButton size="small" onClick={() => onDump(row.task_id)}>
+                <BugReportOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {status === "running" && (
             <Tooltip title="Stop task">
               <IconButton
                 size="small"
@@ -413,7 +422,7 @@ function NodeCard({
         </Box>
       );
     },
-    [node.node, onStop, onOpenLogs],
+    [node.node, onStop, onOpenLogs, onDump],
   );
 
   return (
@@ -604,6 +613,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     severity: "success",
   });
   const [logTaskId, setLogTaskId] = useState(null);
+  const [dumpTaskId, setDumpTaskId] = useState(null);
   const [hiddenColumns, setHiddenColumns] = useState({});
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
@@ -663,6 +673,14 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
 
   const handleCloseLogs = useCallback(() => {
     setLogTaskId(null);
+  }, []);
+
+  const handleOpenDump = useCallback((taskId) => {
+    setDumpTaskId(taskId);
+  }, []);
+
+  const handleCloseDump = useCallback(() => {
+    setDumpTaskId(null);
   }, []);
 
   const handleStop = useCallback(
@@ -831,6 +849,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
             node={node}
             onStop={handleStop}
             onOpenLogs={handleOpenLogs}
+            onDump={handleOpenDump}
             searching={Boolean(search.trim())}
             hiddenColumns={hiddenColumns}
             onToggleColumn={toggleColumn}
@@ -858,6 +877,12 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
         open={logTaskId != null}
         taskId={logTaskId}
         onClose={handleCloseLogs}
+      />
+
+      <StackDumpDrawer
+        open={dumpTaskId != null}
+        taskId={dumpTaskId}
+        onClose={handleCloseDump}
       />
 
       <Dialog open={pauseConfirmOpen} onClose={handleCancelPause}>
