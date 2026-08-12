@@ -76,6 +76,15 @@ export const tasksApi = adminApi.injectEndpoints({
       }),
       invalidatesTags: ["ActiveTasks"],
     }),
+
+    // Read-only stack dump; a mutation because each press is a fresh capture
+    // and consecutive presses are compared to tell stuck from spinning.
+    taskDump: build.mutation({
+      query: ({ taskId }) => ({
+        url: "/admin/tasks/administration/",
+        params: { action: "dump", scope: taskId },
+      }),
+    }),
   }),
 });
 
@@ -88,4 +97,5 @@ export const {
   useActiveTasksListQuery,
   useActiveTasksRefreshMutation,
   useActiveTasksStopMutation,
+  useTaskDumpMutation,
 } = tasksApi;
