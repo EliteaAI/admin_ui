@@ -23,6 +23,7 @@ import ModelTrainingIcon from "@mui/icons-material/ModelTrainingOutlined";
 import AssignmentIcon from "@mui/icons-material/AssignmentOutlined";
 import BudgetsIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
+import RuleOutlinedIcon from "@mui/icons-material/RuleOutlined";
 
 import ThemeModeToggle from "@/components/ThemeModeToggle";
 import UserAvatar from "@/components/UserAvatar";
@@ -62,6 +63,12 @@ const topMenuItems = [
     label: "Budgets",
     icon: BudgetsIcon,
     url: RouteDefinitions.Budgets,
+  },
+  {
+    id: "platform-dimensions",
+    label: "Eval Dimensions",
+    icon: RuleOutlinedIcon,
+    url: RouteDefinitions.PlatformDimensions,
   },
   {
     id: "secrets",

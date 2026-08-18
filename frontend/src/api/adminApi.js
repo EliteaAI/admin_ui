@@ -29,6 +29,7 @@ export const adminApi = createApi({
     "ServiceDescriptors",
     "AppRequests",
     "Budgets",
+    "PlatformDimensions",
     "Surveys",
   ],
   endpoints: () => ({}),

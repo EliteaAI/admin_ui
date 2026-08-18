@@ -3,6 +3,7 @@ export const RouteDefinitions = {
   Roles: "/roles",
   Projects: "/projects",
   Budgets: "/budgets",
+  PlatformDimensions: "/platform-dimensions",
   Secrets: "/secrets",
   LiteLLM: "/litellm",
   AppRequests: "/app-requests",
