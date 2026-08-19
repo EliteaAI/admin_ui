@@ -35,6 +35,7 @@ const LogViewerDrawer = memo((props) => {
     loading = false,
     placeholder = "No logs available.",
     downloadFilename = "logs",
+    showLevelFilter = true,
     onScrollTop,
     onScrollBottom,
   } = props;
@@ -60,8 +61,8 @@ const LogViewerDrawer = memo((props) => {
   }, []);
 
   const filteredLogs = useMemo(
-    () => filterLogsByLevel(logs, activeLevels),
-    [logs, activeLevels],
+    () => (showLevelFilter ? filterLogsByLevel(logs, activeLevels) : logs),
+    [logs, activeLevels, showLevelFilter],
   );
 
   const extensions = useMemo(
@@ -165,7 +166,7 @@ const LogViewerDrawer = memo((props) => {
         {metaBar}
 
         {/* Level filter chips */}
-        {hasLogs && (
+        {hasLogs && showLevelFilter && (
           <Box sx={styles.levelFilterBar}>
             {LOG_LEVELS.map((level) => (
               <Chip

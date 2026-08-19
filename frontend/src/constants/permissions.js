@@ -88,6 +88,15 @@ export const PERMISSIONS = {
     edit: "configuration.litellm.edit",
   },
 
+  // Model Prices section
+  modelPrices: {
+    view: "configuration.model_prices.prices.view",
+    create: "configuration.model_prices.prices.create",
+    edit: "configuration.model_prices.prices.edit",
+    delete: "configuration.model_prices.prices.delete",
+    reimport: "configuration.model_prices.prices.reimport",
+  },
+
   // Scheduling section
   scheduling: {
     view: "configuration.scheduling.schedules.view",
@@ -139,6 +148,7 @@ export const SIDEBAR_PERMISSIONS = {
   "platform-dimensions": [PERMISSIONS.platformDimensions.view],
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
+  "model-prices": [PERMISSIONS.modelPrices.view],
   "app-requests": [PERMISSIONS.users.section],
   configuration: [
     PERMISSIONS.configuration.section,
@@ -173,6 +183,7 @@ export const ROUTE_PERMISSIONS = {
   "/platform-dimensions": SIDEBAR_PERMISSIONS["platform-dimensions"],
   "/secrets": SIDEBAR_PERMISSIONS.secrets,
   "/litellm": SIDEBAR_PERMISSIONS.litellm,
+  "/model-prices": SIDEBAR_PERMISSIONS["model-prices"],
   "/app-requests": SIDEBAR_PERMISSIONS["app-requests"],
   "/configuration": SIDEBAR_PERMISSIONS.configuration,
   "/features": SIDEBAR_PERMISSIONS.configuration,

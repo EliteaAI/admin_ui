@@ -21,6 +21,13 @@ export const usersApi = adminApi.injectEndpoints({
           ...(sort_order && { sort_order }),
         },
       }),
+      transformResponse: (response) => ({
+        ...response,
+        rows: response.rows?.map((user) => ({
+          ...user,
+          status: user.suspended ? "suspended" : "active",
+        })),
+      }),
       providesTags: ["Users"],
     }),
 

@@ -205,15 +205,14 @@ const SurveysSection = memo((props) => {
             This will also delete all associated questions and captured answers.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} size="small">
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleDeleteCancel} variant="text">
             Cancel
           </Button>
           <Button
             onClick={handleDeleteConfirm}
             color="error"
             variant="contained"
-            size="small"
           >
             Delete
           </Button>

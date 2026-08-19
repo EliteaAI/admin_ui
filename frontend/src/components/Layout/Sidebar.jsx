@@ -20,6 +20,7 @@ import SettingsIcon from "@mui/icons-material/SettingsOutlined";
 import TuneIcon from "@mui/icons-material/TuneOutlined";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 import ModelTrainingIcon from "@mui/icons-material/ModelTrainingOutlined";
+import PriceChangeIcon from "@mui/icons-material/PriceChangeOutlined";
 import AssignmentIcon from "@mui/icons-material/AssignmentOutlined";
 import BudgetsIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
@@ -81,6 +82,12 @@ const topMenuItems = [
     label: "LiteLLM",
     icon: ModelTrainingIcon,
     url: RouteDefinitions.LiteLLM,
+  },
+  {
+    id: "model-prices",
+    label: "Model Prices",
+    icon: PriceChangeIcon,
+    url: RouteDefinitions.ModelPrices,
   },
   {
     id: "app-requests",

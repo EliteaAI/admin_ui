@@ -31,6 +31,7 @@ export const adminApi = createApi({
     "Budgets",
     "PlatformDimensions",
     "Surveys",
+    "ModelPrices",
   ],
   endpoints: () => ({}),
 });

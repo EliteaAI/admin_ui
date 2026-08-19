@@ -6,6 +6,7 @@ export const RouteDefinitions = {
   PlatformDimensions: "/platform-dimensions",
   Secrets: "/secrets",
   LiteLLM: "/litellm",
+  ModelPrices: "/model-prices",
   AppRequests: "/app-requests",
   AuditTrail: "/audit-trail",
   SchedulesTasks: "/schedules-tasks",

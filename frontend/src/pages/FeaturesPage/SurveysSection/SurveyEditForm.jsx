@@ -39,6 +39,11 @@ const SurveyEditForm = memo((props) => {
     const questions = local.questions || [];
     if (questions.length === 0) return false;
 
+    const positions = questions.map((q) => q.position ?? 0);
+    const hasDuplicatePositions = new Set(positions).size !== positions.length;
+    if (hasDuplicatePositions) return true;
+    if (positions.some((p) => p < 0)) return true;
+
     return questions.some((q) => {
       if (!q.title?.trim()) return true;
 
@@ -54,6 +59,8 @@ const SurveyEditForm = memo((props) => {
       if (type === "slider") {
         if (!q.options?.min_label?.trim()) return true;
         if (!q.options?.max_label?.trim()) return true;
+        const { min, max } = q.options ?? {};
+        if (min != null && max != null && min >= max) return true;
       }
 
       return false;
@@ -169,6 +176,7 @@ const SurveyEditForm = memo((props) => {
               key={question.id ?? `new-${index}`}
               question={question}
               index={index}
+              allQuestions={local.questions || []}
               onChange={handleQuestionChange}
               onDelete={handleQuestionDelete}
             />
