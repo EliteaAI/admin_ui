@@ -114,6 +114,14 @@ export const PERMISSIONS = {
     edit: "models.admin.project_budgets.edit",
   },
 
+  // Platform-wide evaluation dimension catalog
+  platformDimensions: {
+    view: "configuration.evaluation.platform_dimensions.view",
+    create: "configuration.evaluation.platform_dimensions.create",
+    edit: "configuration.evaluation.platform_dimensions.edit",
+    delete: "configuration.evaluation.platform_dimensions.delete",
+  },
+
   // Surveys
   surveys: {
     manage: "models.admin.surveys.manage",
@@ -137,6 +145,7 @@ export const SIDEBAR_PERMISSIONS = {
   roles: [PERMISSIONS.roles.section, PERMISSIONS.roles.permissions.view],
   projects: [PERMISSIONS.projects.section, PERMISSIONS.projects.list],
   budgets: [PERMISSIONS.budgets.view],
+  "platform-dimensions": [PERMISSIONS.platformDimensions.view],
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
   "model-prices": [PERMISSIONS.modelPrices.view],
@@ -171,6 +180,7 @@ export const ROUTE_PERMISSIONS = {
   "/roles": SIDEBAR_PERMISSIONS.roles,
   "/projects": SIDEBAR_PERMISSIONS.projects,
   "/budgets": SIDEBAR_PERMISSIONS.budgets,
+  "/platform-dimensions": SIDEBAR_PERMISSIONS["platform-dimensions"],
   "/secrets": SIDEBAR_PERMISSIONS.secrets,
   "/litellm": SIDEBAR_PERMISSIONS.litellm,
   "/model-prices": SIDEBAR_PERMISSIONS["model-prices"],
