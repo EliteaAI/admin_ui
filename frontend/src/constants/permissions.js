@@ -19,6 +19,14 @@ export const PERMISSIONS = {
     list: "projects.projects",
     view: "projects.projects.projects.view",
     edit: "projects.projects.projects.edit",
+    backup: {
+      download: "projects.projects.backup.download",
+      full: "projects.projects.backup.full",
+    },
+    restore: {
+      apply: "projects.projects.restore.apply",
+      full: "projects.projects.restore.full",
+    },
   },
 
   // Roles/Permissions section

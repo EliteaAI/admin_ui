@@ -28,6 +28,8 @@ import DeleteProjectDialog from "./DeleteProjectDialog";
 import CreateProjectDialog from "./CreateProjectDialog";
 import AddProjectAdminDialog from "./AddProjectAdminDialog";
 import ProjectActivityDrawer from "./ProjectActivityDrawer";
+import BackupProjectDialog from "./BackupProjectDialog";
+import RestoreProjectDialog from "./RestoreProjectDialog";
 
 const PROJECT_TYPES = ["team", "personal"];
 const EXPORT_COLUMNS = [
@@ -63,6 +65,10 @@ const ProjectsPage = memo(() => {
   const [addAdminProject, setAddAdminProject] = useState(null);
   const [activityOpen, setActivityOpen] = useState(false);
   const [activityProject, setActivityProject] = useState(null);
+  const [backupOpen, setBackupOpen] = useState(false);
+  const [backupProject, setBackupProject] = useState(null);
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [restoreProject, setRestoreProject] = useState(null);
 
   const [suspendProject] = useProjectSuspendMutation();
   const [fetchProjects] = useLazyProjectListQuery();
@@ -72,6 +78,16 @@ const ProjectsPage = memo(() => {
 
   const canEdit = useMemo(
     () => hasPermission(PERMISSIONS.projects.edit),
+    [hasPermission],
+  );
+
+  const canBackup = useMemo(
+    () => hasPermission(PERMISSIONS.projects.backup.download),
+    [hasPermission],
+  );
+
+  const canRestore = useMemo(
+    () => hasPermission(PERMISSIONS.projects.restore.apply),
     [hasPermission],
   );
 
@@ -228,6 +244,26 @@ const ProjectsPage = memo(() => {
     setActivityProject(null);
   }, []);
 
+  const handleBackup = useCallback((project) => {
+    setBackupProject(project);
+    setBackupOpen(true);
+  }, []);
+
+  const handleBackupClose = useCallback(() => {
+    setBackupOpen(false);
+    setBackupProject(null);
+  }, []);
+
+  const handleRestore = useCallback((project) => {
+    setRestoreProject(project);
+    setRestoreOpen(true);
+  }, []);
+
+  const handleRestoreClose = useCallback(() => {
+    setRestoreOpen(false);
+    setRestoreProject(null);
+  }, []);
+
   const extraContent = (
     <>
       {canEdit && selectedIds.length > 0 && (
@@ -307,6 +343,8 @@ const ProjectsPage = memo(() => {
               onAddAdmin={canEdit ? handleAddAdmin : undefined}
               onSuspend={canEdit ? handleSuspend : undefined}
               onActivity={handleActivity}
+              onBackup={canBackup ? handleBackup : undefined}
+              onRestore={canRestore ? handleRestore : undefined}
             />
           )}
         </Box>
@@ -327,6 +365,16 @@ const ProjectsPage = memo(() => {
         open={activityOpen}
         onClose={handleActivityClose}
         project={activityProject}
+      />
+      <BackupProjectDialog
+        open={backupOpen}
+        onClose={handleBackupClose}
+        project={backupProject}
+      />
+      <RestoreProjectDialog
+        open={restoreOpen}
+        onClose={handleRestoreClose}
+        project={restoreProject}
       />
     </>
   );

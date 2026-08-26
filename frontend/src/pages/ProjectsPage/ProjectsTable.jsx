@@ -11,6 +11,8 @@ import PersonAddAlt1Outlined from "@mui/icons-material/PersonAddAlt1Outlined";
 import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import TimelineOutlined from "@mui/icons-material/TimelineOutlined";
+import CloudDownloadOutlined from "@mui/icons-material/CloudDownloadOutlined";
+import SettingsBackupRestoreOutlined from "@mui/icons-material/SettingsBackupRestoreOutlined";
 
 import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import {
@@ -54,7 +56,7 @@ const PROJECTS_COLUMNS = [
     sortable: true,
     hideBelow: 900,
   },
-  { field: "actions", label: "Actions", width: "14rem", sortable: false },
+  { field: "actions", label: "Actions", width: "17rem", sortable: false },
 ];
 
 const ProjectsTable = memo(function ProjectsTable(props) {
@@ -74,6 +76,8 @@ const ProjectsTable = memo(function ProjectsTable(props) {
     onAddAdmin,
     onSuspend,
     onActivity,
+    onBackup,
+    onRestore,
   } = props;
 
   const [hoveredRowId, setHoveredRowId] = useState(null);
@@ -83,7 +87,7 @@ const ProjectsTable = memo(function ProjectsTable(props) {
       columns: PROJECTS_COLUMNS,
       containerWidth: window.innerWidth,
       showCheckbox: !!onSelectionChange,
-      actionsColumnWidth: "14rem",
+      actionsColumnWidth: "17rem",
     });
 
   const isAllSelected = useMemo(
@@ -212,6 +216,20 @@ const ProjectsTable = memo(function ProjectsTable(props) {
               </IconButton>
             </Tooltip>
           )}
+          {onBackup && (
+            <Tooltip title="Backup project">
+              <IconButton size="small" onClick={() => onBackup(row)}>
+                <CloudDownloadOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {onRestore && (
+            <Tooltip title="Restore project">
+              <IconButton size="small" onClick={() => onRestore(row)}>
+                <SettingsBackupRestoreOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title="Project activity">
             <IconButton size="small" onClick={() => onActivity(row)}>
               <TimelineOutlined fontSize="small" />
@@ -227,7 +245,7 @@ const ProjectsTable = memo(function ProjectsTable(props) {
         </Box>
       );
     },
-    [onDelete, onAddAdmin, onSuspend, onActivity],
+    [onDelete, onAddAdmin, onSuspend, onActivity, onBackup, onRestore],
   );
 
   if (isFetching) {
