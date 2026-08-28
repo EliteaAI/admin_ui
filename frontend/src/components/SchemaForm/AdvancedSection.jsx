@@ -30,8 +30,8 @@ import { ALWAYS_SHOW_PLUGIN_UPDATE } from "@/utils/env";
 
 const COLUMNS = [
   { field: "name", label: "Name", width: "1fr" },
-  { field: "local_version", label: "Version", width: "7rem" },
-  { field: "repo_version", label: "Repo Version", width: "7rem" },
+  { field: "local_version", label: "Version", width: "14rem" },
+  { field: "repo_version", label: "Repo Version", width: "14rem" },
   { field: "activated", label: "Active", width: "5rem" },
   { field: "actions", label: "Actions", width: "18rem" },
 ];
