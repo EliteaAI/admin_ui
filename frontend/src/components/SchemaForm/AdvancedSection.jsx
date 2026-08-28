@@ -342,36 +342,23 @@ function AdvancedSection() {
         (r) => r.status === "fulfilled" && r.value.ok,
       ).length;
       const failed = names.length - succeeded;
-      // Restart the pylon after updating all plugins
-      try {
-        await restartPylon({ pylonId }).unwrap();
-        setPluginStates((prev) => {
-          const next = { ...prev };
-          for (const name of names) {
-            const key = pluginKey(pylonId, name);
-            if (next[key]) next[key] = { ...next[key], updated: false };
-          }
-          return next;
-        });
-      } catch {
-        /* restart best-effort */
-      }
       setUpdatingAllPylons((prev) => ({ ...prev, [pylonId]: false }));
+      // No auto-restart: it used to race the still-running downloads and abort them
       if (failed > 0) {
         setSnackbar({
           open: true,
-          message: `Updated ${succeeded}/${names.length} plugins on ${pylonId} (${failed} failed), restart signal sent`,
+          message: `Update requested for ${succeeded}/${names.length} plugins on ${pylonId} (${failed} failed) \u2014 wait for downloads, then press Restart`,
           severity: "warning",
         });
       } else {
         setSnackbar({
           open: true,
-          message: `All ${succeeded} plugins updated on ${pylonId}, restart signal sent`,
+          message: `Update requested for all ${succeeded} plugins on ${pylonId} \u2014 wait for downloads, then press Restart`,
           severity: "success",
         });
       }
     },
-    [updatePlugin, restartPylon],
+    [updatePlugin],
   );
 
   const handleCloseSnackbar = useCallback(() => {
@@ -414,6 +401,9 @@ function AdvancedSection() {
       </Box>
       {pylonGroups.map(([pylonId, plugins]) => {
         const isCollapsed = !!collapsedPylons[pylonId];
+        const restartNeeded = plugins.some(
+          (p) => pluginStates[pluginKey(p.pylon_id, p.name)]?.updated,
+        );
         return (
           <Box key={pylonId} sx={styles.pylonGroup}>
             <Box sx={styles.pylonHeader}>
@@ -498,6 +488,14 @@ function AdvancedSection() {
                   >
                     Update all
                   </Button>
+                )}
+                {restartNeeded && (
+                  <Chip
+                    label="Restart needed"
+                    size="small"
+                    color="warning"
+                    sx={styles.updateChip}
+                  />
                 )}
                 <Button
                   size="small"
