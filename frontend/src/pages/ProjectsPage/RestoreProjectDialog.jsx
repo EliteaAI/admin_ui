@@ -128,6 +128,16 @@ function RestoreProjectDialog({ open, onClose, project }) {
   const summary = result?.result;
   const blockedByMismatch = isMismatch && !allowMismatch;
 
+  // A backup taken before a migration carries columns this project no longer
+  // has; the backend drops them and lists them per table
+  const droppedColumns = useMemo(
+    () =>
+      Object.entries(summary?.dropped_columns ?? {}).flatMap(([table, columns]) =>
+        columns.map((column) => `${table}.${column}`),
+      ),
+    [summary],
+  );
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Restore Project</DialogTitle>
@@ -290,19 +300,34 @@ function RestoreProjectDialog({ open, onClose, project }) {
               {summary.mode ? ` (${summary.mode})` : ""}
             </Box>
             {summary.statements !== undefined ? (
-              <Box component="div" sx={styles.summaryBody}>
-                {summary.statements} statements, {summary.total_rows} rows into{" "}
-                {summary.applied_tables?.length ?? 0} tables
-                {summary.truncated_tables?.length
-                  ? ` · truncated ${summary.truncated_tables.length}`
-                  : ""}
-                {summary.skipped_tables?.length
-                  ? ` · skipped ${summary.skipped_tables.join(", ")}`
-                  : ""}
-              </Box>
+              <>
+                <Box component="div" sx={styles.summaryBody}>
+                  {summary.statements} statements, {summary.total_rows} rows into{" "}
+                  {summary.applied_tables?.length ?? 0} tables
+                  {summary.truncated_tables?.length
+                    ? ` · truncated ${summary.truncated_tables.length}`
+                    : ""}
+                  {summary.skipped_tables?.length
+                    ? ` · skipped ${summary.skipped_tables.join(", ")}`
+                    : ""}
+                </Box>
+                {droppedColumns.length > 0 && (
+                  <Box component="div" sx={styles.summaryBody}>
+                    Columns missing in this project were dropped:{" "}
+                    {droppedColumns.join(", ")}
+                    {summary.dropped_values
+                      ? ` (${summary.dropped_values} values not restored)`
+                      : ""}
+                  </Box>
+                )}
+              </>
             ) : (
               <Box component="pre" sx={styles.output}>
-                {`exit code ${summary.return_code}, ${formatSize(summary.bytes_sent)} sent\n${summary.stderr || summary.stdout || ""}`.trim()}
+                {`exit code ${summary.return_code}, ${formatSize(summary.bytes_sent)} sent${
+                  summary.dropped_settings?.length
+                    ? `\ndropped settings unsupported by the server: ${summary.dropped_settings.join(", ")}`
+                    : ""
+                }\n${summary.stderr || summary.stdout || ""}`.trim()}
               </Box>
             )}
           </Alert>

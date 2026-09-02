@@ -81,8 +81,12 @@ function BackupProjectDialog({ open, onClose, project }) {
       <DialogTitle>Backup Project</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Download a SQL backup of project <strong>{project?.name}</strong>{" "}
-          (schema <code>p_{project?.id}</code>).
+          Download a copy of project <strong>{project?.name}</strong> (schema{" "}
+          <code>p_{project?.id}</code>) as a backup file, or restore it from a
+          previously downloaded backup. The backup covers agents, pipelines,
+          toolkits, MCP servers and skills, and only those entities are
+          restored. Credentials, tokens and other secrets are never included, so
+          they are neither exported nor restored.
         </Typography>
 
         {error && (
