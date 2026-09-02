@@ -47,8 +47,9 @@ export const budgetsApi = adminApi.injectEndpoints({
     }),
 
     userBudgetList: build.query({
-      query: ({ projectId }) => ({
+      query: ({ projectId, ...params }) => ({
         url: `/elitea_core/user_budgets/administration/${projectId}`,
+        params,
       }),
       providesTags: ["Budgets"],
     }),
