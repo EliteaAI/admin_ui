@@ -138,6 +138,16 @@ function RestoreProjectDialog({ open, onClose, project }) {
     [summary],
   );
 
+  // The reverse drift: this project requires a column the backup has no value
+  // for, so the backend restored it empty
+  const filledColumns = useMemo(
+    () =>
+      Object.entries(summary?.filled_columns ?? {}).flatMap(([table, columns]) =>
+        columns.map((column) => `${table}.${column}`),
+      ),
+    [summary],
+  );
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Restore Project</DialogTitle>
@@ -318,6 +328,12 @@ function RestoreProjectDialog({ open, onClose, project }) {
                     {summary.dropped_values
                       ? ` (${summary.dropped_values} values not restored)`
                       : ""}
+                  </Box>
+                )}
+                {filledColumns.length > 0 && (
+                  <Box component="div" sx={styles.summaryBody}>
+                    Columns this project requires were restored empty:{" "}
+                    {filledColumns.join(", ")}
                   </Box>
                 )}
               </>
