@@ -70,6 +70,7 @@ export const projectBackupApi = adminApi.injectEndpoints({
       query: ({
         projectId,
         file,
+        mode = "safe",
         tables = "",
         includeParents = false,
         truncate = false,
@@ -78,6 +79,7 @@ export const projectBackupApi = adminApi.injectEndpoints({
       }) => {
         const body = new FormData();
         body.append("file", file);
+        body.append("mode", mode);
         if (tables.trim()) {
           body.append("tables", tables.trim());
         }

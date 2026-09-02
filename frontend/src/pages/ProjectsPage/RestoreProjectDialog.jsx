@@ -18,15 +18,6 @@ import { useProjectRestoreMutation } from "@/api/projectBackupApi";
 import { useCheckPermission } from "@/hooks/useCheckPermission";
 import { PERMISSIONS } from "@/constants/permissions";
 
-const HEADER_SCAN_BYTES = 65536;
-const PG_DUMP_MARKERS = [
-  "-- PostgreSQL database dump",
-  "SET statement_timeout",
-  "pg_dump version",
-];
-const HEADER_MARKER = "-- ELITEA project backup";
-const HEADER_LINE_RE = /^--\s*(project_id|project_name|schema|mode|generated_at):\s*(.*?)\s*$/;
-
 const formatSize = (bytes) => {
   if (!bytes) return "0 B";
   const units = ["B", "KB", "MB", "GB"];
@@ -39,36 +30,13 @@ const formatSize = (bytes) => {
   return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
 };
 
-const inspectArtifact = (head) => {
-  const info = { kind: null };
-
-  if (PG_DUMP_MARKERS.some((marker) => head.includes(marker))) {
-    info.kind = "pg_dump";
-  } else if (head.includes(HEADER_MARKER) || head.toUpperCase().includes("INSERT INTO")) {
-    info.kind = "safe";
-  }
-
-  head.split("\n").forEach((line) => {
-    const match = HEADER_LINE_RE.exec(line.trim());
-    if (match && info[match[1]] === undefined) {
-      info[match[1]] = match[2];
-    }
-  });
-
-  if (info.project_id !== undefined) {
-    const parsed = Number.parseInt(info.project_id, 10);
-    if (!Number.isNaN(parsed)) info.project_id = parsed;
-  }
-
-  return info;
-};
-
 function RestoreProjectDialog({ open, onClose, project }) {
   const { hasPermission } = useCheckPermission();
   const inputRef = useRef(null);
 
   const [file, setFile] = useState(null);
   const [artifact, setArtifact] = useState(null);
+  const [fullMode, setFullMode] = useState(false);
   const [tables, setTables] = useState("");
   const [includeParents, setIncludeParents] = useState(true);
   const [truncate, setTruncate] = useState(false);
@@ -84,7 +52,8 @@ function RestoreProjectDialog({ open, onClose, project }) {
     [hasPermission],
   );
 
-  const isPgDump = artifact?.kind === "pg_dump";
+  // The backend recognizes the uploaded file and reports what it found in
+  // "artifact"; the dialog only picks the mode and reacts to that answer.
   const isMismatch =
     typeof artifact?.project_id === "number" &&
     project?.id != null &&
@@ -93,6 +62,7 @@ function RestoreProjectDialog({ open, onClose, project }) {
   const reset = useCallback(() => {
     setFile(null);
     setArtifact(null);
+    setFullMode(false);
     setTables("");
     setIncludeParents(true);
     setTruncate(false);
@@ -109,23 +79,12 @@ function RestoreProjectDialog({ open, onClose, project }) {
     onClose();
   }, [isLoading, reset, onClose]);
 
-  const handleFileChange = useCallback(async (event) => {
-    const selected = event.target.files?.[0] ?? null;
+  const handleFileChange = useCallback((event) => {
     setError("");
     setResult(null);
-    setFile(selected);
     setArtifact(null);
-    if (!selected) return;
-    try {
-      const head = await selected.slice(0, HEADER_SCAN_BYTES).text();
-      const info = inspectArtifact(head);
-      setArtifact(info);
-      if (!info.kind) {
-        setError("This file does not look like an ELITEA project backup.");
-      }
-    } catch {
-      setError("Could not read the selected file.");
-    }
+    setAllowMismatch(false);
+    setFile(event.target.files?.[0] ?? null);
   }, []);
 
   const handleSubmit = useCallback(async () => {
@@ -135,24 +94,30 @@ function RestoreProjectDialog({ open, onClose, project }) {
       const response = await restoreProject({
         projectId: project?.id,
         file,
-        tables: isPgDump ? "" : tables,
-        includeParents: !isPgDump && !!tables.trim() && includeParents,
+        mode: fullMode && canFull ? "full" : "safe",
+        tables: fullMode ? "" : tables,
+        includeParents: !fullMode && !!tables.trim() && includeParents,
         truncate,
         dryRun,
         allowProjectMismatch: allowMismatch,
       }).unwrap();
       setResult(response);
+      if (response?.artifact) setArtifact(response.artifact);
     } catch (err) {
       const message = err?.data?.error ?? err?.error ?? "Restore failed.";
       const detail = err?.data?.detail;
       setError(detail ? `${message}: ${detail}` : message);
+      // A project mismatch comes back as 409 with the artifact the backend read,
+      // so the confirmation checkbox below can be offered
+      if (err?.data?.artifact) setArtifact(err.data.artifact);
       if (err?.data?.result) setResult(err.data);
     }
   }, [
     restoreProject,
     project,
     file,
-    isPgDump,
+    fullMode,
+    canFull,
     tables,
     includeParents,
     truncate,
@@ -161,7 +126,6 @@ function RestoreProjectDialog({ open, onClose, project }) {
   ]);
 
   const summary = result?.result;
-  const blockedByPermission = isPgDump && !canFull;
   const blockedByMismatch = isMismatch && !allowMismatch;
 
   return (
@@ -194,43 +158,50 @@ function RestoreProjectDialog({ open, onClose, project }) {
           <input
             ref={inputRef}
             type="file"
-            accept=".sql,text/plain,application/sql"
+            accept=".enc,.sql,text/plain,application/sql,application/octet-stream"
             hidden
             onChange={handleFileChange}
           />
         </Box>
 
-        {artifact?.kind && (
-          <Alert
-            severity={isPgDump ? "warning" : "info"}
-            sx={{ mt: 2, mb: 1 }}
-          >
-            {isPgDump ? (
-              <>
-                Raw <code>pg_dump</code> artifact. It is piped to{" "}
-                <code>psql</code> as-is (DDL included) and cannot be restored
-                partially.
-              </>
-            ) : (
-              <>Safe backup (INSERT statements only, applied in one transaction).</>
-            )}
-            {artifact.project_name || artifact.project_id !== undefined ? (
-              <Box component="div" sx={styles.artifactMeta}>
-                source: {artifact.project_name ?? "-"}
-                {artifact.project_id !== undefined
-                  ? ` (project ${artifact.project_id})`
-                  : ""}
-                {artifact.generated_at ? ` · ${artifact.generated_at}` : ""}
-              </Box>
-            ) : null}
+        <Box sx={styles.options}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={fullMode}
+                onChange={(e) => setFullMode(e.target.checked)}
+                disabled={isLoading || !canFull}
+              />
+            }
+            label="Full restore (raw pg_dump piped to psql)"
+          />
+          {!canFull && (
+            <Typography variant="caption" color="text.secondary">
+              Requires the <code>projects.projects.restore.full</code>{" "}
+              permission. Without it only safe (redacted) backups can be
+              restored.
+            </Typography>
+          )}
+        </Box>
+
+        {fullMode && (
+          <Alert severity="warning" sx={{ mb: 1 }}>
+            The uploaded file is piped to <code>psql</code> as-is (DDL
+            included), cannot be restored partially, and is rejected if it is
+            not a raw <code>pg_dump</code>.
           </Alert>
         )}
 
-        {blockedByPermission && (
-          <Alert severity="error" sx={{ mb: 1 }}>
-            Restoring a raw <code>pg_dump</code> requires the{" "}
-            <code>projects.projects.restore.full</code> permission.
-          </Alert>
+        {artifact?.kind && (
+          <Box component="div" sx={styles.artifactMeta}>
+            {artifact.kind === "pg_dump" ? "raw pg_dump" : "redacted backup"}
+            {" · source: "}
+            {artifact.project_name ?? "-"}
+            {artifact.project_id !== undefined
+              ? ` (project ${artifact.project_id})`
+              : ""}
+            {artifact.generated_at ? ` · ${artifact.generated_at}` : ""}
+          </Box>
         )}
 
         {isMismatch && (
@@ -252,7 +223,7 @@ function RestoreProjectDialog({ open, onClose, project }) {
           </>
         )}
 
-        {!isPgDump && (
+        {!fullMode && (
           <TextField
             margin="dense"
             label="Tables (optional)"
@@ -265,7 +236,7 @@ function RestoreProjectDialog({ open, onClose, project }) {
           />
         )}
 
-        {!isPgDump && !!tables.trim() && (
+        {!fullMode && !!tables.trim() && (
           <FormControlLabel
             control={
               <Checkbox
@@ -294,14 +265,14 @@ function RestoreProjectDialog({ open, onClose, project }) {
               <Checkbox
                 checked={truncate}
                 onChange={(e) => setTruncate(e.target.checked)}
-                disabled={isLoading || isPgDump}
+                disabled={isLoading || fullMode}
               />
             }
             label="Empty target tables first (TRUNCATE ... CASCADE)"
           />
         </Box>
 
-        {truncate && !isPgDump && (
+        {truncate && !fullMode && (
           <Alert severity="warning" sx={{ mb: 1 }}>
             Existing rows in the affected tables are deleted before the backup is
             applied, and <code>CASCADE</code> removes rows referencing them.
@@ -345,13 +316,7 @@ function RestoreProjectDialog({ open, onClose, project }) {
           onClick={handleSubmit}
           variant="contained"
           color={dryRun ? "primary" : "warning"}
-          disabled={
-            isLoading ||
-            !file ||
-            !artifact?.kind ||
-            blockedByPermission ||
-            blockedByMismatch
-          }
+          disabled={isLoading || !file || blockedByMismatch}
         >
           {isLoading ? "Restoring..." : dryRun ? "Run dry run" : "Restore"}
         </Button>
