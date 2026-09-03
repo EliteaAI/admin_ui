@@ -9,7 +9,6 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { downloadProjectBackup } from "@/api/projectBackupApi";
@@ -32,7 +31,6 @@ function BackupProjectDialog({ open, onClose, project }) {
   const { hasPermission } = useCheckPermission();
 
   const [fullMode, setFullMode] = useState(false);
-  const [excludeTables, setExcludeTables] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -44,7 +42,6 @@ function BackupProjectDialog({ open, onClose, project }) {
 
   const reset = useCallback(() => {
     setFullMode(false);
-    setExcludeTables("");
     setIsLoading(false);
     setError("");
     setSuccess("");
@@ -64,7 +61,6 @@ function BackupProjectDialog({ open, onClose, project }) {
       const result = await downloadProjectBackup({
         projectId: project?.id,
         mode: fullMode && canFull ? "full" : "safe",
-        excludeTables: fullMode ? "" : excludeTables,
       });
       setSuccess(
         `Downloaded ${result.filename} (${formatSize(result.size)}).`,
@@ -74,7 +70,7 @@ function BackupProjectDialog({ open, onClose, project }) {
     } finally {
       setIsLoading(false);
     }
-  }, [project, fullMode, canFull, excludeTables]);
+  }, [project, fullMode, canFull]);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -134,19 +130,6 @@ function BackupProjectDialog({ open, onClose, project }) {
             It includes DDL and all stored values, with all plaintext
             credentials, no redaction. Handle and store the file as a secret.
           </Alert>
-        )}
-
-        {!fullMode && (
-          <TextField
-            margin="dense"
-            label="Exclude tables (optional)"
-            fullWidth
-            value={excludeTables}
-            onChange={(e) => setExcludeTables(e.target.value)}
-            disabled={isLoading}
-            placeholder="table_one, table_two"
-            helperText="Enter tables to exclude from the backup, separate them with commas."
-          />
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
