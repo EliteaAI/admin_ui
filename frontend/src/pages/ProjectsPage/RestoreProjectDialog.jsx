@@ -207,8 +207,8 @@ function RestoreProjectDialog({ open, onClose, project }) {
         {fullMode && (
           <Alert severity="warning" sx={{ mb: 1 }}>
             The uploaded file is piped to <code>psql</code> as-is (DDL
-            included), cannot be restored partially, and is rejected if it is
-            not a raw <code>pg_dump</code>.
+            included), cannot be partially restored, and will be rejected if
+            it is not a raw <code>pg_dump</code>.
           </Alert>
         )}
 

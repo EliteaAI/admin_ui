@@ -82,11 +82,11 @@ function BackupProjectDialog({ open, onClose, project }) {
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Download a copy of project <strong>{project?.name}</strong> (schema{" "}
-          <code>p_{project?.id}</code>) as a backup file, or restore it from a
-          previously downloaded backup. The backup covers agents, pipelines,
-          toolkits, MCP servers and skills, and only those entities are
-          restored. Credentials, tokens and other secrets are never included, so
-          they are neither exported nor restored.
+          <code>p_{project?.id}</code>) as a backup file or restore it from a
+          previously downloaded backup. The backup includes agents, pipelines,
+          toolkits, MCP servers and skills. Credentials, tokens and other
+          secrets will be excluded from this backup file and cannot be
+          restored.
         </Typography>
 
         {error && (
@@ -106,7 +106,7 @@ function BackupProjectDialog({ open, onClose, project }) {
             conversation context are skipped, and credential-bearing columns and
             JSON keys are redacted. Vault references{" "}
             <code>{"{{secret.NAME}}"}</code> are kept, but the secret values are
-            not part of the backup.
+            excluded from the backup.
           </Alert>
         )}
 
@@ -131,9 +131,8 @@ function BackupProjectDialog({ open, onClose, project }) {
         {fullMode && (
           <Alert severity="warning" sx={{ mt: 1, mb: 2 }}>
             The full backup is a plain <code>pg_dump</code> of the schema as-is:
-            it includes DDL and every stored value, <strong>including any
-            plaintext credentials</strong>, with no redaction. Handle and store
-            the file as a secret.
+            It includes DDL and all stored values, with all plaintext
+            credentials, no redaction. Handle and store the file as a secret.
           </Alert>
         )}
 
@@ -146,7 +145,7 @@ function BackupProjectDialog({ open, onClose, project }) {
             onChange={(e) => setExcludeTables(e.target.value)}
             disabled={isLoading}
             placeholder="table_one, table_two"
-            helperText="Comma-separated extra tables to skip."
+            helperText="Enter tables to exclude from the backup, separate them with commas."
           />
         )}
       </DialogContent>
