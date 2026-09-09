@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -35,14 +35,18 @@ import {
 } from "@/api/platformDimensionsApi";
 
 import PlatformDimensionDialog from "./PlatformDimensionDialog";
-import { ENGINE_LABELS, POLARITY_LABELS, SCALE_TYPE_LABELS } from "./constants";
+import {
+  EVALUATOR_LABELS,
+  IMPORTANCE_LABELS,
+  POLARITY_LABELS,
+} from "./constants";
 
 const COLUMNS = [
   { field: "name", label: "Name", width: "1.2fr", sortable: false },
   { field: "scale", label: "Scale", width: "10rem", sortable: false },
   {
     field: "allowed_engines",
-    label: "Scored by",
+    label: "Evaluator",
     width: "9rem",
     sortable: false,
     hideBelow: 1000,
@@ -56,8 +60,8 @@ const COLUMNS = [
   },
   {
     field: "default_weight",
-    label: "Weight",
-    width: "6rem",
+    label: "Importance",
+    width: "7rem",
     sortable: false,
     hideBelow: 1300,
   },
@@ -65,8 +69,16 @@ const COLUMNS = [
   { field: "actions", label: "Actions", width: "9rem", sortable: false },
 ];
 
-// Sync is update-only, so a project that never attached the dimension is absent from both
-// lists — silence about it is correct, not a missed write.
+const IMPORTANCE_MAP = { 1: "low", 2: "medium", 3: "high", 4: "critical" };
+
+const getScaleLabel = (row) => {
+  const { scale_type, scale_min, scale_max } = row;
+  if (scale_type === "binary") return "Pass/Fail";
+  if (scale_type === "ordinal" && scale_min === 1 && scale_max === 5) return "Rating (1-5)";
+  if (scale_type === "continuous" && scale_min === 1 && scale_max === 100) return "Score (1-100)";
+  return `Custom (${scale_min}–${scale_max})`;
+};
+
 const describeSync = (result) => {
   const synced = result?.synced_projects ?? 0;
   const failures = result?.failures ?? [];
@@ -80,7 +92,7 @@ const describeSync = (result) => {
     .join(", ")}.`;
 };
 
-export default function PlatformDimensionsPage() {
+const PlatformDimensionsPage = memo(() => {
   usePageTitle("Platform dimensions");
 
   const { hasPermission } = useCheckPermission();
@@ -191,28 +203,48 @@ export default function PlatformDimensionsPage() {
     setDialogOpen(true);
   }, []);
 
+  const closeDialog = useCallback(() => {
+    setDialogOpen(false);
+  }, []);
+
+  const closeSnackbar = useCallback(() => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  }, []);
+
   const renderCell = useCallback((column, value, row) => {
     if (column.field === "scale") {
       return (
-        <Typography variant="bodyMedium" sx={styles.cellText}>
-          {`${SCALE_TYPE_LABELS[row.scale_type] ?? row.scale_type} ${row.scale_min}–${row.scale_max}`}
+        <Typography variant="bodyMedium" sx={platformDimensionsPageStyles.cellText}>
+          {getScaleLabel(row)}
         </Typography>
       );
     }
 
     if (column.field === "allowed_engines") {
       return (
-        <Typography variant="bodyMedium" sx={styles.cellText}>
+        <Typography variant="bodyMedium" sx={platformDimensionsPageStyles.cellText}>
           {(value ?? [])
-            .map((engine) => ENGINE_LABELS[engine] ?? engine)
+            .map((engine) => EVALUATOR_LABELS[engine] ?? engine)
             .join(" · ")}
+        </Typography>
+      );
+    }
+
+    if (column.field === "default_weight") {
+      const importanceKey = IMPORTANCE_MAP[value] ?? null;
+      const importanceLabel = importanceKey
+        ? IMPORTANCE_LABELS[importanceKey]
+        : value ?? "-";
+      return (
+        <Typography variant="bodyMedium" sx={platformDimensionsPageStyles.cellText}>
+          {importanceLabel}
         </Typography>
       );
     }
 
     if (column.field === "polarity") {
       return (
-        <Typography variant="bodyMedium" sx={styles.cellText}>
+        <Typography variant="bodyMedium" sx={platformDimensionsPageStyles.cellText}>
           {POLARITY_LABELS[value] ?? value}
         </Typography>
       );
@@ -232,7 +264,7 @@ export default function PlatformDimensionsPage() {
     if (column.field === "name") {
       return (
         <Tooltip title={row.description || ""} placement="top">
-          <Typography variant="bodyMedium" sx={styles.cellText}>
+          <Typography variant="bodyMedium" sx={platformDimensionsPageStyles.cellText}>
             {value || "-"}
           </Typography>
         </Tooltip>
@@ -240,7 +272,7 @@ export default function PlatformDimensionsPage() {
     }
 
     return (
-      <Typography variant="bodyMedium" sx={styles.cellText}>
+      <Typography variant="bodyMedium" sx={platformDimensionsPageStyles.cellText}>
         {value ?? "-"}
       </Typography>
     );
@@ -248,9 +280,9 @@ export default function PlatformDimensionsPage() {
 
   const renderActions = useCallback(
     (row) => (
-      <Box sx={styles.actionsRow}>
+      <Box sx={platformDimensionsPageStyles.actionsRow}>
         <Tooltip title={canEdit ? "Edit dimension" : "No permission to edit"}>
-          <span>
+          <Box component="span">
             <IconButton
               size="small"
               disabled={!canEdit}
@@ -258,7 +290,7 @@ export default function PlatformDimensionsPage() {
             >
               <EditOutlined fontSize="small" />
             </IconButton>
-          </span>
+          </Box>
         </Tooltip>
         <Tooltip
           title={
@@ -267,7 +299,7 @@ export default function PlatformDimensionsPage() {
               : "No permission to sync"
           }
         >
-          <span>
+          <Box component="span">
             <IconButton
               size="small"
               disabled={!canEdit || isSyncing}
@@ -275,7 +307,7 @@ export default function PlatformDimensionsPage() {
             >
               <SyncOutlined fontSize="small" />
             </IconButton>
-          </span>
+          </Box>
         </Tooltip>
         <Tooltip
           title={
@@ -286,7 +318,7 @@ export default function PlatformDimensionsPage() {
                 : "Activate"
           }
         >
-          <span>
+          <Box component="span">
             <IconButton
               size="small"
               disabled={!canDeactivate}
@@ -298,21 +330,24 @@ export default function PlatformDimensionsPage() {
                 <CheckCircleOutlined fontSize="small" />
               )}
             </IconButton>
-          </span>
+          </Box>
         </Tooltip>
       </Box>
     ),
     [canEdit, canDeactivate, isSyncing, openEdit, handleSync, handleToggleActive],
   );
 
-  const headerControls = (
-    <Tooltip title="Reload">
-      <span>
-        <IconButton size="small" onClick={refetch} disabled={isFetching}>
-          <RefreshOutlined fontSize="small" />
-        </IconButton>
-      </span>
-    </Tooltip>
+  const headerControls = useMemo(
+    () => (
+      <Tooltip title="Reload">
+        <Box component="span">
+          <IconButton size="small" onClick={refetch} disabled={isFetching}>
+            <RefreshOutlined fontSize="small" />
+          </IconButton>
+        </Box>
+      </Tooltip>
+    ),
+    [refetch, isFetching],
   );
 
   return (
@@ -333,9 +368,9 @@ export default function PlatformDimensionsPage() {
           addButtonDisabled={!canCreate}
         />
 
-        <Box sx={styles.tableContainer}>
+        <Box sx={platformDimensionsPageStyles.tableContainer}>
           {isError ? (
-            <Box sx={styles.errorContainer}>
+            <Box sx={platformDimensionsPageStyles.errorContainer}>
               Failed to load platform dimensions.
             </Box>
           ) : (
@@ -374,18 +409,18 @@ export default function PlatformDimensionsPage() {
         open={dialogOpen}
         dimension={editTarget}
         isSaving={isCreating || isUpdating}
-        onClose={() => setDialogOpen(false)}
+        onClose={closeDialog}
         onSave={handleSave}
       />
 
       <Snackbar
         open={snackbar.open}
         autoHideDuration={snackbar.severity === "success" ? 5000 : 10000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        onClose={closeSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          onClose={closeSnackbar}
           severity={snackbar.severity}
           variant="filled"
           sx={{ width: "100%" }}
@@ -395,9 +430,12 @@ export default function PlatformDimensionsPage() {
       </Snackbar>
     </>
   );
-}
+});
 
-const styles = {
+PlatformDimensionsPage.displayName = "PlatformDimensionsPage";
+
+/** @type {MuiSx} */
+const platformDimensionsPageStyles = {
   tableContainer: {
     flexGrow: 1,
     minHeight: 0,
@@ -418,3 +456,5 @@ const styles = {
     gap: "0.25rem",
   },
 };
+
+export default PlatformDimensionsPage;

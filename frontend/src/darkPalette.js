@@ -34,6 +34,7 @@ const blue24 = "rgba(106, 232, 250, 0.24)";
 const blue30 = "rgba(106, 232, 250, 0.30)";
 const blue40 = "rgba(41, 184, 245, 0.40)";
 const skyBlue20 = "rgba(41, 184, 245, 0.20)";
+const blueFill08 = "rgba(41, 184, 245, 0.08)";
 export const darkBlue = "#006DD1";
 const darkBlue40 = "#29B8F566";
 const grey500 = "#ABB3B9";
@@ -45,6 +46,7 @@ const red15 = "rgba(215, 22, 22, 0.15)";
 const red20 = "rgba(215, 22, 22, 0.20)";
 const red40 = "rgba(215, 22, 22, 0.4)";
 const lightRed = "rgba(255, 223, 223, 1)";
+const lightBlue = "#d7f1ff";
 const primaryHover = "#83EFFF";
 const primaryPressed = "rgba(42, 189, 210, 1)";
 const blue = "rgba(41, 184, 245, 1)";
@@ -87,6 +89,11 @@ const darkPalette = {
     secondary: darkBlue40,
   },
   background: {
+    infoBanner: {
+      paper: blueFill08,
+      border: darkBlue40,
+      text: lightBlue,
+    },
     info: blue8,
     default: gray60,
     eliteaDefault: gray60,

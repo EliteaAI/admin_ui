@@ -7,11 +7,13 @@ const skyBlue20 = " rgba(80, 161, 255, 0.2)";
 const skyBlue40 = " rgba(80, 161, 255, 0.4)";
 const light00 = "#5B5E69";
 const gray60 = "#0E131D";
+const darkBlue40 = "#29B8F566";
 const darkMagenta16 = "rgba(245, 81, 249, 0.16)";
 const darkMagenta24 = "rgba(245, 81, 249, 0.24)";
 const grey500 = "#ABB3B9";
 const dangerRed = "#D71616";
 const hoverRed = "#E74444";
+const lightBlue = "#d7f1ff";
 const pressedRed = "#C51111";
 const red8 = "rgba(215, 22, 22, 0.08)";
 const red15 = "rgba(215, 22, 22, 0.15)";
@@ -88,6 +90,11 @@ const lightPalette = {
     secondary: blue02,
   },
   background: {
+    infoBanner: {
+      paper: blueFill08,
+      border: darkBlue40,
+      text: lightBlue,
+    },
     info: blue8,
     default: blue01,
     eliteaDefault: gradient,
