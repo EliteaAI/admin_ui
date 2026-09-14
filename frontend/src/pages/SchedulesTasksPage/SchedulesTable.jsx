@@ -2,11 +2,7 @@ import { memo, useCallback, useMemo, useState } from "react";
 
 import { Link } from "react-router-dom";
 
-import Box from "@mui/material/Box";
-import Input from "@mui/material/Input";
-import Switch from "@mui/material/Switch";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
+import { Box, Input, Switch, Tooltip, Typography } from "@mui/material";
 import LockOutlined from "@mui/icons-material/LockOutlined";
 import cronstrue from "cronstrue";
 
@@ -33,12 +29,12 @@ const CONFIG_SECTION_TITLES = {
   runtime: "Runtime",
 };
 
-function describeConfigLocation(managedBy) {
+const describeConfigLocation = (managedBy) => {
   const title = CONFIG_SECTION_TITLES[managedBy?.section];
   return title
     ? `Managed in Configuration \u2192 ${title}`
     : "Managed by the platform configuration";
-}
+};
 
 function describeCron(expr) {
   try {

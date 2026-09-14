@@ -1,10 +1,6 @@
 import { memo, useCallback, useMemo, useState } from "react";
 
-import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
-import Skeleton from "@mui/material/Skeleton";
-import Snackbar from "@mui/material/Snackbar";
-import Typography from "@mui/material/Typography";
+import { Alert, Box, Skeleton, Snackbar, Typography } from "@mui/material";
 
 import {
   useScheduleListQuery,
@@ -15,7 +11,7 @@ import { useTableSort } from "@/hooks/useTableSort";
 import SchedulesTable from "./SchedulesTable";
 import ScheduleHistoryDrawer from "./ScheduleHistoryDrawer";
 
-function describeUpdateError(err) {
+const describeUpdateError = (err) => {
   const data = err?.data;
   if (Array.isArray(data)) {
     const first = data.find((entry) => entry?.msg);
@@ -25,7 +21,7 @@ function describeUpdateError(err) {
     }
   }
   return data?.error || err?.error || "Failed to update the schedule";
-}
+};
 
 const SchedulesTab = memo((props) => {
   const { search, readOnly } = props;

@@ -187,6 +187,17 @@ function ConfigurationPage() {
       });
   }, [valuesData, activeFields]);
 
+  const invalidFieldsMessage = useMemo(
+    () =>
+      invalidFields
+        .map(
+          (field) =>
+            `${field.title} holds an unusable value (${JSON.stringify(field.storedValue)})`,
+        )
+        .join("; "),
+    [invalidFields],
+  );
+
   const canSave = isDirty || invalidFields.length > 0;
 
   // Set dynamic page title based on current section
@@ -428,12 +439,7 @@ function ConfigurationPage() {
             <Box sx={styles.actionBar}>
               {invalidFields.length > 0 && (
                 <Alert severity="warning" sx={styles.invalidAlert}>
-                  {invalidFields
-                    .map(
-                      (field) =>
-                        `${field.title} holds an unusable value (${JSON.stringify(field.storedValue)})`,
-                    )
-                    .join("; ")}
+                  {invalidFieldsMessage}
                   . The platform is running its default instead; save to
                   correct what is stored. A field hidden by another setting is
                   still corrected.
