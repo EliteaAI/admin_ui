@@ -1,11 +1,18 @@
 import { memo, useCallback, useMemo, useState } from "react";
 
+import { Link } from "react-router-dom";
+
 import Box from "@mui/material/Box";
 import Input from "@mui/material/Input";
 import Switch from "@mui/material/Switch";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import LockOutlined from "@mui/icons-material/LockOutlined";
 import cronstrue from "cronstrue";
 
+import { RouteDefinitions } from "@/routes";
+import { PERMISSIONS } from "@/constants/permissions";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
 import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import {
   GridTableContainer,
@@ -21,6 +28,17 @@ const SCHEDULE_COLUMNS = [
   { field: "rpc_func", label: "Function", width: "1fr", sortable: true },
   { field: "last_run", label: "Last Run", width: "12rem", sortable: true },
 ];
+
+const CONFIG_SECTION_TITLES = {
+  runtime: "Runtime",
+};
+
+function describeConfigLocation(managedBy) {
+  const title = CONFIG_SECTION_TITLES[managedBy?.section];
+  return title
+    ? `Managed in Configuration \u2192 ${title}`
+    : "Managed by the platform configuration";
+}
 
 function describeCron(expr) {
   try {
@@ -39,6 +57,11 @@ const SchedulesTable = memo((props) => {
     onCronUpdate,
     onScheduleClick,
   } = props;
+
+  const { hasPermission } = useCheckPermission();
+  // The Configuration section's schema and value APIs both require
+  // runtime.plugins specifically, so anything less lands on a page that 403s.
+  const canOpenConfiguration = hasPermission(PERMISSIONS.runtime.plugins);
 
   const [editingCronId, setEditingCronId] = useState(null);
   const [cronDraft, setCronDraft] = useState("");
@@ -81,30 +104,58 @@ const SchedulesTable = memo((props) => {
     (column, value, row) => {
       if (column.field === "name") {
         return (
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            onClick={() => onScheduleClick(row)}
-            sx={styles.nameText}
-          >
-            {value}
-          </Typography>
+          <Box sx={styles.nameCell}>
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+              onClick={() => onScheduleClick(row)}
+              sx={styles.nameText}
+            >
+              {value}
+            </Typography>
+            {row.managed_by && (
+              <Tooltip title={describeConfigLocation(row.managed_by)}>
+                {/* Only a section we can route to and open becomes a link;
+                    otherwise the row still locks, it just has nowhere to go. */}
+                {canOpenConfiguration &&
+                CONFIG_SECTION_TITLES[row.managed_by.section] ? (
+                  <Link
+                    to={`${RouteDefinitions.Configuration}#${row.managed_by.section}`}
+                    aria-label={describeConfigLocation(row.managed_by)}
+                    style={styles.managedLink}
+                  >
+                    <LockOutlined sx={styles.managedIcon} />
+                  </Link>
+                ) : (
+                  <LockOutlined sx={styles.managedIcon} />
+                )}
+              </Tooltip>
+            )}
+          </Box>
         );
       }
 
       if (column.field === "active") {
-        return (
+        const toggleable = onToggleActive && !row.managed_by;
+        const control = (
           <Switch
             size="small"
             checked={!!value}
-            onChange={onToggleActive ? () => onToggleActive(row) : undefined}
-            disabled={!onToggleActive}
+            onChange={toggleable ? () => onToggleActive(row) : undefined}
+            disabled={!toggleable}
           />
+        );
+        if (!row.managed_by) return control;
+        return (
+          <Tooltip title={describeConfigLocation(row.managed_by)}>
+            <span>{control}</span>
+          </Tooltip>
         );
       }
 
       if (column.field === "cron") {
-        if (onCronUpdate && editingCronId === row.id) {
+        const editable = onCronUpdate && !row.managed_by;
+        if (editable && editingCronId === row.id) {
           return (
             <Input
               autoFocus
@@ -120,8 +171,8 @@ const SchedulesTable = memo((props) => {
         const desc = describeCron(value);
         return (
           <Box
-            onClick={onCronUpdate ? () => handleCronClick(row) : undefined}
-            sx={onCronUpdate ? styles.cronCell : styles.cronCellReadOnly}
+            onClick={editable ? () => handleCronClick(row) : undefined}
+            sx={editable ? styles.cronCell : styles.cronCellReadOnly}
           >
             <Typography
               variant="bodyMedium"
@@ -181,6 +232,7 @@ const SchedulesTable = memo((props) => {
       );
     },
     [
+      canOpenConfiguration,
       onToggleActive,
       onScheduleClick,
       editingCronId,
@@ -239,6 +291,21 @@ const styles = {
     width: "100%",
     display: "flex",
     flexDirection: "column",
+  },
+  nameCell: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.375rem",
+    overflow: "hidden",
+  },
+  managedLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    color: "inherit",
+  },
+  managedIcon: {
+    fontSize: "0.875rem",
+    opacity: 0.6,
   },
   cellText: {
     overflow: "hidden",

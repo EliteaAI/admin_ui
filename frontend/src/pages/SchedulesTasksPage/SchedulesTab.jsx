@@ -1,7 +1,9 @@
 import { memo, useCallback, useMemo, useState } from "react";
 
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
+import Snackbar from "@mui/material/Snackbar";
 import Typography from "@mui/material/Typography";
 
 import {
@@ -13,6 +15,20 @@ import { useTableSort } from "@/hooks/useTableSort";
 import SchedulesTable from "./SchedulesTable";
 import ScheduleHistoryDrawer from "./ScheduleHistoryDrawer";
 
+// A rejected field comes back as pydantic's raw error list, so the reason
+// lives in the first entry rather than the `error` key the API otherwise uses.
+function describeUpdateError(err) {
+  const data = err?.data;
+  if (Array.isArray(data)) {
+    const first = data.find((entry) => entry?.msg);
+    if (first) {
+      const field = first.loc?.[first.loc.length - 1];
+      return field ? `${field}: ${first.msg}` : first.msg;
+    }
+  }
+  return data?.error || err?.error || "Failed to update the schedule";
+}
+
 const SchedulesTab = memo((props) => {
   const { search, readOnly } = props;
 
@@ -21,6 +37,7 @@ const SchedulesTab = memo((props) => {
   });
   const [updateSchedule] = useScheduleUpdateMutation();
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [error, setError] = useState("");
 
   const { sortConfig, handleSort, sortData } = useTableSort({
     defaultField: "name",
@@ -43,21 +60,34 @@ const SchedulesTab = memo((props) => {
     [sortData, filteredRows],
   );
 
-  const handleToggleActive = useCallback(
-    (schedule) => {
-      updateSchedule({ id: schedule.id, active: !schedule.active });
+  const applyUpdate = useCallback(
+    async (body) => {
+      try {
+        await updateSchedule(body).unwrap();
+      } catch (err) {
+        setError(describeUpdateError(err));
+      }
     },
     [updateSchedule],
+  );
+
+  const handleToggleActive = useCallback(
+    (schedule) => {
+      applyUpdate({ id: schedule.id, active: !schedule.active });
+    },
+    [applyUpdate],
   );
 
   const handleCronUpdate = useCallback(
     (schedule, newCron) => {
       if (newCron && newCron !== schedule.cron) {
-        updateSchedule({ id: schedule.id, cron: newCron });
+        applyUpdate({ id: schedule.id, cron: newCron });
       }
     },
-    [updateSchedule],
+    [applyUpdate],
   );
+
+  const handleErrorClose = useCallback(() => setError(""), []);
 
   const handleScheduleClick = useCallback((schedule) => {
     setSelectedSchedule(schedule);
@@ -112,6 +142,9 @@ const SchedulesTab = memo((props) => {
           <br />
           Click the cron expression to edit it inline.
           <br />
+          Schedules marked with a lock are configured in the Admin Portal
+          configuration and are read-only here.
+          <br />
           Click a schedule name to view its execution history.
         </Typography>
       </Box>
@@ -128,6 +161,21 @@ const SchedulesTab = memo((props) => {
         onClose={handleDrawerClose}
         schedule={selectedSchedule}
       />
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={handleErrorClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleErrorClose}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 });

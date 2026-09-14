@@ -170,6 +170,31 @@ function ConfigurationPage() {
   const activeFields = activeSection_?.fields || [];
   const activeSectionDescription = activeSection_?.description || "";
 
+  // Fields whose stored value is unusable: the platform is already running the
+  // default, so the form is not dirty and Save would stay disabled -- leaving
+  // the bad value in place with nothing on screen to show for it.
+  const invalidFields = useMemo(() => {
+    const meta = valuesData?.fields_meta || {};
+    return Object.entries(meta)
+      .filter(([, entry]) => entry?.value_invalid)
+      .map(([key, entry]) => {
+        // Both sides carry the ::pylon_id suffix when more than one pylon
+        // contributes the same field, so match as-is; _original_key covers a
+        // field whose bare name is what the schema reports.
+        const field = activeFields.find(
+          (candidate) =>
+            candidate.key === key || candidate._original_key === key,
+        );
+        return {
+          key,
+          storedValue: entry.stored_value,
+          title: field?.title || key.split("::")[0],
+        };
+      });
+  }, [valuesData, activeFields]);
+
+  const canSave = isDirty || invalidFields.length > 0;
+
   // Set dynamic page title based on current section
   const pageTitle = useMemo(() => {
     if (activeSection_?.title) return `Configuration: ${activeSection_.title}`;
@@ -407,6 +432,19 @@ function ConfigurationPage() {
             activeSection,
           ) && (
             <Box sx={styles.actionBar}>
+              {invalidFields.length > 0 && (
+                <Alert severity="warning" sx={styles.invalidAlert}>
+                  {invalidFields
+                    .map(
+                      (field) =>
+                        `${field.title} holds an unusable value (${JSON.stringify(field.storedValue)})`,
+                    )
+                    .join("; ")}
+                  . The platform is running its default instead; save to
+                  correct what is stored. A field hidden by another setting is
+                  still corrected.
+                </Alert>
+              )}
               <Box sx={styles.actionButtons}>
                 <Button
                   size="small"
@@ -421,7 +459,7 @@ function ConfigurationPage() {
                   size="small"
                   variant="contained"
                   onClick={handleSave}
-                  disabled={!isDirty || saving}
+                  disabled={!canSave || saving}
                   sx={styles.saveButton}
                 >
                   {saving ? "Saving..." : "Save"}
@@ -539,6 +577,10 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
+  },
+  invalidAlert: {
+    marginBottom: "0.5rem",
+    fontSize: "0.8125rem",
   },
   actionBar: ({ palette }) => ({
     borderTop: `1px solid ${palette.border.table}`,
