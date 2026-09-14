@@ -59,8 +59,6 @@ const SchedulesTable = memo((props) => {
   } = props;
 
   const { hasPermission } = useCheckPermission();
-  // The Configuration section's schema and value APIs both require
-  // runtime.plugins specifically, so anything less lands on a page that 403s.
   const canOpenConfiguration = hasPermission(PERMISSIONS.runtime.plugins);
 
   const [editingCronId, setEditingCronId] = useState(null);
@@ -115,8 +113,6 @@ const SchedulesTable = memo((props) => {
             </Typography>
             {row.managed_by && (
               <Tooltip title={describeConfigLocation(row.managed_by)}>
-                {/* Only a section we can route to and open becomes a link;
-                    otherwise the row still locks, it just has nowhere to go. */}
                 {canOpenConfiguration &&
                 CONFIG_SECTION_TITLES[row.managed_by.section] ? (
                   <Link

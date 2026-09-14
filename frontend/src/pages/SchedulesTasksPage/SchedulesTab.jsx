@@ -15,8 +15,6 @@ import { useTableSort } from "@/hooks/useTableSort";
 import SchedulesTable from "./SchedulesTable";
 import ScheduleHistoryDrawer from "./ScheduleHistoryDrawer";
 
-// A rejected field comes back as pydantic's raw error list, so the reason
-// lives in the first entry rather than the `error` key the API otherwise uses.
 function describeUpdateError(err) {
   const data = err?.data;
   if (Array.isArray(data)) {

@@ -170,17 +170,11 @@ function ConfigurationPage() {
   const activeFields = activeSection_?.fields || [];
   const activeSectionDescription = activeSection_?.description || "";
 
-  // Fields whose stored value is unusable: the platform is already running the
-  // default, so the form is not dirty and Save would stay disabled -- leaving
-  // the bad value in place with nothing on screen to show for it.
   const invalidFields = useMemo(() => {
     const meta = valuesData?.fields_meta || {};
     return Object.entries(meta)
       .filter(([, entry]) => entry?.value_invalid)
       .map(([key, entry]) => {
-        // Both sides carry the ::pylon_id suffix when more than one pylon
-        // contributes the same field, so match as-is; _original_key covers a
-        // field whose bare name is what the schema reports.
         const field = activeFields.find(
           (candidate) =>
             candidate.key === key || candidate._original_key === key,
