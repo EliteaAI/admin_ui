@@ -46,17 +46,17 @@ const DEFAULT_LIMIT_FIELDS = [
 
 const WARNING_THRESHOLD_FIELDS = [
   {
-    key: "cost_budgets_project_warning_pct",
+    key: "usage_project_warning_pct",
     title: "Team Project Budget Warning Threshold",
     hint: "Show a usage alert when a team project's spend reaches this percentage of its budget limit.",
   },
   {
-    key: "cost_budgets_personal_project_warning_pct",
+    key: "usage_personal_project_warning_pct",
     title: "Personal Project Budget Warning Threshold",
     hint: "Show a usage alert when a user's own project spend reaches this percentage of its budget limit.",
   },
   {
-    key: "cost_budgets_user_warning_pct",
+    key: "usage_user_warning_pct",
     title: "Default Per-Member Budget Warning Threshold",
     hint: "Show a usage alert when a member's spend inside a team project reaches this percentage of their own budget limit.",
   },
@@ -78,7 +78,7 @@ const warningPctError = (value) => {
 const CostBudgets = memo((props) => {
   const { values, onChange, onValidityChange } = props;
 
-  const mode = values?.cost_budgets_mode || "off";
+  const mode = values?.usage_mode || "off";
   const enforcing = mode === "enforce";
   const budgetsOn = mode !== "off";
   const defaultsEnabled = !!values?.cost_budgets_defaults_enabled;
@@ -87,7 +87,7 @@ const CostBudgets = memo((props) => {
     MODE_OPTIONS.find((o) => o.value === mode) || MODE_OPTIONS[0];
 
   const handleModeChange = useCallback(
-    (e) => onChange("cost_budgets_mode", e.target.value),
+    (e) => onChange("usage_mode", e.target.value),
     [onChange],
   );
 
