@@ -1,3 +1,4 @@
+import AutoRoutingSettings from "@/components/SchemaForm/AutoRoutingSettings";
 import { useCallback, useEffect, useMemo, memo, useRef, useState } from "react";
 import {
   Alert,
@@ -45,6 +46,13 @@ import {
 // admin_schema.json under that namespace shows up here automatically — no key list
 // to maintain. Sections with their own backend section use pathPrefix: null.
 const FEATURES_SECTIONS = [
+  {
+    id: "auto_routing",
+    title: "Auto Model Selection",
+    icon: BoltIcon,
+    backendSectionId: null,
+    pathPrefix: null,
+  },
   {
     id: "mcp_configuration",
     title: "MCP Configuration",
@@ -132,7 +140,7 @@ const FEATURES_SECTIONS = [
 ];
 
 // Sections that own their save flow and so hide the shared action bar
-const SELF_SAVING_SECTIONS = ["surveys", "model_prices_source", "custom_theme"];
+const SELF_SAVING_SECTIONS = ["auto_routing", "surveys", "model_prices_source", "custom_theme"];
 
 const FeaturesPage = memo(() => {
   const [activeSection, setActiveSection] = useState(
@@ -323,6 +331,8 @@ const FeaturesPage = memo(() => {
       );
 
     switch (activeSection) {
+      case "auto_routing":
+        return <AutoRoutingSettings />;
       case "surveys":
         return <SurveysSection addRef={addSurveyRef} />;
       case "model_prices_source":
