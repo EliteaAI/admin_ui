@@ -1,22 +1,27 @@
 import { useCallback, useEffect, useMemo, memo, useRef, useState } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import CircularProgress from "@mui/material/CircularProgress";
-import ExtensionIcon from "@mui/icons-material/ExtensionOutlined";
-import PublishIcon from "@mui/icons-material/PublishOutlined";
-import BoltIcon from "@mui/icons-material/BoltOutlined";
-import MenuBookIcon from "@mui/icons-material/MenuBookOutlined";
-import SupportAgentIcon from "@mui/icons-material/SupportAgentOutlined";
-import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
-import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
-import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
-import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
-import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
-import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Snackbar,
+  Typography,
+} from "@mui/material";
+import {
+  AccountBalanceWalletOutlined as AccountBalanceWalletOutlinedIcon,
+  BoltOutlined as BoltIcon,
+  ExtensionOutlined as ExtensionIcon,
+  ForumOutlined as ForumOutlinedIcon,
+  LightbulbOutlined as LightbulbOutlinedIcon,
+  MenuBookOutlined as MenuBookIcon,
+  PaidOutlined as PaidOutlinedIcon,
+  PaletteOutlined as PaletteOutlinedIcon,
+  PollOutlined as PollOutlinedIcon,
+  PublishOutlined as PublishIcon,
+  RecordVoiceOverOutlined as RecordVoiceOverOutlinedIcon,
+  RestartAlt as RestartAltIcon,
+  SupportAgentOutlined as SupportAgentIcon,
+} from "@mui/icons-material";
 import DrawerPage from "@/components/DrawerPage";
 import DrawerPageHeader from "@/components/DrawerPageHeader";
 import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
@@ -26,6 +31,7 @@ import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
 import CostBudgets from "@/components/SchemaForm/CostBudgets";
 import ModelPricesSource from "@/components/SchemaForm/ModelPricesSource";
 import SurveysSection from "./SurveysSection/SurveysSection";
+import { CustomThemeSection } from "@/components/SchemaForm/CustomThemeSection";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   useConfigSchemasQuery,
@@ -113,6 +119,13 @@ const FEATURES_SECTIONS = [
     id: "surveys",
     title: "Surveys",
     icon: PollOutlinedIcon,
+    backendSectionId: null,
+    pathPrefix: null,
+  },
+  {
+    id: "custom_theme",
+    title: "Custom Theme",
+    icon: PaletteOutlinedIcon,
     backendSectionId: null,
     pathPrefix: null,
   },
@@ -311,6 +324,12 @@ const FeaturesPage = memo(() => {
         return <SurveysSection addRef={addSurveyRef} />;
       case "model_prices_source":
         return <ModelPricesSource />;
+      case "custom_theme":
+        return (
+          <Box sx={styles.formScroll}>
+            <CustomThemeSection />
+          </Box>
+        );
       case "mcp_configuration":
       case "agent_publishing":
       case "skill_publishing":
@@ -403,7 +422,8 @@ const FeaturesPage = memo(() => {
           {renderContent()}
 
           {activeSection !== "surveys" &&
-            activeSection !== "model_prices_source" && (
+            activeSection !== "model_prices_source" &&
+            activeSection !== "custom_theme" && (
             <Box sx={styles.actionBar}>
               <Box sx={styles.actionButtons}>
                 <Button
