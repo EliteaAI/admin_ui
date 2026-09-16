@@ -131,6 +131,9 @@ const FEATURES_SECTIONS = [
   },
 ];
 
+// Sections that own their save flow and so hide the shared action bar
+const SELF_SAVING_SECTIONS = ["surveys", "model_prices_source", "custom_theme"];
+
 const FeaturesPage = memo(() => {
   const [activeSection, setActiveSection] = useState(
     () => window.location.hash.slice(1) || FEATURES_SECTIONS[0].id,
@@ -421,9 +424,7 @@ const FeaturesPage = memo(() => {
         <Box sx={styles.formArea}>
           {renderContent()}
 
-          {activeSection !== "surveys" &&
-            activeSection !== "model_prices_source" &&
-            activeSection !== "custom_theme" && (
+          {!SELF_SAVING_SECTIONS.includes(activeSection) && (
             <Box sx={styles.actionBar}>
               <Box sx={styles.actionButtons}>
                 <Button

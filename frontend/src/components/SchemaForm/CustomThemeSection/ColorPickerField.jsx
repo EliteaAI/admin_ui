@@ -1,17 +1,15 @@
-import { memo, useState, useCallback, useRef, useEffect } from "react";
-import { Box, Popover, TextField, Tooltip, Typography, useTheme } from "@mui/material";
+import { memo, useState, useCallback, useEffect } from "react";
+import { Box, Popover, TextField, Tooltip, Typography } from "@mui/material";
 import { InfoOutlined as InfoOutlinedIcon } from "@mui/icons-material";
 import { Sketch } from "@uiw/react-color";
 import PropTypes from "prop-types";
 
-import { isValidColor } from "./constants";
+import { isGradient, isValidColor } from "@/utils/color";
 
 const ColorPickerField = memo((props) => {
   const { label, hint, value, onChange, colorKey } = props;
   const [anchorEl, setAnchorEl] = useState(null);
   const [localValue, setLocalValue] = useState(value || "");
-  const inputRef = useRef(null);
-  const theme = useTheme();
 
   // Sync local value when prop changes
   useEffect(() => {
@@ -55,11 +53,8 @@ const ColorPickerField = memo((props) => {
   }, [localValue, value]);
 
   const open = Boolean(anchorEl);
-  const isGradient =
-    localValue?.startsWith("linear-gradient") ||
-    localValue?.startsWith("radial-gradient");
+  const gradient = isGradient(localValue);
   const hasColor = localValue && isValidColor(localValue);
-  const isDarkMode = theme.palette.mode === "dark";
 
   return (
     <Box sx={styles.root}>
@@ -75,20 +70,23 @@ const ColorPickerField = memo((props) => {
       </Box>
 
       <Box sx={styles.inputRow}>
-        <Tooltip title={isGradient ? "Gradients can't use picker" : "Click to pick color"}>
+        <Tooltip
+          title={
+            gradient ? "Gradients can't use picker" : "Click to pick color"
+          }
+        >
           <Box
             sx={[
               styles.swatch,
-              isGradient && styles.swatchGradient,
+              gradient && styles.swatchGradient,
               !hasColor && styles.swatchEmpty,
             ]}
             style={hasColor ? { background: localValue } : undefined}
-            onClick={isGradient ? undefined : handleSwatchClick}
+            onClick={gradient ? undefined : handleSwatchClick}
           />
         </Tooltip>
 
         <TextField
-          ref={inputRef}
           size="small"
           value={localValue}
           onChange={handleInputChange}
@@ -121,7 +119,7 @@ const ColorPickerField = memo((props) => {
           },
         }}
       >
-        <Box sx={styles.sketchWrapper(isDarkMode)}>
+        <Box sx={styles.sketchWrapper}>
           <Sketch
             color={localValue || "#000000"}
             onChange={handleColorChange}
@@ -173,7 +171,7 @@ const styles = {
     width: "1.75rem",
     height: "1.75rem",
     borderRadius: "0.25rem",
-    border: `1px solid ${palette.border.default}`,
+    border: `1px solid ${palette.border.table}`,
     cursor: "pointer",
     flexShrink: 0,
     transition: "transform 0.1s ease",
@@ -189,10 +187,10 @@ const styles = {
   },
   swatchEmpty: ({ palette }) => ({
     background: `
-      linear-gradient(45deg, ${palette.border.default} 25%, transparent 25%),
-      linear-gradient(-45deg, ${palette.border.default} 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, ${palette.border.default} 75%),
-      linear-gradient(-45deg, transparent 75%, ${palette.border.default} 75%)
+      linear-gradient(45deg, ${palette.border.table} 25%, transparent 25%),
+      linear-gradient(-45deg, ${palette.border.table} 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, ${palette.border.table} 75%),
+      linear-gradient(-45deg, transparent 75%, ${palette.border.table} 75%)
     `,
     backgroundSize: "8px 8px",
     backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
@@ -211,20 +209,20 @@ const styles = {
   popover: {
     overflow: "visible",
   },
-  sketchWrapper: (isDarkMode) => ({
+  // The picker ships its own light styling, so the theme has to win here.
+  // The Popover paper already carries the elevation shadow.
+  sketchWrapper: ({ palette }) => ({
     "& .w-color-sketch": {
-      backgroundColor: isDarkMode ? "#1e1e1e !important" : "#ffffff !important",
-      boxShadow: isDarkMode
-        ? "0 0 0 1px rgba(255,255,255,0.1), 0 8px 16px rgba(0,0,0,0.4) !important"
-        : "0 0 0 1px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.15) !important",
+      backgroundColor: `${palette.background.secondary} !important`,
+      boxShadow: "none !important",
     },
     "& .w-color-sketch input": {
-      backgroundColor: isDarkMode ? "#2d2d2d !important" : "#f5f5f5 !important",
-      color: isDarkMode ? "#e0e0e0 !important" : "#333333 !important",
-      border: isDarkMode ? "1px solid #444 !important" : "1px solid #ccc !important",
+      backgroundColor: `${palette.background.userInputBackgroundActive} !important`,
+      color: `${palette.text.primary} !important`,
+      border: `1px solid ${palette.border.table} !important`,
     },
     "& .w-color-sketch label": {
-      color: isDarkMode ? "#aaa !important" : "#666 !important",
+      color: `${palette.text.metrics} !important`,
     },
   }),
 };

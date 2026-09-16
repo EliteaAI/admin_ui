@@ -23,10 +23,13 @@ const CollapsibleSection = memo((props) => {
     [onToggle],
   );
 
+  // A string count is already a label, a number gets the default wording
   const countLabel =
-    count !== undefined
-      ? `${count} ${count === 1 ? "setting" : "settings"}`
-      : null;
+    typeof count === "string"
+      ? count
+      : count !== undefined
+        ? `${count} ${count === 1 ? "setting" : "settings"}`
+        : null;
 
   return (
     <Box sx={styles.sectionContainer}>

@@ -4,7 +4,7 @@ import { FileUploadOutlined, FileDownloadOutlined } from "@mui/icons-material";
 import PropTypes from "prop-types";
 
 const ImportExportButtons = memo((props) => {
-  const { palette, mode, onImport, disabled } = props;
+  const { palette, mode, onImport, onError, disabled } = props;
   const fileInputRef = useRef(null);
 
   const handleImportClick = useCallback(() => {
@@ -22,24 +22,24 @@ const ImportExportButtons = memo((props) => {
           const json = JSON.parse(e.target.result);
           onImport(json);
         } catch (error) {
-          alert("Invalid JSON file. Please check the file format.");
           console.error("JSON parse error:", error);
+          onError("Invalid JSON file. Please check the file format.");
         }
       };
       reader.onerror = () => {
-        alert("Failed to read file.");
+        onError("Failed to read file.");
       };
       reader.readAsText(file);
 
       // Reset input so same file can be selected again
       event.target.value = "";
     },
-    [onImport],
+    [onImport, onError],
   );
 
   const handleExport = useCallback(() => {
     if (!palette) {
-      alert("No palette to export.");
+      onError("No palette to export.");
       return;
     }
 
@@ -60,7 +60,7 @@ const ImportExportButtons = memo((props) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, [palette, mode]);
+  }, [palette, mode, onError]);
 
   return (
     <Box sx={styles.root}>
@@ -74,7 +74,7 @@ const ImportExportButtons = memo((props) => {
 
       <Button
         variant="outlined"
-        startIcon={<FileDownloadOutlined />}
+        startIcon={<FileUploadOutlined />}
         onClick={handleImportClick}
         disabled={disabled}
         sx={styles.button}
@@ -84,7 +84,7 @@ const ImportExportButtons = memo((props) => {
 
       <Button
         variant="outlined"
-        startIcon={<FileUploadOutlined />}
+        startIcon={<FileDownloadOutlined />}
         onClick={handleExport}
         disabled={disabled || !palette}
         sx={styles.button}
@@ -101,6 +101,7 @@ ImportExportButtons.propTypes = {
   palette: PropTypes.object,
   mode: PropTypes.string,
   onImport: PropTypes.func.isRequired,
+  onError: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
 };
 

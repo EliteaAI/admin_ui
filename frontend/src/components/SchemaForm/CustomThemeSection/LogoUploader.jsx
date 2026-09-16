@@ -16,8 +16,15 @@ import {
 } from "@mui/icons-material";
 import PropTypes from "prop-types";
 
+import {
+  LOGO_ALLOWED_TYPES,
+  LOGO_MAX_SIZE_BYTES,
+  LOGO_MAX_SIZE_LABEL,
+} from "./constants";
+
 const LogoUploader = memo((props) => {
-  const { logoUrl, onUpload, onDelete, isUploading, isDeleting } = props;
+  const { logoUrl, onUpload, onDelete, onError, isUploading, isDeleting } =
+    props;
   const [dragOver, setDragOver] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -36,22 +43,20 @@ const LogoUploader = memo((props) => {
     (file) => {
       if (!file) return;
 
-      const allowedTypes = ["image/png", "image/svg+xml"];
-      if (!allowedTypes.includes(file.type)) {
-        alert("Invalid file type. Only PNG and SVG are allowed.");
+      if (!LOGO_ALLOWED_TYPES.includes(file.type)) {
+        onError("Invalid file type. Only PNG and SVG are allowed.");
         return;
       }
 
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        alert("File too large. Maximum size is 5MB.");
+      if (file.size > LOGO_MAX_SIZE_BYTES) {
+        onError(`File too large. Maximum size is ${LOGO_MAX_SIZE_LABEL}.`);
         return;
       }
 
       onUpload(file);
       setPreviewError(false);
     },
-    [onUpload],
+    [onUpload, onError],
   );
 
   const handleInputChange = useCallback(
@@ -124,7 +129,7 @@ const LogoUploader = memo((props) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/png,image/svg+xml"
+        accept={LOGO_ALLOWED_TYPES.join(",")}
         onChange={handleInputChange}
         style={{ display: "none" }}
       />
@@ -185,7 +190,7 @@ const LogoUploader = memo((props) => {
                 Drag and drop an image here, or click to browse
               </Typography>
               <Typography variant="caption" sx={styles.dropHint}>
-                PNG, SVG • Max 5MB
+                PNG, SVG • Max {LOGO_MAX_SIZE_LABEL}
               </Typography>
             </>
           )}
@@ -233,6 +238,7 @@ LogoUploader.propTypes = {
   logoUrl: PropTypes.string,
   onUpload: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
+  onError: PropTypes.func.isRequired,
   isUploading: PropTypes.bool,
   isDeleting: PropTypes.bool,
 };
@@ -257,7 +263,7 @@ const styles = {
     justifyContent: "center",
     gap: "0.5rem",
     padding: "2rem",
-    border: `2px dashed ${palette.border.default}`,
+    border: `2px dashed ${palette.border.table}`,
     borderRadius: "0.5rem",
     cursor: "pointer",
     transition: "all 0.2s ease",
@@ -294,9 +300,9 @@ const styles = {
     justifyContent: "center",
     width: "10rem",
     height: "10rem",
-    border: `1px solid ${palette.border.default}`,
+    border: `1px solid ${palette.border.table}`,
     borderRadius: "0.5rem",
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.background.secondary,
     overflow: "hidden",
     cursor: "pointer",
     transition: "all 0.2s ease",

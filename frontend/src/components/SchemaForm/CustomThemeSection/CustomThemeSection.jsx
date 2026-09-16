@@ -27,7 +27,8 @@ import CollapsibleSection from "@/components/CollapsibleSection";
 import ColorCategoryGroup from "./ColorCategoryGroup";
 import LogoUploader from "./LogoUploader";
 import ImportExportButtons from "./ImportExportButtons";
-import { COLOR_CATEGORIES, PALETTE_MODES, setNestedValue } from "./constants";
+import { COLOR_CATEGORIES, PALETTE_MODES } from "./constants";
+import { setNestedValue, unsetNestedValue } from "@/utils/nestedValue";
 import {
   useCustomThemeAdminQuery,
   useCustomThemeSaveMutation,
@@ -38,11 +39,11 @@ import {
 
 const CustomThemeSection = memo(() => {
   // API hooks
+  // Mutations invalidate the CustomTheme tag, so the query refetches on its own
   const {
     data: themeData,
     isLoading,
     error: loadError,
-    refetch,
   } = useCustomThemeAdminQuery();
 
   const [saveTheme, { isLoading: isSaving }] = useCustomThemeSaveMutation();
@@ -75,7 +76,7 @@ const CustomThemeSection = memo(() => {
   }, []);
 
   // Determine if theme exists
-  const themeExists = themeData?.exists && themeData?.theme;
+  const themeExists = Boolean(themeData?.exists && themeData?.theme);
 
   // Sync local state from server data
   useEffect(() => {
@@ -95,27 +96,48 @@ const CustomThemeSection = memo(() => {
     setHasChanges(true);
   }, []);
 
+  const showError = useCallback((message) => {
+    setSnackbar({ open: true, message, severity: "error" });
+  }, []);
+
   const handleColorChange = useCallback((colorKey, value) => {
-    setPalette((prev) => setNestedValue(prev, colorKey, value));
+    // An empty field means the token is unset, storing "" would hand the
+    // consuming theme a color string it cannot parse
+    setPalette((prev) =>
+      value === ""
+        ? unsetNestedValue(prev, colorKey)
+        : setNestedValue(prev, colorKey, value),
+    );
     setHasChanges(true);
   }, []);
 
-  const handleImport = useCallback((json) => {
-    if (json.mode) {
-      setMode(json.mode);
-    }
+  const handleImport = useCallback(
+    (json) => {
+      const isPaletteObject =
+        json !== null && typeof json === "object" && !Array.isArray(json);
 
-    // Remove mode and logo_url from palette data (logo must be uploaded separately)
-    const { mode: _jsonMode, logo_url: _logoUrl, ...paletteData } = json;
-    setPalette(paletteData);
-    setHasChanges(true);
+      if (!isPaletteObject) {
+        showError("Invalid palette file: expected a JSON object");
+        return;
+      }
 
-    setSnackbar({
-      open: true,
-      message: "Palette imported successfully",
-      severity: "success",
-    });
-  }, []);
+      if (PALETTE_MODES.some((option) => option.value === json.mode)) {
+        setMode(json.mode);
+      }
+
+      // Remove mode and logo_url from palette data (logo must be uploaded separately)
+      const { mode: _jsonMode, logo_url: _logoUrl, ...paletteData } = json;
+      setPalette(paletteData);
+      setHasChanges(true);
+
+      setSnackbar({
+        open: true,
+        message: "Palette imported successfully",
+        severity: "success",
+      });
+    },
+    [showError],
+  );
 
   const handleLogoUpload = useCallback(
     async (file) => {
@@ -137,14 +159,10 @@ const CustomThemeSection = memo(() => {
         });
       } catch (err) {
         console.error("Logo upload error:", err);
-        setSnackbar({
-          open: true,
-          message: err?.data?.error || "Failed to upload logo",
-          severity: "error",
-        });
+        showError(err?.data?.error || "Failed to upload logo");
       }
     },
-    [uploadLogo],
+    [uploadLogo, showError],
   );
 
   const handleLogoDelete = useCallback(async () => {
@@ -161,13 +179,9 @@ const CustomThemeSection = memo(() => {
       });
     } catch (err) {
       console.error("Logo delete error:", err);
-      setSnackbar({
-        open: true,
-        message: err?.data?.error || "Failed to delete logo",
-        severity: "error",
-      });
+      showError(err?.data?.error || "Failed to delete logo");
     }
-  }, [deleteLogo]);
+  }, [deleteLogo, showError]);
 
   const handleSave = useCallback(async () => {
     try {
@@ -178,7 +192,6 @@ const CustomThemeSection = memo(() => {
       }).unwrap();
 
       setHasChanges(false);
-      refetch();
 
       setSnackbar({
         open: true,
@@ -187,13 +200,9 @@ const CustomThemeSection = memo(() => {
       });
     } catch (err) {
       console.error("Save error:", err);
-      setSnackbar({
-        open: true,
-        message: err?.data?.error || "Failed to save theme",
-        severity: "error",
-      });
+      showError(err?.data?.error || "Failed to save theme");
     }
-  }, [mode, palette, logoUrl, saveTheme, refetch]);
+  }, [mode, palette, logoUrl, saveTheme, showError]);
 
   const handleDeleteClick = useCallback(() => {
     setDeleteDialogOpen(true);
@@ -213,8 +222,8 @@ const CustomThemeSection = memo(() => {
       setMode("dark");
       setPalette({});
       setLogoUrl(null);
+      setLogoPreviewUrl(null);
       setHasChanges(false);
-      refetch();
 
       setSnackbar({
         open: true,
@@ -223,18 +232,16 @@ const CustomThemeSection = memo(() => {
       });
     } catch (err) {
       console.error("Delete error:", err);
-      setSnackbar({
-        open: true,
-        message: err?.data?.error || "Failed to delete theme",
-        severity: "error",
-      });
+      showError(err?.data?.error || "Failed to delete theme");
     }
-  }, [deleteTheme, refetch]);
+  }, [deleteTheme, showError]);
 
   const handleCreate = useCallback(() => {
     // Initialize with empty palette - user will fill in colors
     setPalette({});
     setMode("dark");
+    setLogoUrl(null);
+    setLogoPreviewUrl(null);
     setHasChanges(true);
   }, []);
 
@@ -315,6 +322,7 @@ const CustomThemeSection = memo(() => {
             palette={palette}
             mode={mode}
             onImport={handleImport}
+            onError={showError}
             disabled={isSaving}
           />
         </Box>
@@ -361,6 +369,7 @@ const CustomThemeSection = memo(() => {
           logoUrl={logoPreviewUrl}
           onUpload={handleLogoUpload}
           onDelete={handleLogoDelete}
+          onError={showError}
           isUploading={isUploading}
           isDeleting={isDeletingLogo}
         />

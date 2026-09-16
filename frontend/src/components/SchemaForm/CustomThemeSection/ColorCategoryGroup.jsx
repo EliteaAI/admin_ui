@@ -1,10 +1,10 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { Box, Typography } from "@mui/material";
 import PropTypes from "prop-types";
 
 import CollapsibleSection from "@/components/CollapsibleSection";
+import { getNestedValue } from "@/utils/nestedValue";
 import ColorPickerField from "./ColorPickerField";
-import { getNestedValue } from "./constants";
 
 const ColorCategoryGroup = memo((props) => {
   const { category, palette, onChange, defaultExpanded = false } = props;
@@ -14,26 +14,20 @@ const ColorCategoryGroup = memo((props) => {
     setExpanded((prev) => !prev);
   }, []);
 
-  const handleColorChange = useCallback(
-    (colorKey, value) => {
-      onChange(colorKey, value);
-    },
-    [onChange],
-  );
+  // How many of this category's tokens the theme actually defines
+  const countLabel = useMemo(() => {
+    const filledCount = category.colors.filter((color) =>
+      getNestedValue(palette, color.key),
+    ).length;
 
-  // Count colors with values
-  const colorCount = category.colors.length;
-  const filledCount = category.colors.filter(
-    (color) => getNestedValue(palette, color.key),
-  ).length;
-
-  const countLabel = `${filledCount}/${colorCount} colors`;
+    return `${filledCount}/${category.colors.length} colors`;
+  }, [category, palette]);
 
   return (
     <CollapsibleSection
       icon={category.icon}
       title={category.title}
-      count={colorCount}
+      count={countLabel}
       expanded={expanded}
       onToggle={handleToggle}
     >
@@ -43,12 +37,6 @@ const ColorCategoryGroup = memo((props) => {
         </Typography>
       )}
 
-      <Box sx={styles.colorInfo}>
-        <Typography variant="caption" sx={styles.colorCount}>
-          {countLabel}
-        </Typography>
-      </Box>
-
       <Box sx={styles.colorGrid}>
         {category.colors.map((color) => (
           <ColorPickerField
@@ -57,7 +45,7 @@ const ColorCategoryGroup = memo((props) => {
             hint={color.hint}
             colorKey={color.key}
             value={getNestedValue(palette, color.key) || ""}
-            onChange={handleColorChange}
+            onChange={onChange}
           />
         ))}
       </Box>
@@ -92,16 +80,6 @@ const styles = {
     color: palette.text.metrics,
     fontSize: "0.75rem",
     marginBottom: "0.5rem",
-  }),
-  colorInfo: {
-    marginBottom: "1rem",
-  },
-  colorCount: ({ palette }) => ({
-    color: palette.text.metrics,
-    fontSize: "0.75rem",
-    backgroundColor: palette.background.hover,
-    padding: "0.125rem 0.5rem",
-    borderRadius: "0.25rem",
   }),
   colorGrid: {
     display: "grid",
