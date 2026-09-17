@@ -25,6 +25,7 @@ const SOURCE_LABELS = {
   litellm: "LiteLLM",
   azure_foundry: "Azure AI Foundry",
   bedrock: "AWS Bedrock",
+  custom: "Custom",
 };
 
 const sourceLabel = (id) => SOURCE_LABELS[id] || id;
@@ -54,6 +55,7 @@ const ModelPricesSource = memo(() => {
   const activeSource = sourcesData?.active || "";
   const selectedSource = selected || activeSource;
   const label = sourceLabel(selectedSource);
+  const isCustom = selectedSource === "custom";
 
   const handleReimport = useCallback(async () => {
     setError("");
@@ -63,10 +65,13 @@ const ModelPricesSource = memo(() => {
       setConfirmOpen(false);
       setSnackbar({
         open: true,
-        message:
-          `Prices re-imported from ${label} ` +
-          `(${counts.deleted ?? 0} removed, ${counts.inserted ?? 0} imported). ` +
-          "Restart the pylons to apply the change to cost estimation.",
+        message: isCustom
+          ? `Model prices cleared (${counts.deleted ?? 0} removed). ` +
+            "The scheduled daily refresh will do nothing while Custom is " +
+            "active. Restart the pylons to apply the change to cost estimation."
+          : `Prices re-imported from ${label} ` +
+            `(${counts.deleted ?? 0} removed, ${counts.inserted ?? 0} imported). ` +
+            "Restart the pylons to apply the change to cost estimation.",
         severity: "warning",
       });
     } catch (err) {
@@ -100,7 +105,9 @@ const ModelPricesSource = memo(() => {
         Choose the upstream catalog that model prices are imported from. The
         active source also feeds the scheduled price refresh. Importing is
         destructive: it deletes all current prices, including custom overrides,
-        and replaces them with a fresh import from the chosen source.
+        and replaces them with a fresh import from the chosen source. Choose
+        "Custom" to manage prices entirely by hand — this clears the table and
+        disables the scheduled refresh.
       </Typography>
 
       <Box sx={styles.card}>
@@ -151,22 +158,41 @@ const ModelPricesSource = memo(() => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Re-import model prices</DialogTitle>
+        <DialogTitle>
+          {isCustom ? "Switch to custom prices" : "Re-import model prices"}
+        </DialogTitle>
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            This will <strong>delete all current model prices</strong>,
-            including custom overrides, and replace them with a fresh import
-            from <strong>{label}</strong>. This cannot be undone.
-          </Alert>
-          <DialogContentText>
-            The import runs against the source first — if it returns nothing,
-            the current prices are left unchanged.
-          </DialogContentText>
+          {isCustom ? (
+            <>
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                This will <strong>delete all current model prices</strong>,
+                including custom overrides, leaving the table empty. This
+                cannot be undone.
+              </Alert>
+              <DialogContentText>
+                Use "Add custom price" on the Model Prices page to populate
+                the table by hand. The scheduled daily refresh will do
+                nothing while Custom is active.
+              </DialogContentText>
+            </>
+          ) : (
+            <>
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                This will <strong>delete all current model prices</strong>,
+                including custom overrides, and replace them with a fresh
+                import from <strong>{label}</strong>. This cannot be undone.
+              </Alert>
+              <DialogContentText>
+                The import runs against the source first — if it returns
+                nothing, the current prices are left unchanged.
+              </DialogContentText>
+            </>
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
@@ -182,7 +208,13 @@ const ModelPricesSource = memo(() => {
             color="error"
             disabled={isLoading}
           >
-            {isLoading ? "Re-importing..." : "Delete & re-import"}
+            {isLoading
+              ? isCustom
+                ? "Clearing..."
+                : "Re-importing..."
+              : isCustom
+                ? "Clear & switch to Custom"
+                : "Delete & re-import"}
           </Button>
         </DialogActions>
       </Dialog>
