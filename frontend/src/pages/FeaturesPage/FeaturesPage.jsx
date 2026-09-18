@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import {
   AccountBalanceWalletOutlined as AccountBalanceWalletOutlinedIcon,
+  AlternateEmailOutlined as AlternateEmailIcon,
   BoltOutlined as BoltIcon,
   ExtensionOutlined as ExtensionIcon,
   ForumOutlined as ForumOutlinedIcon,
@@ -28,6 +29,7 @@ import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
 import HelpCenterSection from "@/components/SchemaForm/HelpCenterSection";
 import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
 import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
+import ChatMentions from "@/components/SchemaForm/ChatMentions";
 import CostBudgets from "@/components/SchemaForm/CostBudgets";
 import ModelPricesSource from "@/components/SchemaForm/ModelPricesSource";
 import SurveysSection from "./SurveysSection/SurveysSection";
@@ -85,6 +87,13 @@ const FEATURES_SECTIONS = [
     title: "Voice Features",
     icon: RecordVoiceOverOutlinedIcon,
     backendSectionId: "voice_features",
+    pathPrefix: null,
+  },
+  {
+    id: "chat_mentions",
+    title: "Chat Mentions",
+    icon: AlternateEmailIcon,
+    backendSectionId: "chat_mentions",
     pathPrefix: null,
   },
   {
@@ -371,6 +380,12 @@ const FeaturesPage = memo(() => {
         return (
           <Box sx={styles.formScroll}>
             <VoiceFeatures values={localValues} onChange={handleFieldChange} />
+          </Box>
+        );
+      case "chat_mentions":
+        return (
+          <Box sx={styles.formScroll}>
+            <ChatMentions values={localValues} onChange={handleFieldChange} />
           </Box>
         );
       case "cost_budgets":
