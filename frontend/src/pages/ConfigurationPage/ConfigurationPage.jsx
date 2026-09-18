@@ -51,6 +51,7 @@ const MOVED_TO_FEATURES = [
   "resources",
   "support_assistant",
   "voice_features",
+  "chat_mentions",
   "cost_budgets",
 ];
 // Guardrails-section fields whose config path starts with one of these prefixes have
