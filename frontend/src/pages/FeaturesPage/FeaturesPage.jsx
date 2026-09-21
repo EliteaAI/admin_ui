@@ -98,7 +98,7 @@ const FEATURES_SECTIONS = [
   },
   {
     id: "cost_budgets",
-    title: "Cost Budgets (Beta)",
+    title: "Cost Budgets",
     icon: AccountBalanceWalletOutlinedIcon,
     backendSectionId: "cost_budgets",
     pathPrefix: null,
@@ -112,14 +112,14 @@ const FEATURES_SECTIONS = [
   },
   {
     id: "midturn_injection",
-    title: "Mid-turn Input (Beta)",
+    title: "Mid-turn Input",
     icon: ForumOutlinedIcon,
     backendSectionId: "guardrails",
     pathPrefix: "midturn_injection_guardrail.",
   },
   {
     id: "next_input_suggestion",
-    title: "Next-Input Suggestions (Beta)",
+    title: "Next-Input Suggestions",
     icon: LightbulbOutlinedIcon,
     backendSectionId: "guardrails",
     pathPrefix: "next_input_suggestion_guardrail.",
