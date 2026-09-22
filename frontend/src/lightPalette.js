@@ -99,6 +99,10 @@ const lightPalette = {
     default: blue01,
     eliteaDefault: gradient,
     secondary: white,
+    surface: {
+      default: gradient,
+      secondary: white,
+    },
     tabPanel: white01,
     chatBkg: almostWhite,
     dragging: blue12,

@@ -116,6 +116,16 @@ export const COLOR_CATEGORIES = [
         hint: "Alternative panel background",
       },
       {
+        key: "background.surface.default",
+        label: "Default Surface Background",
+        hint: "Default background for content surfaces",
+      },
+      {
+        key: "background.surface.secondary",
+        label: "Secondary Surface Background",
+        hint: "Secondary background for content surfaces",
+      },
+      {
         key: "background.panel",
         label: "Panel Background",
         hint: "Side panels and drawers",
