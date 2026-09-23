@@ -98,6 +98,10 @@ const darkPalette = {
     default: gray60,
     eliteaDefault: gray60,
     secondary: gray50,
+    surface: {
+      default: gray50,
+      secondary: gray60,
+    },
     tabPanel: gray55,
     chatBkg: gray55,
     dragging: blue10,
