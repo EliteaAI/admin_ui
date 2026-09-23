@@ -1,4 +1,11 @@
-import { memo, useState, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useState } from 'react';
+
+import {
+  Add as AddIcon,
+  DeleteOutline as DeleteOutlineIcon,
+  ImageOutlined,
+  SaveOutlined as SaveOutlinedIcon,
+} from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -15,47 +22,35 @@ import {
   Select,
   Snackbar,
   Typography,
-} from "@mui/material";
-import {
-  Add as AddIcon,
-  DeleteOutline as DeleteOutlineIcon,
-  ImageOutlined,
-  SaveOutlined as SaveOutlinedIcon,
-} from "@mui/icons-material";
+} from '@mui/material';
 
-import CollapsibleSection from "@/components/CollapsibleSection";
-import ColorCategoryGroup from "./ColorCategoryGroup";
-import LogoUploader from "./LogoUploader";
-import ImportExportButtons from "./ImportExportButtons";
-import { COLOR_CATEGORIES, PALETTE_MODES } from "./constants";
-import { setNestedValue, unsetNestedValue } from "@/utils/nestedValue";
 import {
   useCustomThemeAdminQuery,
-  useCustomThemeSaveMutation,
   useCustomThemeDeleteMutation,
-  useCustomThemeLogoUploadMutation,
   useCustomThemeLogoDeleteMutation,
-} from "@/api/customThemeApi";
+  useCustomThemeLogoUploadMutation,
+  useCustomThemeSaveMutation,
+} from '@/api/customThemeApi';
+import CollapsibleSection from '@/components/CollapsibleSection';
+import { setNestedValue, unsetNestedValue } from '@/utils/nestedValue';
+
+import ColorCategoryGroup from './ColorCategoryGroup';
+import ImportExportButtons from './ImportExportButtons';
+import LogoUploader from './LogoUploader';
+import { COLOR_CATEGORIES, PALETTE_MODES } from './constants';
 
 const CustomThemeSection = memo(() => {
   // API hooks
   // Mutations invalidate the CustomTheme tag, so the query refetches on its own
-  const {
-    data: themeData,
-    isLoading,
-    error: loadError,
-  } = useCustomThemeAdminQuery();
+  const { data: themeData, isLoading, error: loadError } = useCustomThemeAdminQuery();
 
   const [saveTheme, { isLoading: isSaving }] = useCustomThemeSaveMutation();
-  const [deleteTheme, { isLoading: isDeleting }] =
-    useCustomThemeDeleteMutation();
-  const [uploadLogo, { isLoading: isUploading }] =
-    useCustomThemeLogoUploadMutation();
-  const [deleteLogo, { isLoading: isDeletingLogo }] =
-    useCustomThemeLogoDeleteMutation();
+  const [deleteTheme, { isLoading: isDeleting }] = useCustomThemeDeleteMutation();
+  const [uploadLogo, { isLoading: isUploading }] = useCustomThemeLogoUploadMutation();
+  const [deleteLogo, { isLoading: isDeletingLogo }] = useCustomThemeLogoDeleteMutation();
 
   // Local state
-  const [mode, setMode] = useState("dark");
+  const [mode, setMode] = useState('dark');
   const [palette, setPalette] = useState({});
   const [logoUrl, setLogoUrl] = useState(null); // Actual URL for saving
   const [logoPreviewUrl, setLogoPreviewUrl] = useState(null); // Preview URL for display
@@ -64,12 +59,12 @@ const CustomThemeSection = memo(() => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
 
-  const toggleSection = useCallback((sectionId) => {
-    setExpandedSections((prev) => ({
+  const toggleSection = useCallback(sectionId => {
+    setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId],
     }));
@@ -81,7 +76,7 @@ const CustomThemeSection = memo(() => {
   // Sync local state from server data
   useEffect(() => {
     if (themeData?.theme) {
-      setMode(themeData.theme.mode || "dark");
+      setMode(themeData.theme.mode || 'dark');
       setPalette(themeData.theme.palette || {});
       // logo_url is the public static URL - works for both preview and storage
       setLogoUrl(themeData.theme.logo_url || null);
@@ -91,59 +86,58 @@ const CustomThemeSection = memo(() => {
   }, [themeData]);
 
   // Handlers
-  const handleModeChange = useCallback((event) => {
+  const handleModeChange = useCallback(event => {
     setMode(event.target.value);
     setHasChanges(true);
   }, []);
 
-  const showError = useCallback((message) => {
-    setSnackbar({ open: true, message, severity: "error" });
+  const showError = useCallback(message => {
+    setSnackbar({ open: true, message, severity: 'error' });
   }, []);
 
   const handleColorChange = useCallback((colorKey, value) => {
     // An empty field means the token is unset, storing "" would hand the
     // consuming theme a color string it cannot parse
-    setPalette((prev) =>
-      value === ""
-        ? unsetNestedValue(prev, colorKey)
-        : setNestedValue(prev, colorKey, value),
+    setPalette(prev =>
+      value === '' ? unsetNestedValue(prev, colorKey) : setNestedValue(prev, colorKey, value),
     );
     setHasChanges(true);
   }, []);
 
   const handleImport = useCallback(
-    (json) => {
-      const isPaletteObject =
-        json !== null && typeof json === "object" && !Array.isArray(json);
+    json => {
+      const isPaletteObject = json !== null && typeof json === 'object' && !Array.isArray(json);
 
       if (!isPaletteObject) {
-        showError("Invalid palette file: expected a JSON object");
+        showError('Invalid palette file: expected a JSON object');
         return;
       }
 
-      if (PALETTE_MODES.some((option) => option.value === json.mode)) {
+      if (PALETTE_MODES.some(option => option.value === json.mode)) {
         setMode(json.mode);
       }
 
       // Remove mode and logo_url from palette data (logo must be uploaded separately)
-      const { mode: _jsonMode, logo_url: _logoUrl, ...paletteData } = json;
+      const paletteData = { ...json };
+      delete paletteData.mode;
+      delete paletteData.logo_url;
       setPalette(paletteData);
       setHasChanges(true);
 
       setSnackbar({
         open: true,
-        message: "Palette imported successfully",
-        severity: "success",
+        message: 'Palette imported successfully',
+        severity: 'success',
       });
     },
     [showError],
   );
 
   const handleLogoUpload = useCallback(
-    async (file) => {
+    async file => {
       try {
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append('file', file);
 
         const result = await uploadLogo(formData).unwrap();
         // Update logo URL - same URL works for both preview and storage
@@ -154,12 +148,12 @@ const CustomThemeSection = memo(() => {
 
         setSnackbar({
           open: true,
-          message: "Logo uploaded successfully",
-          severity: "success",
+          message: 'Logo uploaded successfully',
+          severity: 'success',
         });
       } catch (err) {
-        console.error("Logo upload error:", err);
-        showError(err?.data?.error || "Failed to upload logo");
+        console.error('Logo upload error:', err);
+        showError(err?.data?.error || 'Failed to upload logo');
       }
     },
     [uploadLogo, showError],
@@ -174,12 +168,12 @@ const CustomThemeSection = memo(() => {
 
       setSnackbar({
         open: true,
-        message: "Logo deleted successfully",
-        severity: "success",
+        message: 'Logo deleted successfully',
+        severity: 'success',
       });
     } catch (err) {
-      console.error("Logo delete error:", err);
-      showError(err?.data?.error || "Failed to delete logo");
+      console.error('Logo delete error:', err);
+      showError(err?.data?.error || 'Failed to delete logo');
     }
   }, [deleteLogo, showError]);
 
@@ -195,12 +189,12 @@ const CustomThemeSection = memo(() => {
 
       setSnackbar({
         open: true,
-        message: "Theme saved successfully",
-        severity: "success",
+        message: 'Theme saved successfully',
+        severity: 'success',
       });
     } catch (err) {
-      console.error("Save error:", err);
-      showError(err?.data?.error || "Failed to save theme");
+      console.error('Save error:', err);
+      showError(err?.data?.error || 'Failed to save theme');
     }
   }, [mode, palette, logoUrl, saveTheme, showError]);
 
@@ -219,7 +213,7 @@ const CustomThemeSection = memo(() => {
       await deleteTheme().unwrap();
 
       // Reset local state
-      setMode("dark");
+      setMode('dark');
       setPalette({});
       setLogoUrl(null);
       setLogoPreviewUrl(null);
@@ -227,26 +221,26 @@ const CustomThemeSection = memo(() => {
 
       setSnackbar({
         open: true,
-        message: "Theme deleted successfully",
-        severity: "success",
+        message: 'Theme deleted successfully',
+        severity: 'success',
       });
     } catch (err) {
-      console.error("Delete error:", err);
-      showError(err?.data?.error || "Failed to delete theme");
+      console.error('Delete error:', err);
+      showError(err?.data?.error || 'Failed to delete theme');
     }
   }, [deleteTheme, showError]);
 
   const handleCreate = useCallback(() => {
     // Initialize with empty palette - user will fill in colors
     setPalette({});
-    setMode("dark");
+    setMode('dark');
     setLogoUrl(null);
     setLogoPreviewUrl(null);
     setHasChanges(true);
   }, []);
 
   const handleSnackbarClose = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   // Loading state
@@ -264,8 +258,7 @@ const CustomThemeSection = memo(() => {
     return (
       <Box sx={styles.root}>
         <Alert severity="error">
-          Failed to load custom theme configuration. Please try refreshing the
-          page.
+          Failed to load custom theme configuration. Please try refreshing the page.
         </Alert>
       </Box>
     );
@@ -276,12 +269,17 @@ const CustomThemeSection = memo(() => {
     return (
       <Box sx={styles.root}>
         <Box sx={styles.emptyState}>
-          <Typography variant="body1" sx={styles.emptyTitle}>
+          <Typography
+            variant="body1"
+            sx={styles.emptyTitle}
+          >
             No Custom Theme Configured
           </Typography>
-          <Typography variant="body2" sx={styles.emptyDescription}>
-            Create a custom theme to personalize the platform appearance with
-            your brand colors and logo.
+          <Typography
+            variant="body2"
+            sx={styles.emptyDescription}
+          >
+            Create a custom theme to personalize the platform appearance with your brand colors and logo.
           </Typography>
           <Button
             variant="contained"
@@ -298,10 +296,12 @@ const CustomThemeSection = memo(() => {
   // Theme editor
   return (
     <Box sx={styles.root}>
-      <Typography variant="body2" sx={styles.description}>
-        Customize the platform appearance with your brand colors and logo. All
-        changes are applied to users when they select "Custom" theme mode in
-        their preferences.
+      <Typography
+        variant="body2"
+        sx={styles.description}
+      >
+        Customize the platform appearance with your brand colors and logo. All changes are applied to users
+        when they select &quot;Custom&quot; theme mode in their preferences.
       </Typography>
 
       {/* Actions bar */}
@@ -309,9 +309,16 @@ const CustomThemeSection = memo(() => {
         <Box sx={styles.actionsLeft}>
           <FormControl sx={styles.modeSelect}>
             <InputLabel>Base Mode</InputLabel>
-            <Select value={mode} onChange={handleModeChange} label="Base Mode">
-              {PALETTE_MODES.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
+            <Select
+              value={mode}
+              onChange={handleModeChange}
+              label="Base Mode"
+            >
+              {PALETTE_MODES.map(option => (
+                <MenuItem
+                  key={option.value}
+                  value={option.value}
+                >
                   {option.label}
                 </MenuItem>
               ))}
@@ -337,7 +344,7 @@ const CustomThemeSection = memo(() => {
               disabled={isDeleting || isSaving}
               sx={styles.actionButton}
             >
-              {isDeleting ? "Deleting..." : "Delete Theme"}
+              {isDeleting ? 'Deleting...' : 'Delete Theme'}
             </Button>
           )}
 
@@ -348,11 +355,7 @@ const CustomThemeSection = memo(() => {
             disabled={isSaving || (!hasChanges && themeExists)}
             sx={styles.actionButton}
           >
-            {isSaving
-              ? "Saving..."
-              : themeExists
-                ? "Save Changes"
-                : "Create Theme"}
+            {isSaving ? 'Saving...' : themeExists ? 'Save Changes' : 'Create Theme'}
           </Button>
         </Box>
       </Box>
@@ -363,7 +366,7 @@ const CustomThemeSection = memo(() => {
         title="Platform Logo"
         count={1}
         expanded={expandedSections.logo}
-        onToggle={() => toggleSection("logo")}
+        onToggle={() => toggleSection('logo')}
       >
         <LogoUploader
           logoUrl={logoPreviewUrl}
@@ -376,7 +379,7 @@ const CustomThemeSection = memo(() => {
       </CollapsibleSection>
 
       {/* Color categories */}
-      {COLOR_CATEGORIES.map((category) => (
+      {COLOR_CATEGORIES.map(category => (
         <ColorCategoryGroup
           key={category.id}
           category={category}
@@ -396,8 +399,7 @@ const CustomThemeSection = memo(() => {
         <DialogTitle>Delete Custom Theme</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the custom theme? This will remove
-            all colors and the logo.
+            Are you sure you want to delete the custom theme? This will remove all colors and the logo.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -414,7 +416,7 @@ const CustomThemeSection = memo(() => {
             color="error"
             disabled={isDeleting}
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -424,7 +426,7 @@ const CustomThemeSection = memo(() => {
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert
           onClose={handleSnackbarClose}
@@ -438,72 +440,72 @@ const CustomThemeSection = memo(() => {
   );
 });
 
-CustomThemeSection.displayName = "CustomThemeSection";
+CustomThemeSection.displayName = 'CustomThemeSection';
 
 const styles = {
   root: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
   },
   loadingContainer: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "1rem",
-    padding: "3rem",
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem',
+    padding: '3rem',
   },
   description: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.8125rem",
+    fontSize: '0.8125rem',
     lineHeight: 1.6,
-    marginBottom: "0.5rem",
+    marginBottom: '0.5rem',
   }),
   emptyState: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "1rem",
-    padding: "3rem",
-    textAlign: "center",
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem',
+    padding: '3rem',
+    textAlign: 'center',
   },
   emptyTitle: {
     fontWeight: 600,
   },
   emptyDescription: ({ palette }) => ({
     color: palette.text.secondary,
-    maxWidth: "24rem",
+    maxWidth: '24rem',
   }),
   actionsBar: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: "1rem",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '1rem',
   },
   actionsLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: "1rem",
-    flexWrap: "wrap",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap',
   },
   actionsRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   modeSelect: {
-    minWidth: "8rem",
-    "& .MuiInputBase-root": {
-      height: "2.25rem",
-      fontSize: "0.875rem",
+    minWidth: '8rem',
+    '& .MuiInputBase-root': {
+      height: '2.25rem',
+      fontSize: '0.875rem',
     },
   },
   actionButton: {
-    height: "2.25rem",
-    fontSize: "0.875rem",
+    height: '2.25rem',
+    fontSize: '0.875rem',
   },
 };
 

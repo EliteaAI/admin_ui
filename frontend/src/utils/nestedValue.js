@@ -14,7 +14,7 @@
  */
 export const getNestedValue = (obj, path) => {
   if (!obj || !path) return undefined;
-  return path.split(".").reduce((acc, key) => acc?.[key], obj);
+  return path.split('.').reduce((acc, key) => acc?.[key], obj);
 };
 
 /**
@@ -28,30 +28,23 @@ export const getNestedValue = (obj, path) => {
 export const setNestedValue = (obj, path, value) => {
   if (!path) return obj;
 
-  const keys = path.split(".");
+  const keys = path.split('.');
   const result = { ...(obj || {}) };
   let current = result;
 
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i];
-    if (key === "__proto__" || key === "constructor" || key === "prototype") {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
       return obj;
     }
 
     const child = current[key];
-    current[key] =
-      child && typeof child === "object" && !Array.isArray(child)
-        ? { ...child }
-        : {};
+    current[key] = child && typeof child === 'object' && !Array.isArray(child) ? { ...child } : {};
     current = current[key];
   }
 
   const lastKey = keys[keys.length - 1];
-  if (
-    lastKey === "__proto__" ||
-    lastKey === "constructor" ||
-    lastKey === "prototype"
-  ) {
+  if (lastKey === '__proto__' || lastKey === 'constructor' || lastKey === 'prototype') {
     return obj;
   }
 
@@ -68,18 +61,18 @@ export const setNestedValue = (obj, path, value) => {
 export const unsetNestedValue = (obj, path) => {
   if (!obj || !path) return obj;
 
-  const keys = path.split(".");
+  const keys = path.split('.');
   const result = { ...obj };
   let current = result;
 
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i];
-    if (key === "__proto__" || key === "constructor" || key === "prototype") {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
       return obj;
     }
 
     const child = current[key];
-    if (!child || typeof child !== "object" || Array.isArray(child)) {
+    if (!child || typeof child !== 'object' || Array.isArray(child)) {
       return obj;
     }
 
@@ -88,11 +81,7 @@ export const unsetNestedValue = (obj, path) => {
   }
 
   const lastKey = keys[keys.length - 1];
-  if (
-    lastKey === "__proto__" ||
-    lastKey === "constructor" ||
-    lastKey === "prototype"
-  ) {
+  if (lastKey === '__proto__' || lastKey === 'constructor' || lastKey === 'prototype') {
     return obj;
   }
 

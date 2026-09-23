@@ -1,40 +1,40 @@
-import { useCallback, useMemo, useState } from "react";
-import PropTypes from "prop-types";
+import { useCallback, useMemo, useState } from 'react';
 
-import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+import PropTypes from 'prop-types';
+
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 
 import {
   useProjectAddAdminMutation,
   useProjectUpdateUserRoleMutation,
   useProjectUserListQuery,
-} from "@/api/projectsApi";
+} from '@/api/projectsApi';
 
 const ROLES = [
-  { value: "admin", label: "Admin" },
-  { value: "editor", label: "Editor" },
-  { value: "viewer", label: "Viewer" },
+  { value: 'admin', label: 'Admin' },
+  { value: 'editor', label: 'Editor' },
+  { value: 'viewer', label: 'Viewer' },
 ];
 
 function AddProjectAdminDialog({ open, onClose, project }) {
-  const [email, setEmail] = useState("");
-  const [selectedRole, setSelectedRole] = useState("admin");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [email, setEmail] = useState('');
+  const [selectedRole, setSelectedRole] = useState('admin');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const [addAdmin, { isLoading: isAdding }] = useProjectAddAdminMutation();
-  const [updateRole, { isLoading: isUpdating }] =
-    useProjectUpdateUserRoleMutation();
+  const [updateRole, { isLoading: isUpdating }] = useProjectUpdateUserRoleMutation();
 
   const { data: projectUsers } = useProjectUserListQuery(
     { projectId: project?.id },
@@ -46,20 +46,16 @@ function AddProjectAdminDialog({ open, onClose, project }) {
   const existingUser = useMemo(() => {
     if (!email.trim() || !projectUsers) return null;
     const normalizedEmail = email.trim().toLowerCase();
-    return (
-      projectUsers.rows?.find(
-        (u) => u.email?.toLowerCase() === normalizedEmail,
-      ) ?? null
-    );
+    return projectUsers.rows?.find(u => u.email?.toLowerCase() === normalizedEmail) ?? null;
   }, [email, projectUsers]);
 
   const isExistingUser = Boolean(existingUser);
 
   const handleSubmit = useCallback(async () => {
-    setError("");
-    setSuccess("");
+    setError('');
+    setSuccess('');
     if (!email.trim()) {
-      setError("Email is required.");
+      setError('Email is required.');
       return;
     }
     try {
@@ -77,53 +73,58 @@ function AddProjectAdminDialog({ open, onClose, project }) {
           roles: [selectedRole],
         }).unwrap();
         const entry = Array.isArray(result) ? result[0] : result;
-        if (entry?.status === "error") {
-          setError(entry.msg || "Failed to add user.");
+        if (entry?.status === 'error') {
+          setError(entry.msg || 'Failed to add user.');
           return;
         }
         setSuccess(`User added with "${selectedRole}" role successfully.`);
       }
-      setEmail("");
-      setSelectedRole("admin");
+      setEmail('');
+      setSelectedRole('admin');
     } catch (err) {
       setError(
-        err?.data?.error ??
-          err?.error ??
-          (isExistingUser ? "Failed to update role." : "Failed to add user."),
+        err?.data?.error ?? err?.error ?? (isExistingUser ? 'Failed to update role.' : 'Failed to add user.'),
       );
     }
-  }, [
-    email,
-    selectedRole,
-    isExistingUser,
-    existingUser,
-    addAdmin,
-    updateRole,
-    project,
-  ]);
+  }, [email, selectedRole, isExistingUser, existingUser, addAdmin, updateRole, project]);
 
   const handleClose = useCallback(() => {
-    setEmail("");
-    setSelectedRole("admin");
-    setError("");
-    setSuccess("");
+    setEmail('');
+    setSelectedRole('admin');
+    setError('');
+    setSuccess('');
     onClose();
   }, [onClose]);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogTitle>Manage Project User</DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ mb: 1 }}
+        >
           Add or update a user role in project <strong>{project?.name}</strong>
         </Typography>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+          >
             {error}
           </Alert>
         )}
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
+          <Alert
+            severity="success"
+            sx={{ mb: 2 }}
+          >
             {success}
           </Alert>
         )}
@@ -134,24 +135,27 @@ function AddProjectAdminDialog({ open, onClose, project }) {
           type="email"
           fullWidth
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
           disabled={isLoading}
           placeholder="user@example.com"
-          helperText={
-            isExistingUser
-              ? "User already exists in this project — role will be updated."
-              : ""
-          }
+          helperText={isExistingUser ? 'User already exists in this project — role will be updated.' : ''}
         />
-        <FormControl fullWidth margin="dense" disabled={isLoading}>
+        <FormControl
+          fullWidth
+          margin="dense"
+          disabled={isLoading}
+        >
           <InputLabel>Role</InputLabel>
           <Select
             value={selectedRole}
             label="Role"
-            onChange={(e) => setSelectedRole(e.target.value)}
+            onChange={e => setSelectedRole(e.target.value)}
           >
-            {ROLES.map((role) => (
-              <MenuItem key={role.value} value={role.value}>
+            {ROLES.map(role => (
+              <MenuItem
+                key={role.value}
+                value={role.value}
+              >
                 {role.label}
               </MenuItem>
             ))}
@@ -159,7 +163,11 @@ function AddProjectAdminDialog({ open, onClose, project }) {
         </FormControl>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose} variant="text" disabled={isLoading}>
+        <Button
+          onClick={handleClose}
+          variant="text"
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button
@@ -169,11 +177,11 @@ function AddProjectAdminDialog({ open, onClose, project }) {
         >
           {isLoading
             ? isExistingUser
-              ? "Updating..."
-              : "Adding..."
+              ? 'Updating...'
+              : 'Adding...'
             : isExistingUser
-              ? "Update Role"
-              : "Add User"}
+              ? 'Update Role'
+              : 'Add User'}
         </Button>
       </DialogActions>
     </Dialog>

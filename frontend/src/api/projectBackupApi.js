@@ -1,5 +1,6 @@
-import { adminApi } from "./adminApi";
-import { V2_BASE, VITE_DEV_TOKEN } from "@/utils/env";
+import { V2_BASE, VITE_DEV_TOKEN } from '@/utils/env';
+
+import { adminApi } from './adminApi';
 
 const FILENAME_RE = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i;
 
@@ -15,14 +16,10 @@ const parseFilename = (header, fallback) => {
 
 // The backup endpoint streams SQL, so it is fetched directly instead of through
 // RTK Query (which would try to parse and cache the whole dump).
-export const downloadProjectBackup = async ({
-  projectId,
-  mode = "safe",
-  excludeTables = "",
-}) => {
+export const downloadProjectBackup = async ({ projectId, mode = 'safe', excludeTables = '' }) => {
   const params = new URLSearchParams({ mode });
   if (excludeTables.trim()) {
-    params.set("exclude_tables", excludeTables.trim());
+    params.set('exclude_tables', excludeTables.trim());
   }
 
   const headers = {};
@@ -32,7 +29,7 @@ export const downloadProjectBackup = async ({
 
   const response = await fetch(
     `${V2_BASE}/admin/project_backup/administration/${projectId}?${params.toString()}`,
-    { credentials: "include", headers },
+    { credentials: 'include', headers },
   );
 
   if (!response.ok) {
@@ -48,12 +45,12 @@ export const downloadProjectBackup = async ({
 
   const blob = await response.blob();
   const filename = parseFilename(
-    response.headers.get("Content-Disposition"),
+    response.headers.get('Content-Disposition'),
     `elitea-backup-${projectId}-${mode}.sql`,
   );
 
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -65,38 +62,35 @@ export const downloadProjectBackup = async ({
 };
 
 export const projectBackupApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     projectRestore: build.mutation({
       query: ({
         projectId,
         file,
-        mode = "safe",
-        tables = "",
+        mode = 'safe',
+        tables = '',
         includeParents = false,
         truncate = false,
         dryRun = true,
         allowProjectMismatch = false,
       }) => {
         const body = new FormData();
-        body.append("file", file);
-        body.append("mode", mode);
+        body.append('file', file);
+        body.append('mode', mode);
         if (tables.trim()) {
-          body.append("tables", tables.trim());
+          body.append('tables', tables.trim());
         }
-        body.append("include_parents", includeParents ? "true" : "false");
-        body.append("truncate", truncate ? "true" : "false");
-        body.append("dry_run", dryRun ? "true" : "false");
-        body.append(
-          "allow_project_mismatch",
-          allowProjectMismatch ? "true" : "false",
-        );
+        body.append('include_parents', includeParents ? 'true' : 'false');
+        body.append('truncate', truncate ? 'true' : 'false');
+        body.append('dry_run', dryRun ? 'true' : 'false');
+        body.append('allow_project_mismatch', allowProjectMismatch ? 'true' : 'false');
         return {
           url: `${V2_BASE}/admin/project_restore/administration/${projectId}`,
-          method: "POST",
+          method: 'POST',
           body,
         };
       },
-      invalidatesTags: ["Projects"],
+      invalidatesTags: ['Projects'],
     }),
   }),
 });

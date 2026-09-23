@@ -1,9 +1,11 @@
-import { memo, useCallback, useRef } from "react";
-import { Box, Button } from "@mui/material";
-import { FileUploadOutlined, FileDownloadOutlined } from "@mui/icons-material";
-import PropTypes from "prop-types";
+import { memo, useCallback, useRef } from 'react';
 
-const ImportExportButtons = memo((props) => {
+import PropTypes from 'prop-types';
+
+import { FileDownloadOutlined, FileUploadOutlined } from '@mui/icons-material';
+import { Box, Button } from '@mui/material';
+
+const ImportExportButtons = memo(props => {
   const { palette, mode, onImport, onError, disabled } = props;
   const fileInputRef = useRef(null);
 
@@ -12,50 +14,50 @@ const ImportExportButtons = memo((props) => {
   }, []);
 
   const handleFileChange = useCallback(
-    (event) => {
+    event => {
       const file = event.target.files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         try {
           const json = JSON.parse(e.target.result);
           onImport(json);
         } catch (error) {
-          console.error("JSON parse error:", error);
-          onError("Invalid JSON file. Please check the file format.");
+          console.error('JSON parse error:', error);
+          onError('Invalid JSON file. Please check the file format.');
         }
       };
       reader.onerror = () => {
-        onError("Failed to read file.");
+        onError('Failed to read file.');
       };
       reader.readAsText(file);
 
       // Reset input so same file can be selected again
-      event.target.value = "";
+      event.target.value = '';
     },
     [onImport, onError],
   );
 
   const handleExport = useCallback(() => {
     if (!palette) {
-      onError("No palette to export.");
+      onError('No palette to export.');
       return;
     }
 
     const exportData = {
-      mode: mode || "dark",
+      mode: mode || 'dark',
       ...palette,
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-      type: "application/json",
+      type: 'application/json',
     });
 
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = url;
-    link.download = `custom-theme-${mode || "dark"}.json`;
+    link.download = `custom-theme-${mode || 'dark'}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -69,7 +71,7 @@ const ImportExportButtons = memo((props) => {
         type="file"
         accept="application/json,.json"
         onChange={handleFileChange}
-        style={{ display: "none" }}
+        style={{ display: 'none' }}
       />
 
       <Button
@@ -95,7 +97,7 @@ const ImportExportButtons = memo((props) => {
   );
 });
 
-ImportExportButtons.displayName = "ImportExportButtons";
+ImportExportButtons.displayName = 'ImportExportButtons';
 
 ImportExportButtons.propTypes = {
   palette: PropTypes.object,
@@ -107,12 +109,12 @@ ImportExportButtons.propTypes = {
 
 const styles = {
   root: {
-    display: "flex",
-    gap: "0.5rem",
+    display: 'flex',
+    gap: '0.5rem',
   },
   button: {
-    height: "2.25rem",
-    fontSize: "0.875rem",
+    height: '2.25rem',
+    fontSize: '0.875rem',
   },
 };
 

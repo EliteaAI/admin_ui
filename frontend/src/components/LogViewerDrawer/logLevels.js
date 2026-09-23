@@ -1,17 +1,17 @@
-export const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"];
+export const LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'];
 
 export const LEVEL_COLORS = {
-  DEBUG: "default",
-  INFO: "info",
-  WARNING: "warning",
-  ERROR: "error",
-  CRITICAL: "error",
+  DEBUG: 'default',
+  INFO: 'info',
+  WARNING: 'warning',
+  ERROR: 'error',
+  CRITICAL: 'error',
 };
 
 // Matches the SecretFormatter line prefix, e.g.
 // "2026.08.06 06:55:34 UTC -    DEBUG - plugins.auth.module - message"
 const LEVEL_LINE_RE = new RegExp(
-  `^\\d{4}\\.\\d{2}\\.\\d{2}\\s+[\\d:]+\\s+\\S*\\s+-\\s+(${LOG_LEVELS.join("|")})\\s+-`,
+  `^\\d{4}\\.\\d{2}\\.\\d{2}\\s+[\\d:]+\\s+\\S*\\s+-\\s+(${LOG_LEVELS.join('|')})\\s+-`,
 );
 
 // Splits log text into level-tagged blocks, folding continuation lines
@@ -20,7 +20,7 @@ const LEVEL_LINE_RE = new RegExp(
 export function filterLogsByLevel(logText, activeLevels) {
   if (!logText) return logText;
 
-  const lines = logText.split("\n");
+  const lines = logText.split('\n');
   const blocks = [];
   let current = null;
 
@@ -37,7 +37,7 @@ export function filterLogsByLevel(logText, activeLevels) {
   }
 
   return blocks
-    .filter((block) => block.level === null || activeLevels.has(block.level))
-    .flatMap((block) => block.lines)
-    .join("\n");
+    .filter(block => block.level === null || activeLevels.has(block.level))
+    .flatMap(block => block.lines)
+    .join('\n');
 }

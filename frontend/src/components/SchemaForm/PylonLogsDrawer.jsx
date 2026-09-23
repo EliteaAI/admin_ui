@@ -1,63 +1,57 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Drawer from "@mui/material/Drawer";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
-import CircularProgress from "@mui/material/CircularProgress";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import CloseOutlined from "@mui/icons-material/CloseOutlined";
-import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
-import FullscreenOutlined from "@mui/icons-material/FullscreenOutlined";
-import FullscreenExitOutlined from "@mui/icons-material/FullscreenExitOutlined";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import { useTheme } from "@mui/material/styles";
-import CodeMirror from "@uiw/react-codemirror";
-import { EditorView, keymap } from "@codemirror/view";
-import { search, searchKeymap } from "@codemirror/search";
-import { useRuntimePylonLogsMutation } from "@/api/configurationApi";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const PylonLogsDrawer = memo(function PylonLogsDrawer({
-  open,
-  pylonId,
-  onClose,
-}) {
-  const [logs, setLogs] = useState("");
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import FullscreenExitOutlined from '@mui/icons-material/FullscreenExitOutlined';
+import FullscreenOutlined from '@mui/icons-material/FullscreenOutlined';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Snackbar from '@mui/material/Snackbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
+
+import { useRuntimePylonLogsMutation } from '@/api/configurationApi';
+import { search, searchKeymap } from '@codemirror/search';
+import { EditorView, keymap } from '@codemirror/view';
+import CodeMirror from '@uiw/react-codemirror';
+
+const PylonLogsDrawer = memo(({ open, pylonId, onClose }) => {
+  const [logs, setLogs] = useState('');
   const [fetchLogs, { isLoading }] = useRuntimePylonLogsMutation();
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
   const [downloadAnchor, setDownloadAnchor] = useState(null);
   const [fullscreen, setFullscreen] = useState(false);
   const editorViewRef = useRef(null);
   const muiTheme = useTheme();
-  const cmTheme = muiTheme.palette.mode === "dark" ? "dark" : "light";
+  const cmTheme = muiTheme.palette.mode === 'dark' ? 'dark' : 'light';
 
   const extensions = useMemo(
-    () => [
-      search({ top: false }),
-      keymap.of(searchKeymap),
-      EditorView.lineWrapping,
-    ],
+    () => [search({ top: false }), keymap.of(searchKeymap), EditorView.lineWrapping],
     [],
   );
 
-  const handleCreateEditor = useCallback((view) => {
+  const handleCreateEditor = useCallback(view => {
     editorViewRef.current = view;
   }, []);
 
   const scrollToTop = useCallback(() => {
     const view = editorViewRef.current;
     if (view) {
-      view.dispatch({ effects: EditorView.scrollIntoView(0, { y: "start" }) });
+      view.dispatch({ effects: EditorView.scrollIntoView(0, { y: 'start' }) });
     }
   }, []);
 
@@ -65,7 +59,7 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
     const view = editorViewRef.current;
     if (view) {
       view.dispatch({
-        effects: EditorView.scrollIntoView(view.state.doc.length, { y: "end" }),
+        effects: EditorView.scrollIntoView(view.state.doc.length, { y: 'end' }),
       });
     }
   }, []);
@@ -73,7 +67,7 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
   // Clear logs when drawer opens with a new pylon
   useEffect(() => {
     if (open) {
-      setLogs("");
+      setLogs('');
     }
   }, [open, pylonId]);
 
@@ -81,37 +75,37 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
     try {
       const result = await fetchLogs({ pylonId }).unwrap();
       if (result.ok) {
-        setLogs(result.logs || "");
+        setLogs(result.logs || '');
       } else {
         setSnackbar({
           open: true,
-          message: "Error during logs retrieval",
-          severity: "error",
+          message: 'Error during logs retrieval',
+          severity: 'error',
         });
       }
     } catch (err) {
       setSnackbar({
         open: true,
-        message: "Error during logs retrieval",
-        severity: "error",
+        message: 'Error during logs retrieval',
+        severity: 'error',
       });
       console.error(err);
     }
   }, [fetchLogs, pylonId]);
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-  const handleDownloadClick = useCallback((e) => {
+  const handleDownloadClick = useCallback(e => {
     setDownloadAnchor(e.currentTarget);
   }, []);
 
   const handleDownload = useCallback(
-    (format) => {
-      const blob = new Blob([logs], { type: "text/plain" });
+    format => {
+      const blob = new Blob([logs], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
       a.download = `${pylonId}.${format}`;
       document.body.appendChild(a);
@@ -135,7 +129,10 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
           {/* Header */}
           <Box sx={styles.header}>
             <Box sx={styles.headerLeft}>
-              <Typography variant="h6" sx={styles.title}>
+              <Typography
+                variant="h6"
+                sx={styles.title}
+              >
                 Pylon Logs
               </Typography>
               <Typography
@@ -146,11 +143,11 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
                 {pylonId}
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", gap: "0.25rem" }}>
-              <Tooltip title={fullscreen ? "Exit fullscreen" : "Fullscreen"}>
+            <Box sx={{ display: 'flex', gap: '0.25rem' }}>
+              <Tooltip title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
                 <IconButton
                   size="small"
-                  onClick={() => setFullscreen((f) => !f)}
+                  onClick={() => setFullscreen(f => !f)}
                 >
                   {fullscreen ? (
                     <FullscreenExitOutlined fontSize="small" />
@@ -159,7 +156,10 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
                   )}
                 </IconButton>
               </Tooltip>
-              <IconButton size="small" onClick={onClose}>
+              <IconButton
+                size="small"
+                onClick={onClose}
+              >
                 <CloseOutlined fontSize="small" />
               </IconButton>
             </Box>
@@ -184,12 +184,15 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
                       onCreateEditor={handleCreateEditor}
                       style={{
                         flex: 1,
-                        overflow: "hidden",
-                        fontSize: "0.75rem",
+                        overflow: 'hidden',
+                        fontSize: '0.75rem',
                       }}
                     />
                     <Box sx={styles.scrollButtons}>
-                      <Tooltip title="Scroll to top" placement="left">
+                      <Tooltip
+                        title="Scroll to top"
+                        placement="left"
+                      >
                         <IconButton
                           size="small"
                           onClick={scrollToTop}
@@ -198,7 +201,10 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
                           <KeyboardArrowUpIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Scroll to bottom" placement="left">
+                      <Tooltip
+                        title="Scroll to bottom"
+                        placement="left"
+                      >
                         <IconButton
                           size="small"
                           onClick={scrollToBottom}
@@ -210,9 +216,7 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
                     </Box>
                   </>
                 ) : (
-                  <Box sx={styles.placeholder}>
-                    Click &quot;Fetch&quot; to load pylon logs.
-                  </Box>
+                  <Box sx={styles.placeholder}>Click &quot;Fetch&quot; to load pylon logs.</Box>
                 )}
               </Box>
             )}
@@ -223,8 +227,8 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
             <Button
               size="small"
               variant="outlined"
-              startIcon={<DownloadOutlinedIcon sx={{ fontSize: "0.875rem" }} />}
-              endIcon={<ArrowDropDownIcon sx={{ fontSize: "0.875rem" }} />}
+              startIcon={<DownloadOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
+              endIcon={<ArrowDropDownIcon sx={{ fontSize: '0.875rem' }} />}
               onClick={handleDownloadClick}
               disabled={!logs || isLoading}
               sx={styles.actionButton}
@@ -235,13 +239,19 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
               anchorEl={downloadAnchor}
               open={Boolean(downloadAnchor)}
               onClose={() => setDownloadAnchor(null)}
-              anchorOrigin={{ vertical: "top", horizontal: "right" }}
-              transformOrigin={{ vertical: "bottom", horizontal: "right" }}
+              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-              <MenuItem dense onClick={() => handleDownload("log")}>
+              <MenuItem
+                dense
+                onClick={() => handleDownload('log')}
+              >
                 .log
               </MenuItem>
-              <MenuItem dense onClick={() => handleDownload("txt")}>
+              <MenuItem
+                dense
+                onClick={() => handleDownload('txt')}
+              >
                 .txt
               </MenuItem>
             </Menu>
@@ -252,7 +262,7 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
               disabled={isLoading}
               sx={styles.actionButton}
             >
-              {isLoading ? "Fetching..." : "Fetch"}
+              {isLoading ? 'Fetching...' : 'Fetch'}
             </Button>
           </Box>
         </Box>
@@ -262,13 +272,13 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
         open={snackbar.open}
         autoHideDuration={5000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -277,105 +287,107 @@ const PylonLogsDrawer = memo(function PylonLogsDrawer({
   );
 });
 
+PylonLogsDrawer.displayName = 'PylonLogsDrawer';
+
 const styles = {
-  drawer: (fullscreen) => ({
-    "& .MuiDrawer-paper": {
-      width: fullscreen ? "100vw" : "50vw",
-      maxWidth: fullscreen ? "100vw" : "50vw",
-      transition: "width 0.3s ease, max-width 0.3s ease",
+  drawer: fullscreen => ({
+    '& .MuiDrawer-paper': {
+      width: fullscreen ? '100vw' : '50vw',
+      maxWidth: fullscreen ? '100vw' : '50vw',
+      transition: 'width 0.3s ease, max-width 0.3s ease',
     },
   }),
   root: {
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
-    overflow: "hidden",
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
+    overflow: 'hidden',
   },
   header: ({ palette }) => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "1rem 1.5rem",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '1rem 1.5rem',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   headerLeft: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.125rem",
-    overflow: "hidden",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.125rem',
+    overflow: 'hidden',
   },
   title: {
-    fontSize: "1rem",
+    fontSize: '1rem',
     fontWeight: 600,
   },
   subtitle: {
-    fontSize: "0.75rem",
-    fontFamily: "monospace",
+    fontSize: '0.75rem',
+    fontFamily: 'monospace',
   },
   logsArea: {
     flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
   logsWrapper: {
     flex: 1,
-    display: "flex",
-    position: "relative",
-    overflow: "hidden",
-    "& .cm-editor": {
+    display: 'flex',
+    position: 'relative',
+    overflow: 'hidden',
+    '& .cm-editor': {
       flex: 1,
-      height: "100%",
+      height: '100%',
     },
-    "& .cm-scroller": {
-      fontFamily: "monospace",
-      fontSize: "0.75rem",
+    '& .cm-scroller': {
+      fontFamily: 'monospace',
+      fontSize: '0.75rem',
       lineHeight: 1.6,
     },
   },
   placeholder: ({ palette }) => ({
     flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "0.875rem",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '0.875rem',
     color: palette.text.secondary,
-    fontFamily: "monospace",
+    fontFamily: 'monospace',
   }),
   scrollButtons: {
-    position: "absolute",
-    right: "1.25rem",
-    bottom: "0.75rem",
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.25rem",
+    position: 'absolute',
+    right: '1.25rem',
+    bottom: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
     zIndex: 1,
   },
   scrollButton: ({ palette }) => ({
     backgroundColor: palette.background.paper,
     border: `1px solid ${palette.border?.table || palette.divider}`,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-    "&:hover": {
-      backgroundColor: palette.action?.hover || "rgba(0,0,0,0.08)",
+    boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+    '&:hover': {
+      backgroundColor: palette.action?.hover || 'rgba(0,0,0,0.08)',
     },
   }),
   loading: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
   },
   footer: ({ palette }) => ({
-    display: "flex",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    gap: "0.5rem",
-    padding: "0.75rem 1.5rem",
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.75rem 1.5rem',
     borderTop: `0.0625rem solid ${palette.border.table}`,
   }),
   actionButton: {
-    textTransform: "none",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    fontSize: '0.8125rem',
   },
 };
 

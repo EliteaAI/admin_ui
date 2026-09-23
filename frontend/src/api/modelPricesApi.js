@@ -1,10 +1,10 @@
-import { adminApi } from "./adminApi";
+import { adminApi } from './adminApi';
 
 export const modelPricesApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     modelPriceList: build.query({
       query: ({ limit = 50, offset = 0, search, mode, custom_only } = {}) => ({
-        url: "/costs/prices/administration/0",
+        url: '/costs/prices/administration/0',
         params: {
           limit,
           offset,
@@ -13,56 +13,56 @@ export const modelPricesApi = adminApi.injectEndpoints({
           ...(custom_only && { custom_only }),
         },
       }),
-      providesTags: ["ModelPrices"],
+      providesTags: ['ModelPrices'],
     }),
 
     modelPriceGet: build.query({
       query: ({ modelName }) => ({
         url: `/costs/price/administration/0/${encodeURIComponent(modelName)}`,
       }),
-      providesTags: ["ModelPrices"],
+      providesTags: ['ModelPrices'],
     }),
 
     modelPriceCreate: build.mutation({
-      query: (body) => ({
-        url: "/costs/price/administration/0",
-        method: "POST",
+      query: body => ({
+        url: '/costs/price/administration/0',
+        method: 'POST',
         body,
       }),
-      invalidatesTags: ["ModelPrices"],
+      invalidatesTags: ['ModelPrices'],
     }),
 
     modelPriceUpdate: build.mutation({
       query: ({ modelName, ...body }) => ({
         url: `/costs/price/administration/0/${encodeURIComponent(modelName)}`,
-        method: "PUT",
+        method: 'PUT',
         body,
       }),
-      invalidatesTags: ["ModelPrices"],
+      invalidatesTags: ['ModelPrices'],
     }),
 
     modelPriceReset: build.mutation({
       query: ({ modelName }) => ({
         url: `/costs/price/administration/0/${encodeURIComponent(modelName)}`,
-        method: "DELETE",
+        method: 'DELETE',
       }),
-      invalidatesTags: ["ModelPrices"],
+      invalidatesTags: ['ModelPrices'],
     }),
 
     modelPriceSources: build.query({
       query: () => ({
-        url: "/costs/sources/administration/0",
+        url: '/costs/sources/administration/0',
       }),
-      providesTags: ["ModelPrices"],
+      providesTags: ['ModelPrices'],
     }),
 
     modelPriceReimport: build.mutation({
       query: ({ source_id }) => ({
-        url: "/costs/sources/administration/0",
-        method: "POST",
+        url: '/costs/sources/administration/0',
+        method: 'POST',
         body: { source_id },
       }),
-      invalidatesTags: ["ModelPrices"],
+      invalidatesTags: ['ModelPrices'],
     }),
   }),
 });

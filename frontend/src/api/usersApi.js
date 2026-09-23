@@ -1,16 +1,9 @@
-import { adminApi } from "./adminApi";
+import { adminApi } from './adminApi';
 
 export const usersApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     userList: build.query({
-      query: ({
-        limit = 20,
-        offset = 0,
-        search,
-        user_type,
-        sort_by,
-        sort_order,
-      } = {}) => ({
+      query: ({ limit = 20, offset = 0, search, user_type, sort_by, sort_order } = {}) => ({
         url: `/admin/auth_users/administration`,
         params: {
           limit,
@@ -21,124 +14,124 @@ export const usersApi = adminApi.injectEndpoints({
           ...(sort_order && { sort_order }),
         },
       }),
-      transformResponse: (response) => ({
+      transformResponse: response => ({
         ...response,
-        rows: response.rows?.map((user) => ({
+        rows: response.rows?.map(user => ({
           ...user,
-          status: user.suspended ? "suspended" : "active",
+          status: user.suspended ? 'suspended' : 'active',
         })),
       }),
-      providesTags: ["Users"],
+      providesTags: ['Users'],
     }),
 
     userDelete: build.mutation({
       query: ({ userIds }) => ({
-        url: "/admin/auth_users/administration",
-        method: "POST",
+        url: '/admin/auth_users/administration',
+        method: 'POST',
         body: {
-          action: "delete",
-          users: userIds.map((id) => ({ id })),
+          action: 'delete',
+          users: userIds.map(id => ({ id })),
         },
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: ['Users'],
     }),
 
     userToggleAdmin: build.mutation({
       query: ({ userId, isAdmin }) => ({
-        url: "/admin/auth_users/administration",
-        method: "POST",
+        url: '/admin/auth_users/administration',
+        method: 'POST',
         body: {
-          action: "toggle_admin",
+          action: 'toggle_admin',
           user_id: userId,
           is_admin: isAdmin,
         },
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: ['Users'],
     }),
 
     userSetAdminRole: build.mutation({
       query: ({ userId, roleName }) => ({
-        url: "/admin/auth_users/administration",
-        method: "POST",
+        url: '/admin/auth_users/administration',
+        method: 'POST',
         body: {
-          action: "set_admin_role",
+          action: 'set_admin_role',
           user_id: userId,
           role_name: roleName, // Can be null to remove all admin roles
         },
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: ['Users'],
     }),
 
     userSuspend: build.mutation({
       query: ({ userId, suspended }) => ({
         url: `/admin/user_suspend/administration/${userId}`,
-        method: "PUT",
+        method: 'PUT',
         body: { suspended },
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: ['Users'],
     }),
 
     roleList: build.query({
-      query: ({ targetMode = "default" } = {}) => ({
+      query: ({ targetMode = 'default' } = {}) => ({
         url: `/admin/roles/administration/${targetMode}`,
       }),
-      providesTags: ["Roles"],
+      providesTags: ['Roles'],
     }),
 
     permissionMatrix: build.query({
-      query: ({ targetMode = "default" } = {}) => ({
+      query: ({ targetMode = 'default' } = {}) => ({
         url: `/admin/permissions/administration/${targetMode}`,
       }),
-      providesTags: ["Permissions"],
+      providesTags: ['Permissions'],
     }),
 
     permissionMatrixUpdate: build.mutation({
-      query: ({ targetMode = "default", rows }) => ({
+      query: ({ targetMode = 'default', rows }) => ({
         url: `/admin/permissions/administration/${targetMode}`,
-        method: "PUT",
+        method: 'PUT',
         body: rows,
       }),
-      invalidatesTags: ["Permissions"],
+      invalidatesTags: ['Permissions'],
     }),
 
     permissionMatrixSync: build.mutation({
-      query: ({ targetMode = "default" }) => ({
+      query: ({ targetMode = 'default' }) => ({
         url: `/admin/permissions/administration/${targetMode}`,
-        method: "POST",
+        method: 'POST',
       }),
-      invalidatesTags: ["Permissions"],
+      invalidatesTags: ['Permissions'],
     }),
 
     publicPermissionMatrix: build.query({
-      query: ({ targetMode = "default" } = {}) => ({
+      query: ({ targetMode = 'default' } = {}) => ({
         url: `/admin/permissions/public/${targetMode}`,
       }),
-      providesTags: ["PublicPermissions"],
+      providesTags: ['PublicPermissions'],
     }),
 
     publicPermissionMatrixUpdate: build.mutation({
-      query: ({ targetMode = "default", rows }) => ({
+      query: ({ targetMode = 'default', rows }) => ({
         url: `/admin/permissions/public/${targetMode}`,
-        method: "PUT",
+        method: 'PUT',
         body: rows,
       }),
-      invalidatesTags: ["PublicPermissions"],
+      invalidatesTags: ['PublicPermissions'],
     }),
 
     supportPermissionMatrix: build.query({
-      query: ({ targetMode = "default" } = {}) => ({
+      query: ({ targetMode = 'default' } = {}) => ({
         url: `/admin/permissions/support/${targetMode}`,
       }),
-      providesTags: ["SupportPermissions"],
+      providesTags: ['SupportPermissions'],
     }),
 
     supportPermissionMatrixUpdate: build.mutation({
-      query: ({ targetMode = "default", rows }) => ({
+      query: ({ targetMode = 'default', rows }) => ({
         url: `/admin/permissions/support/${targetMode}`,
-        method: "PUT",
+        method: 'PUT',
         body: rows,
       }),
-      invalidatesTags: ["SupportPermissions"],
+      invalidatesTags: ['SupportPermissions'],
     }),
   }),
 });

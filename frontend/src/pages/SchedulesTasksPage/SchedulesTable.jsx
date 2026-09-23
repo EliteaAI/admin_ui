@@ -1,80 +1,65 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useState } from 'react';
 
-import { Link } from "react-router-dom";
+import cronstrue from 'cronstrue';
+import { Link } from 'react-router-dom';
 
-import { Box, Input, Switch, Tooltip, Typography } from "@mui/material";
-import LockOutlined from "@mui/icons-material/LockOutlined";
-import cronstrue from "cronstrue";
+import LockOutlined from '@mui/icons-material/LockOutlined';
+import { Box, Input, Switch, Tooltip, Typography } from '@mui/material';
 
-import { RouteDefinitions } from "@/routes";
-import { PERMISSIONS } from "@/constants/permissions";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
-import {
-  GridTableContainer,
-  GridTableHeader,
-  GridTableBody,
-  GridTableRow,
-} from "@/components/GridTable";
+import { GridTableBody, GridTableContainer, GridTableHeader, GridTableRow } from '@/components/GridTable';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
+import { RouteDefinitions } from '@/routes';
 
 const SCHEDULE_COLUMNS = [
-  { field: "name", label: "Name", width: "1fr", sortable: true },
-  { field: "cron", label: "Cron", width: "14rem", sortable: false },
-  { field: "active", label: "Active", width: "5rem", sortable: false },
-  { field: "rpc_func", label: "Function", width: "1fr", sortable: true },
-  { field: "last_run", label: "Last Run", width: "12rem", sortable: true },
+  { field: 'name', label: 'Name', width: '1fr', sortable: true },
+  { field: 'cron', label: 'Cron', width: '14rem', sortable: false },
+  { field: 'active', label: 'Active', width: '5rem', sortable: false },
+  { field: 'rpc_func', label: 'Function', width: '1fr', sortable: true },
+  { field: 'last_run', label: 'Last Run', width: '12rem', sortable: true },
 ];
 
 const CONFIG_SECTION_TITLES = {
-  runtime: "Runtime",
+  runtime: 'Runtime',
 };
 
-const describeConfigLocation = (managedBy) => {
+const describeConfigLocation = managedBy => {
   const title = CONFIG_SECTION_TITLES[managedBy?.section];
-  return title
-    ? `Managed in Configuration \u2192 ${title}`
-    : "Managed by the platform configuration";
+  return title ? `Managed in Configuration \u2192 ${title}` : 'Managed by the platform configuration';
 };
 
 function describeCron(expr) {
   try {
     return cronstrue.toString(expr, { use24HourTimeFormat: true });
   } catch {
-    return "";
+    return '';
   }
 }
 
-const SchedulesTable = memo((props) => {
-  const {
-    schedules,
-    sortConfig,
-    onSort,
-    onToggleActive,
-    onCronUpdate,
-    onScheduleClick,
-  } = props;
+const SchedulesTable = memo(props => {
+  const { schedules, sortConfig, onSort, onToggleActive, onCronUpdate, onScheduleClick } = props;
 
   const { hasPermission } = useCheckPermission();
   const canOpenConfiguration = hasPermission(PERMISSIONS.runtime.plugins);
 
   const [editingCronId, setEditingCronId] = useState(null);
-  const [cronDraft, setCronDraft] = useState("");
+  const [cronDraft, setCronDraft] = useState('');
   const [hoveredRowId, setHoveredRowId] = useState(null);
 
-  const { visibleColumns, dataColumns, gridTemplateColumns } =
-    useResponsiveColumns({
-      columns: SCHEDULE_COLUMNS,
-      containerWidth: window.innerWidth,
-      showCheckbox: false,
-    });
+  const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
+    columns: SCHEDULE_COLUMNS,
+    containerWidth: window.innerWidth,
+    showCheckbox: false,
+  });
 
-  const handleCronClick = useCallback((schedule) => {
+  const handleCronClick = useCallback(schedule => {
     setEditingCronId(schedule.id);
     setCronDraft(schedule.cron);
   }, []);
 
   const handleCronBlur = useCallback(
-    (schedule) => {
+    schedule => {
       setEditingCronId(null);
       onCronUpdate(schedule, cronDraft.trim());
     },
@@ -83,11 +68,11 @@ const SchedulesTable = memo((props) => {
 
   const handleCronKeyDown = useCallback(
     (e, schedule) => {
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         setEditingCronId(null);
         onCronUpdate(schedule, cronDraft.trim());
       }
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         setEditingCronId(null);
       }
     },
@@ -96,7 +81,7 @@ const SchedulesTable = memo((props) => {
 
   const renderCell = useCallback(
     (column, value, row) => {
-      if (column.field === "name") {
+      if (column.field === 'name') {
         return (
           <Box sx={styles.nameCell}>
             <Typography
@@ -109,8 +94,7 @@ const SchedulesTable = memo((props) => {
             </Typography>
             {row.managed_by && (
               <Tooltip title={describeConfigLocation(row.managed_by)}>
-                {canOpenConfiguration &&
-                CONFIG_SECTION_TITLES[row.managed_by.section] ? (
+                {canOpenConfiguration && CONFIG_SECTION_TITLES[row.managed_by.section] ? (
                   <Link
                     to={`${RouteDefinitions.Configuration}#${row.managed_by.section}`}
                     aria-label={describeConfigLocation(row.managed_by)}
@@ -127,7 +111,7 @@ const SchedulesTable = memo((props) => {
         );
       }
 
-      if (column.field === "active") {
+      if (column.field === 'active') {
         const toggleable = onToggleActive && !row.managed_by;
         const control = (
           <Switch
@@ -145,7 +129,7 @@ const SchedulesTable = memo((props) => {
         );
       }
 
-      if (column.field === "cron") {
+      if (column.field === 'cron') {
         const editable = onCronUpdate && !row.managed_by;
         if (editable && editingCronId === row.id) {
           return (
@@ -153,9 +137,9 @@ const SchedulesTable = memo((props) => {
               autoFocus
               disableUnderline
               value={cronDraft}
-              onChange={(e) => setCronDraft(e.target.value)}
+              onChange={e => setCronDraft(e.target.value)}
               onBlur={() => handleCronBlur(row)}
-              onKeyDown={(e) => handleCronKeyDown(e, row)}
+              onKeyDown={e => handleCronKeyDown(e, row)}
               sx={styles.cronInput}
             />
           );
@@ -186,7 +170,7 @@ const SchedulesTable = memo((props) => {
         );
       }
 
-      if (column.field === "last_run") {
+      if (column.field === 'last_run') {
         if (!value) {
           return (
             <Typography
@@ -219,13 +203,14 @@ const SchedulesTable = memo((props) => {
           color="text.secondary"
           sx={styles.cellText}
         >
-          {value || "\u2014"}
+          {value || '\u2014'}
         </Typography>
       );
     },
     [
       canOpenConfiguration,
       onToggleActive,
+      onCronUpdate,
       onScheduleClick,
       editingCronId,
       cronDraft,
@@ -235,7 +220,7 @@ const SchedulesTable = memo((props) => {
     ],
   );
 
-  const getRowSx = useCallback((row) => {
+  const getRowSx = useCallback(row => {
     if (!row.active) return styles.inactiveRow;
     return undefined;
   }, []);
@@ -256,7 +241,7 @@ const SchedulesTable = memo((props) => {
         />
 
         <GridTableBody>
-          {schedules.map((row) => (
+          {schedules.map(row => (
             <GridTableRow
               key={row.id}
               row={row}
@@ -276,85 +261,86 @@ const SchedulesTable = memo((props) => {
   );
 });
 
+SchedulesTable.displayName = 'SchedulesTable';
+
 const styles = {
   tableContainer: {
     flex: 1,
     minHeight: 0,
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
   },
   nameCell: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.375rem",
-    overflow: "hidden",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+    overflow: 'hidden',
   },
   managedLink: {
-    display: "inline-flex",
-    alignItems: "center",
-    color: "inherit",
+    display: 'inline-flex',
+    alignItems: 'center',
+    color: 'inherit',
   },
   managedIcon: {
-    fontSize: "0.875rem",
+    fontSize: '0.875rem',
     opacity: 0.6,
   },
   cellText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   nameText: {
-    cursor: "pointer",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    "&:hover": {
-      textDecoration: "underline",
+    cursor: 'pointer',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    '&:hover': {
+      textDecoration: 'underline',
     },
   },
   cronCell: {
-    cursor: "pointer",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.125rem",
-    "&:hover .MuiTypography-root:first-of-type": {
-      textDecoration: "underline",
+    cursor: 'pointer',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.125rem',
+    '&:hover .MuiTypography-root:first-of-type': {
+      textDecoration: 'underline',
     },
   },
   cronCellReadOnly: {
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.125rem",
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.125rem',
   },
   cronText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    fontFamily: "monospace",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontFamily: 'monospace',
   },
   cronDesc: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    fontSize: "0.6875rem",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontSize: '0.6875rem',
     lineHeight: 1.2,
     opacity: 0.7,
   },
   cronInput: ({ palette }) => ({
-    fontSize: "0.8125rem",
-    fontFamily: "monospace",
-    padding: "0.125rem 0.375rem",
+    fontSize: '0.8125rem',
+    fontFamily: 'monospace',
+    padding: '0.125rem 0.375rem',
     backgroundColor: palette.background.userInputBackgroundActive,
-    borderRadius: "0.25rem",
-    width: "100%",
+    borderRadius: '0.25rem',
+    width: '100%',
   }),
   inactiveRow: ({ palette }) => ({
     opacity: 0.5,
-    backgroundColor:
-      palette.mode === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
+    backgroundColor: palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
   }),
 };
 

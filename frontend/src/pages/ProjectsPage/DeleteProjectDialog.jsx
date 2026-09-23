@@ -1,52 +1,62 @@
-import { useCallback, useState } from "react";
-import PropTypes from "prop-types";
+import { useCallback, useState } from 'react';
 
-import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import Typography from "@mui/material/Typography";
+import PropTypes from 'prop-types';
 
-import { useProjectDeleteMutation } from "@/api/projectsApi";
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Typography from '@mui/material/Typography';
+
+import { useProjectDeleteMutation } from '@/api/projectsApi';
 
 function DeleteProjectDialog({ open, onClose, projectIds }) {
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [deleteProject, { isLoading }] = useProjectDeleteMutation();
 
   const count = projectIds?.length ?? 0;
 
   const handleDelete = useCallback(async () => {
-    setError("");
+    setError('');
     try {
       for (const projectId of projectIds) {
         await deleteProject({ projectId }).unwrap();
       }
       onClose();
     } catch (err) {
-      setError(
-        err?.data?.error ?? err?.error ?? "Failed to delete project(s).",
-      );
+      setError(err?.data?.error ?? err?.error ?? 'Failed to delete project(s).');
     }
   }, [projectIds, deleteProject, onClose]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Delete Project{count > 1 ? "s" : ""}</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogTitle>Delete Project{count > 1 ? 's' : ''}</DialogTitle>
       <DialogContent>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+          >
             {error}
           </Alert>
         )}
         <Typography variant="bodyMedium">
-          Are you sure you want to delete {count} project{count > 1 ? "s" : ""}?
-          This action cannot be undone.
+          Are you sure you want to delete {count} project{count > 1 ? 's' : ''}? This action cannot be undone.
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} variant="text" disabled={isLoading}>
+        <Button
+          onClick={onClose}
+          variant="text"
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button
@@ -55,7 +65,7 @@ function DeleteProjectDialog({ open, onClose, projectIds }) {
           color="error"
           disabled={isLoading}
         >
-          {isLoading ? "Deleting..." : "Delete"}
+          {isLoading ? 'Deleting...' : 'Delete'}
         </Button>
       </DialogActions>
     </Dialog>

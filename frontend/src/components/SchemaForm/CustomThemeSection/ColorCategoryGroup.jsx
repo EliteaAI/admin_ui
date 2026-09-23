@@ -1,24 +1,25 @@
-import { memo, useState, useCallback, useMemo } from "react";
-import { Box, Typography } from "@mui/material";
-import PropTypes from "prop-types";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import CollapsibleSection from "@/components/CollapsibleSection";
-import { getNestedValue } from "@/utils/nestedValue";
-import ColorPickerField from "./ColorPickerField";
+import PropTypes from 'prop-types';
 
-const ColorCategoryGroup = memo((props) => {
+import { Box, Typography } from '@mui/material';
+
+import CollapsibleSection from '@/components/CollapsibleSection';
+import { getNestedValue } from '@/utils/nestedValue';
+
+import ColorPickerField from './ColorPickerField';
+
+const ColorCategoryGroup = memo(props => {
   const { category, palette, onChange, defaultExpanded = false } = props;
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const handleToggle = useCallback(() => {
-    setExpanded((prev) => !prev);
+    setExpanded(prev => !prev);
   }, []);
 
   // How many of this category's tokens the theme actually defines
   const countLabel = useMemo(() => {
-    const filledCount = category.colors.filter((color) =>
-      getNestedValue(palette, color.key),
-    ).length;
+    const filledCount = category.colors.filter(color => getNestedValue(palette, color.key)).length;
 
     return `${filledCount}/${category.colors.length} colors`;
   }, [category, palette]);
@@ -32,19 +33,22 @@ const ColorCategoryGroup = memo((props) => {
       onToggle={handleToggle}
     >
       {category.description && (
-        <Typography variant="caption" sx={styles.description}>
+        <Typography
+          variant="caption"
+          sx={styles.description}
+        >
           {category.description}
         </Typography>
       )}
 
       <Box sx={styles.colorGrid}>
-        {category.colors.map((color) => (
+        {category.colors.map(color => (
           <ColorPickerField
             key={color.key}
             label={color.label}
             hint={color.hint}
             colorKey={color.key}
-            value={getNestedValue(palette, color.key) || ""}
+            value={getNestedValue(palette, color.key) || ''}
             onChange={onChange}
           />
         ))}
@@ -53,7 +57,7 @@ const ColorCategoryGroup = memo((props) => {
   );
 });
 
-ColorCategoryGroup.displayName = "ColorCategoryGroup";
+ColorCategoryGroup.displayName = 'ColorCategoryGroup';
 
 ColorCategoryGroup.propTypes = {
   category: PropTypes.shape({
@@ -76,15 +80,15 @@ ColorCategoryGroup.propTypes = {
 
 const styles = {
   description: ({ palette }) => ({
-    display: "block",
+    display: 'block',
     color: palette.text.metrics,
-    fontSize: "0.75rem",
-    marginBottom: "0.5rem",
+    fontSize: '0.75rem',
+    marginBottom: '0.5rem',
   }),
   colorGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(14rem, 1fr))",
-    gap: "1rem",
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(14rem, 1fr))',
+    gap: '1rem',
   },
 };
 

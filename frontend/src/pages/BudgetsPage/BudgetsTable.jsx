@@ -1,43 +1,43 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
-import LinearProgress from "@mui/material/LinearProgress";
-import Skeleton from "@mui/material/Skeleton";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
-import EditOutlined from "@mui/icons-material/EditOutlined";
-import PeopleOutlined from "@mui/icons-material/PeopleOutline";
+import EditOutlined from '@mui/icons-material/EditOutlined';
+import PeopleOutlined from '@mui/icons-material/PeopleOutline';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import LinearProgress from '@mui/material/LinearProgress';
+import Skeleton from '@mui/material/Skeleton';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 
-import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import {
+  GridTableBody,
   GridTableContainer,
   GridTableHeader,
-  GridTableBody,
-  GridTableRow,
   GridTablePagination,
-} from "@/components/GridTable";
+  GridTableRow,
+} from '@/components/GridTable';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
 
-import { formatMoney, formatLimit, usageColor } from "./format";
+import { formatLimit, formatMoney, usageColor } from './format';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 const SOURCE_CONFIG = {
   explicit: {
-    label: "Explicit",
-    color: "primary",
-    hint: "Set directly for this project",
+    label: 'Explicit',
+    color: 'primary',
+    hint: 'Set directly for this project',
   },
   default: {
-    label: "Default",
-    color: "info",
-    hint: "Inherited from the platform default, not set for this project",
+    label: 'Default',
+    color: 'info',
+    hint: 'Inherited from the platform default, not set for this project',
   },
   unlimited: {
-    label: "Unlimited",
-    color: "default",
-    hint: "No limit applies to this project",
+    label: 'Unlimited',
+    color: 'default',
+    hint: 'No limit applies to this project',
   },
 };
 
@@ -46,28 +46,28 @@ const SOURCE_CONFIG = {
 // defaults and LiteLLM — so ordering by them could only ever sort the fetched page.
 // Ranking by cost belongs in the Excel export, which holds every record.
 const BUDGET_COLUMNS = [
-  { field: "effective_limit", label: "Limit", width: "8rem", sortable: false },
-  { field: "spend", label: "Spent", width: "8rem", sortable: false },
-  { field: "percent_used", label: "Used", width: "10rem", sortable: false },
+  { field: 'effective_limit', label: 'Limit', width: '8rem', sortable: false },
+  { field: 'spend', label: 'Spent', width: '8rem', sortable: false },
+  { field: 'percent_used', label: 'Used', width: '10rem', sortable: false },
   {
-    field: "limit_source",
-    label: "Source",
-    width: "7rem",
+    field: 'limit_source',
+    label: 'Source',
+    width: '7rem',
     sortable: false,
     hideBelow: 1100,
   },
-  { field: "actions", label: "Actions", width: "8rem", sortable: false },
+  { field: 'actions', label: 'Actions', width: '8rem', sortable: false },
 ];
 
 const ID_COLUMN = {
-  field: "project_id",
-  label: "ID",
-  width: "5rem",
+  field: 'project_id',
+  label: 'ID',
+  width: '5rem',
   sortable: true,
 };
 
 const TEAM_COLUMNS = [
-  { field: "name", label: "Name", width: "1.2fr", sortable: true },
+  { field: 'name', label: 'Name', width: '1.2fr', sortable: true },
   ID_COLUMN,
   ...BUDGET_COLUMNS,
 ];
@@ -75,20 +75,20 @@ const TEAM_COLUMNS = [
 // Owner and email are not columns on the project table, so neither can be sorted.
 // Email drops out first on narrow screens: the owner name already identifies the row.
 const PERSONAL_COLUMNS = [
-  { field: "name", label: "Name", width: "1fr", sortable: true },
+  { field: 'name', label: 'Name', width: '1fr', sortable: true },
   ID_COLUMN,
-  { field: "owner_name", label: "Owner", width: "1fr", sortable: false },
+  { field: 'owner_name', label: 'Owner', width: '1fr', sortable: false },
   {
-    field: "owner_email",
-    label: "Email",
-    width: "1fr",
+    field: 'owner_email',
+    label: 'Email',
+    width: '1fr',
     sortable: false,
     hideBelow: 1500,
   },
   ...BUDGET_COLUMNS,
 ];
 
-const BudgetsTable = memo(function BudgetsTable(props) {
+const BudgetsTable = memo(props => {
   const {
     rows = [],
     total = 0,
@@ -107,13 +107,12 @@ const BudgetsTable = memo(function BudgetsTable(props) {
 
   const [hoveredRowId, setHoveredRowId] = useState(null);
 
-  const { visibleColumns, dataColumns, gridTemplateColumns } =
-    useResponsiveColumns({
-      columns: isPersonal ? PERSONAL_COLUMNS : TEAM_COLUMNS,
-      containerWidth: window.innerWidth,
-      showCheckbox: false,
-      actionsColumnWidth: "8rem",
-    });
+  const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
+    columns: isPersonal ? PERSONAL_COLUMNS : TEAM_COLUMNS,
+    containerWidth: window.innerWidth,
+    showCheckbox: false,
+    actionsColumnWidth: '8rem',
+  });
 
   const paginationProps = useMemo(
     () => ({
@@ -132,38 +131,50 @@ const BudgetsTable = memo(function BudgetsTable(props) {
   );
 
   const renderCell = useCallback((column, value, row) => {
-    if (column.field === "name") {
+    if (column.field === 'name') {
       return (
         <Tooltip
           title={
             row?.is_personal
               ? "This user's own budget — API and token calls without a project land here"
-              : value || ""
+              : value || ''
           }
           placement="top"
         >
-          <Typography variant="bodyMedium" sx={styles.cellText}>
-            {value || "-"}
+          <Typography
+            variant="bodyMedium"
+            sx={styles.cellText}
+          >
+            {value || '-'}
           </Typography>
         </Tooltip>
       );
     }
 
     // Long identities need the full value on hover, since the cell ellipsises
-    if (column.field === "owner_name" || column.field === "owner_email") {
+    if (column.field === 'owner_name' || column.field === 'owner_email') {
       return (
-        <Tooltip title={value || ""} placement="top">
-          <Typography variant="bodyMedium" sx={styles.cellText}>
-            {value || "-"}
+        <Tooltip
+          title={value || ''}
+          placement="top"
+        >
+          <Typography
+            variant="bodyMedium"
+            sx={styles.cellText}
+          >
+            {value || '-'}
           </Typography>
         </Tooltip>
       );
     }
 
-    if (column.field === "limit_source") {
+    if (column.field === 'limit_source') {
       const cfg = SOURCE_CONFIG[value] || SOURCE_CONFIG.unlimited;
       return (
-        <Tooltip title={cfg.hint} placement="top">
+        <Tooltip
+          title={cfg.hint}
+          placement="top"
+        >
           <Chip
             label={cfg.label}
             size="small"
@@ -174,23 +185,29 @@ const BudgetsTable = memo(function BudgetsTable(props) {
       );
     }
 
-    if (column.field === "effective_limit") {
+    if (column.field === 'effective_limit') {
       return (
-        <Typography variant="bodyMedium" sx={styles.cellText}>
+        <Typography
+          variant="bodyMedium"
+          sx={styles.cellText}
+        >
           {formatLimit(value, row?.currency)}
         </Typography>
       );
     }
 
-    if (column.field === "spend") {
+    if (column.field === 'spend') {
       return (
-        <Typography variant="bodyMedium" sx={styles.cellText}>
+        <Typography
+          variant="bodyMedium"
+          sx={styles.cellText}
+        >
           {formatMoney(value, row?.currency)}
         </Typography>
       );
     }
 
-    if (column.field === "percent_used") {
+    if (column.field === 'percent_used') {
       if (value === null || value === undefined) {
         return (
           <Typography
@@ -211,7 +228,10 @@ const BudgetsTable = memo(function BudgetsTable(props) {
             color={color}
             sx={styles.usageBar}
           />
-          <Typography variant="bodySmall" color={`${color}.main`}>
+          <Typography
+            variant="bodySmall"
+            color={`${color}.main`}
+          >
             {value}%
           </Typography>
         </Box>
@@ -219,26 +239,32 @@ const BudgetsTable = memo(function BudgetsTable(props) {
     }
 
     return (
-      <Typography variant="bodyMedium" sx={styles.cellText}>
-        {value || "-"}
+      <Typography
+        variant="bodyMedium"
+        sx={styles.cellText}
+      >
+        {value || '-'}
       </Typography>
     );
   }, []);
 
   const renderActions = useCallback(
-    (row) => (
+    row => (
       <Box sx={styles.actionsRow}>
         {/* A personal project's only member is its owner, so its project budget already
             is that person's budget — offering a separate member budget would be two ways
             to set one limit. */}
         {!isPersonal && (
           <Tooltip title="Manage member budgets">
-            <IconButton size="small" onClick={() => onUsers(row)}>
+            <IconButton
+              size="small"
+              onClick={() => onUsers(row)}
+            >
               <PeopleOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
         )}
-        <Tooltip title={canEdit ? "Edit budget" : "No permission to edit"}>
+        <Tooltip title={canEdit ? 'Edit budget' : 'No permission to edit'}>
           <span>
             <IconButton
               size="small"
@@ -263,7 +289,7 @@ const BudgetsTable = memo(function BudgetsTable(props) {
             variant="rectangular"
             width="100%"
             height="2.5rem"
-            sx={{ marginBottom: "0.5rem" }}
+            sx={{ marginBottom: '0.5rem' }}
           />
         ))}
       </Box>
@@ -286,7 +312,7 @@ const BudgetsTable = memo(function BudgetsTable(props) {
         />
 
         <GridTableBody>
-          {rows.map((row) => (
+          {rows.map(row => (
             <GridTableRow
               key={row.project_id}
               row={row}
@@ -308,36 +334,38 @@ const BudgetsTable = memo(function BudgetsTable(props) {
   );
 });
 
+BudgetsTable.displayName = 'BudgetsTable';
+
 const styles = {
   tableContainer: {
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
   },
   skeletonContainer: {
-    padding: "1rem",
+    padding: '1rem',
   },
   cellText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   usageCell: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-    width: "100%",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    width: '100%',
   },
   usageBar: {
     flexGrow: 1,
-    height: "0.375rem",
-    borderRadius: "0.25rem",
+    height: '0.375rem',
+    borderRadius: '0.25rem',
   },
   actionsRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.25rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
   },
 };
 

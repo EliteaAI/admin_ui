@@ -1,29 +1,26 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Alert, Box, Skeleton, Snackbar, Typography } from "@mui/material";
+import { Alert, Box, Skeleton, Snackbar, Typography } from '@mui/material';
 
-import {
-  useScheduleListQuery,
-  useScheduleUpdateMutation,
-} from "@/api/schedulesApi";
-import { useTableSort } from "@/hooks/useTableSort";
+import { useScheduleListQuery, useScheduleUpdateMutation } from '@/api/schedulesApi';
+import { useTableSort } from '@/hooks/useTableSort';
 
-import SchedulesTable from "./SchedulesTable";
-import ScheduleHistoryDrawer from "./ScheduleHistoryDrawer";
+import ScheduleHistoryDrawer from './ScheduleHistoryDrawer';
+import SchedulesTable from './SchedulesTable';
 
-const describeUpdateError = (err) => {
+const describeUpdateError = err => {
   const data = err?.data;
   if (Array.isArray(data)) {
-    const first = data.find((entry) => entry?.msg);
+    const first = data.find(entry => entry?.msg);
     if (first) {
       const field = first.loc?.[first.loc.length - 1];
       return field ? `${field}: ${first.msg}` : first.msg;
     }
   }
-  return data?.error || err?.error || "Failed to update the schedule";
+  return data?.error || err?.error || 'Failed to update the schedule';
 };
 
-const SchedulesTab = memo((props) => {
+const SchedulesTab = memo(props => {
   const { search, readOnly } = props;
 
   const { data, isFetching, isError } = useScheduleListQuery(undefined, {
@@ -31,31 +28,24 @@ const SchedulesTab = memo((props) => {
   });
   const [updateSchedule] = useScheduleUpdateMutation();
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const { sortConfig, handleSort, sortData } = useTableSort({
-    defaultField: "name",
-    defaultDirection: "asc",
+    defaultField: 'name',
+    defaultDirection: 'asc',
   });
 
   const filteredRows = useMemo(() => {
     const rows = data?.rows || [];
     if (!search) return rows;
     const lower = search.toLowerCase();
-    return rows.filter(
-      (r) =>
-        r.name.toLowerCase().includes(lower) ||
-        r.rpc_func.toLowerCase().includes(lower),
-    );
+    return rows.filter(r => r.name.toLowerCase().includes(lower) || r.rpc_func.toLowerCase().includes(lower));
   }, [data, search]);
 
-  const sortedRows = useMemo(
-    () => sortData(filteredRows),
-    [sortData, filteredRows],
-  );
+  const sortedRows = useMemo(() => sortData(filteredRows), [sortData, filteredRows]);
 
   const applyUpdate = useCallback(
-    async (body) => {
+    async body => {
       try {
         await updateSchedule(body).unwrap();
       } catch (err) {
@@ -66,7 +56,7 @@ const SchedulesTab = memo((props) => {
   );
 
   const handleToggleActive = useCallback(
-    (schedule) => {
+    schedule => {
       applyUpdate({ id: schedule.id, active: !schedule.active });
     },
     [applyUpdate],
@@ -81,9 +71,9 @@ const SchedulesTab = memo((props) => {
     [applyUpdate],
   );
 
-  const handleErrorClose = useCallback(() => setError(""), []);
+  const handleErrorClose = useCallback(() => setError(''), []);
 
-  const handleScheduleClick = useCallback((schedule) => {
+  const handleScheduleClick = useCallback(schedule => {
     setSelectedSchedule(schedule);
   }, []);
 
@@ -100,7 +90,7 @@ const SchedulesTab = memo((props) => {
             variant="rectangular"
             width="100%"
             height="2.5rem"
-            sx={{ mb: "0.5rem" }}
+            sx={{ mb: '0.5rem' }}
           />
         ))}
       </Box>
@@ -129,15 +119,14 @@ const SchedulesTab = memo((props) => {
         >
           Background jobs that run automatically on a cron timer.
           <br />
-          Each schedule calls an internal platform function at the configured
-          interval.
+          Each schedule calls an internal platform function at the configured interval.
           <br />
           Toggle the switch to enable or disable a schedule.
           <br />
           Click the cron expression to edit it inline.
           <br />
-          Schedules marked with a lock are configured in the Admin Portal
-          configuration and are read-only here.
+          Schedules marked with a lock are configured in the Admin Portal configuration and are read-only
+          here.
           <br />
           Click a schedule name to view its execution history.
         </Typography>
@@ -159,13 +148,13 @@ const SchedulesTab = memo((props) => {
         open={!!error}
         autoHideDuration={6000}
         onClose={handleErrorClose}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleErrorClose}
           severity="error"
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {error}
         </Alert>
@@ -174,47 +163,48 @@ const SchedulesTab = memo((props) => {
   );
 });
 
+SchedulesTab.displayName = 'SchedulesTab';
+
 const styles = {
   content: {
     flex: 1,
     minHeight: 0,
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
   },
   descriptionBox: ({ palette }) => ({
-    padding: "0.75rem 1rem",
-    marginTop: "0.5rem",
-    marginBottom: "0.75rem",
-    marginLeft: "1.5rem",
-    marginRight: "1.5rem",
-    borderRadius: "0.5rem",
+    padding: '0.75rem 1rem',
+    marginTop: '0.5rem',
+    marginBottom: '0.75rem',
+    marginLeft: '1.5rem',
+    marginRight: '1.5rem',
+    borderRadius: '0.5rem',
     flexShrink: 0,
-    backgroundColor:
-      palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-    border: `1px solid ${palette.mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
+    backgroundColor: palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+    border: `1px solid ${palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
   }),
   descriptionTitle: {
-    display: "block",
+    display: 'block',
     fontWeight: 600,
-    fontSize: "0.875rem",
-    marginBottom: "0.375rem",
+    fontSize: '0.875rem',
+    marginBottom: '0.375rem',
   },
   descriptionText: {
-    display: "block",
-    fontSize: "0.8125rem",
+    display: 'block',
+    fontSize: '0.8125rem',
     lineHeight: 1.6,
   },
   loadingContainer: {
-    width: "100%",
-    padding: "1.5rem",
+    width: '100%',
+    padding: '1.5rem',
   },
   errorContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    padding: "3rem",
-    color: "error.main",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    padding: '3rem',
+    color: 'error.main',
   },
 };
 

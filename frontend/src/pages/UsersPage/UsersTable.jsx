@@ -1,78 +1,78 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import Skeleton from "@mui/material/Skeleton";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
-import DeleteIcon from "@mui/icons-material/Delete";
-import BlockOutlined from "@mui/icons-material/BlockOutlined";
-import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
-import TimelineOutlined from "@mui/icons-material/TimelineOutlined";
+import BlockOutlined from '@mui/icons-material/BlockOutlined';
+import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
+import DeleteIcon from '@mui/icons-material/Delete';
+import TimelineOutlined from '@mui/icons-material/TimelineOutlined';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import Skeleton from '@mui/material/Skeleton';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 
-import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { ADMIN_ROLES } from "@/constants/permissions";
 import {
+  GridTableBody,
   GridTableContainer,
   GridTableHeader,
-  GridTableBody,
-  GridTableRow,
   GridTablePagination,
-} from "@/components/GridTable";
+  GridTableRow,
+} from '@/components/GridTable';
+import { ADMIN_ROLES } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 const STATUS_CONFIG = {
-  active: { label: "Active", color: "success" },
-  suspended: { label: "Suspended", color: "warning" },
+  active: { label: 'Active', color: 'success' },
+  suspended: { label: 'Suspended', color: 'warning' },
 };
 
 const ADMIN_ROLE_OPTIONS = [
-  { value: ADMIN_ROLES.NONE, label: "None" },
-  { value: ADMIN_ROLES.VIEWER, label: "Viewer" },
-  { value: ADMIN_ROLES.EDITOR, label: "Editor" },
-  { value: ADMIN_ROLES.ADMIN, label: "Admin" },
-  { value: ADMIN_ROLES.SUPER_ADMIN, label: "Super Admin" },
+  { value: ADMIN_ROLES.NONE, label: 'None' },
+  { value: ADMIN_ROLES.VIEWER, label: 'Viewer' },
+  { value: ADMIN_ROLES.EDITOR, label: 'Editor' },
+  { value: ADMIN_ROLES.ADMIN, label: 'Admin' },
+  { value: ADMIN_ROLES.SUPER_ADMIN, label: 'Super Admin' },
 ];
 
 const USERS_COLUMNS = [
-  { field: "name", label: "Name", width: "1fr", sortable: true },
+  { field: 'name', label: 'Name', width: '1fr', sortable: true },
   {
-    field: "email",
-    label: "Email",
-    width: "1.2fr",
+    field: 'email',
+    label: 'Email',
+    width: '1.2fr',
     sortable: true,
     hideBelow: 600,
   },
   {
-    field: "last_login",
-    label: "Last login",
-    width: "1fr",
+    field: 'last_login',
+    label: 'Last login',
+    width: '1fr',
     sortable: true,
     hideBelow: 800,
   },
   {
-    field: "status",
-    label: "Status",
-    width: "7rem",
+    field: 'status',
+    label: 'Status',
+    width: '7rem',
     sortable: false,
     hideBelow: 900,
   },
   {
-    field: "admin_role",
-    label: "Admin Role",
-    width: "9rem",
+    field: 'admin_role',
+    label: 'Admin Role',
+    width: '9rem',
     sortable: false,
     hideBelow: 900,
   },
-  { field: "actions", label: "Actions", width: "10rem", sortable: false },
+  { field: 'actions', label: 'Actions', width: '10rem', sortable: false },
 ];
 
-const UsersTable = memo(function UsersTable(props) {
+const UsersTable = memo(props => {
   const {
     users = [],
     total = 0,
@@ -92,7 +92,6 @@ const UsersTable = memo(function UsersTable(props) {
     showCheckbox = true,
     showActions = true,
     showAdminRoleSelect = true,
-    currentUserId,
   } = props;
 
   const { isSuperAdmin, isAdmin } = useCheckPermission();
@@ -101,25 +100,24 @@ const UsersTable = memo(function UsersTable(props) {
 
   const activeColumns = useMemo(
     () =>
-      USERS_COLUMNS.filter((col) => {
-        if (col.field === "actions" && !showActions) return false;
-        if (col.field === "admin_role" && !showAdminRoleSelect) return false;
-        if (col.field === "status" && !showActions) return false;
+      USERS_COLUMNS.filter(col => {
+        if (col.field === 'actions' && !showActions) return false;
+        if (col.field === 'admin_role' && !showAdminRoleSelect) return false;
+        if (col.field === 'status' && !showActions) return false;
         return true;
       }),
     [showActions, showAdminRoleSelect],
   );
 
-  const { visibleColumns, dataColumns, gridTemplateColumns } =
-    useResponsiveColumns({
-      columns: activeColumns,
-      containerWidth: window.innerWidth,
-      showCheckbox,
-      actionsColumnWidth: "10rem",
-    });
+  const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
+    columns: activeColumns,
+    containerWidth: window.innerWidth,
+    showCheckbox,
+    actionsColumnWidth: '10rem',
+  });
 
   const isAllSelected = useMemo(
-    () => users.length > 0 && users.every((u) => selectedIds.includes(u.id)),
+    () => users.length > 0 && users.every(u => selectedIds.includes(u.id)),
     [users, selectedIds],
   );
 
@@ -132,15 +130,15 @@ const UsersTable = memo(function UsersTable(props) {
     if (isAllSelected) {
       onSelectionChange([]);
     } else {
-      onSelectionChange(users.map((u) => u.id));
+      onSelectionChange(users.map(u => u.id));
     }
   }, [isAllSelected, users, onSelectionChange]);
 
   const handleSelectRow = useCallback(
-    (userId) => {
+    userId => {
       const isCurrentlySelected = selectedIds.includes(userId);
       if (isCurrentlySelected) {
-        onSelectionChange(selectedIds.filter((id) => id !== userId));
+        onSelectionChange(selectedIds.filter(id => id !== userId));
       } else {
         onSelectionChange([...selectedIds, userId]);
       }
@@ -166,7 +164,7 @@ const UsersTable = memo(function UsersTable(props) {
 
   const renderCell = useCallback(
     (column, value, row) => {
-      if (column.field === "status") {
+      if (column.field === 'status') {
         const cfg = STATUS_CONFIG[value] || STATUS_CONFIG.active;
         return (
           <Chip
@@ -177,15 +175,14 @@ const UsersTable = memo(function UsersTable(props) {
           />
         );
       }
-      if (column.field === "admin_role") {
-        const currentRole = value || "";
+      if (column.field === 'admin_role') {
+        const currentRole = value || '';
         const rowHasSuperAdmin = value === ADMIN_ROLES.SUPER_ADMIN;
 
         const isDisabled = !isAdmin || (rowHasSuperAdmin && !isSuperAdmin);
 
-        const availableOptions = ADMIN_ROLE_OPTIONS.filter((option) => {
-          if (option.value === ADMIN_ROLES.SUPER_ADMIN && !isSuperAdmin)
-            return rowHasSuperAdmin;
+        const availableOptions = ADMIN_ROLE_OPTIONS.filter(option => {
+          if (option.value === ADMIN_ROLES.SUPER_ADMIN && !isSuperAdmin) return rowHasSuperAdmin;
 
           return true;
         });
@@ -194,21 +191,24 @@ const UsersTable = memo(function UsersTable(props) {
           <Select
             size="small"
             value={currentRole}
-            onChange={(e) => onSetAdminRole?.(row.id, e.target.value || null)}
+            onChange={e => onSetAdminRole?.(row.id, e.target.value || null)}
             disabled={isDisabled}
             sx={styles.roleSelect}
             displayEmpty
           >
-            {availableOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
+            {availableOptions.map(option => (
+              <MenuItem
+                key={option.value}
+                value={option.value}
+              >
                 {option.label}
               </MenuItem>
             ))}
           </Select>
         );
       }
-      if (column.field === "last_login") {
-        if (!value) return "Never";
+      if (column.field === 'last_login') {
+        if (!value) return 'Never';
         try {
           return new Date(value).toLocaleString();
         } catch {
@@ -221,28 +221,34 @@ const UsersTable = memo(function UsersTable(props) {
           color="text.secondary"
           sx={styles.cellText}
         >
-          {value || "-"}
+          {value || '-'}
         </Typography>
       );
     },
-    [onSetAdminRole, currentUserId, isSuperAdmin, isAdmin],
+    [onSetAdminRole, isSuperAdmin, isAdmin],
   );
 
-  const getRowSx = useCallback((row) => {
-    if (row.status === "suspended") return styles.suspendedRow;
+  const getRowSx = useCallback(row => {
+    if (row.status === 'suspended') return styles.suspendedRow;
     return undefined;
   }, []);
 
   const renderActions = useCallback(
-    (row) => {
-      const isSuspended = row.status === "suspended";
+    row => {
+      const isSuspended = row.status === 'suspended';
       return (
         <Box sx={styles.actionsRow}>
           {onSuspend && (
-            <Tooltip title={isSuspended ? "Unsuspend user" : "Suspend user"}>
-              <IconButton size="small" onClick={() => onSuspend(row)}>
+            <Tooltip title={isSuspended ? 'Unsuspend user' : 'Suspend user'}>
+              <IconButton
+                size="small"
+                onClick={() => onSuspend(row)}
+              >
                 {isSuspended ? (
-                  <CheckCircleOutlined fontSize="small" color="success" />
+                  <CheckCircleOutlined
+                    fontSize="small"
+                    color="success"
+                  />
                 ) : (
                   <BlockOutlined fontSize="small" />
                 )}
@@ -251,14 +257,20 @@ const UsersTable = memo(function UsersTable(props) {
           )}
           {onActivity && (
             <Tooltip title="User activity">
-              <IconButton size="small" onClick={() => onActivity(row)}>
+              <IconButton
+                size="small"
+                onClick={() => onActivity(row)}
+              >
                 <TimelineOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
           {onDelete && (
             <Tooltip title="Delete user">
-              <IconButton size="small" onClick={() => onDelete([row.id])}>
+              <IconButton
+                size="small"
+                onClick={() => onDelete([row.id])}
+              >
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -278,7 +290,7 @@ const UsersTable = memo(function UsersTable(props) {
             variant="rectangular"
             width="100%"
             height="2.5rem"
-            sx={{ marginBottom: "0.5rem" }}
+            sx={{ marginBottom: '0.5rem' }}
           />
         ))}
       </Box>
@@ -304,7 +316,7 @@ const UsersTable = memo(function UsersTable(props) {
         />
 
         <GridTableBody>
-          {users.map((row) => (
+          {users.map(row => (
             <GridTableRow
               key={row.id}
               row={row}
@@ -329,36 +341,37 @@ const UsersTable = memo(function UsersTable(props) {
   );
 });
 
+UsersTable.displayName = 'UsersTable';
+
 const styles = {
   tableContainer: {
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
   },
   skeletonContainer: {
-    width: "100%",
-    padding: "1.5rem",
+    width: '100%',
+    padding: '1.5rem',
   },
   cellText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   actionsRow: {
-    display: "flex",
-    gap: "0.125rem",
+    display: 'flex',
+    gap: '0.125rem',
   },
   suspendedRow: ({ palette }) => ({
     opacity: 0.5,
-    backgroundColor:
-      palette.mode === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
+    backgroundColor: palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
   }),
   roleSelect: {
-    minWidth: "7rem",
-    "& .MuiSelect-select": {
-      padding: "0.25rem 0.5rem",
-      fontSize: "0.8125rem",
+    minWidth: '7rem',
+    '& .MuiSelect-select': {
+      padding: '0.25rem 0.5rem',
+      fontSize: '0.8125rem',
     },
   },
 };

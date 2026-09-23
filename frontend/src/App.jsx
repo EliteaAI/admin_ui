@@ -1,47 +1,50 @@
 import {
   Navigate,
   Route,
+  RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
-  RouterProvider,
-} from "react-router-dom";
+} from 'react-router-dom';
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 
-import Layout from "@/components/Layout/Layout";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import UsersPage from "@/pages/UsersPage/UsersPage";
-import RolesPage from "@/pages/RolesPage/RolesPage";
-import ProjectsPage from "@/pages/ProjectsPage/ProjectsPage";
-import BudgetsPage from "@/pages/BudgetsPage/BudgetsPage";
-import PlatformDimensionsPage from "@/pages/PlatformDimensionsPage/PlatformDimensionsPage";
-import AuditTrailPage from "@/pages/AuditTrailPage/AuditTrailPage";
-import SchedulesTasksPage from "@/pages/SchedulesTasksPage/SchedulesTasksPage";
-import ConfigurationPage from "@/pages/ConfigurationPage/ConfigurationPage";
-import SecretsPage from "@/pages/SecretsPage/SecretsPage";
-import LiteLLMPage from "@/pages/LiteLLMPage/LiteLLMPage";
-import ModelPricesPage from "@/pages/ModelPricesPage/ModelPricesPage";
-import AppRequestsPage from "@/pages/AppRequestsPage/AppRequestsPage";
-import FeaturesPage from "@/pages/FeaturesPage/FeaturesPage";
-import ReportsPage from "@/pages/ReportsPage/ReportsPage";
-import { RouteDefinitions } from "@/routes";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { SIDEBAR_PERMISSIONS } from "@/constants/permissions";
+import Layout from '@/components/Layout/Layout';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { SIDEBAR_PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import AppRequestsPage from '@/pages/AppRequestsPage/AppRequestsPage';
+import AuditTrailPage from '@/pages/AuditTrailPage/AuditTrailPage';
+import BudgetsPage from '@/pages/BudgetsPage/BudgetsPage';
+import ConfigurationPage from '@/pages/ConfigurationPage/ConfigurationPage';
+import FeaturesPage from '@/pages/FeaturesPage/FeaturesPage';
+import LiteLLMPage from '@/pages/LiteLLMPage/LiteLLMPage';
+import ModelPricesPage from '@/pages/ModelPricesPage/ModelPricesPage';
+import PlatformDimensionsPage from '@/pages/PlatformDimensionsPage/PlatformDimensionsPage';
+import ProjectsPage from '@/pages/ProjectsPage/ProjectsPage';
+import ReportsPage from '@/pages/ReportsPage/ReportsPage';
+import RolesPage from '@/pages/RolesPage/RolesPage';
+import SchedulesTasksPage from '@/pages/SchedulesTasksPage/SchedulesTasksPage';
+import SecretsPage from '@/pages/SecretsPage/SecretsPage';
+import UsersPage from '@/pages/UsersPage/UsersPage';
+import { RouteDefinitions } from '@/routes';
 
-const basename = globalThis.admin_ui_config?.vite_base_uri ?? "";
+const basename = globalThis.admin_ui_config?.vite_base_uri ?? '';
 
 function NotFound() {
   return (
     <Box
       sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100%",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
       }}
     >
-      <Typography variant="headingLarge" color="text.secondary">
+      <Typography
+        variant="headingLarge"
+        color="text.secondary"
+      >
         404 — Page not found
       </Typography>
     </Box>
@@ -52,9 +55,7 @@ const DefaultRedirect = () => {
   const { hasAnyPermission } = useCheckPermission();
 
   const sidebarKeys = Object.keys(SIDEBAR_PERMISSIONS);
-  const firstAllowed = sidebarKeys.find((key) =>
-    hasAnyPermission(SIDEBAR_PERMISSIONS[key]),
-  );
+  const firstAllowed = sidebarKeys.find(key => hasAnyPermission(SIDEBAR_PERMISSIONS[key]));
 
   return (
     <Navigate
@@ -71,7 +72,10 @@ const guard = (path, element) => {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
-      <Route index element={<DefaultRedirect />} />
+      <Route
+        index
+        element={<DefaultRedirect />}
+      />
       <Route
         path={RouteDefinitions.Users}
         element={guard(RouteDefinitions.Users, <UsersPage />)}
@@ -90,10 +94,7 @@ const router = createBrowserRouter(
       />
       <Route
         path={RouteDefinitions.PlatformDimensions}
-        element={guard(
-          RouteDefinitions.PlatformDimensions,
-          <PlatformDimensionsPage />,
-        )}
+        element={guard(RouteDefinitions.PlatformDimensions, <PlatformDimensionsPage />)}
       />
       <Route
         path={RouteDefinitions.Secrets}
@@ -131,7 +132,10 @@ const router = createBrowserRouter(
         path={RouteDefinitions.Reports}
         element={guard(RouteDefinitions.Reports, <ReportsPage />)}
       />
-      <Route path="*" element={<NotFound />} />
+      <Route
+        path="*"
+        element={<NotFound />}
+      />
     </Route>,
   ),
   { basename },

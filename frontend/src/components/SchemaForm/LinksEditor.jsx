@@ -1,19 +1,20 @@
-import { memo, useCallback } from "react";
-import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { memo, useCallback, useMemo } from 'react';
 
-const LinksEditor = memo((props) => {
+import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { Box, Button, IconButton, TextField } from '@mui/material';
+
+const LinksEditor = memo(props => {
   const { value, onChange } = props;
 
-  const links = Array.isArray(value) ? value : [];
+  const links = useMemo(() => (Array.isArray(value) ? value : []), [value]);
 
   const handleAdd = () => {
-    onChange([...links, { title: "", url: "" }]);
+    onChange([...links, { title: '', url: '' }]);
   };
 
   const handleDelete = useCallback(
-    (index) => {
+    index => {
       const next = links.filter((_, i) => i !== index);
       onChange(next);
     },
@@ -22,9 +23,7 @@ const LinksEditor = memo((props) => {
 
   const handleChange = useCallback(
     (index, field, newValue) => {
-      const next = links.map((link, i) =>
-        i === index ? { ...link, [field]: newValue } : link,
-      );
+      const next = links.map((link, i) => (i === index ? { ...link, [field]: newValue } : link));
       onChange(next);
     },
     [links, onChange],
@@ -34,7 +33,6 @@ const LinksEditor = memo((props) => {
     <Box sx={styles.root}>
       {links.map((link, index) => (
         <LinkRow
-          // eslint-disable-next-line react/no-array-index-key
           key={index}
           index={index}
           link={link}
@@ -55,13 +53,13 @@ const LinksEditor = memo((props) => {
   );
 });
 
-LinksEditor.displayName = "LinksEditor";
+LinksEditor.displayName = 'LinksEditor';
 
-const LinkRow = memo((props) => {
+const LinkRow = memo(props => {
   const { index, link, onDelete, onChange } = props;
 
-  const handleTitleChange = (e) => onChange(index, "title", e.target.value);
-  const handleUrlChange = (e) => onChange(index, "url", e.target.value);
+  const handleTitleChange = e => onChange(index, 'title', e.target.value);
+  const handleUrlChange = e => onChange(index, 'url', e.target.value);
   const handleDelete = () => onDelete(index);
 
   return (
@@ -80,42 +78,46 @@ const LinkRow = memo((props) => {
         onChange={handleUrlChange}
         sx={styles.urlField}
       />
-      <IconButton size="small" onClick={handleDelete} sx={styles.deleteBtn}>
-        <DeleteOutlineIcon sx={{ fontSize: "1rem" }} />
+      <IconButton
+        size="small"
+        onClick={handleDelete}
+        sx={styles.deleteBtn}
+      >
+        <DeleteOutlineIcon sx={{ fontSize: '1rem' }} />
       </IconButton>
     </Box>
   );
 });
 
-LinkRow.displayName = "LinkRow";
+LinkRow.displayName = 'LinkRow';
 
 const styles = {
   root: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.5rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
   },
   row: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   titleField: {
-    width: "12rem",
-    "& .MuiInputBase-input": { fontSize: "0.8125rem" },
+    width: '12rem',
+    '& .MuiInputBase-input': { fontSize: '0.8125rem' },
   },
   urlField: {
     flex: 1,
-    "& .MuiInputBase-input": { fontSize: "0.8125rem" },
+    '& .MuiInputBase-input': { fontSize: '0.8125rem' },
   },
   deleteBtn: ({ palette }) => ({
     color: palette.text.secondary,
-    "&:hover": { color: palette.error.main },
+    '&:hover': { color: palette.error.main },
   }),
   addButton: {
-    alignSelf: "flex-start",
-    fontSize: "0.8125rem",
-    marginTop: "0.25rem",
+    alignSelf: 'flex-start',
+    fontSize: '0.8125rem',
+    marginTop: '0.25rem',
   },
 };
 

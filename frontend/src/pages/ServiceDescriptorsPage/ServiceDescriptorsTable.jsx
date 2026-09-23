@@ -1,118 +1,112 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 
-import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
-import { useTableSort } from "@/hooks/useTableSort";
-import {
-  GridTableContainer,
-  GridTableHeader,
-  GridTableBody,
-  GridTableRow,
-} from "@/components/GridTable";
+import { GridTableBody, GridTableContainer, GridTableHeader, GridTableRow } from '@/components/GridTable';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
+import { useTableSort } from '@/hooks/useTableSort';
 
 const DESCRIPTOR_COLUMNS = [
-  { field: "project_id", label: "Project ID", width: "8rem", sortable: true },
+  { field: 'project_id', label: 'Project ID', width: '8rem', sortable: true },
   {
-    field: "provider_name",
-    label: "Provider Name",
-    width: "1fr",
+    field: 'provider_name',
+    label: 'Provider Name',
+    width: '1fr',
     sortable: true,
   },
   {
-    field: "service_location_url",
-    label: "Service URL",
-    width: "2fr",
+    field: 'service_location_url',
+    label: 'Service URL',
+    width: '2fr',
     sortable: true,
   },
-  { field: "healthy", label: "Healthy", width: "8rem", sortable: true },
-  { field: "actions", label: "", width: "4rem", sortable: false },
+  { field: 'healthy', label: 'Healthy', width: '8rem', sortable: true },
+  { field: 'actions', label: '', width: '4rem', sortable: false },
 ];
 
-const ServiceDescriptorsTable = memo(function ServiceDescriptorsTable({
-  descriptors,
-  search,
-  onDelete,
-  isFetching,
-}) {
+const ServiceDescriptorsTable = memo(({ descriptors, search, onDelete, isFetching }) => {
   const [hoveredRowId, setHoveredRowId] = useState(null);
 
   const { sortConfig, handleSort, sortData } = useTableSort({
-    defaultField: "provider_name",
-    defaultDirection: "asc",
+    defaultField: 'provider_name',
+    defaultDirection: 'asc',
   });
 
   const filteredDescriptors = useMemo(() => {
     if (!search) return descriptors;
     const lowerSearch = search.toLowerCase();
     return descriptors.filter(
-      (d) =>
-        String(d.project_id ?? "")
+      d =>
+        String(d.project_id ?? '')
           .toLowerCase()
           .includes(lowerSearch) ||
-        (d.provider_name || "").toLowerCase().includes(lowerSearch) ||
-        (d.service_location_url || "").toLowerCase().includes(lowerSearch),
+        (d.provider_name || '').toLowerCase().includes(lowerSearch) ||
+        (d.service_location_url || '').toLowerCase().includes(lowerSearch),
     );
   }, [descriptors, search]);
 
-  const sortedDescriptors = useMemo(
-    () => sortData(filteredDescriptors),
-    [sortData, filteredDescriptors],
-  );
+  const sortedDescriptors = useMemo(() => sortData(filteredDescriptors), [sortData, filteredDescriptors]);
 
-  const { visibleColumns, dataColumns, gridTemplateColumns } =
-    useResponsiveColumns({
-      columns: DESCRIPTOR_COLUMNS,
-      containerWidth: window.innerWidth,
-      showCheckbox: false,
-      actionsColumnWidth: "4rem",
-    });
+  const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
+    columns: DESCRIPTOR_COLUMNS,
+    containerWidth: window.innerWidth,
+    showCheckbox: false,
+    actionsColumnWidth: '4rem',
+  });
 
-  const renderCell = useCallback((column, value, row) => {
-    if (column.field === "healthy") {
-      const color = value ? "success" : "error";
-      const label = value ? "Yes" : "No";
+  const renderCell = useCallback((column, value) => {
+    if (column.field === 'healthy') {
+      const color = value ? 'success' : 'error';
+      const label = value ? 'Yes' : 'No';
       return (
-        <Chip label={label} size="small" color={color} variant="outlined" />
+        <Chip
+          label={label}
+          size="small"
+          color={color}
+          variant="outlined"
+        />
       );
     }
 
-    if (column.field === "project_id") {
+    if (column.field === 'project_id') {
       return (
         <Typography
           variant="bodyMedium"
           color="text.secondary"
           sx={styles.cellTextMono}
         >
-          {value != null ? value : "\u2014"}
+          {value != null ? value : '\u2014'}
         </Typography>
       );
     }
 
     return (
-      <Tooltip title={value || ""}>
+      <Tooltip title={value || ''}>
         <Typography
           variant="bodyMedium"
           color="text.secondary"
           sx={styles.cellText}
         >
-          {value || "\u2014"}
+          {value || '\u2014'}
         </Typography>
       </Tooltip>
     );
   }, []);
 
   const renderActions = useCallback(
-    (row) => {
+    row => {
       return (
         <Box sx={styles.actionsRow}>
           <Tooltip title="Delete descriptor">
-            <IconButton size="small" onClick={() => onDelete(row)}>
+            <IconButton
+              size="small"
+              onClick={() => onDelete(row)}
+            >
               <DeleteOutlinedIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -138,7 +132,7 @@ const ServiceDescriptorsTable = memo(function ServiceDescriptorsTable({
         />
 
         <GridTableBody>
-          {sortedDescriptors.map((row) => {
+          {sortedDescriptors.map(row => {
             const rowKey = `${row.project_id}_${row.provider_name}_${row.service_location_url}`;
             return (
               <GridTableRow
@@ -161,29 +155,31 @@ const ServiceDescriptorsTable = memo(function ServiceDescriptorsTable({
   );
 });
 
+ServiceDescriptorsTable.displayName = 'ServiceDescriptorsTable';
+
 const styles = {
   tableContainer: {
     flex: 1,
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
     minHeight: 0,
   },
   cellText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   cellTextMono: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    fontFamily: "monospace",
-    fontSize: "0.75rem",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontFamily: 'monospace',
+    fontSize: '0.75rem',
   },
   actionsRow: {
-    display: "flex",
-    gap: "0.125rem",
+    display: 'flex',
+    gap: '0.125rem',
   },
 };
 

@@ -1,93 +1,87 @@
-import { memo, useCallback, useMemo, useState } from "react";
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
-import Skeleton from "@mui/material/Skeleton";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
-import {
-  GridTableContainer,
-  GridTableHeader,
-  GridTableBody,
-  GridTableRow,
-} from "@/components/GridTable";
+import DeleteIcon from '@mui/icons-material/Delete';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Tooltip from '@mui/material/Tooltip';
+
+import { GridTableBody, GridTableContainer, GridTableHeader, GridTableRow } from '@/components/GridTable';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
 
 const SURVEYS_COLUMNS = [
-  { field: "name", label: "Name", width: "1fr", sortable: false },
+  { field: 'name', label: 'Name', width: '1fr', sortable: false },
   {
-    field: "description",
-    label: "Description",
-    width: "1.5fr",
+    field: 'description',
+    label: 'Description',
+    width: '1.5fr',
     sortable: false,
     hideBelow: 800,
   },
   {
-    field: "enabled",
-    label: "Status",
-    width: "8rem",
+    field: 'enabled',
+    label: 'Status',
+    width: '8rem',
     sortable: false,
   },
   {
-    field: "questions_count",
-    label: "Questions",
-    width: "7rem",
+    field: 'questions_count',
+    label: 'Questions',
+    width: '7rem',
     sortable: false,
     hideBelow: 900,
   },
-  { field: "actions", label: "Actions", width: "5.5rem", sortable: false },
+  { field: 'actions', label: 'Actions', width: '5.5rem', sortable: false },
 ];
 
-const SurveysTable = memo((props) => {
+const SurveysTable = memo(props => {
   const { surveys = [], isFetching = false, onRowClick, onDelete } = props;
 
   const [hoveredRowId, setHoveredRowId] = useState(null);
 
   const rows = useMemo(
     () =>
-      surveys.map((s) => ({
+      surveys.map(s => ({
         ...s,
         questions_count: s.questions?.length ?? 0,
       })),
     [surveys],
   );
 
-  const { visibleColumns, dataColumns, gridTemplateColumns } =
-    useResponsiveColumns({
-      columns: SURVEYS_COLUMNS,
-      containerWidth: window.innerWidth,
-      showCheckbox: false,
-      actionsColumnWidth: "5.5rem",
-    });
+  const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
+    columns: SURVEYS_COLUMNS,
+    containerWidth: window.innerWidth,
+    showCheckbox: false,
+    actionsColumnWidth: '5.5rem',
+  });
 
   const renderCell = useCallback((column, value) => {
-    if (column.field === "enabled") {
+    if (column.field === 'enabled') {
       return (
         <Chip
-          label={value ? "Enabled" : "Disabled"}
+          label={value ? 'Enabled' : 'Disabled'}
           size="small"
-          color={value ? "success" : "default"}
+          color={value ? 'success' : 'default'}
           variant="outlined"
         />
       );
     }
-    if (column.field === "questions_count") {
+    if (column.field === 'questions_count') {
       return String(value ?? 0);
     }
     // Return string so GridTableRow wraps it in Tooltip automatically
-    return String(value || "-");
+    return String(value || '-');
   }, []);
 
   const renderActions = useCallback(
-    (row) => (
+    row => (
       <Box sx={styles.actionsRow}>
         {onDelete && (
           <Tooltip title="Delete survey">
             <IconButton
               size="small"
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onDelete(row);
               }}
@@ -110,7 +104,7 @@ const SurveysTable = memo((props) => {
             variant="rectangular"
             width="100%"
             height="2.5rem"
-            sx={{ marginBottom: "0.5rem" }}
+            sx={{ marginBottom: '0.5rem' }}
           />
         ))}
       </Box>
@@ -130,7 +124,7 @@ const SurveysTable = memo((props) => {
         />
 
         <GridTableBody>
-          {rows.map((row) => (
+          {rows.map(row => (
             <Box
               key={row.id}
               onClick={() => onRowClick?.(row)}
@@ -155,32 +149,34 @@ const SurveysTable = memo((props) => {
   );
 });
 
+SurveysTable.displayName = 'SurveysTable';
+
 const styles = {
   tableContainer: {
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
-    marginTop: "1.5rem",
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    marginTop: '1.5rem',
   },
   cellText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   actionsRow: {
-    display: "flex",
-    gap: "0.125rem",
+    display: 'flex',
+    gap: '0.125rem',
   },
   skeletonContainer: {
-    width: "100%",
-    padding: "1.5rem",
+    width: '100%',
+    padding: '1.5rem',
   },
   clickableRow: ({ palette }) => ({
-    cursor: "pointer",
+    cursor: 'pointer',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
-    "&:last-of-type": {
-      borderBottom: "none",
+    '&:last-of-type': {
+      borderBottom: 'none',
     },
   }),
 };

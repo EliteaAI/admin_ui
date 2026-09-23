@@ -1,32 +1,32 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
-import Typography from "@mui/material/Typography";
+import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Typography from '@mui/material/Typography';
 
-import DrawerPage from "@/components/DrawerPage";
-import DrawerPageHeader from "@/components/DrawerPageHeader";
-import { useDebounceValue } from "@/hooks/useDebounceValue";
-import { useTableSort } from "@/hooks/useTableSort";
-import { useSecretListQuery } from "@/api/secretsApi";
-import { usePageTitle } from "@/hooks/usePageTitle";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { PERMISSIONS } from "@/constants/permissions";
+import { useSecretListQuery } from '@/api/secretsApi';
+import DrawerPage from '@/components/DrawerPage';
+import DrawerPageHeader from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { useDebounceValue } from '@/hooks/useDebounceValue';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { useTableSort } from '@/hooks/useTableSort';
 
-import SecretsTable from "./SecretsTable";
-import CreateSecretDialog from "./CreateSecretDialog";
-import EditSecretDialog from "./EditSecretDialog";
-import DeleteSecretDialog from "./DeleteSecretDialog";
-import { isInternalSecret } from "./constants";
+import CreateSecretDialog from './CreateSecretDialog';
+import DeleteSecretDialog from './DeleteSecretDialog';
+import EditSecretDialog from './EditSecretDialog';
+import SecretsTable from './SecretsTable';
+import { isInternalSecret } from './constants';
 
 const SecretsPage = memo(() => {
-  usePageTitle("Secrets");
+  usePageTitle('Secrets');
 
   const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState(0);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const debouncedSearch = useDebounceValue(search, 300);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
@@ -34,13 +34,13 @@ const SecretsPage = memo(() => {
   // Dialog states
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [editSecretName, setEditSecretName] = useState("");
+  const [editSecretName, setEditSecretName] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteSecretName, setDeleteSecretName] = useState("");
+  const [deleteSecretName, setDeleteSecretName] = useState('');
 
   const { data: allSecrets = [], isFetching, isError } = useSecretListQuery();
   const { sortConfig, handleSort, sortData } = useTableSort({
-    defaultField: "name",
+    defaultField: 'name',
   });
 
   // Split secrets into user vs internal
@@ -65,21 +65,18 @@ const SecretsPage = memo(() => {
       canEdit: hasPermission(PERMISSIONS.secrets.edit),
       canDelete: hasPermission(PERMISSIONS.secrets.delete),
     }),
-    [],
+    [hasPermission],
   );
 
   // Client-side search
   const filteredSecrets = useMemo(() => {
     if (!debouncedSearch) return activeSecrets;
     const lower = debouncedSearch.toLowerCase();
-    return activeSecrets.filter((s) => s.name.toLowerCase().includes(lower));
+    return activeSecrets.filter(s => s.name.toLowerCase().includes(lower));
   }, [activeSecrets, debouncedSearch]);
 
   // Client-side sort
-  const sortedSecrets = useMemo(
-    () => sortData(filteredSecrets),
-    [sortData, filteredSecrets],
-  );
+  const sortedSecrets = useMemo(() => sortData(filteredSecrets), [sortData, filteredSecrets]);
 
   // Client-side pagination
   const paginatedSecrets = useMemo(
@@ -88,28 +85,25 @@ const SecretsPage = memo(() => {
   );
 
   // Set of all secret names for duplicate checking in create dialog
-  const allSecretNames = useMemo(
-    () => new Set(allSecrets.map((s) => s.name)),
-    [allSecrets],
-  );
+  const allSecretNames = useMemo(() => new Set(allSecrets.map(s => s.name)), [allSecrets]);
 
   // Handlers
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
     setPage(0);
-    setSearch("");
+    setSearch('');
   }, []);
 
-  const handleSearchChange = useCallback((value) => {
+  const handleSearchChange = useCallback(value => {
     setSearch(value);
     setPage(0);
   }, []);
 
-  const handlePageChange = useCallback((newPage) => {
+  const handlePageChange = useCallback(newPage => {
     setPage(newPage);
   }, []);
 
-  const handlePageSizeChange = useCallback((newSize) => {
+  const handlePageSizeChange = useCallback(newSize => {
     setPageSize(newSize);
     setPage(0);
   }, []);
@@ -117,34 +111,44 @@ const SecretsPage = memo(() => {
   const handleCreateOpen = useCallback(() => setCreateOpen(true), []);
   const handleCreateClose = useCallback(() => setCreateOpen(false), []);
 
-  const handleEditOpen = useCallback((name) => {
+  const handleEditOpen = useCallback(name => {
     setEditSecretName(name);
     setEditOpen(true);
   }, []);
   const handleEditClose = useCallback(() => {
     setEditOpen(false);
-    setEditSecretName("");
+    setEditSecretName('');
   }, []);
 
-  const handleDeleteOpen = useCallback((name) => {
+  const handleDeleteOpen = useCallback(name => {
     setDeleteSecretName(name);
     setDeleteOpen(true);
   }, []);
   const handleDeleteClose = useCallback(() => {
     setDeleteOpen(false);
-    setDeleteSecretName("");
+    setDeleteSecretName('');
   }, []);
 
   const tabsElement = (
-    <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
-      <Tab label={`User Secrets (${userSecrets.length})`} sx={styles.tab} />
-      <Tab label={`Internal (${internalSecrets.length})`} sx={styles.tab} />
+    <Tabs
+      value={activeTab}
+      onChange={handleTabChange}
+      sx={styles.tabs}
+    >
+      <Tab
+        label={`User Secrets (${userSecrets.length})`}
+        sx={styles.tab}
+      />
+      <Tab
+        label={`Internal (${internalSecrets.length})`}
+        sx={styles.tab}
+      />
     </Tabs>
   );
 
   return (
     <>
-      <DrawerPage sx={{ overflow: "hidden" }}>
+      <DrawerPage sx={{ overflow: 'hidden' }}>
         <DrawerPageHeader
           title="Secrets"
           tabs={tabsElement}
@@ -161,7 +165,10 @@ const SecretsPage = memo(() => {
         <Box sx={styles.tableContainer}>
           {isError ? (
             <Box sx={styles.errorContainer}>
-              <Typography variant="bodyMedium" color="error">
+              <Typography
+                variant="bodyMedium"
+                color="error"
+              >
                 Failed to load secrets.
               </Typography>
             </Box>
@@ -203,36 +210,36 @@ const SecretsPage = memo(() => {
   );
 });
 
-SecretsPage.displayName = "SecretsPage";
+SecretsPage.displayName = 'SecretsPage';
 
 const styles = {
   tabs: ({ palette }) => ({
-    minHeight: "2.5rem",
-    "& .MuiTabs-indicator": {
+    minHeight: '2.5rem',
+    '& .MuiTabs-indicator': {
       backgroundColor: palette.text.secondary,
     },
   }),
   tab: ({ palette }) => ({
-    textTransform: "none",
-    minHeight: "2.5rem",
-    padding: "0.5rem 1rem",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    minHeight: '2.5rem',
+    padding: '0.5rem 1rem',
+    fontSize: '0.8125rem',
     fontWeight: 500,
     color: palette.text.metrics,
-    "&.Mui-selected": {
+    '&.Mui-selected': {
       color: palette.text.secondary,
     },
   }),
   tableContainer: {
     flex: 1,
-    overflow: "auto",
+    overflow: 'auto',
   },
   errorContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    padding: "2rem",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    padding: '2rem',
   },
 };
 
