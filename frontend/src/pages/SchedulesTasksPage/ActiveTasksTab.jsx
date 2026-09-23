@@ -1,148 +1,136 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
-import Collapse from "@mui/material/Collapse";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogActions from "@mui/material/DialogActions";
-import IconButton from "@mui/material/IconButton";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Checkbox from "@mui/material/Checkbox";
-import ListItemText from "@mui/material/ListItemText";
-import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import StopOutlined from "@mui/icons-material/StopOutlined";
-import HubOutlined from "@mui/icons-material/HubOutlined";
-import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
-import CheckOutlined from "@mui/icons-material/CheckOutlined";
-import ViewColumnOutlined from "@mui/icons-material/ViewColumnOutlined";
-import PauseCircleOutlined from "@mui/icons-material/PauseCircleOutlined";
-import PlayCircleOutlined from "@mui/icons-material/PlayCircleOutlined";
-import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
+import BugReportOutlined from '@mui/icons-material/BugReportOutlined';
+import CheckOutlined from '@mui/icons-material/CheckOutlined';
+import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import HubOutlined from '@mui/icons-material/HubOutlined';
+import PauseCircleOutlined from '@mui/icons-material/PauseCircleOutlined';
+import PlayCircleOutlined from '@mui/icons-material/PlayCircleOutlined';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import StopOutlined from '@mui/icons-material/StopOutlined';
+import ViewColumnOutlined from '@mui/icons-material/ViewColumnOutlined';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import Collapse from '@mui/material/Collapse';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Snackbar from '@mui/material/Snackbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 
-import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
-import { useTableSort } from "@/hooks/useTableSort";
-import {
-  GridTableContainer,
-  GridTableHeader,
-  GridTableBody,
-  GridTableRow,
-} from "@/components/GridTable";
-
+import { useMaintenanceQuery, useMaintenanceSaveMutation } from '@/api/configurationApi';
 import {
   useActiveTasksListQuery,
   useActiveTasksRefreshMutation,
   useActiveTasksStopMutation,
-} from "@/api/tasksApi";
-import {
-  useMaintenanceQuery,
-  useMaintenanceSaveMutation,
-} from "@/api/configurationApi";
-
-import { TaskLogDrawer, StackDumpDrawer } from "@/components/LogViewerDrawer";
+} from '@/api/tasksApi';
+import { GridTableBody, GridTableContainer, GridTableHeader, GridTableRow } from '@/components/GridTable';
+import { StackDumpDrawer, TaskLogDrawer } from '@/components/LogViewerDrawer';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
+import { useTableSort } from '@/hooks/useTableSort';
 
 const POOL_COLUMNS = [
-  { field: "pool", label: "Pool", width: "1fr", sortable: false },
-  { field: "ident", label: "Ident", width: "1fr", sortable: false },
-  { field: "task_limit", label: "Task Limit", width: "8rem", sortable: false },
-  { field: "running_tasks", label: "Running", width: "8rem", sortable: false },
+  { field: 'pool', label: 'Pool', width: '1fr', sortable: false },
+  { field: 'ident', label: 'Ident', width: '1fr', sortable: false },
+  { field: 'task_limit', label: 'Task Limit', width: '8rem', sortable: false },
+  { field: 'running_tasks', label: 'Running', width: '8rem', sortable: false },
 ];
 
 const TASK_COLUMNS = [
-  { field: "project_id", label: "Project ID", width: "8rem", sortable: true },
+  { field: 'project_id', label: 'Project ID', width: '8rem', sortable: true },
   {
-    field: "user_id",
-    label: "User ID",
-    width: "8rem",
+    field: 'user_id',
+    label: 'User ID',
+    width: '8rem',
     sortable: true,
     hideBelow: 1100,
   },
-  { field: "started_at", label: "Time", width: "13rem", sortable: true },
-  { field: "status", label: "Status", width: "7rem", sortable: true },
+  { field: 'started_at', label: 'Time', width: '13rem', sortable: true },
+  { field: 'status', label: 'Status', width: '7rem', sortable: true },
   {
-    field: "user_input_preview",
-    label: "User input",
-    width: "1fr",
+    field: 'user_input_preview',
+    label: 'User input',
+    width: '1fr',
     sortable: false,
   },
   {
-    field: "task_id",
-    label: "Task ID",
-    width: "1fr",
+    field: 'task_id',
+    label: 'Task ID',
+    width: '1fr',
     sortable: false,
     hideBelow: 1000,
   },
   {
-    field: "meta",
-    label: "Meta",
-    width: "1fr",
+    field: 'meta',
+    label: 'Meta',
+    width: '1fr',
     sortable: false,
     hideBelow: 1300,
   },
   {
-    field: "runner",
-    label: "Runner",
-    width: "1fr",
+    field: 'runner',
+    label: 'Runner',
+    width: '1fr',
     sortable: false,
     hideBelow: 900,
   },
-  { field: "actions", label: "", width: "9rem", sortable: false },
+  { field: 'actions', label: '', width: '9rem', sortable: false },
 ];
 
 // User-toggleable columns (the wide/opaque ones). All shown by default.
 const TOGGLEABLE_COLUMNS = [
-  { field: "task_id", label: "Task ID" },
-  { field: "meta", label: "Meta" },
-  { field: "runner", label: "Runner" },
+  { field: 'task_id', label: 'Task ID' },
+  { field: 'meta', label: 'Meta' },
+  { field: 'runner', label: 'Runner' },
 ];
 
 const STATUS_CONFIG = {
-  running: { label: "Running", color: "success" },
-  done: { label: "Done", color: "default" },
-  error: { label: "Error", color: "error" },
-  stopped: { label: "Stopped", color: "warning" },
+  running: { label: 'Running', color: 'success' },
+  done: { label: 'Done', color: 'default' },
+  error: { label: 'Error', color: 'error' },
+  stopped: { label: 'Stopped', color: 'warning' },
 };
 
 // Default ordering priority: actionable Running first, Pending sunk to the
 // bottom (never hidden), everything else in between. Lower = higher up.
 const STATUS_RANK = { running: 0, error: 1, done: 2, pending: 3 };
-const statusRank = (status) => {
-  const rank = STATUS_RANK[(status || "").toLowerCase()];
+const statusRank = status => {
+  const rank = STATUS_RANK[(status || '').toLowerCase()];
   return rank == null ? 2 : rank;
 };
 
 function parseMeta(meta) {
-  if (!meta) return "";
+  if (!meta) return '';
   try {
     const match = meta.match(/'task':\s*'([^']+)'/);
     if (match) return match[1];
   } catch {
     // ignore
   }
-  return String(meta).length > 60
-    ? String(meta).substring(0, 60) + "..."
-    : String(meta);
+  return String(meta).length > 60 ? String(meta).substring(0, 60) + '...' : String(meta);
 }
 
 // Backend timestamp is naive UTC (server wall-clock); force UTC parse and read
 // UTC components so display matches the stored time regardless of viewer tz.
 function formatUtc(value) {
-  if (!value) return "—";
+  if (!value) return '—';
   const iso = /[zZ]|[+-]\d{2}:?\d{2}$/.test(value) ? value : `${value}Z`;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return value;
-  const p = (n, w = 2) => String(n).padStart(w, "0");
+  const p = (n, w = 2) => String(n).padStart(w, '0');
   return (
     `${d.getUTCFullYear()}.${p(d.getUTCMonth() + 1)}.${p(d.getUTCDate())} ` +
     `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} UTC`
@@ -154,7 +142,7 @@ function formatClockUtc(ts) {
   if (!ts) return null;
   const d = new Date(ts);
   if (Number.isNaN(d.getTime())) return null;
-  const p = (n) => String(n).padStart(2, "0");
+  const p = n => String(n).padStart(2, '0');
   return `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} UTC`;
 }
 
@@ -174,8 +162,8 @@ function taskMatchesSearch(task, lowerQuery, hidden) {
   if (!hidden?.meta) parts.push(task.meta);
   if (!hidden?.runner) parts.push(task.runner);
   const haystack = parts
-    .map((v) => (v == null ? "" : String(v)))
-    .join(" ")
+    .map(v => (v == null ? '' : String(v)))
+    .join(' ')
     .toLowerCase();
   return haystack.includes(lowerQuery);
 }
@@ -185,7 +173,7 @@ function taskMatchesSearch(task, lowerQuery, hidden) {
 function CopyableCell({ display, full, mono }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = useCallback(
-    async (e) => {
+    async e => {
       e.stopPropagation();
       if (!full) return;
       try {
@@ -200,7 +188,7 @@ function CopyableCell({ display, full, mono }) {
   );
   return (
     <Box sx={styles.copyCell}>
-      <Tooltip title={full || ""}>
+      <Tooltip title={full || ''}>
         <Typography
           variant="bodyMedium"
           color="text.secondary"
@@ -210,7 +198,7 @@ function CopyableCell({ display, full, mono }) {
         </Typography>
       </Tooltip>
       {full ? (
-        <Tooltip title={copied ? "Copied" : "Copy"}>
+        <Tooltip title={copied ? 'Copied' : 'Copy'}>
           <IconButton
             size="small"
             onClick={handleCopy}
@@ -218,7 +206,10 @@ function CopyableCell({ display, full, mono }) {
             sx={styles.copyButton}
           >
             {copied ? (
-              <CheckOutlined sx={styles.copyIcon} color="success" />
+              <CheckOutlined
+                sx={styles.copyIcon}
+                color="success"
+              />
             ) : (
               <ContentCopyOutlined sx={styles.copyIcon} />
             )}
@@ -229,15 +220,7 @@ function CopyableCell({ display, full, mono }) {
   );
 }
 
-function NodeCard({
-  node,
-  onStop,
-  onOpenLogs,
-  onDump,
-  searching,
-  hiddenColumns,
-  onToggleColumn,
-}) {
+function NodeCard({ node, onStop, onOpenLogs, onDump, searching, hiddenColumns, onToggleColumn }) {
   const [expanded, setExpanded] = useState(true);
   const [poolExpanded, setPoolExpanded] = useState(false);
   const [tasksExpanded, setTasksExpanded] = useState(true);
@@ -246,61 +229,50 @@ function NodeCard({
   // Default view: Running first, Pending last, newest within a group first.
   // Sorting Status uses the same rank; other columns sort naturally.
   const { sortConfig, handleSort, sortData } = useTableSort({
-    defaultField: "status",
-    defaultDirection: "asc",
+    defaultField: 'status',
+    defaultDirection: 'asc',
     comparators: {
       status: (_a, _b, rowA, rowB) => {
         const byRank = statusRank(rowA.status) - statusRank(rowB.status);
         if (byRank !== 0) return byRank;
-        return String(rowB.started_at || "").localeCompare(
-          String(rowA.started_at || ""),
-        );
+        return String(rowB.started_at || '').localeCompare(String(rowA.started_at || ''));
       },
     },
   });
-  const sortedTasks = useMemo(
-    () => sortData(node.tasks || []),
-    [sortData, node.tasks],
-  );
+  const sortedTasks = useMemo(() => sortData(node.tasks || []), [sortData, node.tasks]);
 
   const totalRunning = node.tasks?.length || 0;
-  const totalCapacity = (node.pools || []).reduce(
-    (sum, p) => sum + (p.task_limit || 0),
-    0,
-  );
+  const totalCapacity = (node.pools || []).reduce((sum, p) => sum + (p.task_limit || 0), 0);
 
   const poolColumns = useResponsiveColumns({
     columns: POOL_COLUMNS,
     containerWidth: window.innerWidth,
     showCheckbox: false,
-    actionsColumnWidth: "0",
+    actionsColumnWidth: '0',
   });
 
   const visibleTaskColumns = useMemo(
-    () => TASK_COLUMNS.filter((c) => !hiddenColumns?.[c.field]),
+    () => TASK_COLUMNS.filter(c => !hiddenColumns?.[c.field]),
     [hiddenColumns],
   );
-  const hiddenCount = TOGGLEABLE_COLUMNS.filter(
-    (c) => hiddenColumns?.[c.field],
-  ).length;
+  const hiddenCount = TOGGLEABLE_COLUMNS.filter(c => hiddenColumns?.[c.field]).length;
 
   const taskColumns = useResponsiveColumns({
     columns: visibleTaskColumns,
     containerWidth: window.innerWidth,
     showCheckbox: false,
-    actionsColumnWidth: "9rem",
+    actionsColumnWidth: '9rem',
   });
 
   const renderPoolCell = useCallback((column, value) => {
-    if (column.field === "running_tasks") {
-      const limit = null; // we show limit in its own column
+    if (column.field === 'running_tasks') {
       return (
         <Typography
           variant="bodyMedium"
           color="text.secondary"
           sx={styles.cellText}
         >
-          {value ?? "\u2014"}
+          {value ?? '\u2014'}
         </Typography>
       );
     }
@@ -310,26 +282,26 @@ function NodeCard({
         color="text.secondary"
         sx={styles.cellText}
       >
-        {value ?? "\u2014"}
+        {value ?? '\u2014'}
       </Typography>
     );
   }, []);
 
-  const renderTaskCell = useCallback((column, value, row) => {
-    if (column.field === "task_id") {
+  const renderTaskCell = useCallback((column, value) => {
+    if (column.field === 'task_id') {
       return (
         <CopyableCell
-          display={value ? value.substring(0, 12) + "..." : "\u2014"}
+          display={value ? value.substring(0, 12) + '...' : '\u2014'}
           full={value}
           mono
         />
       );
     }
-    if (column.field === "status") {
-      const statusLower = (value || "").toLowerCase();
+    if (column.field === 'status') {
+      const statusLower = (value || '').toLowerCase();
       const cfg = STATUS_CONFIG[statusLower] || {
-        label: value || "Unknown",
-        color: "default",
+        label: value || 'Unknown',
+        color: 'default',
       };
       return (
         <Chip
@@ -340,24 +312,23 @@ function NodeCard({
         />
       );
     }
-    if (column.field === "meta") {
-      return <CopyableCell display={parseMeta(value)} full={value} />;
-    }
-    if (column.field === "runner") {
+    if (column.field === 'meta') {
       return (
         <CopyableCell
-          display={
-            value
-              ? value.length > 20
-                ? value.substring(0, 20) + "..."
-                : value
-              : "\u2014"
-          }
+          display={parseMeta(value)}
           full={value}
         />
       );
     }
-    if (column.field === "started_at") {
+    if (column.field === 'runner') {
+      return (
+        <CopyableCell
+          display={value ? (value.length > 20 ? value.substring(0, 20) + '...' : value) : '\u2014'}
+          full={value}
+        />
+      );
+    }
+    if (column.field === 'started_at') {
       return (
         <Typography
           variant="bodyMedium"
@@ -368,15 +339,15 @@ function NodeCard({
         </Typography>
       );
     }
-    if (column.field === "user_input_preview") {
+    if (column.field === 'user_input_preview') {
       return (
-        <Tooltip title={value || ""}>
+        <Tooltip title={value || ''}>
           <Typography
             variant="bodyMedium"
             color="text.secondary"
             sx={styles.cellText}
           >
-            {value || "\u2014"}
+            {value || '\u2014'}
           </Typography>
         </Tooltip>
       );
@@ -387,35 +358,44 @@ function NodeCard({
         color="text.secondary"
         sx={styles.cellText}
       >
-        {value ?? "\u2014"}
+        {value ?? '\u2014'}
       </Typography>
     );
   }, []);
 
   const renderTaskActions = useCallback(
-    (row) => {
-      const status = (row.status || "").toLowerCase();
+    row => {
+      const status = (row.status || '').toLowerCase();
       return (
-        <Box sx={{ display: "flex", gap: "0.125rem" }}>
+        <Box sx={{ display: 'flex', gap: '0.125rem' }}>
           <Tooltip title="View logs">
-            <IconButton size="small" onClick={() => onOpenLogs(row.task_id)}>
+            <IconButton
+              size="small"
+              onClick={() => onOpenLogs(row.task_id)}
+            >
               <DescriptionOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          {status === "running" && (
+          {status === 'running' && (
             <Tooltip title="Dump stack (see where the task is stuck)">
-              <IconButton size="small" onClick={() => onDump(row.task_id)}>
+              <IconButton
+                size="small"
+                onClick={() => onDump(row.task_id)}
+              >
                 <BugReportOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
-          {status === "running" && (
+          {status === 'running' && (
             <Tooltip title="Stop task">
               <IconButton
                 size="small"
                 onClick={() => onStop(node.node, row.task_id)}
               >
-                <StopOutlined fontSize="small" color="error" />
+                <StopOutlined
+                  fontSize="small"
+                  color="error"
+                />
               </IconButton>
             </Tooltip>
           )}
@@ -427,23 +407,30 @@ function NodeCard({
 
   return (
     <Box sx={styles.nodeCard}>
-      <Box sx={styles.nodeHeader} onClick={() => setExpanded((v) => !v)}>
+      <Box
+        sx={styles.nodeHeader}
+        onClick={() => setExpanded(v => !v)}
+      >
         <Box sx={styles.nodeHeaderLeft}>
-          <ExpandMoreIcon
-            sx={[styles.expandIcon, !expanded && styles.expandIconCollapsed]}
-          />
-          <Typography variant="body2" sx={styles.nodeTitle}>
+          <ExpandMoreIcon sx={[styles.expandIcon, !expanded && styles.expandIconCollapsed]} />
+          <Typography
+            variant="body2"
+            sx={styles.nodeTitle}
+          >
             {node.plugin}
           </Typography>
           <Chip
-            label={`${totalRunning} task${totalRunning !== 1 ? "s" : ""}`}
+            label={`${totalRunning} task${totalRunning !== 1 ? 's' : ''}`}
             size="small"
-            color={totalRunning > 0 ? "success" : "default"}
+            color={totalRunning > 0 ? 'success' : 'default'}
             variant="outlined"
             sx={styles.countChip}
           />
           {totalCapacity > 0 && (
-            <Typography variant="caption" sx={styles.capacityText}>
+            <Typography
+              variant="caption"
+              sx={styles.capacityText}
+            >
               capacity: {totalCapacity}
             </Typography>
           )}
@@ -457,39 +444,37 @@ function NodeCard({
             <Box sx={styles.subSectionHeader}>
               <Box
                 sx={styles.subSectionToggle}
-                onClick={() => setTasksExpanded((v) => !v)}
+                onClick={() => setTasksExpanded(v => !v)}
               >
-                <ExpandMoreIcon
-                  sx={[
-                    styles.subExpandIcon,
-                    !tasksExpanded && styles.expandIconCollapsed,
-                  ]}
-                />
-                <Typography variant="caption" sx={styles.tableSectionTitle}>
+                <ExpandMoreIcon sx={[styles.subExpandIcon, !tasksExpanded && styles.expandIconCollapsed]} />
+                <Typography
+                  variant="caption"
+                  sx={styles.tableSectionTitle}
+                >
                   Active Tasks
                 </Typography>
                 <Chip
                   label={totalRunning}
                   size="small"
-                  color={totalRunning > 0 ? "success" : "default"}
+                  color={totalRunning > 0 ? 'success' : 'default'}
                   variant="outlined"
                   sx={styles.subCountChip}
                 />
               </Box>
               <Button
                 size="small"
-                startIcon={<ViewColumnOutlined sx={{ fontSize: "1rem" }} />}
-                onClick={(e) => setColumnMenuAnchor(e.currentTarget)}
+                startIcon={<ViewColumnOutlined sx={{ fontSize: '1rem' }} />}
+                onClick={e => setColumnMenuAnchor(e.currentTarget)}
                 sx={styles.columnsButton}
               >
-                Columns{hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ""}
+                Columns{hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ''}
               </Button>
               <Menu
                 anchorEl={columnMenuAnchor}
                 open={Boolean(columnMenuAnchor)}
                 onClose={() => setColumnMenuAnchor(null)}
               >
-                {TOGGLEABLE_COLUMNS.map((col) => (
+                {TOGGLEABLE_COLUMNS.map(col => (
                   <MenuItem
                     key={col.field}
                     onClick={() => onToggleColumn(col.field)}
@@ -507,7 +492,10 @@ function NodeCard({
             </Box>
             <Collapse in={tasksExpanded}>
               {sortedTasks.length > 0 ? (
-                <GridTableContainer isLoading={false} isEmpty={false}>
+                <GridTableContainer
+                  isLoading={false}
+                  isEmpty={false}
+                >
                   <GridTableHeader
                     columns={taskColumns.visibleColumns}
                     sortConfig={sortConfig}
@@ -515,8 +503,11 @@ function NodeCard({
                     gridTemplateColumns={taskColumns.gridTemplateColumns}
                     showCheckbox={false}
                   />
-                  <GridTableBody minHeight="0" sx={styles.tableBodyScroll}>
-                    {sortedTasks.map((task) => (
+                  <GridTableBody
+                    minHeight="0"
+                    sx={styles.tableBodyScroll}
+                  >
+                    {sortedTasks.map(task => (
                       <GridTableRow
                         key={task.task_id}
                         row={task}
@@ -530,8 +521,11 @@ function NodeCard({
                   </GridTableBody>
                 </GridTableContainer>
               ) : (
-                <Typography variant="caption" sx={styles.emptyTasks}>
-                  {searching ? "No matching active tasks" : "No active tasks"}
+                <Typography
+                  variant="caption"
+                  sx={styles.emptyTasks}
+                >
+                  {searching ? 'No matching active tasks' : 'No active tasks'}
                 </Typography>
               )}
             </Collapse>
@@ -543,15 +537,13 @@ function NodeCard({
               <Box sx={styles.subSectionHeader}>
                 <Box
                   sx={styles.subSectionToggle}
-                  onClick={() => setPoolExpanded((v) => !v)}
+                  onClick={() => setPoolExpanded(v => !v)}
                 >
-                  <ExpandMoreIcon
-                    sx={[
-                      styles.subExpandIcon,
-                      !poolExpanded && styles.expandIconCollapsed,
-                    ]}
-                  />
-                  <Typography variant="caption" sx={styles.tableSectionTitle}>
+                  <ExpandMoreIcon sx={[styles.subExpandIcon, !poolExpanded && styles.expandIconCollapsed]} />
+                  <Typography
+                    variant="caption"
+                    sx={styles.tableSectionTitle}
+                  >
                     Pool State
                   </Typography>
                   <Chip
@@ -564,7 +556,10 @@ function NodeCard({
               </Box>
               <Collapse in={poolExpanded}>
                 <Box sx={styles.tableScroll}>
-                  <GridTableContainer isLoading={false} isEmpty={false}>
+                  <GridTableContainer
+                    isLoading={false}
+                    isEmpty={false}
+                  >
                     <GridTableHeader
                       columns={poolColumns.visibleColumns}
                       gridTemplateColumns={poolColumns.gridTemplateColumns}
@@ -593,50 +588,39 @@ function NodeCard({
   );
 }
 
-const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-    refetch,
-    fulfilledTimeStamp,
-  } = useActiveTasksListQuery(undefined, {
-    pollingInterval: 15000,
-  });
+const ActiveTasksTab = memo(({ search = '' }) => {
+  const { data, isLoading, isFetching, isError, error, refetch, fulfilledTimeStamp } =
+    useActiveTasksListQuery(undefined, {
+      pollingInterval: 15000,
+    });
   const [refreshNode] = useActiveTasksRefreshMutation();
   const [stopTask] = useActiveTasksStopMutation();
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
   const [logTaskId, setLogTaskId] = useState(null);
   const [dumpTaskId, setDumpTaskId] = useState(null);
   const [hiddenColumns, setHiddenColumns] = useState({});
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
-  const { data: maintenanceData, isSuccess: maintenanceLoaded } =
-    useMaintenanceQuery();
-  const [saveMaintenance, { isLoading: pauseSaving }] =
-    useMaintenanceSaveMutation();
+  const { data: maintenanceData, isSuccess: maintenanceLoaded } = useMaintenanceQuery();
+  const [saveMaintenance, { isLoading: pauseSaving }] = useMaintenanceSaveMutation();
   const tasksPaused = Boolean(maintenanceData?.tasks_paused);
 
   const nodes = useMemo(() => {
     const all = data?.nodes || [];
     const lower = search.trim().toLowerCase();
     if (!lower) return all;
-    return all.map((node) => ({
+    return all.map(node => ({
       ...node,
-      tasks: (node.tasks || []).filter((t) =>
-        taskMatchesSearch(t, lower, hiddenColumns),
-      ),
+      tasks: (node.tasks || []).filter(t => taskMatchesSearch(t, lower, hiddenColumns)),
     }));
   }, [data, search, hiddenColumns]);
 
-  const toggleColumn = useCallback((field) => {
-    setHiddenColumns((prev) => ({ ...prev, [field]: !prev[field] }));
+  const toggleColumn = useCallback(field => {
+    setHiddenColumns(prev => ({ ...prev, [field]: !prev[field] }));
   }, []);
 
   // Global refresh: ask every node to re-broadcast pool + task state (the real
@@ -645,7 +629,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
   const [globalRefreshing, setGlobalRefreshing] = useState(false);
   const handleManualRefresh = useCallback(async () => {
     if (globalRefreshing) return;
-    const targets = (data?.nodes || []).map((n) => n.node);
+    const targets = (data?.nodes || []).map(n => n.node);
     if (targets.length === 0) {
       refetch();
       return;
@@ -653,21 +637,21 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     setGlobalRefreshing(true);
     try {
       for (const nodeStr of targets) {
-        await refreshNode({ node: nodeStr, scope: "pool" }).unwrap();
-        await refreshNode({ node: nodeStr, scope: "task" }).unwrap();
+        await refreshNode({ node: nodeStr, scope: 'pool' }).unwrap();
+        await refreshNode({ node: nodeStr, scope: 'task' }).unwrap();
       }
     } catch (err) {
       setSnackbar({
         open: true,
-        message: `Refresh failed: ${err?.message || "Unknown error"}`,
-        severity: "error",
+        message: `Refresh failed: ${err?.message || 'Unknown error'}`,
+        severity: 'error',
       });
     } finally {
       setGlobalRefreshing(false);
     }
   }, [globalRefreshing, data, refreshNode, refetch]);
 
-  const handleOpenLogs = useCallback((taskId) => {
+  const handleOpenLogs = useCallback(taskId => {
     setLogTaskId(taskId);
   }, []);
 
@@ -675,7 +659,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     setLogTaskId(null);
   }, []);
 
-  const handleOpenDump = useCallback((taskId) => {
+  const handleOpenDump = useCallback(taskId => {
     setDumpTaskId(taskId);
   }, []);
 
@@ -690,13 +674,13 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
         setSnackbar({
           open: true,
           message: `Stop signal sent for task ${taskId.substring(0, 12)}...`,
-          severity: "info",
+          severity: 'info',
         });
       } catch (err) {
         setSnackbar({
           open: true,
-          message: `Stop failed: ${err?.message || "Unknown error"}`,
-          severity: "error",
+          message: `Stop failed: ${err?.message || 'Unknown error'}`,
+          severity: 'error',
         });
       }
     },
@@ -704,7 +688,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
   );
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   const handleTogglePauseClick = useCallback(() => {
@@ -723,15 +707,15 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
       setSnackbar({
         open: true,
         message: newValue
-          ? "New tasks are now paused. Running tasks are unaffected."
-          : "New tasks are accepted again.",
-        severity: newValue ? "warning" : "success",
+          ? 'New tasks are now paused. Running tasks are unaffected.'
+          : 'New tasks are accepted again.',
+        severity: newValue ? 'warning' : 'success',
       });
     } catch (err) {
       setSnackbar({
         open: true,
-        message: `Failed to toggle: ${err?.data?.error || err?.message || "Unknown error"}`,
-        severity: "error",
+        message: `Failed to toggle: ${err?.data?.error || err?.message || 'Unknown error'}`,
+        severity: 'error',
       });
     }
   }, [tasksPaused, saveMaintenance]);
@@ -748,18 +732,15 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     return (
       <Box sx={styles.emptyState}>
         <HubOutlined sx={styles.emptyIcon} />
-        <Typography variant="bodyMedium" color="text.disabled">
-          {isError ? "Could not load active tasks" : "No task nodes available"}
+        <Typography
+          variant="bodyMedium"
+          color="text.disabled"
+        >
+          {isError ? 'Could not load active tasks' : 'No task nodes available'}
         </Typography>
         <Button
           size="small"
-          startIcon={
-            isFetching ? (
-              <CircularProgress size={12} />
-            ) : (
-              <RefreshIcon sx={{ fontSize: "1rem" }} />
-            )
-          }
+          startIcon={isFetching ? <CircularProgress size={12} /> : <RefreshIcon sx={{ fontSize: '1rem' }} />}
           onClick={() => refetch()}
           disabled={isFetching}
           sx={styles.columnsButton}
@@ -776,7 +757,10 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
     <Box sx={styles.root}>
       <Box sx={styles.toolbar}>
         {lastRefreshed && (
-          <Typography variant="caption" sx={styles.lastRefreshed}>
+          <Typography
+            variant="caption"
+            sx={styles.lastRefreshed}
+          >
             Last refreshed {lastRefreshed}
           </Typography>
         )}
@@ -786,14 +770,12 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
             size="small"
             color="warning"
             variant="outlined"
-            icon={<PauseCircleOutlined sx={{ fontSize: "1rem" }} />}
+            icon={<PauseCircleOutlined sx={{ fontSize: '1rem' }} />}
           />
         )}
         <Tooltip
           title={
-            tasksPaused
-              ? "Resume accepting new tasks"
-              : "Reject new tasks; running tasks are unaffected"
+            tasksPaused ? 'Resume accepting new tasks' : 'Reject new tasks; running tasks are unaffected'
           }
         >
           <Box component="span">
@@ -803,16 +785,16 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
                 pauseSaving ? (
                   <CircularProgress size={12} />
                 ) : tasksPaused ? (
-                  <PlayCircleOutlined sx={{ fontSize: "1rem" }} />
+                  <PlayCircleOutlined sx={{ fontSize: '1rem' }} />
                 ) : (
-                  <PauseCircleOutlined sx={{ fontSize: "1rem" }} />
+                  <PauseCircleOutlined sx={{ fontSize: '1rem' }} />
                 )
               }
               onClick={handleTogglePauseClick}
               disabled={pauseSaving || !maintenanceLoaded}
               sx={styles.columnsButton}
             >
-              {tasksPaused ? "Resume new tasks" : "Pause new tasks"}
+              {tasksPaused ? 'Resume new tasks' : 'Pause new tasks'}
             </Button>
           </Box>
         </Tooltip>
@@ -821,11 +803,7 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
             <Button
               size="small"
               startIcon={
-                globalRefreshing ? (
-                  <CircularProgress size={12} />
-                ) : (
-                  <RefreshIcon sx={{ fontSize: "1rem" }} />
-                )
+                globalRefreshing ? <CircularProgress size={12} /> : <RefreshIcon sx={{ fontSize: '1rem' }} />
               }
               onClick={handleManualRefresh}
               disabled={globalRefreshing}
@@ -837,13 +815,16 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
         </Tooltip>
       </Box>
       {isError && (
-        <Alert severity="error" sx={styles.errorBanner}>
+        <Alert
+          severity="error"
+          sx={styles.errorBanner}
+        >
           Could not refresh active tasks
-          {error?.status ? ` (${error.status})` : ""}. Showing last known data.
+          {error?.status ? ` (${error.status})` : ''}. Showing last known data.
         </Alert>
       )}
       <Box sx={styles.scrollArea}>
-        {nodes.map((node) => (
+        {nodes.map(node => (
           <NodeCard
             key={node.node}
             node={node}
@@ -861,13 +842,13 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -885,26 +866,27 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
         onClose={handleCloseDump}
       />
 
-      <Dialog open={pauseConfirmOpen} onClose={handleCancelPause}>
-        <DialogTitle>
-          {tasksPaused ? "Resume new tasks?" : "Pause new tasks?"}
-        </DialogTitle>
+      <Dialog
+        open={pauseConfirmOpen}
+        onClose={handleCancelPause}
+      >
+        <DialogTitle>{tasksPaused ? 'Resume new tasks?' : 'Pause new tasks?'}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             {tasksPaused
-              ? "New tasks (predicts, index jobs, pipelines) will be accepted again on every node."
-              : "New tasks (predicts, index jobs, pipelines) will be rejected on every node until resumed. Already-running tasks are left to finish; this does not show the maintenance splash to other users."}
+              ? 'New tasks (predicts, index jobs, pipelines) will be accepted again on every node.'
+              : 'New tasks (predicts, index jobs, pipelines) will be rejected on every node until resumed. Already-running tasks are left to finish; this does not show the maintenance splash to other users.'}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelPause}>Cancel</Button>
           <Button
             onClick={handleConfirmPause}
-            color={tasksPaused ? "primary" : "warning"}
+            color={tasksPaused ? 'primary' : 'warning'}
             variant="contained"
             disabled={pauseSaving}
           >
-            {tasksPaused ? "Resume" : "Pause"}
+            {tasksPaused ? 'Resume' : 'Pause'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -912,188 +894,188 @@ const ActiveTasksTab = memo(function ActiveTasksTab({ search = "" }) {
   );
 });
 
+ActiveTasksTab.displayName = 'ActiveTasksTab';
+
 const styles = {
   root: {
     flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
   toolbar: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: "0.5rem",
-    padding: "0.5rem 1.5rem 0",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '0.5rem',
+    padding: '0.5rem 1.5rem 0',
   },
   lastRefreshed: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.6875rem",
-    marginRight: "auto",
+    fontSize: '0.6875rem',
+    marginRight: 'auto',
   }),
   errorBanner: {
-    margin: "0.5rem 1.5rem 0",
+    margin: '0.5rem 1.5rem 0',
   },
   columnsButton: {
-    textTransform: "none",
-    fontSize: "0.75rem",
-    minWidth: "auto",
+    textTransform: 'none',
+    fontSize: '0.75rem',
+    minWidth: 'auto',
   },
   scrollArea: {
     flex: 1,
-    overflowY: "auto",
-    padding: "1rem 1.5rem",
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.75rem",
+    overflowY: 'auto',
+    padding: '1rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
   },
   loading: {
     flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyState: {
     flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "0.75rem",
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.75rem',
   },
   emptyIcon: {
-    fontSize: "3rem",
-    color: "text.disabled",
+    fontSize: '3rem',
+    color: 'text.disabled',
   },
   nodeCard: ({ palette }) => ({
     border: `1px solid ${palette.border.table}`,
-    borderRadius: "0.5rem",
-    overflow: "hidden",
+    borderRadius: '0.5rem',
+    overflow: 'hidden',
   }),
   nodeHeader: ({ palette }) => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0.625rem 1rem",
-    cursor: "pointer",
-    backgroundColor:
-      palette.background.tabPanel || palette.background.userInputBackground,
-    "&:hover": {
-      backgroundColor:
-        palette.background.conversation?.hover || palette.action.hover,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0.625rem 1rem',
+    cursor: 'pointer',
+    backgroundColor: palette.background.tabPanel || palette.background.userInputBackground,
+    '&:hover': {
+      backgroundColor: palette.background.conversation?.hover || palette.action.hover,
     },
   }),
   nodeHeaderLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   expandIcon: {
-    fontSize: "1.25rem",
-    transition: "transform 0.2s",
-    color: "text.metrics",
+    fontSize: '1.25rem',
+    transition: 'transform 0.2s',
+    color: 'text.metrics',
   },
   expandIconCollapsed: {
-    transform: "rotate(-90deg)",
+    transform: 'rotate(-90deg)',
   },
   nodeTitle: {
     fontWeight: 600,
-    fontSize: "0.875rem",
+    fontSize: '0.875rem',
   },
   countChip: {
-    fontSize: "0.6875rem",
-    height: "1.25rem",
-    "& .MuiChip-label": {
-      padding: "0 0.375rem",
+    fontSize: '0.6875rem',
+    height: '1.25rem',
+    '& .MuiChip-label': {
+      padding: '0 0.375rem',
     },
   },
   capacityText: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.6875rem",
+    fontSize: '0.6875rem',
   }),
   nodeBody: ({ palette }) => ({
     borderTop: `1px solid ${palette.border.table}`,
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.75rem",
-    padding: "0.75rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    padding: '0.75rem',
   }),
   tableSection: {
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
   },
   subSectionHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0.25rem 0",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0.25rem 0',
   },
   subSectionToggle: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.375rem",
-    cursor: "pointer",
-    userSelect: "none",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+    cursor: 'pointer',
+    userSelect: 'none',
   },
   subExpandIcon: {
-    fontSize: "1rem",
-    transition: "transform 0.2s",
-    color: "text.metrics",
+    fontSize: '1rem',
+    transition: 'transform 0.2s',
+    color: 'text.metrics',
   },
   subCountChip: {
-    fontSize: "0.625rem",
-    height: "1rem",
-    "& .MuiChip-label": {
-      padding: "0 0.25rem",
+    fontSize: '0.625rem',
+    height: '1rem',
+    '& .MuiChip-label': {
+      padding: '0 0.25rem',
     },
   },
   tableScroll: {
-    maxHeight: "18rem",
-    overflowY: "auto",
+    maxHeight: '18rem',
+    overflowY: 'auto',
   },
   tableBodyScroll: {
-    maxHeight: "18rem",
-    overflowY: "auto",
+    maxHeight: '18rem',
+    overflowY: 'auto',
   },
   tableSectionTitle: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.6875rem",
+    fontSize: '0.6875rem',
     fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
   }),
   emptyTasks: ({ palette }) => ({
     color: palette.text.disabled,
-    fontSize: "0.75rem",
-    padding: "0.75rem 0.25rem",
+    fontSize: '0.75rem',
+    padding: '0.75rem 0.25rem',
   }),
   cellText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   cellTextMono: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    fontFamily: "monospace",
-    fontSize: "0.75rem",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontFamily: 'monospace',
+    fontSize: '0.75rem',
   },
   copyCell: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.25rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
     minWidth: 0,
-    "&:hover .copy-btn": { opacity: 1 },
+    '&:hover .copy-btn': { opacity: 1 },
   },
   copyButton: {
-    padding: "0.125rem",
+    padding: '0.125rem',
     opacity: 0.35,
-    transition: "opacity 0.15s",
+    transition: 'opacity 0.15s',
     flexShrink: 0,
   },
   copyIcon: {
-    fontSize: "0.875rem",
+    fontSize: '0.875rem',
   },
 };
 

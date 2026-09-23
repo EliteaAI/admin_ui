@@ -1,36 +1,33 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from 'react';
 
-import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
-import MenuItem from "@mui/material/MenuItem";
-import Snackbar from "@mui/material/Snackbar";
-import TextField from "@mui/material/TextField";
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import MenuItem from '@mui/material/MenuItem';
+import Snackbar from '@mui/material/Snackbar';
+import TextField from '@mui/material/TextField';
 
-import DrawerPage from "@/components/DrawerPage";
-import DrawerPageHeader from "@/components/DrawerPageHeader";
-import { useDebounceValue } from "@/hooks/useDebounceValue";
-import { usePageTitle } from "@/hooks/usePageTitle";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { PERMISSIONS } from "@/constants/permissions";
-import { useModelPriceListQuery } from "@/api/modelPricesApi";
+import { useModelPriceListQuery } from '@/api/modelPricesApi';
+import DrawerPage from '@/components/DrawerPage';
+import DrawerPageHeader from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { useDebounceValue } from '@/hooks/useDebounceValue';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
-import ModelPricesTable from "./ModelPricesTable";
-import ModelPriceDialog from "./ModelPriceDialog";
-import ResetPriceDialog from "./ResetPriceDialog";
-import { MODEL_MODES } from "./constants";
+import ModelPriceDialog from './ModelPriceDialog';
+import ModelPricesTable from './ModelPricesTable';
+import ResetPriceDialog from './ResetPriceDialog';
+import { MODEL_MODES } from './constants';
 
 export default function ModelPricesPage() {
-  usePageTitle("Model Prices");
+  usePageTitle('Model Prices');
 
   const { hasPermission } = useCheckPermission();
-  const canEdit = useMemo(
-    () => hasPermission(PERMISSIONS.modelPrices.edit),
-    [hasPermission],
-  );
+  const canEdit = useMemo(() => hasPermission(PERMISSIONS.modelPrices.edit), [hasPermission]);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const debouncedSearch = useDebounceValue(search, 300);
-  const [mode, setMode] = useState("");
+  const [mode, setMode] = useState('');
   const [customOnly, setCustomOnly] = useState(false);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(50);
@@ -40,8 +37,8 @@ export default function ModelPricesPage() {
   const [resetTarget, setResetTarget] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
 
   const { data, isFetching, isError } = useModelPriceListQuery(
@@ -58,32 +55,32 @@ export default function ModelPricesPage() {
   const rows = data?.rows || [];
   const total = data?.total || 0;
 
-  const handleSearchChange = useCallback((value) => {
+  const handleSearchChange = useCallback(value => {
     setSearch(value);
     setPage(0);
   }, []);
 
-  const handleModeChange = useCallback((event) => {
+  const handleModeChange = useCallback(event => {
     setMode(event.target.value);
     setPage(0);
   }, []);
 
-  const handleCustomToggle = useCallback((event) => {
-    setCustomOnly(event.target.value === "custom");
+  const handleCustomToggle = useCallback(event => {
+    setCustomOnly(event.target.value === 'custom');
     setPage(0);
   }, []);
 
-  const handlePageSizeChange = useCallback((size) => {
+  const handlePageSizeChange = useCallback(size => {
     setPageSize(size);
     setPage(0);
   }, []);
 
-  const notify = useCallback((message, severity = "success") => {
+  const notify = useCallback((message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
   }, []);
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   const headerControls = (
@@ -99,8 +96,11 @@ export default function ModelPricesPage() {
         <MenuItem value="">
           <em>All modes</em>
         </MenuItem>
-        {MODEL_MODES.map((m) => (
-          <MenuItem key={m} value={m}>
+        {MODEL_MODES.map(m => (
+          <MenuItem
+            key={m}
+            value={m}
+          >
             {m}
           </MenuItem>
         ))}
@@ -109,7 +109,7 @@ export default function ModelPricesPage() {
         size="small"
         select
         label="Source"
-        value={customOnly ? "custom" : "all"}
+        value={customOnly ? 'custom' : 'all'}
         onChange={handleCustomToggle}
         sx={styles.filterSelect}
       >
@@ -161,27 +161,27 @@ export default function ModelPricesPage() {
           setCreateOpen(false);
           setEditTarget(null);
         }}
-        onSaved={(message) => notify(message)}
+        onSaved={message => notify(message)}
       />
 
       <ResetPriceDialog
         open={!!resetTarget}
         target={resetTarget}
         onClose={() => setResetTarget(null)}
-        onDone={(message) => notify(message)}
+        onDone={message => notify(message)}
       />
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={snackbar.severity === "success" ? 5000 : 10000}
+        autoHideDuration={snackbar.severity === 'success' ? 5000 : 10000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -192,20 +192,20 @@ export default function ModelPricesPage() {
 
 const styles = {
   headerControls: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   filterSelect: {
-    minWidth: "10rem",
+    minWidth: '10rem',
   },
   tableContainer: {
     flexGrow: 1,
     minHeight: 0,
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
   },
   errorContainer: {
-    padding: "1rem",
+    padding: '1rem',
   },
 };

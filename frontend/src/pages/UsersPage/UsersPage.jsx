@@ -1,60 +1,61 @@
-import { memo, useCallback, useMemo, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
-import IconButton from "@mui/material/IconButton";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
-import Tooltip from "@mui/material/Tooltip";
-import DeleteIcon from "@mui/icons-material/Delete";
-import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
+import { useDispatch, useSelector } from 'react-redux';
 
-import DrawerPage from "@/components/DrawerPage";
-import DrawerPageHeader from "@/components/DrawerPageHeader";
+import DeleteIcon from '@mui/icons-material/Delete';
+import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Tooltip from '@mui/material/Tooltip';
+
 import {
-  useUserListQuery,
   useLazyUserListQuery,
+  useUserListQuery,
   useUserSetAdminRoleMutation,
   useUserSuspendMutation,
-} from "@/api/usersApi";
-import { useDebounceValue } from "@/hooks/useDebounceValue";
-import { usePageTitle } from "@/hooks/usePageTitle";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { PERMISSIONS } from "@/constants/permissions";
-import { exportToExcel } from "@/utils/exportToExcel";
-import { setRoles } from "@/store";
+} from '@/api/usersApi';
+import DrawerPage from '@/components/DrawerPage';
+import DrawerPageHeader from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { useDebounceValue } from '@/hooks/useDebounceValue';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { setRoles } from '@/store';
+import { exportToExcel } from '@/utils/exportToExcel';
 
-import UsersTable from "./UsersTable";
-import DeleteUserDialog from "./DeleteUserDialog";
-import UserActivityDrawer from "./UserActivityDrawer";
+import DeleteUserDialog from './DeleteUserDialog';
+import UserActivityDrawer from './UserActivityDrawer';
+import UsersTable from './UsersTable';
 
-const USER_TYPES = ["platform", "system"];
+const USER_TYPES = ['platform', 'system'];
 const EXPORT_COLUMNS = [
-  { header: "Name", key: "name" },
-  { header: "Email", key: "email" },
-  { header: "Last Login", key: "last_login" },
-  { header: "Status", key: "status" },
+  { header: 'Name', key: 'name' },
+  { header: 'Email', key: 'email' },
+  { header: 'Last Login', key: 'last_login' },
+  { header: 'Status', key: 'status' },
   {
-    header: "Admin Role",
-    key: "admin_role",
-    transform: (v) => v || "None",
+    header: 'Admin Role',
+    key: 'admin_role',
+    transform: v => v || 'None',
   },
 ];
 
 const UsersPage = memo(() => {
-  usePageTitle("Users");
+  usePageTitle('Users');
   const dispatch = useDispatch();
   const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState(0);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const debouncedSearch = useDebounceValue(search, 300);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteIds, setDeleteIds] = useState([]);
@@ -65,7 +66,7 @@ const UsersPage = memo(() => {
 
   const userType = USER_TYPES[activeTab];
 
-  const currentUser = useSelector((state) => state.user.user);
+  const currentUser = useSelector(state => state.user.user);
   const currentUserId = currentUser?.id;
 
   const [setAdminRole] = useUserSetAdminRoleMutation();
@@ -100,40 +101,40 @@ const UsersPage = memo(() => {
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
     setPage(0);
-    setSearch("");
+    setSearch('');
     setSelectedIds([]);
   }, []);
 
-  const handleSearchChange = useCallback((value) => {
+  const handleSearchChange = useCallback(value => {
     setSearch(value);
     setPage(0);
     setSelectedIds([]);
   }, []);
 
-  const handleSort = useCallback((field) => {
-    setSortBy((prev) => {
+  const handleSort = useCallback(field => {
+    setSortBy(prev => {
       if (prev === field) {
-        setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
+        setSortOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
         return prev;
       }
-      setSortOrder("asc");
+      setSortOrder('asc');
       return field;
     });
     setPage(0);
   }, []);
 
-  const handlePageChange = useCallback((newPage) => {
+  const handlePageChange = useCallback(newPage => {
     setPage(newPage);
     setSelectedIds([]);
   }, []);
 
-  const handlePageSizeChange = useCallback((newPageSize) => {
+  const handlePageSizeChange = useCallback(newPageSize => {
     setPageSize(newPageSize);
     setPage(0);
     setSelectedIds([]);
   }, []);
 
-  const handleDelete = useCallback((ids) => {
+  const handleDelete = useCallback(ids => {
     setDeleteIds(ids);
     setDeleteOpen(true);
   }, []);
@@ -150,11 +151,10 @@ const UsersPage = memo(() => {
         await setAdminRole({ userId, roleName }).unwrap();
 
         // If the user changed their own role, update the Redux store
-        if (userId === currentUserId)
-          dispatch(setRoles(roleName ? [roleName] : []));
+        if (userId === currentUserId) dispatch(setRoles(roleName ? [roleName] : []));
         // Reload the page to reflect changes in permissions
         window.location.reload();
-      } catch (err) {
+      } catch {
         // Silent error handling
       }
     },
@@ -163,14 +163,14 @@ const UsersPage = memo(() => {
 
   // Suspend handler
   const handleSuspend = useCallback(
-    async (user) => {
-      const newSuspended = user.status !== "suspended";
+    async user => {
+      const newSuspended = user.status !== 'suspended';
       try {
         await suspendUser({
           userId: user.id,
           suspended: newSuspended,
         }).unwrap();
-      } catch (err) {
+      } catch {
         // Error handling via RTK Query cache invalidation
       }
     },
@@ -182,37 +182,34 @@ const UsersPage = memo(() => {
     setExporting(true);
 
     try {
-      const fetchAll = async (userType) => {
+      const fetchAll = async type => {
         const first = await fetchUsers({
           limit: 1,
           offset: 0,
-          user_type: userType,
+          user_type: type,
         }).unwrap();
-        const total = first?.total ?? 0;
+        const totalCount = first?.total ?? 0;
 
-        if (total === 0) return [];
+        if (totalCount === 0) return [];
 
         const result = await fetchUsers({
-          limit: total,
+          limit: totalCount,
           offset: 0,
-          user_type: userType,
+          user_type: type,
         }).unwrap();
         return result?.rows ?? [];
       };
 
-      const [platformRows, systemRows] = await Promise.all([
-        fetchAll("platform"),
-        fetchAll("system"),
-      ]);
+      const [platformRows, systemRows] = await Promise.all([fetchAll('platform'), fetchAll('system')]);
 
-      await exportToExcel("Users.xlsx", [
+      await exportToExcel('Users.xlsx', [
         {
-          sheetName: "Platform Users",
+          sheetName: 'Platform Users',
           columns: EXPORT_COLUMNS,
           rows: platformRows,
         },
         {
-          sheetName: "System Users",
+          sheetName: 'System Users',
           columns: EXPORT_COLUMNS,
           rows: systemRows,
         },
@@ -225,7 +222,7 @@ const UsersPage = memo(() => {
   }, [fetchUsers]);
 
   // Activity drawer handlers
-  const handleActivity = useCallback((user) => {
+  const handleActivity = useCallback(user => {
     setActivityUser(user);
     setActivityOpen(true);
   }, []);
@@ -250,7 +247,10 @@ const UsersPage = memo(() => {
           Delete ({selectedIds.length})
         </Button>
       )}
-      <Tooltip title="Export to Excel" placement="top">
+      <Tooltip
+        title="Export to Excel"
+        placement="top"
+      >
         <Box component="span">
           <IconButton
             disabled={exporting}
@@ -259,7 +259,10 @@ const UsersPage = memo(() => {
             sx={styles.exportButton}
           >
             {exporting ? (
-              <CircularProgress size={16} sx={{ color: "icon.fill.send" }} />
+              <CircularProgress
+                size={16}
+                sx={{ color: 'icon.fill.send' }}
+              />
             ) : (
               <FileDownloadOutlined sx={styles.exportIcon} />
             )}
@@ -269,13 +272,23 @@ const UsersPage = memo(() => {
     </>
   );
 
-  const platformLabel = `Platform Users${counts.platform != null ? ` (${counts.platform})` : ""}`;
-  const systemLabel = `System Users${counts.system != null ? ` (${counts.system})` : ""}`;
+  const platformLabel = `Platform Users${counts.platform != null ? ` (${counts.platform})` : ''}`;
+  const systemLabel = `System Users${counts.system != null ? ` (${counts.system})` : ''}`;
 
   const tabsElement = (
-    <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
-      <Tab label={platformLabel} sx={styles.tab} />
-      <Tab label={systemLabel} sx={styles.tab} />
+    <Tabs
+      value={activeTab}
+      onChange={handleTabChange}
+      sx={styles.tabs}
+    >
+      <Tab
+        label={platformLabel}
+        sx={styles.tab}
+      />
+      <Tab
+        label={systemLabel}
+        sx={styles.tab}
+      />
     </Tabs>
   );
 
@@ -335,59 +348,59 @@ const UsersPage = memo(() => {
   );
 });
 
-UsersPage.displayName = "UsersPage";
+UsersPage.displayName = 'UsersPage';
 
 const styles = {
   tabs: ({ palette }) => ({
-    minHeight: "2.5rem",
-    "& .MuiTabs-indicator": {
+    minHeight: '2.5rem',
+    '& .MuiTabs-indicator': {
       backgroundColor: palette.text.secondary,
     },
   }),
   tab: ({ palette }) => ({
-    textTransform: "none",
-    minHeight: "2.5rem",
-    padding: "0.5rem 1rem",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    minHeight: '2.5rem',
+    padding: '0.5rem 1rem',
+    fontSize: '0.8125rem',
     fontWeight: 500,
     color: palette.text.metrics,
-    "&.Mui-selected": {
+    '&.Mui-selected': {
       color: palette.text.secondary,
     },
   }),
   tableContainer: {
     flex: 1,
     minHeight: 0,
-    display: "flex",
-    maxWidth: "100%",
+    display: 'flex',
+    maxWidth: '100%',
   },
   errorContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    width: "100%",
-    padding: "3rem",
-    color: "error.main",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    width: '100%',
+    padding: '3rem',
+    color: 'error.main',
   },
   exportButton: ({ palette }) => ({
-    minWidth: "1.75rem",
-    width: "1.75rem",
-    height: "1.75rem",
-    padding: ".5rem",
+    minWidth: '1.75rem',
+    width: '1.75rem',
+    height: '1.75rem',
+    padding: '.5rem',
     backgroundColor: palette.background.button.primary.default,
-    borderRadius: "50%",
-    "&:hover": {
+    borderRadius: '50%',
+    '&:hover': {
       backgroundColor: palette.background.button.primary.hover,
     },
-    "&.Mui-disabled": {
+    '&.Mui-disabled': {
       backgroundColor: palette.background.button.primary.default,
       opacity: 0.6,
     },
   }),
   exportIcon: ({ palette }) => ({
-    width: "1rem",
-    height: "1rem",
+    width: '1rem',
+    height: '1rem',
     fill: palette.icon.fill.send,
   }),
 };

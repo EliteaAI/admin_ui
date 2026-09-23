@@ -1,60 +1,64 @@
-import { useCallback, useEffect, useState } from "react";
-import PropTypes from "prop-types";
+import { useCallback, useEffect, useState } from 'react';
 
-import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import TextField from "@mui/material/TextField";
+import PropTypes from 'prop-types';
 
-import { useSecretUpdateMutation } from "@/api/secretsApi";
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
+
+import { useSecretUpdateMutation } from '@/api/secretsApi';
 
 function EditSecretDialog({ open, onClose, secretName }) {
-  const [value, setValue] = useState("");
-  const [error, setError] = useState("");
+  const [value, setValue] = useState('');
+  const [error, setError] = useState('');
   const [updateSecret, { isLoading }] = useSecretUpdateMutation();
 
   useEffect(() => {
     if (open) {
-      setValue("");
-      setError("");
+      setValue('');
+      setError('');
     }
   }, [open]);
 
   const handleSave = useCallback(async () => {
-    setError("");
+    setError('');
     if (!value) {
-      setError("Secret value is required.");
+      setError('Secret value is required.');
       return;
     }
     try {
       await updateSecret({ name: secretName, value }).unwrap();
-      setValue("");
+      setValue('');
       onClose();
     } catch (err) {
-      setError(
-        err?.data?.error ??
-          err?.data?.message ??
-          err?.error ??
-          "Failed to update secret.",
-      );
+      setError(err?.data?.error ?? err?.data?.message ?? err?.error ?? 'Failed to update secret.');
     }
   }, [secretName, value, updateSecret, onClose]);
 
   const handleClose = useCallback(() => {
-    setValue("");
-    setError("");
+    setValue('');
+    setError('');
     onClose();
   }, [onClose]);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogTitle>Edit Secret</DialogTitle>
       <DialogContent>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+          >
             {error}
           </Alert>
         )}
@@ -62,7 +66,7 @@ function EditSecretDialog({ open, onClose, secretName }) {
           margin="dense"
           label="Secret Name"
           fullWidth
-          value={secretName || ""}
+          value={secretName || ''}
           disabled
         />
         <TextField
@@ -74,17 +78,25 @@ function EditSecretDialog({ open, onClose, secretName }) {
           minRows={2}
           maxRows={6}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={e => setValue(e.target.value)}
           disabled={isLoading}
           placeholder="Enter new value"
         />
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose} variant="text" disabled={isLoading}>
+        <Button
+          onClick={handleClose}
+          variant="text"
+          disabled={isLoading}
+        >
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save"}
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Saving...' : 'Save'}
         </Button>
       </DialogActions>
     </Dialog>

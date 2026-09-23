@@ -1,8 +1,8 @@
-import React, { memo } from "react";
+import React, { memo } from 'react';
 
-import SvgIcon from "@mui/material/SvgIcon";
+import SvgIcon from '@mui/material/SvgIcon';
 
-const EliteAIcon = memo((props) => {
+const EliteAIcon = memo(props => {
   return (
     <SvgIcon {...props}>
       <svg
@@ -50,7 +50,10 @@ const EliteAIcon = memo((props) => {
             gradientUnits="userSpaceOnUse"
           >
             <stop stopColor="#F767CF" />
-            <stop offset="1" stopColor="#24E1FA" />
+            <stop
+              offset="1"
+              stopColor="#24E1FA"
+            />
           </linearGradient>
           <linearGradient
             id="paint1_linear_783_13266"
@@ -61,7 +64,10 @@ const EliteAIcon = memo((props) => {
             gradientUnits="userSpaceOnUse"
           >
             <stop stopColor="#1F9CA4" />
-            <stop offset="1" stopColor="#BC2592" />
+            <stop
+              offset="1"
+              stopColor="#BC2592"
+            />
           </linearGradient>
           <linearGradient
             id="paint2_linear_783_13266"
@@ -72,7 +78,10 @@ const EliteAIcon = memo((props) => {
             gradientUnits="userSpaceOnUse"
           >
             <stop stopColor="#4BEDFF" />
-            <stop offset="1" stopColor="#CB38BD" />
+            <stop
+              offset="1"
+              stopColor="#CB38BD"
+            />
           </linearGradient>
           <linearGradient
             id="paint3_linear_783_13266"
@@ -82,13 +91,21 @@ const EliteAIcon = memo((props) => {
             y2="17.4273"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0.368946" stopColor="#DD42BB" />
-            <stop offset="1" stopColor="#FFB054" />
+            <stop
+              offset="0.368946"
+              stopColor="#DD42BB"
+            />
+            <stop
+              offset="1"
+              stopColor="#FFB054"
+            />
           </linearGradient>
         </defs>
       </svg>
     </SvgIcon>
   );
 });
+
+EliteAIcon.displayName = 'EliteAIcon';
 
 export default EliteAIcon;

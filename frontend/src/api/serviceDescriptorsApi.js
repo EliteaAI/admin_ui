@@ -1,14 +1,15 @@
-import { adminApi } from "./adminApi";
-import { V2_BASE } from "@/utils/env";
+import { V2_BASE } from '@/utils/env';
+
+import { adminApi } from './adminApi';
 
 export const serviceDescriptorsApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     serviceDescriptorList: build.query({
       query: () => ({
         url: `${V2_BASE}/elitea_core/admin/administration`,
       }),
-      providesTags: ["ServiceDescriptors"],
-      transformResponse: (response) => {
+      providesTags: ['ServiceDescriptors'],
+      transformResponse: response => {
         // We know the API response is { total, rows }
         return response.rows || [];
       },
@@ -17,18 +18,15 @@ export const serviceDescriptorsApi = adminApi.injectEndpoints({
     serviceDescriptorDelete: build.mutation({
       query: ({ project_id, provider_name, service_location_url }) => ({
         url: `${V2_BASE}/elitea_core/register_descriptor/${project_id}`,
-        method: "DELETE",
+        method: 'DELETE',
         params: {
           provider_name,
           service_location_url,
         },
       }),
-      invalidatesTags: ["ServiceDescriptors"],
+      invalidatesTags: ['ServiceDescriptors'],
     }),
   }),
 });
 
-export const {
-  useServiceDescriptorListQuery,
-  useServiceDescriptorDeleteMutation,
-} = serviceDescriptorsApi;
+export const { useServiceDescriptorListQuery, useServiceDescriptorDeleteMutation } = serviceDescriptorsApi;

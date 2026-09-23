@@ -1,38 +1,41 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import CircularProgress from "@mui/material/CircularProgress";
-import SecurityIcon from "@mui/icons-material/SecurityOutlined";
-import DnsIcon from "@mui/icons-material/DnsOutlined";
-import MonitorHeartIcon from "@mui/icons-material/MonitorHeartOutlined";
-import SettingsIcon from "@mui/icons-material/SettingsOutlined";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
-import LockIcon from "@mui/icons-material/LockOutlined";
-import CodeIcon from "@mui/icons-material/CodeOutlined";
-import ConstructionIcon from "@mui/icons-material/ConstructionOutlined";
-import CampaignIcon from "@mui/icons-material/CampaignOutlined";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import SettingsInputComponentIcon from "@mui/icons-material/SettingsInputComponent";
-import DrawerPage from "@/components/DrawerPage";
-import DrawerPageHeader from "@/components/DrawerPageHeader";
-import SchemaForm from "@/components/SchemaForm/SchemaForm";
-import AdvancedSection from "@/components/SchemaForm/AdvancedSection";
-import MaintenanceSection from "@/components/SchemaForm/MaintenanceSection";
-import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
-import ServiceDescriptorsSection from "../ServiceDescriptorsPage/ServiceDescriptorsSection";
-import DedicatedBanner from "@/components/SchemaForm/DedicatedBanner";
-import { usePageTitle } from "@/hooks/usePageTitle";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { CONFIG_SECTION_PERMISSIONS } from "@/constants/permissions";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+import CampaignIcon from '@mui/icons-material/CampaignOutlined';
+import CodeIcon from '@mui/icons-material/CodeOutlined';
+import ConstructionIcon from '@mui/icons-material/ConstructionOutlined';
+import DnsIcon from '@mui/icons-material/DnsOutlined';
+import LockIcon from '@mui/icons-material/LockOutlined';
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeartOutlined';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import SecurityIcon from '@mui/icons-material/SecurityOutlined';
+import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent';
+import SettingsIcon from '@mui/icons-material/SettingsOutlined';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Snackbar from '@mui/material/Snackbar';
+import Typography from '@mui/material/Typography';
+
 import {
+  useConfigRestartMutation,
   useConfigSchemasQuery,
   useConfigValuesQuery,
   useConfigValuesSaveMutation,
-  useConfigRestartMutation,
-} from "@/api/configurationApi";
+} from '@/api/configurationApi';
+import DrawerPage from '@/components/DrawerPage';
+import DrawerPageHeader from '@/components/DrawerPageHeader';
+import AdvancedSection from '@/components/SchemaForm/AdvancedSection';
+import DedicatedBanner from '@/components/SchemaForm/DedicatedBanner';
+import GuardrailsSection from '@/components/SchemaForm/GuardrailsSection';
+import MaintenanceSection from '@/components/SchemaForm/MaintenanceSection';
+import SchemaForm from '@/components/SchemaForm/SchemaForm';
+import { CONFIG_SECTION_PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { usePageTitle } from '@/hooks/usePageTitle';
+
+import ServiceDescriptorsSection from '../ServiceDescriptorsPage/ServiceDescriptorsSection';
 
 const SECTION_ICONS = {
   guardrails: SecurityIcon,
@@ -48,64 +51,58 @@ const SECTION_ICONS = {
 };
 
 const MOVED_TO_FEATURES = [
-  "resources",
-  "support_assistant",
-  "voice_features",
-  "chat_mentions",
-  "cost_budgets",
+  'resources',
+  'support_assistant',
+  'voice_features',
+  'chat_mentions',
+  'cost_budgets',
 ];
 // Guardrails-section fields whose config path starts with one of these prefixes have
 // been relocated to the Features page (see FeaturesPage FEATURES_SECTIONS), so they are
 // hidden here. Prefix-based so new publishing_guardrail.*/mcp_exposure.* fields added to
 // admin_schema.json stay out of Guardrails automatically.
 const FEATURES_GUARDRAILS_PREFIXES = [
-  "mcp_exposure.",
-  "publishing_guardrail.",
-  "skill_publishing_guardrail.",
-  "midturn_injection_guardrail.",
-  "next_input_suggestion_guardrail.",
+  'mcp_exposure.',
+  'publishing_guardrail.',
+  'skill_publishing_guardrail.',
+  'midturn_injection_guardrail.',
+  'next_input_suggestion_guardrail.',
+];
+
+const SECTION_ORDER = [
+  'advanced',
+  'maintenance',
+  'dedicated_banner',
+  'mcp_servers',
+  'guardrails',
+  'observability',
+  'runtime',
+  'auth',
+  'service_descriptors',
 ];
 
 function ConfigurationPage() {
-  const [activeSection, setActiveSection] = useState(
-    () => window.location.hash.slice(1) || null,
-  );
+  const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);
   const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
   const serverValuesRef = useRef({});
 
-  const { data: schemasData, isLoading: schemasLoading } =
-    useConfigSchemasQuery();
-
-  const SECTION_ORDER = [
-    "advanced",
-    "maintenance",
-    "dedicated_banner",
-    "mcp_servers",
-    "guardrails",
-    "observability",
-    "runtime",
-    "auth",
-    "service_descriptors",
-  ];
+  const { data: schemasData, isLoading: schemasLoading } = useConfigSchemasQuery();
 
   const sections = useMemo(() => {
     const serverSections = (schemasData?.sections || []).filter(
-      (s) => s.id !== "litellm" && !MOVED_TO_FEATURES.includes(s.id),
+      s => s.id !== 'litellm' && !MOVED_TO_FEATURES.includes(s.id),
     );
 
-    const allSections = [
-      ...serverSections,
-      { id: "service_descriptors", title: "Service Descriptors" },
-    ];
+    const allSections = [...serverSections, { id: 'service_descriptors', title: 'Service Descriptors' }];
 
-    const filtered = allSections.filter((s) => {
+    const filtered = allSections.filter(s => {
       const requiredPerms = CONFIG_SECTION_PERMISSIONS[s.id];
       if (!requiredPerms) return true;
       return hasAnyPermission(requiredPerms);
@@ -114,10 +111,7 @@ function ConfigurationPage() {
     return filtered.sort((a, b) => {
       const indexA = SECTION_ORDER.indexOf(a.id);
       const indexB = SECTION_ORDER.indexOf(b.id);
-      return (
-        (indexA === -1 ? Infinity : indexA) -
-        (indexB === -1 ? Infinity : indexB)
-      );
+      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
     });
   }, [schemasData, hasAnyPermission]);
 
@@ -130,10 +124,10 @@ function ConfigurationPage() {
   useEffect(() => {
     if (schemasLoading || sections.length === 0) return;
     if (!activeSection) {
-      const advancedSection = sections.find((s) => s.id === "advanced");
+      const advancedSection = sections.find(s => s.id === 'advanced');
       setActiveSection(advancedSection?.id || sections[0].id);
-    } else if (!sections.find((s) => s.id === activeSection)) {
-      const advancedSection = sections.find((s) => s.id === "advanced");
+    } else if (!sections.find(s => s.id === activeSection)) {
+      const advancedSection = sections.find(s => s.id === 'advanced');
       setActiveSection(advancedSection?.id || sections[0].id);
     }
   }, [sections, activeSection, schemasLoading]);
@@ -159,17 +153,15 @@ function ConfigurationPage() {
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
 
   const isDirty = useMemo(() => {
-    return (
-      JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current)
-    );
+    return JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current);
   }, [localValues]);
 
   const activeSection_ = useMemo(() => {
-    return sections.find((s) => s.id === activeSection);
+    return sections.find(s => s.id === activeSection);
   }, [sections, activeSection]);
 
-  const activeFields = activeSection_?.fields || [];
-  const activeSectionDescription = activeSection_?.description || "";
+  const activeFields = useMemo(() => activeSection_?.fields || [], [activeSection_]);
+  const activeSectionDescription = activeSection_?.description || '';
 
   const invalidFields = useMemo(() => {
     const meta = valuesData?.fields_meta || {};
@@ -177,13 +169,12 @@ function ConfigurationPage() {
       .filter(([, entry]) => entry?.value_invalid)
       .map(([key, entry]) => {
         const field = activeFields.find(
-          (candidate) =>
-            candidate.key === key || candidate._original_key === key,
+          candidate => candidate.key === key || candidate._original_key === key,
         );
         return {
           key,
           storedValue: entry.stored_value,
-          title: field?.title || key.split("::")[0],
+          title: field?.title || key.split('::')[0],
         };
       });
   }, [valuesData, activeFields]);
@@ -191,11 +182,8 @@ function ConfigurationPage() {
   const invalidFieldsMessage = useMemo(
     () =>
       invalidFields
-        .map(
-          (field) =>
-            `${field.title} holds an unusable value (${JSON.stringify(field.storedValue)})`,
-        )
-        .join("; "),
+        .map(field => `${field.title} holds an unusable value (${JSON.stringify(field.storedValue)})`)
+        .join('; '),
     [invalidFields],
   );
 
@@ -205,21 +193,19 @@ function ConfigurationPage() {
   const pageTitle = useMemo(() => {
     if (activeSection_?.title) return `Configuration: ${activeSection_.title}`;
 
-    return "Configuration";
+    return 'Configuration';
   }, [activeSection_]);
 
   usePageTitle(pageTitle);
 
   const handleFieldChange = useCallback((key, value) => {
-    setLocalValues((prev) => ({ ...prev, [key]: value }));
+    setLocalValues(prev => ({ ...prev, [key]: value }));
   }, []);
 
   const handleSectionChange = useCallback(
-    (sectionId) => {
+    sectionId => {
       if (isDirty) {
-        const confirmed = window.confirm(
-          "You have unsaved changes. Discard them?",
-        );
+        const confirmed = window.confirm('You have unsaved changes. Discard them?');
         if (!confirmed) return;
       }
       setActiveSection(sectionId);
@@ -236,13 +222,8 @@ function ConfigurationPage() {
     try {
       const cleanedValues = Object.fromEntries(
         Object.entries(localValues).map(([key, value]) => {
-          if (key.endsWith("_links") && Array.isArray(value)) {
-            return [
-              key,
-              value.filter(
-                (link) => link.title?.trim() !== "" || link.url?.trim() !== "",
-              ),
-            ];
+          if (key.endsWith('_links') && Array.isArray(value)) {
+            return [key, value.filter(link => link.title?.trim() !== '' || link.url?.trim() !== '')];
           }
           return [key, value];
         }),
@@ -260,35 +241,31 @@ function ConfigurationPage() {
 
       if (result.requires_restart?.length > 0) {
         // Normalize: v1 returns flat strings, v2 returns {pylon_id, plugins}
-        const normalized = result.requires_restart.map((r) =>
-          typeof r === "string" ? { pylon_id: r, plugins: [] } : r,
+        const normalized = result.requires_restart.map(r =>
+          typeof r === 'string' ? { pylon_id: r, plugins: [] } : r,
         );
         setPendingRestarts(normalized);
         const summary = normalized
-          .map((r) =>
-            r.plugins?.length
-              ? `${r.plugins.join(", ")} on ${r.pylon_id}`
-              : r.pylon_id,
-          )
-          .join("; ");
+          .map(r => (r.plugins?.length ? `${r.plugins.join(', ')} on ${r.pylon_id}` : r.pylon_id))
+          .join('; ');
         setSnackbar({
           open: true,
           message: `Configuration saved. Reload required: ${summary}`,
-          severity: "warning",
+          severity: 'warning',
         });
       } else {
         setPendingRestarts([]);
         setSnackbar({
           open: true,
-          message: "Configuration saved successfully",
-          severity: "success",
+          message: 'Configuration saved successfully',
+          severity: 'success',
         });
       }
     } catch (err) {
       setSnackbar({
         open: true,
-        message: `Failed to save: ${err?.data?.error || err?.message || "Unknown error"}`,
-        severity: "error",
+        message: `Failed to save: ${err?.data?.error || err?.message || 'Unknown error'}`,
+        severity: 'error',
       });
     }
   }, [activeSection, localValues, saveValues]);
@@ -297,18 +274,16 @@ function ConfigurationPage() {
     async (pylonId, plugins) => {
       try {
         await restartPylon({ pylonId, plugins }).unwrap();
-        setPendingRestarts((prev) =>
-          prev.filter((r) => r.pylon_id !== pylonId),
-        );
+        setPendingRestarts(prev => prev.filter(r => r.pylon_id !== pylonId));
         const label = plugins?.length
-          ? `Reload signal sent for ${plugins.join(", ")} on ${pylonId}`
+          ? `Reload signal sent for ${plugins.join(', ')} on ${pylonId}`
           : `Restart signal sent to ${pylonId}`;
-        setSnackbar({ open: true, message: label, severity: "info" });
+        setSnackbar({ open: true, message: label, severity: 'info' });
       } catch (err) {
         setSnackbar({
           open: true,
-          message: `Reload failed: ${err?.message || "Unknown error"}`,
-          severity: "error",
+          message: `Reload failed: ${err?.message || 'Unknown error'}`,
+          severity: 'error',
         });
       }
     },
@@ -316,13 +291,16 @@ function ConfigurationPage() {
   );
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   if (schemasLoading) {
     return (
       <DrawerPage>
-        <DrawerPageHeader title="Configuration" showBorder />
+        <DrawerPageHeader
+          title="Configuration"
+          showBorder
+        />
         <Box sx={styles.loadingContainer}>
           <CircularProgress size={32} />
         </Box>
@@ -331,13 +309,16 @@ function ConfigurationPage() {
   }
 
   return (
-    <DrawerPage sx={{ overflow: "hidden" }}>
-      <DrawerPageHeader title="Configuration" showBorder />
+    <DrawerPage sx={{ overflow: 'hidden' }}>
+      <DrawerPageHeader
+        title="Configuration"
+        showBorder
+      />
 
       <Box sx={styles.content}>
         {/* Section sidebar */}
         <Box sx={styles.sectionSidebar}>
-          {sections.map((section) => {
+          {sections.map(section => {
             const IconComponent = SECTION_ICONS[section.id] || SettingsIcon;
             const isActive = activeSection === section.id;
             return (
@@ -346,7 +327,7 @@ function ConfigurationPage() {
                 onClick={() => handleSectionChange(section.id)}
                 sx={styles.sectionItem(isActive)}
               >
-                <IconComponent sx={{ fontSize: "1rem" }} />
+                <IconComponent sx={{ fontSize: '1rem' }} />
                 <Typography
                   variant="body2"
                   sx={styles.sectionItemText(isActive)}
@@ -362,25 +343,25 @@ function ConfigurationPage() {
         <Box sx={styles.formArea}>
           {(() => {
             switch (activeSection) {
-              case "advanced":
+              case 'advanced':
                 return (
                   <Box sx={styles.formScroll}>
                     <AdvancedSection />
                   </Box>
                 );
-              case "maintenance":
+              case 'maintenance':
                 return (
                   <Box sx={styles.formScroll}>
                     <MaintenanceSection />
                   </Box>
                 );
-              case "service_descriptors":
+              case 'service_descriptors':
                 return (
                   <Box sx={{ ...styles.formScroll, padding: 0 }}>
                     <ServiceDescriptorsSection />
                   </Box>
                 );
-              case "dedicated_banner":
+              case 'dedicated_banner':
                 return valuesFetching ? (
                   <Box sx={styles.loadingContainer}>
                     <CircularProgress size={24} />
@@ -393,12 +374,9 @@ function ConfigurationPage() {
                     />
                   </Box>
                 );
-              case "guardrails": {
+              case 'guardrails': {
                 const guardrailsFields = activeFields.filter(
-                  (f) =>
-                    !FEATURES_GUARDRAILS_PREFIXES.some((p) =>
-                      f.path?.startsWith(p),
-                    ),
+                  f => !FEATURES_GUARDRAILS_PREFIXES.some(p => f.path?.startsWith(p)),
                 );
                 return valuesLoading ? (
                   <Box sx={styles.loadingContainer}>
@@ -434,16 +412,15 @@ function ConfigurationPage() {
           })()}
 
           {/* Action bar */}
-          {!["advanced", "maintenance", "service_descriptors"].includes(
-            activeSection,
-          ) && (
+          {!['advanced', 'maintenance', 'service_descriptors'].includes(activeSection) && (
             <Box sx={styles.actionBar}>
               {invalidFields.length > 0 && (
-                <Alert severity="warning" sx={styles.invalidAlert}>
-                  {invalidFieldsMessage}
-                  . The platform is running its default instead; save to
-                  correct what is stored. A field hidden by another setting is
-                  still corrected.
+                <Alert
+                  severity="warning"
+                  sx={styles.invalidAlert}
+                >
+                  {invalidFieldsMessage}. The platform is running its default instead; save to correct what is
+                  stored. A field hidden by another setting is still corrected.
                 </Alert>
               )}
               <Box sx={styles.actionButtons}>
@@ -463,33 +440,30 @@ function ConfigurationPage() {
                   disabled={!canSave || saving}
                   sx={styles.saveButton}
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? 'Saving...' : 'Save'}
                 </Button>
               </Box>
 
               {pendingRestarts.length > 0 && (
                 <Box sx={styles.restartBar}>
-                  <Typography variant="caption" sx={styles.restartLabel}>
+                  <Typography
+                    variant="caption"
+                    sx={styles.restartLabel}
+                  >
                     Reload required:
                   </Typography>
-                  {pendingRestarts.map((entry) => (
+                  {pendingRestarts.map(entry => (
                     <Button
                       key={entry.pylon_id}
                       size="small"
                       variant="outlined"
                       color="warning"
-                      startIcon={
-                        <RestartAltIcon sx={{ fontSize: "0.875rem" }} />
-                      }
-                      onClick={() =>
-                        handleReload(entry.pylon_id, entry.plugins)
-                      }
+                      startIcon={<RestartAltIcon sx={{ fontSize: '0.875rem' }} />}
+                      onClick={() => handleReload(entry.pylon_id, entry.plugins)}
                       disabled={restarting}
                       sx={styles.restartButton}
                     >
-                      {entry.plugins?.length
-                        ? entry.plugins.join(", ")
-                        : entry.pylon_id}
+                      {entry.plugins?.length ? entry.plugins.join(', ') : entry.pylon_id}
                     </Button>
                   ))}
                 </Box>
@@ -503,13 +477,13 @@ function ConfigurationPage() {
         open={snackbar.open}
         autoHideDuration={5000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -521,101 +495,99 @@ function ConfigurationPage() {
 /** @type {MuiSx} */
 const styles = {
   content: {
-    display: "flex",
+    display: 'flex',
     flex: 1,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   sectionSidebar: ({ palette }) => ({
-    width: "13rem",
-    minWidth: "13rem",
+    width: '13rem',
+    minWidth: '13rem',
     borderRight: `1px solid ${palette.border.table}`,
-    padding: "0.75rem",
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.25rem",
-    overflowY: "auto",
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    overflowY: 'auto',
   }),
   sectionItem:
-    (isActive) =>
+    isActive =>
     ({ palette }) => ({
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
-      padding: "0.5rem 0.75rem",
-      borderRadius: "0.375rem",
-      cursor: "pointer",
-      transition: "all 0.15s ease",
-      backgroundColor: isActive
-        ? palette.background.userInputBackgroundActive
-        : "transparent",
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.5rem 0.75rem',
+      borderRadius: '0.375rem',
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+      backgroundColor: isActive ? palette.background.userInputBackgroundActive : 'transparent',
       color: isActive ? palette.text.secondary : palette.text.metrics,
-      "&:hover": {
+      '&:hover': {
         backgroundColor: isActive
           ? palette.background.userInputBackgroundActive
           : palette.background.conversation?.hover || palette.action.hover,
       },
     }),
   sectionItemText:
-    (isActive) =>
+    isActive =>
     ({ palette }) => ({
-      fontSize: "0.8125rem",
+      fontSize: '0.8125rem',
       fontWeight: isActive ? 600 : 400,
       color: isActive ? palette.text.secondary : palette.text.metrics,
     }),
   formArea: {
     flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
   formScroll: {
     flex: 1,
-    overflowY: "auto",
-    padding: "1.5rem",
+    overflowY: 'auto',
+    padding: '1.5rem',
   },
   loadingContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
   },
   invalidAlert: {
-    marginBottom: "0.5rem",
-    fontSize: "0.8125rem",
+    marginBottom: '0.5rem',
+    fontSize: '0.8125rem',
   },
   actionBar: ({ palette }) => ({
     borderTop: `1px solid ${palette.border.table}`,
-    padding: "0.75rem 1.5rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "1rem",
-    flexWrap: "wrap",
+    padding: '0.75rem 1.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    flexWrap: 'wrap',
   }),
   actionButtons: {
-    display: "flex",
-    gap: "0.5rem",
+    display: 'flex',
+    gap: '0.5rem',
   },
   discardButton: {
-    textTransform: "none",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    fontSize: '0.8125rem',
   },
   saveButton: {
-    textTransform: "none",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    fontSize: '0.8125rem',
   },
   restartBar: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   restartLabel: ({ palette }) => ({
     color: palette.warning?.main || palette.text.metrics,
     fontWeight: 500,
   }),
   restartButton: {
-    textTransform: "none",
-    fontSize: "0.75rem",
+    textTransform: 'none',
+    fontSize: '0.75rem',
   },
 };
 

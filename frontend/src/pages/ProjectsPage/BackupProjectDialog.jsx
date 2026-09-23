@@ -1,23 +1,24 @@
-import { useCallback, useMemo, useState } from "react";
-import PropTypes from "prop-types";
+import { useCallback, useMemo, useState } from 'react';
 
-import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Typography from "@mui/material/Typography";
+import PropTypes from 'prop-types';
 
-import { downloadProjectBackup } from "@/api/projectBackupApi";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { PERMISSIONS } from "@/constants/permissions";
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Typography from '@mui/material/Typography';
 
-const formatSize = (bytes) => {
-  if (!bytes) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
+import { downloadProjectBackup } from '@/api/projectBackupApi';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+
+const formatSize = bytes => {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
   let value = bytes;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -32,19 +33,16 @@ function BackupProjectDialog({ open, onClose, project }) {
 
   const [fullMode, setFullMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const canFull = useMemo(
-    () => hasPermission(PERMISSIONS.projects.backup.full),
-    [hasPermission],
-  );
+  const canFull = useMemo(() => hasPermission(PERMISSIONS.projects.backup.full), [hasPermission]);
 
   const reset = useCallback(() => {
     setFullMode(false);
     setIsLoading(false);
-    setError("");
-    setSuccess("");
+    setError('');
+    setSuccess('');
   }, []);
 
   const handleClose = useCallback(() => {
@@ -54,55 +52,67 @@ function BackupProjectDialog({ open, onClose, project }) {
   }, [isLoading, reset, onClose]);
 
   const handleDownload = useCallback(async () => {
-    setError("");
-    setSuccess("");
+    setError('');
+    setSuccess('');
     setIsLoading(true);
     try {
       const result = await downloadProjectBackup({
         projectId: project?.id,
-        mode: fullMode && canFull ? "full" : "safe",
+        mode: fullMode && canFull ? 'full' : 'safe',
       });
-      setSuccess(
-        `Downloaded ${result.filename} (${formatSize(result.size)}).`,
-      );
+      setSuccess(`Downloaded ${result.filename} (${formatSize(result.size)}).`);
     } catch (err) {
-      setError(err?.message ?? "Failed to download backup.");
+      setError(err?.message ?? 'Failed to download backup.');
     } finally {
       setIsLoading(false);
     }
   }, [project, fullMode, canFull]);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogTitle>Backup Project</DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Download a copy of project <strong>{project?.name}</strong> (schema{" "}
-          <code>p_{project?.id}</code>) as a backup file or restore it from a
-          previously downloaded backup. The backup includes agents, pipelines,
-          toolkits, MCP servers and skills. Credentials, tokens and other
-          secrets will be excluded from this backup file and cannot be
-          restored.
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ mb: 2 }}
+        >
+          Download a copy of project <strong>{project?.name}</strong> (schema <code>p_{project?.id}</code>) as
+          a backup file or restore it from a previously downloaded backup. The backup includes agents,
+          pipelines, toolkits, MCP servers and skills. Credentials, tokens and other secrets will be excluded
+          from this backup file and cannot be restored.
         </Typography>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+          >
             {error}
           </Alert>
         )}
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
+          <Alert
+            severity="success"
+            sx={{ mb: 2 }}
+          >
             {success}
           </Alert>
         )}
 
         {!fullMode && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Safe mode: data only (INSERT statements), no DDL. Tokens, traces and
-            conversation context are skipped, and credential-bearing columns and
-            JSON keys are redacted. Vault references{" "}
-            <code>{"{{secret.NAME}}"}</code> are kept, but the secret values are
-            excluded from the backup.
+          <Alert
+            severity="info"
+            sx={{ mb: 2 }}
+          >
+            Safe mode: data only (INSERT statements), no DDL. Tokens, traces and conversation context are
+            skipped, and credential-bearing columns and JSON keys are redacted. Vault references{' '}
+            <code>{'{{secret.NAME}}'}</code> are kept, but the secret values are excluded from the backup.
           </Alert>
         )}
 
@@ -110,7 +120,7 @@ function BackupProjectDialog({ open, onClose, project }) {
           control={
             <Checkbox
               checked={fullMode}
-              onChange={(e) => setFullMode(e.target.checked)}
+              onChange={e => setFullMode(e.target.checked)}
               disabled={isLoading || !canFull}
             />
           }
@@ -118,31 +128,41 @@ function BackupProjectDialog({ open, onClose, project }) {
         />
 
         {!canFull && (
-          <Typography variant="caption" color="text.metrics" sx={styles.hint}>
-            Full backup requires the{" "}
-            <code>projects.projects.backup.full</code> permission.
+          <Typography
+            variant="caption"
+            color="text.metrics"
+            sx={styles.hint}
+          >
+            Full backup requires the <code>projects.projects.backup.full</code> permission.
           </Typography>
         )}
 
         {fullMode && (
-          <Alert severity="warning" sx={{ mt: 1, mb: 2 }}>
-            The full backup is a plain <code>pg_dump</code> of the schema as-is:
-            It includes DDL and all stored values, with all plaintext
-            credentials, no redaction. Handle and store the file as a secret.
+          <Alert
+            severity="warning"
+            sx={{ mt: 1, mb: 2 }}
+          >
+            The full backup is a plain <code>pg_dump</code> of the schema as-is: It includes DDL and all
+            stored values, with all plaintext credentials, no redaction. Handle and store the file as a
+            secret.
           </Alert>
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose} variant="text" disabled={isLoading}>
+        <Button
+          onClick={handleClose}
+          variant="text"
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button
           onClick={handleDownload}
           variant="contained"
-          color={fullMode ? "warning" : "primary"}
+          color={fullMode ? 'warning' : 'primary'}
           disabled={isLoading || !project?.id}
         >
-          {isLoading ? "Preparing..." : "Download"}
+          {isLoading ? 'Preparing...' : 'Download'}
         </Button>
       </DialogActions>
     </Dialog>
@@ -160,8 +180,8 @@ BackupProjectDialog.propTypes = {
 
 const styles = {
   hint: {
-    display: "block",
-    marginBottom: "0.5rem",
+    display: 'block',
+    marginBottom: '0.5rem',
   },
 };
 

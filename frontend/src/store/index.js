@@ -1,32 +1,28 @@
-import { configureStore, createSlice } from "@reduxjs/toolkit";
-
-import { adminApi } from "@/api/adminApi";
+import { adminApi } from '@/api/adminApi';
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 
 const settingsSlice = createSlice({
-  name: "settings",
+  name: 'settings',
   initialState: {
-    mode: localStorage.getItem("mode") || "dark",
+    mode: localStorage.getItem('mode') || 'dark',
     socketConnected: false,
-    sideBarCollapsed: localStorage.getItem("sideBarCollapsed") === "true",
+    sideBarCollapsed: localStorage.getItem('sideBarCollapsed') === 'true',
   },
   reducers: {
     setMode: (state, action) => {
       state.mode = action.payload;
-      localStorage.setItem("mode", state.mode);
+      localStorage.setItem('mode', state.mode);
     },
-    toggleMode: (state) => {
-      state.mode = state.mode === "light" ? "dark" : "light";
-      localStorage.setItem("mode", state.mode);
+    toggleMode: state => {
+      state.mode = state.mode === 'light' ? 'dark' : 'light';
+      localStorage.setItem('mode', state.mode);
     },
     setSocketConnected: (state, action) => {
       state.socketConnected = action.payload;
     },
-    toggleSidebarCollapsed: (state) => {
+    toggleSidebarCollapsed: state => {
       state.sideBarCollapsed = !state.sideBarCollapsed;
-      localStorage.setItem(
-        "sideBarCollapsed",
-        state.sideBarCollapsed ? "true" : "false",
-      );
+      localStorage.setItem('sideBarCollapsed', state.sideBarCollapsed ? 'true' : 'false');
     },
   },
 });
@@ -35,19 +31,17 @@ const settingsSlice = createSlice({
 const adminConfig = globalThis?.admin_ui_config || {};
 
 const userSlice = createSlice({
-  name: "user",
+  name: 'user',
   initialState: {
     user:
       adminConfig.user_id || adminConfig.user_name || adminConfig.user_email
         ? {
             id: adminConfig.user_id || null,
-            name: adminConfig.user_name || "",
-            email: adminConfig.user_email || "",
+            name: adminConfig.user_name || '',
+            email: adminConfig.user_email || '',
           }
         : null,
-    permissions: Array.isArray(adminConfig.permissions)
-      ? adminConfig.permissions
-      : [],
+    permissions: Array.isArray(adminConfig.permissions) ? adminConfig.permissions : [],
     roles: Array.isArray(adminConfig.roles) ? adminConfig.roles : [],
   },
   reducers: {
@@ -72,7 +66,7 @@ const store = configureStore({
     user: userSlice.reducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
-  middleware: (getDefaultMiddleware) =>
+  middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [],
@@ -82,10 +76,5 @@ const store = configureStore({
 });
 
 export default store;
-export const {
-  setMode,
-  toggleMode,
-  setSocketConnected,
-  toggleSidebarCollapsed,
-} = settingsActions;
+export const { setMode, toggleMode, setSocketConnected, toggleSidebarCollapsed } = settingsActions;
 export const { setUser, setPermissions, setRoles } = userActions;

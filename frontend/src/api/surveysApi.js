@@ -1,49 +1,47 @@
-import { adminApi } from "./adminApi";
+import { adminApi } from './adminApi';
 
-const SURVEY_MODE = "administration";
+const SURVEY_MODE = 'administration';
 
 export const surveysApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     surveysList: build.query({
       query: () => ({ url: `social/surveys/${SURVEY_MODE}` }),
-      transformResponse: (response) => response.result ?? [],
-      providesTags: ["Surveys"],
+      transformResponse: response => response.result ?? [],
+      providesTags: ['Surveys'],
     }),
 
     surveyGet: build.query({
-      query: (surveyId) => ({
+      query: surveyId => ({
         url: `social/survey/${SURVEY_MODE}/${surveyId}`,
       }),
-      transformResponse: (response) => response.result ?? null,
-      providesTags: (result, error, surveyId) => [
-        { type: "Surveys", id: surveyId },
-      ],
+      transformResponse: response => response.result ?? null,
+      providesTags: (result, error, surveyId) => [{ type: 'Surveys', id: surveyId }],
     }),
 
     surveyCreate: build.mutation({
-      query: (body) => ({
+      query: body => ({
         url: `social/surveys/${SURVEY_MODE}`,
-        method: "POST",
+        method: 'POST',
         body,
       }),
-      invalidatesTags: ["Surveys"],
+      invalidatesTags: ['Surveys'],
     }),
 
     surveyUpdate: build.mutation({
       query: ({ surveyId, ...body }) => ({
         url: `social/survey/${SURVEY_MODE}/${surveyId}`,
-        method: "PUT",
+        method: 'PUT',
         body,
       }),
-      invalidatesTags: ["Surveys"],
+      invalidatesTags: ['Surveys'],
     }),
 
     surveyDelete: build.mutation({
-      query: (surveyId) => ({
+      query: surveyId => ({
         url: `social/survey/${SURVEY_MODE}/${surveyId}`,
-        method: "DELETE",
+        method: 'DELETE',
       }),
-      invalidatesTags: ["Surveys"],
+      invalidatesTags: ['Surveys'],
     }),
 
     surveyAnswers: build.query({
@@ -56,8 +54,7 @@ export const surveysApi = adminApi.injectEndpoints({
           offset,
         },
       }),
-      transformResponse: (response) =>
-        response.result ?? { total: 0, rows: [] },
+      transformResponse: response => response.result ?? { total: 0, rows: [] },
     }),
   }),
 });

@@ -1,13 +1,5 @@
-import AutoRoutingSettings from "@/components/SchemaForm/AutoRoutingSettings";
-import { useCallback, useEffect, useMemo, memo, useRef, useState } from "react";
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Snackbar,
-  Typography,
-} from "@mui/material";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import {
   AccountBalanceWalletOutlined as AccountBalanceWalletOutlinedIcon,
   AlternateEmailOutlined as AlternateEmailIcon,
@@ -23,25 +15,29 @@ import {
   RecordVoiceOverOutlined as RecordVoiceOverOutlinedIcon,
   RestartAlt as RestartAltIcon,
   SupportAgentOutlined as SupportAgentIcon,
-} from "@mui/icons-material";
-import DrawerPage from "@/components/DrawerPage";
-import DrawerPageHeader from "@/components/DrawerPageHeader";
-import GuardrailsSection from "@/components/SchemaForm/GuardrailsSection";
-import HelpCenterSection from "@/components/SchemaForm/HelpCenterSection";
-import SupportAssistant from "@/components/SchemaForm/SupportAssistant";
-import VoiceFeatures from "@/components/SchemaForm/VoiceFeatures";
-import ChatMentions from "@/components/SchemaForm/ChatMentions";
-import CostBudgets from "@/components/SchemaForm/CostBudgets";
-import ModelPricesSource from "@/components/SchemaForm/ModelPricesSource";
-import SurveysSection from "./SurveysSection/SurveysSection";
-import { CustomThemeSection } from "@/components/SchemaForm/CustomThemeSection";
-import { usePageTitle } from "@/hooks/usePageTitle";
+} from '@mui/icons-material';
+import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
+
 import {
+  useConfigRestartMutation,
   useConfigSchemasQuery,
   useConfigValuesQuery,
   useConfigValuesSaveMutation,
-  useConfigRestartMutation,
-} from "@/api/configurationApi";
+} from '@/api/configurationApi';
+import DrawerPage from '@/components/DrawerPage';
+import DrawerPageHeader from '@/components/DrawerPageHeader';
+import AutoRoutingSettings from '@/components/SchemaForm/AutoRoutingSettings';
+import ChatMentions from '@/components/SchemaForm/ChatMentions';
+import CostBudgets from '@/components/SchemaForm/CostBudgets';
+import { CustomThemeSection } from '@/components/SchemaForm/CustomThemeSection';
+import GuardrailsSection from '@/components/SchemaForm/GuardrailsSection';
+import HelpCenterSection from '@/components/SchemaForm/HelpCenterSection';
+import ModelPricesSource from '@/components/SchemaForm/ModelPricesSource';
+import SupportAssistant from '@/components/SchemaForm/SupportAssistant';
+import VoiceFeatures from '@/components/SchemaForm/VoiceFeatures';
+import { usePageTitle } from '@/hooks/usePageTitle';
+
+import SurveysSection from './SurveysSection/SurveysSection';
 
 // Sections sourced from the shared "guardrails" backend section are selected by
 // config-path prefix (e.g. "publishing_guardrail.*"), so any new field added to
@@ -49,99 +45,99 @@ import {
 // to maintain. Sections with their own backend section use pathPrefix: null.
 const FEATURES_SECTIONS = [
   {
-    id: "auto_routing",
-    title: "Auto Model Selection",
+    id: 'auto_routing',
+    title: 'Auto Model Selection',
     icon: BoltIcon,
     backendSectionId: null,
     pathPrefix: null,
   },
   {
-    id: "mcp_configuration",
-    title: "MCP Configuration",
+    id: 'mcp_configuration',
+    title: 'MCP Configuration',
     icon: ExtensionIcon,
-    backendSectionId: "guardrails",
-    pathPrefix: "mcp_exposure.",
+    backendSectionId: 'guardrails',
+    pathPrefix: 'mcp_exposure.',
   },
   {
-    id: "agent_publishing",
-    title: "Agent Publishing",
+    id: 'agent_publishing',
+    title: 'Agent Publishing',
     icon: PublishIcon,
-    backendSectionId: "guardrails",
-    pathPrefix: "publishing_guardrail.",
+    backendSectionId: 'guardrails',
+    pathPrefix: 'publishing_guardrail.',
   },
   {
-    id: "skill_publishing",
-    title: "Skill Publishing",
+    id: 'skill_publishing',
+    title: 'Skill Publishing',
     icon: BoltIcon,
-    backendSectionId: "guardrails",
-    pathPrefix: "skill_publishing_guardrail.",
+    backendSectionId: 'guardrails',
+    pathPrefix: 'skill_publishing_guardrail.',
   },
   {
-    id: "help_center",
-    title: "Help Center",
+    id: 'help_center',
+    title: 'Help Center',
     icon: MenuBookIcon,
-    backendSectionId: "resources",
+    backendSectionId: 'resources',
     pathPrefix: null,
   },
   {
-    id: "support_assistant",
-    title: "Support Assistant",
+    id: 'support_assistant',
+    title: 'Support Assistant',
     icon: SupportAgentIcon,
-    backendSectionId: "support_assistant",
+    backendSectionId: 'support_assistant',
     pathPrefix: null,
   },
   {
-    id: "voice_features",
-    title: "Voice Features",
+    id: 'voice_features',
+    title: 'Voice Features',
     icon: RecordVoiceOverOutlinedIcon,
-    backendSectionId: "voice_features",
+    backendSectionId: 'voice_features',
     pathPrefix: null,
   },
   {
-    id: "chat_mentions",
-    title: "Chat Mentions",
+    id: 'chat_mentions',
+    title: 'Chat Mentions',
     icon: AlternateEmailIcon,
-    backendSectionId: "chat_mentions",
+    backendSectionId: 'chat_mentions',
     pathPrefix: null,
   },
   {
-    id: "cost_budgets",
-    title: "Cost Budgets",
+    id: 'cost_budgets',
+    title: 'Cost Budgets',
     icon: AccountBalanceWalletOutlinedIcon,
-    backendSectionId: "cost_budgets",
+    backendSectionId: 'cost_budgets',
     pathPrefix: null,
   },
   {
-    id: "model_prices_source",
-    title: "Model Prices Source",
+    id: 'model_prices_source',
+    title: 'Model Prices Source',
     icon: PaidOutlinedIcon,
     backendSectionId: null,
     pathPrefix: null,
   },
   {
-    id: "midturn_injection",
-    title: "Mid-turn Input",
+    id: 'midturn_injection',
+    title: 'Mid-turn Input',
     icon: ForumOutlinedIcon,
-    backendSectionId: "guardrails",
-    pathPrefix: "midturn_injection_guardrail.",
+    backendSectionId: 'guardrails',
+    pathPrefix: 'midturn_injection_guardrail.',
   },
   {
-    id: "next_input_suggestion",
-    title: "Next-Input Suggestions",
+    id: 'next_input_suggestion',
+    title: 'Next-Input Suggestions',
     icon: LightbulbOutlinedIcon,
-    backendSectionId: "guardrails",
-    pathPrefix: "next_input_suggestion_guardrail.",
+    backendSectionId: 'guardrails',
+    pathPrefix: 'next_input_suggestion_guardrail.',
   },
   {
-    id: "surveys",
-    title: "Surveys",
+    id: 'surveys',
+    title: 'Surveys',
     icon: PollOutlinedIcon,
     backendSectionId: null,
     pathPrefix: null,
   },
   {
-    id: "custom_theme",
-    title: "Custom Theme",
+    id: 'custom_theme',
+    title: 'Custom Theme',
     icon: PaletteOutlinedIcon,
     backendSectionId: null,
     pathPrefix: null,
@@ -149,7 +145,7 @@ const FEATURES_SECTIONS = [
 ];
 
 // Sections that own their save flow and so hide the shared action bar
-const SELF_SAVING_SECTIONS = ["auto_routing", "surveys", "model_prices_source", "custom_theme"];
+const SELF_SAVING_SECTIONS = ['auto_routing', 'surveys', 'model_prices_source', 'custom_theme'];
 
 const FeaturesPage = memo(() => {
   const [activeSection, setActiveSection] = useState(
@@ -160,15 +156,13 @@ const FeaturesPage = memo(() => {
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
   const serverValuesRef = useRef({});
 
   const activeDef = useMemo(
-    () =>
-      FEATURES_SECTIONS.find((s) => s.id === activeSection) ??
-      FEATURES_SECTIONS[0],
+    () => FEATURES_SECTIONS.find(s => s.id === activeSection) ?? FEATURES_SECTIONS[0],
     [activeSection],
   );
 
@@ -198,8 +192,7 @@ const FeaturesPage = memo(() => {
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
 
   const isDirty = useMemo(
-    () =>
-      JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current),
+    () => JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current),
     [localValues],
   );
 
@@ -208,27 +201,21 @@ const FeaturesPage = memo(() => {
 
   const guardrailsFields = useMemo(() => {
     if (!activeDef.pathPrefix) return [];
-    const guardrailsSchema = schemasData?.sections?.find(
-      (s) => s.id === "guardrails",
-    );
-    return (guardrailsSchema?.fields || []).filter((f) =>
-      f.path?.startsWith(activeDef.pathPrefix),
-    );
+    const guardrailsSchema = schemasData?.sections?.find(s => s.id === 'guardrails');
+    return (guardrailsSchema?.fields || []).filter(f => f.path?.startsWith(activeDef.pathPrefix));
   }, [activeDef, schemasData]);
 
   const handleFieldChange = useCallback((key, value) => {
-    setLocalValues((prev) => ({ ...prev, [key]: value }));
+    setLocalValues(prev => ({ ...prev, [key]: value }));
   }, []);
 
   // Sections with their own field validation report upwards so Save can block
   const [sectionValid, setSectionValid] = useState(true);
 
   const handleSectionChange = useCallback(
-    (sectionId) => {
+    sectionId => {
       if (isDirty) {
-        const confirmed = window.confirm(
-          "You have unsaved changes. Discard them?",
-        );
+        const confirmed = window.confirm('You have unsaved changes. Discard them?');
         if (!confirmed) return;
       }
       setActiveSection(sectionId);
@@ -247,13 +234,8 @@ const FeaturesPage = memo(() => {
     try {
       const cleanedValues = Object.fromEntries(
         Object.entries(localValues).map(([key, value]) => {
-          if (key.endsWith("_links") && Array.isArray(value)) {
-            return [
-              key,
-              value.filter(
-                (link) => link.title?.trim() !== "" || link.url?.trim() !== "",
-              ),
-            ];
+          if (key.endsWith('_links') && Array.isArray(value)) {
+            return [key, value.filter(link => link.title?.trim() !== '' || link.url?.trim() !== '')];
           }
           return [key, value];
         }),
@@ -268,35 +250,31 @@ const FeaturesPage = memo(() => {
       setLocalValues({ ...cleanedValues });
 
       if (result.requires_restart?.length > 0) {
-        const normalized = result.requires_restart.map((r) =>
-          typeof r === "string" ? { pylon_id: r, plugins: [] } : r,
+        const normalized = result.requires_restart.map(r =>
+          typeof r === 'string' ? { pylon_id: r, plugins: [] } : r,
         );
         setPendingRestarts(normalized);
         const summary = normalized
-          .map((r) =>
-            r.plugins?.length
-              ? `${r.plugins.join(", ")} on ${r.pylon_id}`
-              : r.pylon_id,
-          )
-          .join("; ");
+          .map(r => (r.plugins?.length ? `${r.plugins.join(', ')} on ${r.pylon_id}` : r.pylon_id))
+          .join('; ');
         setSnackbar({
           open: true,
           message: `Configuration saved. Reload required: ${summary}`,
-          severity: "warning",
+          severity: 'warning',
         });
       } else {
         setPendingRestarts([]);
         setSnackbar({
           open: true,
-          message: "Configuration saved successfully",
-          severity: "success",
+          message: 'Configuration saved successfully',
+          severity: 'success',
         });
       }
     } catch (err) {
       setSnackbar({
         open: true,
-        message: `Failed to save: ${err?.data?.error || err?.message || "Unknown error"}`,
-        severity: "error",
+        message: `Failed to save: ${err?.data?.error || err?.message || 'Unknown error'}`,
+        severity: 'error',
       });
     }
   }, [activeDef, localValues, saveValues]);
@@ -305,18 +283,16 @@ const FeaturesPage = memo(() => {
     async (pylonId, plugins) => {
       try {
         await restartPylon({ pylonId, plugins }).unwrap();
-        setPendingRestarts((prev) =>
-          prev.filter((r) => r.pylon_id !== pylonId),
-        );
+        setPendingRestarts(prev => prev.filter(r => r.pylon_id !== pylonId));
         const label = plugins?.length
-          ? `Reload signal sent for ${plugins.join(", ")} on ${pylonId}`
+          ? `Reload signal sent for ${plugins.join(', ')} on ${pylonId}`
           : `Restart signal sent to ${pylonId}`;
-        setSnackbar({ open: true, message: label, severity: "info" });
+        setSnackbar({ open: true, message: label, severity: 'info' });
       } catch (err) {
         setSnackbar({
           open: true,
-          message: `Reload failed: ${err?.message || "Unknown error"}`,
-          severity: "error",
+          message: `Reload failed: ${err?.message || 'Unknown error'}`,
+          severity: 'error',
         });
       }
     },
@@ -324,13 +300,11 @@ const FeaturesPage = memo(() => {
   );
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   const renderContent = () => {
-    const isLoading =
-      activeDef.backendSectionId &&
-      (activeDef.pathPrefix ? valuesLoading : valuesFetching);
+    const isLoading = activeDef.backendSectionId && (activeDef.pathPrefix ? valuesLoading : valuesFetching);
 
     if (isLoading)
       return (
@@ -340,23 +314,23 @@ const FeaturesPage = memo(() => {
       );
 
     switch (activeSection) {
-      case "auto_routing":
+      case 'auto_routing':
         return <AutoRoutingSettings />;
-      case "surveys":
+      case 'surveys':
         return <SurveysSection addRef={addSurveyRef} />;
-      case "model_prices_source":
+      case 'model_prices_source':
         return <ModelPricesSource />;
-      case "custom_theme":
+      case 'custom_theme':
         return (
           <Box sx={styles.formScroll}>
             <CustomThemeSection />
           </Box>
         );
-      case "mcp_configuration":
-      case "agent_publishing":
-      case "skill_publishing":
-      case "midturn_injection":
-      case "next_input_suggestion":
+      case 'mcp_configuration':
+      case 'agent_publishing':
+      case 'skill_publishing':
+      case 'midturn_injection':
+      case 'next_input_suggestion':
         return (
           <Box sx={styles.formScroll}>
             <GuardrailsSection
@@ -368,7 +342,7 @@ const FeaturesPage = memo(() => {
             />
           </Box>
         );
-      case "help_center":
+      case 'help_center':
         return (
           <Box sx={styles.formScroll}>
             <HelpCenterSection
@@ -377,7 +351,7 @@ const FeaturesPage = memo(() => {
             />
           </Box>
         );
-      case "support_assistant":
+      case 'support_assistant':
         return (
           <Box sx={styles.formScroll}>
             <SupportAssistant
@@ -386,19 +360,25 @@ const FeaturesPage = memo(() => {
             />
           </Box>
         );
-      case "voice_features":
+      case 'voice_features':
         return (
           <Box sx={styles.formScroll}>
-            <VoiceFeatures values={localValues} onChange={handleFieldChange} />
+            <VoiceFeatures
+              values={localValues}
+              onChange={handleFieldChange}
+            />
           </Box>
         );
-      case "chat_mentions":
+      case 'chat_mentions':
         return (
           <Box sx={styles.formScroll}>
-            <ChatMentions values={localValues} onChange={handleFieldChange} />
+            <ChatMentions
+              values={localValues}
+              onChange={handleFieldChange}
+            />
           </Box>
         );
-      case "cost_budgets":
+      case 'cost_budgets':
         return (
           <Box sx={styles.formScroll}>
             <CostBudgets
@@ -414,18 +394,18 @@ const FeaturesPage = memo(() => {
   };
 
   return (
-    <DrawerPage sx={{ overflow: "hidden" }}>
+    <DrawerPage sx={{ overflow: 'hidden' }}>
       <DrawerPageHeader
         title="Features"
         showBorder
-        showAddButton={activeSection === "surveys"}
+        showAddButton={activeSection === 'surveys'}
         onAdd={() => addSurveyRef.current?.()}
         addButtonTooltip="Add survey"
       />
 
       <Box sx={styles.content}>
         <Box sx={styles.sectionSidebar}>
-          {FEATURES_SECTIONS.map((section) => {
+          {FEATURES_SECTIONS.map(section => {
             const IconComponent = section.icon;
             const isActive = activeSection === section.id;
             return (
@@ -434,7 +414,7 @@ const FeaturesPage = memo(() => {
                 onClick={() => handleSectionChange(section.id)}
                 sx={styles.sectionItem(isActive)}
               >
-                <IconComponent sx={{ fontSize: "1rem" }} />
+                <IconComponent sx={{ fontSize: '1rem' }} />
                 <Typography
                   variant="body2"
                   sx={styles.sectionItemText(isActive)}
@@ -468,33 +448,30 @@ const FeaturesPage = memo(() => {
                   disabled={!isDirty || saving || !sectionValid}
                   sx={styles.saveButton}
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? 'Saving...' : 'Save'}
                 </Button>
               </Box>
 
               {pendingRestarts.length > 0 && (
                 <Box sx={styles.restartBar}>
-                  <Typography variant="caption" sx={styles.restartLabel}>
+                  <Typography
+                    variant="caption"
+                    sx={styles.restartLabel}
+                  >
                     Reload required:
                   </Typography>
-                  {pendingRestarts.map((entry) => (
+                  {pendingRestarts.map(entry => (
                     <Button
                       key={entry.pylon_id}
                       size="small"
                       variant="outlined"
                       color="warning"
-                      startIcon={
-                        <RestartAltIcon sx={{ fontSize: "0.875rem" }} />
-                      }
-                      onClick={() =>
-                        handleReload(entry.pylon_id, entry.plugins)
-                      }
+                      startIcon={<RestartAltIcon sx={{ fontSize: '0.875rem' }} />}
+                      onClick={() => handleReload(entry.pylon_id, entry.plugins)}
                       disabled={restarting}
                       sx={styles.restartButton}
                     >
-                      {entry.plugins?.length
-                        ? entry.plugins.join(", ")
-                        : entry.pylon_id}
+                      {entry.plugins?.length ? entry.plugins.join(', ') : entry.pylon_id}
                     </Button>
                   ))}
                 </Box>
@@ -508,13 +485,13 @@ const FeaturesPage = memo(() => {
         open={snackbar.open}
         autoHideDuration={5000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -523,99 +500,99 @@ const FeaturesPage = memo(() => {
   );
 });
 
+FeaturesPage.displayName = 'FeaturesPage';
+
 const styles = {
   content: {
-    display: "flex",
+    display: 'flex',
     flex: 1,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   sectionSidebar: ({ palette }) => ({
-    width: "13rem",
-    minWidth: "13rem",
+    width: '13rem',
+    minWidth: '13rem',
     borderRight: `1px solid ${palette.border.table}`,
-    padding: "0.75rem",
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.25rem",
-    overflowY: "auto",
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    overflowY: 'auto',
   }),
   sectionItem:
-    (isActive) =>
+    isActive =>
     ({ palette }) => ({
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
-      padding: "0.5rem 0.75rem",
-      borderRadius: "0.375rem",
-      cursor: "pointer",
-      transition: "all 0.15s ease",
-      backgroundColor: isActive
-        ? palette.background.userInputBackgroundActive
-        : "transparent",
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.5rem 0.75rem',
+      borderRadius: '0.375rem',
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+      backgroundColor: isActive ? palette.background.userInputBackgroundActive : 'transparent',
       color: isActive ? palette.text.secondary : palette.text.metrics,
-      "&:hover": {
+      '&:hover': {
         backgroundColor: isActive
           ? palette.background.userInputBackgroundActive
           : palette.background.conversation?.hover || palette.action.hover,
       },
     }),
   sectionItemText:
-    (isActive) =>
+    isActive =>
     ({ palette }) => ({
-      fontSize: "0.8125rem",
+      fontSize: '0.8125rem',
       fontWeight: isActive ? 600 : 400,
       color: isActive ? palette.text.secondary : palette.text.metrics,
     }),
   formArea: {
     flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
   formScroll: {
     flex: 1,
-    overflowY: "auto",
-    padding: "1.5rem",
+    overflowY: 'auto',
+    padding: '1.5rem',
   },
   loadingContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
   },
   actionBar: ({ palette }) => ({
     borderTop: `1px solid ${palette.border.table}`,
-    padding: "0.75rem 1.5rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "1rem",
-    flexWrap: "wrap",
+    padding: '0.75rem 1.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    flexWrap: 'wrap',
   }),
   actionButtons: {
-    display: "flex",
-    gap: "0.5rem",
+    display: 'flex',
+    gap: '0.5rem',
   },
   discardButton: {
-    textTransform: "none",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    fontSize: '0.8125rem',
   },
   saveButton: {
-    textTransform: "none",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    fontSize: '0.8125rem',
   },
   restartBar: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   restartLabel: ({ palette }) => ({
     color: palette.warning?.main || palette.text.metrics,
     fontWeight: 500,
   }),
   restartButton: {
-    textTransform: "none",
-    fontSize: "0.75rem",
+    textTransform: 'none',
+    fontSize: '0.75rem',
   },
 };
 

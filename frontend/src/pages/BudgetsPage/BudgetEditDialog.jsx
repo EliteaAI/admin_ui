@@ -1,23 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
 
-import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 
-import { formatMoney, formatLimit } from "./format";
+import { formatLimit, formatMoney } from './format';
 
 // An inherited limit isn't set here, so where it came from decides where to change it
 const INHERITED_SUFFIX = {
-  default: " (platform default)",
-  project_default: " (project member default)",
+  default: ' (platform default)',
+  project_default: ' (project member default)',
 };
 
 /**
@@ -30,41 +30,34 @@ export default function BudgetEditDialog(props) {
   const { open, onClose, onSave, target, isSaving } = props;
 
   const [unlimited, setUnlimited] = useState(false);
-  const [limit, setLimit] = useState("");
-  const [memberDefault, setMemberDefault] = useState("");
-  const [error, setError] = useState("");
+  const [limit, setLimit] = useState('');
+  const [memberDefault, setMemberDefault] = useState('');
+  const [error, setError] = useState('');
 
   const isProject = !target?.user_id;
   // A personal project has one member, so a "default for members" is a second way to set
   // that one person's limit — and it is not enforced there
   const showsMemberDefault = isProject && !target?.is_personal;
   const hasProjectDefault =
-    target?.project_member_default !== null &&
-    target?.project_member_default !== undefined;
+    target?.project_member_default !== null && target?.project_member_default !== undefined;
 
   useEffect(() => {
     if (!open || !target) return;
-    setError("");
-    setUnlimited(
-      target.monthly_limit === null || target.monthly_limit === undefined,
-    );
+    setError('');
+    setUnlimited(target.monthly_limit === null || target.monthly_limit === undefined);
     setLimit(
-      target.monthly_limit === null || target.monthly_limit === undefined
-        ? ""
-        : String(target.monthly_limit),
+      target.monthly_limit === null || target.monthly_limit === undefined ? '' : String(target.monthly_limit),
     );
     setMemberDefault(
-      target.member_default_limit === null ||
-        target.member_default_limit === undefined
-        ? ""
+      target.member_default_limit === null || target.member_default_limit === undefined
+        ? ''
         : String(target.member_default_limit),
     );
   }, [open, target]);
 
   const spend = Number(target?.spend || 0);
-  const parsed = limit.trim() === "" ? null : Number(limit);
-  const parsedMemberDefault =
-    memberDefault.trim() === "" ? null : Number(memberDefault);
+  const parsed = limit.trim() === '' ? null : Number(limit);
+  const parsedMemberDefault = memberDefault.trim() === '' ? null : Number(memberDefault);
 
   const memberDefaultError =
     showsMemberDefault &&
@@ -74,16 +67,15 @@ export default function BudgetEditDialog(props) {
   const validationError = useMemo(() => {
     // Only when the field is on screen: a hidden value is never sent, so it must not
     // block Save
-    if (memberDefaultError) return "Member default must be zero or more.";
-    if (unlimited) return "";
-    if (limit.trim() === "") return "Enter a limit or switch to unlimited.";
-    if (Number.isNaN(parsed)) return "Limit must be a number.";
-    if (parsed < 0) return "Limit must be zero or more.";
-    return "";
+    if (memberDefaultError) return 'Member default must be zero or more.';
+    if (unlimited) return '';
+    if (limit.trim() === '') return 'Enter a limit or switch to unlimited.';
+    if (Number.isNaN(parsed)) return 'Limit must be a number.';
+    if (parsed < 0) return 'Limit must be zero or more.';
+    return '';
   }, [unlimited, limit, parsed, memberDefaultError]);
 
-  const willBlockNow =
-    !unlimited && !validationError && parsed !== null && spend > parsed;
+  const willBlockNow = !unlimited && !validationError && parsed !== null && spend > parsed;
 
   const handleSave = async () => {
     if (validationError) {
@@ -91,7 +83,7 @@ export default function BudgetEditDialog(props) {
       return;
     }
 
-    setError("");
+    setError('');
 
     try {
       await onSave({
@@ -103,7 +95,7 @@ export default function BudgetEditDialog(props) {
       });
       onClose();
     } catch (err) {
-      setError(err?.data?.error ?? err?.error ?? "Failed to save the budget.");
+      setError(err?.data?.error ?? err?.error ?? 'Failed to save the budget.');
     }
   };
 
@@ -112,33 +104,43 @@ export default function BudgetEditDialog(props) {
     : `${target?.name || `Project ${target?.project_id}`}`;
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>
-        {target?.user_id ? "Edit member budget" : "Edit project budget"}
-      </DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+    >
+      <DialogTitle>{target?.user_id ? 'Edit member budget' : 'Edit project budget'}</DialogTitle>
 
       <DialogContent>
         <Box sx={styles.content}>
-          <Typography variant="bodyMedium" color="text.secondary">
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+          >
             {scopeLabel}
           </Typography>
 
           <Box sx={styles.factRow}>
-            <Typography variant="bodySmall" color="text.secondary">
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+            >
               Spent this month
             </Typography>
-            <Typography variant="bodyMedium">
-              {formatMoney(spend, target?.currency)}
-            </Typography>
+            <Typography variant="bodyMedium">{formatMoney(spend, target?.currency)}</Typography>
           </Box>
 
           <Box sx={styles.factRow}>
-            <Typography variant="bodySmall" color="text.secondary">
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+            >
               Current limit
             </Typography>
             <Typography variant="bodyMedium">
               {formatLimit(target?.effective_limit, target?.currency)}
-              {INHERITED_SUFFIX[target?.limit_source] || ""}
+              {INHERITED_SUFFIX[target?.limit_source] || ''}
             </Typography>
           </Box>
 
@@ -146,40 +148,39 @@ export default function BudgetEditDialog(props) {
             control={
               <Switch
                 checked={unlimited}
-                onChange={(event) => setUnlimited(event.target.checked)}
+                onChange={event => setUnlimited(event.target.checked)}
               />
             }
             label={
               isProject
-                ? "Unlimited (exempt from platform defaults)"
-                : "Unlimited (exempt from the platform default)"
+                ? 'Unlimited (exempt from platform defaults)'
+                : 'Unlimited (exempt from the platform default)'
             }
           />
 
           {!isProject && unlimited && hasProjectDefault && (
             <Alert severity="info">
-              This project sets a default of{" "}
-              {formatMoney(target.project_member_default, target?.currency)} for
-              members with no limit of their own, and it still applies here.
-              Enter a limit above to override it for this member.
+              This project sets a default of {formatMoney(target.project_member_default, target?.currency)}{' '}
+              for members with no limit of their own, and it still applies here. Enter a limit above to
+              override it for this member.
             </Alert>
           )}
 
           <TextField
             label="Monthly limit (USD)"
             value={limit}
-            onChange={(event) => setLimit(event.target.value)}
+            onChange={event => setLimit(event.target.value)}
             disabled={unlimited}
             type="number"
             size="small"
             fullWidth
             sx={styles.limitField}
-            inputProps={{ min: 0, step: "0.01", inputMode: "decimal" }}
-            error={!!validationError && limit.trim() !== ""}
+            inputProps={{ min: 0, step: '0.01', inputMode: 'decimal' }}
+            error={!!validationError && limit.trim() !== ''}
             helperText={
               unlimited
-                ? "No limit will be enforced for this scope."
-                : validationError || "Set 0 to block all shared-model usage."
+                ? 'No limit will be enforced for this scope.'
+                : validationError || 'Set 0 to block all shared-model usage.'
             }
           />
 
@@ -187,12 +188,12 @@ export default function BudgetEditDialog(props) {
             <TextField
               label="Member default limit (USD)"
               value={memberDefault}
-              onChange={(event) => setMemberDefault(event.target.value)}
+              onChange={event => setMemberDefault(event.target.value)}
               type="number"
               size="small"
               fullWidth
               sx={styles.limitField}
-              inputProps={{ min: 0, step: "0.01", inputMode: "decimal" }}
+              inputProps={{ min: 0, step: '0.01', inputMode: 'decimal' }}
               error={memberDefaultError}
               helperText="Applies to every member with no limit of their own, now and in future. Members with their own limit are unaffected, and this applies even when the project is unlimited. Leave blank for none."
             />
@@ -200,8 +201,8 @@ export default function BudgetEditDialog(props) {
 
           {willBlockNow && (
             <Alert severity="warning">
-              This limit is below the {formatMoney(spend, target?.currency)}{" "}
-              already spent, so shared-model calls will be blocked immediately.
+              This limit is below the {formatMoney(spend, target?.currency)} already spent, so shared-model
+              calls will be blocked immediately.
             </Alert>
           )}
 
@@ -210,7 +211,10 @@ export default function BudgetEditDialog(props) {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={isSaving}>
+        <Button
+          onClick={onClose}
+          disabled={isSaving}
+        >
           Cancel
         </Button>
         <Button
@@ -227,25 +231,24 @@ export default function BudgetEditDialog(props) {
 
 const styles = {
   content: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-    paddingTop: "0.5rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    paddingTop: '0.5rem',
   },
   factRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   // Native number spinners render unstyled and clash with the dark theme
   limitField: {
-    "& input[type=number]": {
-      MozAppearance: "textfield",
+    '& input[type=number]': {
+      MozAppearance: 'textfield',
     },
-    "& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button":
-      {
-        WebkitAppearance: "none",
-        margin: 0,
-      },
+    '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+      WebkitAppearance: 'none',
+      margin: 0,
+    },
   },
 };

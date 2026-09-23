@@ -1,44 +1,47 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
-import Collapse from "@mui/material/Collapse";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import Typography from "@mui/material/Typography";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import CloudDownloadOutlinedIcon from "@mui/icons-material/CloudDownloadOutlined";
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import ClearAllOutlinedIcon from "@mui/icons-material/ClearAllOutlined";
-import PluginConfigDrawer from "./PluginConfigDrawer";
-import { PylonLogsDrawer } from "@/components/LogViewerDrawer";
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+
+import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ClearAllOutlinedIcon from '@mui/icons-material/ClearAllOutlined';
+import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import Collapse from '@mui/material/Collapse';
+import Snackbar from '@mui/material/Snackbar';
+import Typography from '@mui/material/Typography';
+
 import {
-  useRuntimeRemoteQuery,
   useConfigRestartMutation,
   useRuntimePluginCheckMutation,
   useRuntimePluginUpdateMutation,
-} from "@/api/configurationApi";
-import { ALWAYS_SHOW_PLUGIN_UPDATE } from "@/utils/env";
+  useRuntimeRemoteQuery,
+} from '@/api/configurationApi';
+import { PylonLogsDrawer } from '@/components/LogViewerDrawer';
+import { ALWAYS_SHOW_PLUGIN_UPDATE } from '@/utils/env';
+
+import PluginConfigDrawer from './PluginConfigDrawer';
 
 const COLUMNS = [
-  { field: "name", label: "Name", width: "1fr" },
-  { field: "local_version", label: "Version", width: "14rem" },
-  { field: "repo_version", label: "Repo Version", width: "14rem" },
-  { field: "activated", label: "Active", width: "5rem" },
-  { field: "actions", label: "Actions", width: "18rem" },
+  { field: 'name', label: 'Name', width: '1fr' },
+  { field: 'local_version', label: 'Version', width: '14rem' },
+  { field: 'repo_version', label: 'Repo Version', width: '14rem' },
+  { field: 'activated', label: 'Active', width: '5rem' },
+  { field: 'actions', label: 'Actions', width: '18rem' },
 ];
 
-const gridTemplate = COLUMNS.map((c) => c.width).join(" ");
+const gridTemplate = COLUMNS.map(c => c.width).join(' ');
 
-const STORAGE_KEY = "admin_plugin_repo_versions";
+const STORAGE_KEY = 'admin_plugin_repo_versions';
 
 function loadPluginStates() {
   try {
@@ -65,8 +68,8 @@ function AdvancedSection() {
   const [updatingAllPylons, setUpdatingAllPylons] = useState({});
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
 
   useEffect(() => {
@@ -88,15 +91,15 @@ function AdvancedSection() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [data]);
 
-  const togglePylon = useCallback((pylonId) => {
-    setCollapsedPylons((prev) => ({ ...prev, [pylonId]: !prev[pylonId] }));
+  const togglePylon = useCallback(pylonId => {
+    setCollapsedPylons(prev => ({ ...prev, [pylonId]: !prev[pylonId] }));
   }, []);
 
-  const handleOpenDrawer = useCallback((plugin) => {
+  const handleOpenDrawer = useCallback(plugin => {
     setDrawerPlugin(plugin);
   }, []);
 
-  const handleOpenPylonConfig = useCallback((pylonId) => {
+  const handleOpenPylonConfig = useCallback(pylonId => {
     setDrawerPlugin({ pylon_id: pylonId, name: null });
   }, []);
 
@@ -104,7 +107,7 @@ function AdvancedSection() {
     setDrawerPlugin(null);
   }, []);
 
-  const handleOpenLogsDrawer = useCallback((pylonId) => {
+  const handleOpenLogsDrawer = useCallback(pylonId => {
     setLogsPylonId(pylonId);
   }, []);
 
@@ -123,8 +126,8 @@ function AdvancedSection() {
     refetchPylons();
     setSnackbar({
       open: true,
-      message: "Local plugin state cleared, refreshing pylons…",
-      severity: "info",
+      message: 'Local plugin state cleared, refreshing pylons…',
+      severity: 'info',
     });
   }, [refetchPylons]);
 
@@ -133,20 +136,20 @@ function AdvancedSection() {
       try {
         await restartPylon({ pylonId, plugins: [pluginName] }).unwrap();
         const key = pluginKey(pylonId, pluginName);
-        setPluginStates((prev) => ({
+        setPluginStates(prev => ({
           ...prev,
           [key]: { ...prev[key], updated: false },
         }));
         setSnackbar({
           open: true,
           message: `Reload signal sent for ${pluginName} on ${pylonId}`,
-          severity: "info",
+          severity: 'info',
         });
       } catch (err) {
         setSnackbar({
           open: true,
-          message: `Reload failed: ${err?.message || "Unknown error"}`,
-          severity: "error",
+          message: `Reload failed: ${err?.message || 'Unknown error'}`,
+          severity: 'error',
         });
       }
     },
@@ -158,7 +161,7 @@ function AdvancedSection() {
       try {
         await restartPylon({ pylonId }).unwrap();
         if (plugins?.length) {
-          setPluginStates((prev) => {
+          setPluginStates(prev => {
             const next = { ...prev };
             for (const p of plugins) {
               const key = pluginKey(pylonId, p.name);
@@ -170,13 +173,13 @@ function AdvancedSection() {
         setSnackbar({
           open: true,
           message: `Restart signal sent to ${pylonId}`,
-          severity: "info",
+          severity: 'info',
         });
       } catch (err) {
         setSnackbar({
           open: true,
-          message: `Restart failed: ${err?.message || "Unknown error"}`,
-          severity: "error",
+          message: `Restart failed: ${err?.message || 'Unknown error'}`,
+          severity: 'error',
         });
       }
     },
@@ -184,8 +187,8 @@ function AdvancedSection() {
   );
 
   const handleCheckPylonUpdates = useCallback(
-    async (plugins) => {
-      setPluginStates((prev) => {
+    async plugins => {
+      setPluginStates(prev => {
         const next = { ...prev };
         for (const p of plugins) {
           const key = pluginKey(p.pylon_id, p.name);
@@ -194,14 +197,14 @@ function AdvancedSection() {
         return next;
       });
       const results = await Promise.allSettled(
-        plugins.map(async (plugin) => {
+        plugins.map(async plugin => {
           const key = pluginKey(plugin.pylon_id, plugin.name);
           try {
             const result = await checkPlugin({
               pluginName: plugin.name,
             }).unwrap();
             if (result.ok) {
-              setPluginStates((prev) => ({
+              setPluginStates(prev => ({
                 ...prev,
                 [key]: {
                   ...prev[key],
@@ -210,14 +213,14 @@ function AdvancedSection() {
                 },
               }));
             } else {
-              setPluginStates((prev) => ({
+              setPluginStates(prev => ({
                 ...prev,
                 [key]: { ...prev[key], checking: false, checkError: true },
               }));
             }
             return { pluginName: plugin.name, ...result };
-          } catch (err) {
-            setPluginStates((prev) => ({
+          } catch {
+            setPluginStates(prev => ({
               ...prev,
               [key]: { ...prev[key], checking: false, checkError: true },
             }));
@@ -226,27 +229,24 @@ function AdvancedSection() {
         }),
       );
       const failed =
-        results.filter((r) => r.status === "fulfilled" && !r.value.ok).length +
-        results.filter((r) => r.status === "rejected").length;
+        results.filter(r => r.status === 'fulfilled' && !r.value.ok).length +
+        results.filter(r => r.status === 'rejected').length;
       if (failed > 0) {
         setSnackbar({
           open: true,
           message: `${failed} plugin(s) could not be checked`,
-          severity: "warning",
+          severity: 'warning',
         });
       } else {
-        const updatable = results.filter((r) => {
-          if (r.status !== "fulfilled" || !r.value.ok) return false;
-          const plugin = plugins.find((p) => p.name === r.value.pluginName);
+        const updatable = results.filter(r => {
+          if (r.status !== 'fulfilled' || !r.value.ok) return false;
+          const plugin = plugins.find(p => p.name === r.value.pluginName);
           return plugin && r.value.repo_version !== plugin.local_version;
         }).length;
         setSnackbar({
           open: true,
-          message:
-            updatable > 0
-              ? `${updatable} update(s) available`
-              : "All plugins are up to date",
-          severity: updatable > 0 ? "info" : "success",
+          message: updatable > 0 ? `${updatable} update(s) available` : 'All plugins are up to date',
+          severity: updatable > 0 ? 'info' : 'success',
         });
       }
     },
@@ -256,7 +256,7 @@ function AdvancedSection() {
   const handleUpdatePlugin = useCallback(
     async (pluginName, pylonId) => {
       const key = pluginKey(pylonId, pluginName);
-      setPluginStates((prev) => ({
+      setPluginStates(prev => ({
         ...prev,
         [key]: { ...prev[key], updating: true },
       }));
@@ -269,19 +269,19 @@ function AdvancedSection() {
           setSnackbar({
             open: true,
             message: result.message,
-            severity: "success",
+            severity: 'success',
           });
-          setPluginStates((prev) => ({
+          setPluginStates(prev => ({
             ...prev,
             [key]: { ...prev[key], updating: false, updated: true },
           }));
         } else {
           setSnackbar({
             open: true,
-            message: result.error || "Update failed",
-            severity: "error",
+            message: result.error || 'Update failed',
+            severity: 'error',
           });
-          setPluginStates((prev) => ({
+          setPluginStates(prev => ({
             ...prev,
             [key]: { ...prev[key], updating: false },
           }));
@@ -289,10 +289,10 @@ function AdvancedSection() {
       } catch (err) {
         setSnackbar({
           open: true,
-          message: `Update failed: ${err?.data?.error || err?.message || "Unknown error"}`,
-          severity: "error",
+          message: `Update failed: ${err?.data?.error || err?.message || 'Unknown error'}`,
+          severity: 'error',
         });
-        setPluginStates((prev) => ({
+        setPluginStates(prev => ({
           ...prev,
           [key]: { ...prev[key], updating: false },
         }));
@@ -303,12 +303,12 @@ function AdvancedSection() {
 
   const handleUpdateAllPlugins = useCallback(
     async (pylonId, plugins) => {
-      setUpdatingAllPylons((prev) => ({ ...prev, [pylonId]: true }));
-      const names = plugins.map((p) => p.name);
+      setUpdatingAllPylons(prev => ({ ...prev, [pylonId]: true }));
+      const names = plugins.map(p => p.name);
       const results = await Promise.allSettled(
-        names.map(async (name) => {
+        names.map(async name => {
           const key = pluginKey(pylonId, name);
-          setPluginStates((prev) => ({
+          setPluginStates(prev => ({
             ...prev,
             [key]: { ...prev[key], updating: true },
           }));
@@ -318,19 +318,19 @@ function AdvancedSection() {
               pylonIds: [pylonId],
             }).unwrap();
             if (result.ok) {
-              setPluginStates((prev) => ({
+              setPluginStates(prev => ({
                 ...prev,
                 [key]: { ...prev[key], updating: false, updated: true },
               }));
             } else {
-              setPluginStates((prev) => ({
+              setPluginStates(prev => ({
                 ...prev,
                 [key]: { ...prev[key], updating: false },
               }));
             }
             return { name, ok: result.ok };
-          } catch (err) {
-            setPluginStates((prev) => ({
+          } catch {
+            setPluginStates(prev => ({
               ...prev,
               [key]: { ...prev[key], updating: false },
             }));
@@ -338,23 +338,21 @@ function AdvancedSection() {
           }
         }),
       );
-      const succeeded = results.filter(
-        (r) => r.status === "fulfilled" && r.value.ok,
-      ).length;
+      const succeeded = results.filter(r => r.status === 'fulfilled' && r.value.ok).length;
       const failed = names.length - succeeded;
-      setUpdatingAllPylons((prev) => ({ ...prev, [pylonId]: false }));
+      setUpdatingAllPylons(prev => ({ ...prev, [pylonId]: false }));
       // No auto-restart: it used to race the still-running downloads and abort them
       if (failed > 0) {
         setSnackbar({
           open: true,
           message: `Update requested for ${succeeded}/${names.length} plugins on ${pylonId} (${failed} failed) \u2014 wait for downloads, then press Restart`,
-          severity: "warning",
+          severity: 'warning',
         });
       } else {
         setSnackbar({
           open: true,
           message: `Update requested for all ${succeeded} plugins on ${pylonId} \u2014 wait for downloads, then press Restart`,
-          severity: "success",
+          severity: 'success',
         });
       }
     },
@@ -362,7 +360,7 @@ function AdvancedSection() {
   );
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   if (isLoading) {
@@ -376,7 +374,10 @@ function AdvancedSection() {
   if (pylonGroups.length === 0) {
     return (
       <Box sx={styles.loading}>
-        <Typography variant="body2" color="text.metrics">
+        <Typography
+          variant="body2"
+          color="text.metrics"
+        >
           No connected pylons found.
         </Typography>
       </Box>
@@ -386,13 +387,16 @@ function AdvancedSection() {
   return (
     <Box sx={styles.root}>
       <Box sx={styles.topHeader}>
-        <Typography variant="body2" sx={styles.description}>
+        <Typography
+          variant="body2"
+          sx={styles.description}
+        >
           View and edit raw plugin configurations for all connected pylons.
         </Typography>
         <Button
           size="small"
           variant="outlined"
-          startIcon={<ClearAllOutlinedIcon sx={{ fontSize: "0.875rem" }} />}
+          startIcon={<ClearAllOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
           onClick={handleResetLocalState}
           sx={styles.resetButton}
         >
@@ -401,11 +405,12 @@ function AdvancedSection() {
       </Box>
       {pylonGroups.map(([pylonId, plugins]) => {
         const isCollapsed = !!collapsedPylons[pylonId];
-        const restartNeeded = plugins.some(
-          (p) => pluginStates[pluginKey(p.pylon_id, p.name)]?.updated,
-        );
+        const restartNeeded = plugins.some(p => pluginStates[pluginKey(p.pylon_id, p.name)]?.updated);
         return (
-          <Box key={pylonId} sx={styles.pylonGroup}>
+          <Box
+            key={pylonId}
+            sx={styles.pylonGroup}
+          >
             <Box sx={styles.pylonHeader}>
               <Box
                 sx={styles.pylonHeaderLeft}
@@ -416,7 +421,10 @@ function AdvancedSection() {
                 ) : (
                   <ExpandLessIcon sx={styles.chevron} />
                 )}
-                <Typography variant="body2" sx={styles.pylonTitle}>
+                <Typography
+                  variant="body2"
+                  sx={styles.pylonTitle}
+                >
                   {pylonId}
                 </Typography>
                 <Chip
@@ -429,9 +437,7 @@ function AdvancedSection() {
               <Box sx={styles.pylonHeaderRight}>
                 <Button
                   size="small"
-                  startIcon={
-                    <SettingsOutlinedIcon sx={{ fontSize: "0.875rem" }} />
-                  }
+                  startIcon={<SettingsOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
                   onClick={() => handleOpenPylonConfig(pylonId)}
                   sx={styles.pylonConfigButton}
                 >
@@ -439,9 +445,7 @@ function AdvancedSection() {
                 </Button>
                 <Button
                   size="small"
-                  startIcon={
-                    <ArticleOutlinedIcon sx={{ fontSize: "0.875rem" }} />
-                  }
+                  startIcon={<ArticleOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
                   onClick={() => handleOpenLogsDrawer(pylonId)}
                   sx={styles.pylonConfigButton}
                 >
@@ -450,19 +454,16 @@ function AdvancedSection() {
                 <Button
                   size="small"
                   startIcon={
-                    plugins.some(
-                      (p) =>
-                        pluginStates[pluginKey(p.pylon_id, p.name)]?.checking,
-                    ) ? (
-                      <CircularProgress size={14} color="inherit" />
+                    plugins.some(p => pluginStates[pluginKey(p.pylon_id, p.name)]?.checking) ? (
+                      <CircularProgress
+                        size={14}
+                        color="inherit"
+                      />
                     ) : (
-                      <SearchOutlinedIcon sx={{ fontSize: "0.875rem" }} />
+                      <SearchOutlinedIcon sx={{ fontSize: '0.875rem' }} />
                     )
                   }
-                  disabled={plugins.some(
-                    (p) =>
-                      pluginStates[pluginKey(p.pylon_id, p.name)]?.checking,
-                  )}
+                  disabled={plugins.some(p => pluginStates[pluginKey(p.pylon_id, p.name)]?.checking)}
                   onClick={() => handleCheckPylonUpdates(plugins)}
                   sx={styles.pylonConfigButton}
                 >
@@ -475,11 +476,12 @@ function AdvancedSection() {
                     variant="outlined"
                     startIcon={
                       updatingAllPylons[pylonId] ? (
-                        <CircularProgress size={14} color="inherit" />
-                      ) : (
-                        <CloudDownloadOutlinedIcon
-                          sx={{ fontSize: "0.875rem" }}
+                        <CircularProgress
+                          size={14}
+                          color="inherit"
                         />
+                      ) : (
+                        <CloudDownloadOutlinedIcon sx={{ fontSize: '0.875rem' }} />
                       )
                     }
                     disabled={!!updatingAllPylons[pylonId]}
@@ -500,7 +502,7 @@ function AdvancedSection() {
                 <Button
                   size="small"
                   color="warning"
-                  startIcon={<RestartAltIcon sx={{ fontSize: "0.875rem" }} />}
+                  startIcon={<RestartAltIcon sx={{ fontSize: '0.875rem' }} />}
                   onClick={() => handleRestartPylon(pylonId, plugins)}
                   sx={styles.pylonConfigButton}
                 >
@@ -510,7 +512,7 @@ function AdvancedSection() {
             </Box>
             <Collapse in={!isCollapsed}>
               <Box sx={styles.tableHeader}>
-                {COLUMNS.map((col) => (
+                {COLUMNS.map(col => (
                   <Typography
                     key={col.field}
                     variant="caption"
@@ -520,22 +522,26 @@ function AdvancedSection() {
                   </Typography>
                 ))}
               </Box>
-              {plugins.map((plugin) => {
-                const ps =
-                  pluginStates[pluginKey(plugin.pylon_id, plugin.name)] || {};
-                const hasUpdate =
-                  ps.repoVersion &&
-                  ps.repoVersion !== plugin.local_version &&
-                  !ps.updated;
-                const shouldShowUpdateButton =
-                  hasUpdate || ALWAYS_SHOW_PLUGIN_UPDATE;
+              {plugins.map(plugin => {
+                const ps = pluginStates[pluginKey(plugin.pylon_id, plugin.name)] || {};
+                const hasUpdate = ps.repoVersion && ps.repoVersion !== plugin.local_version && !ps.updated;
+                const shouldShowUpdateButton = hasUpdate || ALWAYS_SHOW_PLUGIN_UPDATE;
                 return (
-                  <Box key={plugin.name} sx={styles.tableRow}>
-                    <Typography variant="body2" sx={styles.cell}>
+                  <Box
+                    key={plugin.name}
+                    sx={styles.tableRow}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={styles.cell}
+                    >
                       {plugin.name}
                     </Typography>
-                    <Typography variant="body2" sx={styles.cell}>
-                      {plugin.local_version || "-"}
+                    <Typography
+                      variant="body2"
+                      sx={styles.cell}
+                    >
+                      {plugin.local_version || '-'}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -544,7 +550,7 @@ function AdvancedSection() {
                         ...(hasUpdate ? styles.versionHighlight : {}),
                       }}
                     >
-                      {ps.repoVersion || "-"}
+                      {ps.repoVersion || '-'}
                     </Typography>
                     <Box sx={styles.cell}>
                       <Box sx={styles.statusDot(plugin.activated)} />
@@ -552,11 +558,7 @@ function AdvancedSection() {
                     <Box sx={styles.actionsCell}>
                       <Button
                         size="small"
-                        startIcon={
-                          <VisibilityOutlinedIcon
-                            sx={{ fontSize: "0.875rem" }}
-                          />
-                        }
+                        startIcon={<VisibilityOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
                         onClick={() => handleOpenDrawer(plugin)}
                         sx={styles.actionButton}
                       >
@@ -565,25 +567,20 @@ function AdvancedSection() {
                       <Button
                         size="small"
                         disabled
-                        startIcon={
-                          <RefreshOutlinedIcon sx={{ fontSize: "0.875rem" }} />
-                        }
-                        onClick={() =>
-                          handleReloadPlugin(plugin.pylon_id, plugin.name)
-                        }
+                        startIcon={<RefreshOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
+                        onClick={() => handleReloadPlugin(plugin.pylon_id, plugin.name)}
                         sx={styles.actionButton}
                       >
                         Reload
                       </Button>
                       {ps.checking || ps.updating ? (
-                        <CircularProgress size={16} sx={{ mx: "0.5rem" }} />
+                        <CircularProgress
+                          size={16}
+                          sx={{ mx: '0.5rem' }}
+                        />
                       ) : ps.updated ? (
                         <Chip
-                          icon={
-                            <CheckCircleOutlineIcon
-                              sx={{ fontSize: "0.875rem" }}
-                            />
-                          }
+                          icon={<CheckCircleOutlineIcon sx={{ fontSize: '0.875rem' }} />}
                           label="Restart needed"
                           size="small"
                           color="warning"
@@ -594,25 +591,15 @@ function AdvancedSection() {
                           size="small"
                           color="error"
                           variant="outlined"
-                          startIcon={
-                            <CloudDownloadOutlinedIcon
-                              sx={{ fontSize: "0.875rem" }}
-                            />
-                          }
-                          onClick={() =>
-                            handleUpdatePlugin(plugin.name, plugin.pylon_id)
-                          }
+                          startIcon={<CloudDownloadOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
+                          onClick={() => handleUpdatePlugin(plugin.name, plugin.pylon_id)}
                           sx={styles.updateButton}
                         >
                           Update
                         </Button>
                       ) : ps.repoVersion && !ps.checkError ? (
                         <Chip
-                          icon={
-                            <CheckCircleOutlineIcon
-                              sx={{ fontSize: "0.875rem" }}
-                            />
-                          }
+                          icon={<CheckCircleOutlineIcon sx={{ fontSize: '0.875rem' }} />}
                           label="Latest"
                           size="small"
                           color="primary"
@@ -645,13 +632,13 @@ function AdvancedSection() {
         open={snackbar.open}
         autoHideDuration={5000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -662,167 +649,166 @@ function AdvancedSection() {
 
 const styles = {
   root: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.75rem",
-    padding: "1.5rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    padding: '1.5rem',
   },
   topHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "1rem",
-    marginBottom: "0.25rem",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    marginBottom: '0.25rem',
   },
   description: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.8125rem",
+    fontSize: '0.8125rem',
     lineHeight: 1.6,
   }),
   resetButton: {
-    textTransform: "none",
-    fontSize: "0.75rem",
+    textTransform: 'none',
+    fontSize: '0.75rem',
     minWidth: 0,
-    padding: "0.25rem 0.75rem",
+    padding: '0.25rem 0.75rem',
     flexShrink: 0,
   },
   loading: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
   },
   pylonGroup: ({ palette }) => ({
     border: `1px solid ${palette.border.table}`,
-    borderRadius: "0.5rem",
-    overflow: "hidden",
+    borderRadius: '0.5rem',
+    overflow: 'hidden',
   }),
   pylonHeader: ({ palette }) => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0.625rem 1rem",
-    backgroundColor:
-      palette.background.tabPanel || palette.background.userInputBackground,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0.625rem 1rem',
+    backgroundColor: palette.background.tabPanel || palette.background.userInputBackground,
   }),
   pylonHeaderLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-    cursor: "pointer",
-    userSelect: "none",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    cursor: 'pointer',
+    userSelect: 'none',
     flex: 1,
     minWidth: 0,
   },
   chevron: {
-    fontSize: "1.25rem",
+    fontSize: '1.25rem',
     flexShrink: 0,
   },
   pylonTitle: {
     fontWeight: 600,
-    fontSize: "0.8125rem",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    fontSize: '0.8125rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   countChip: {
-    fontSize: "0.625rem",
-    height: "1.125rem",
+    fontSize: '0.625rem',
+    height: '1.125rem',
     flexShrink: 0,
-    "& .MuiChip-label": {
-      padding: "0 0.375rem",
+    '& .MuiChip-label': {
+      padding: '0 0.375rem',
     },
   },
   pylonHeaderRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.25rem",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
     flexShrink: 0,
-    marginLeft: "0.5rem",
+    marginLeft: '0.5rem',
   },
   pylonConfigButton: {
-    textTransform: "none",
-    fontSize: "0.75rem",
+    textTransform: 'none',
+    fontSize: '0.75rem',
     minWidth: 0,
-    padding: "0.125rem 0.5rem",
+    padding: '0.125rem 0.5rem',
     flexShrink: 0,
   },
   tableHeader: ({ palette }) => ({
-    display: "grid",
+    display: 'grid',
     gridTemplateColumns: gridTemplate,
-    padding: "0.375rem 1rem",
+    padding: '0.375rem 1rem',
     borderBottom: `1px solid ${palette.border.table}`,
     backgroundColor: palette.background.userInputBackground,
   }),
   headerCell: ({ palette }) => ({
-    fontSize: "0.6875rem",
+    fontSize: '0.6875rem',
     fontWeight: 600,
     color: palette.text.metrics,
-    textTransform: "uppercase",
-    letterSpacing: "0.03em",
-    "&:last-child": {
-      textAlign: "right",
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
+    '&:last-child': {
+      textAlign: 'right',
     },
   }),
   tableRow: ({ palette }) => ({
-    display: "grid",
+    display: 'grid',
     gridTemplateColumns: gridTemplate,
-    padding: "0.5rem 1rem",
-    alignItems: "center",
+    padding: '0.5rem 1rem',
+    alignItems: 'center',
     borderBottom: `1px solid ${palette.border.table}`,
-    "&:last-of-type": {
-      borderBottom: "none",
+    '&:last-of-type': {
+      borderBottom: 'none',
     },
-    "&:hover": {
+    '&:hover': {
       backgroundColor: palette.background.userInputBackground,
     },
   }),
   cell: {
-    fontSize: "0.8125rem",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    fontSize: '0.8125rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
     minWidth: 0,
   },
-  statusDot: (active) => ({
-    width: "0.5rem",
-    height: "0.5rem",
-    borderRadius: "50%",
-    backgroundColor: active ? "#4caf50" : "#9e9e9e",
+  statusDot: active => ({
+    width: '0.5rem',
+    height: '0.5rem',
+    borderRadius: '50%',
+    backgroundColor: active ? '#4caf50' : '#9e9e9e',
   }),
   actionsCell: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.25rem",
-    justifyContent: "flex-end",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    justifyContent: 'flex-end',
   },
   actionButton: {
-    textTransform: "none",
-    fontSize: "0.75rem",
+    textTransform: 'none',
+    fontSize: '0.75rem',
     minWidth: 0,
-    padding: "0.125rem 0.5rem",
+    padding: '0.125rem 0.5rem',
   },
   updateButton: {
-    textTransform: "none",
-    fontSize: "0.75rem",
+    textTransform: 'none',
+    fontSize: '0.75rem',
     minWidth: 0,
-    padding: "0.125rem 0.5rem",
+    padding: '0.125rem 0.5rem',
     fontWeight: 600,
   },
   updateChip: {
-    fontSize: "0.625rem",
-    height: "1.25rem",
-    "& .MuiChip-label": {
-      padding: "0 0.375rem",
+    fontSize: '0.625rem',
+    height: '1.25rem',
+    '& .MuiChip-label': {
+      padding: '0 0.375rem',
     },
-    "& .MuiChip-icon": {
-      fontSize: "0.75rem",
-      marginLeft: "0.25rem",
+    '& .MuiChip-icon': {
+      fontSize: '0.75rem',
+      marginLeft: '0.25rem',
     },
   },
   versionHighlight: {
     fontWeight: 600,
-    color: "#ed6c02",
+    color: '#ed6c02',
   },
 };
 

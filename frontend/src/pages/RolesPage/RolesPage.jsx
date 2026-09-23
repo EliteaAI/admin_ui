@@ -1,33 +1,33 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Snackbar from '@mui/material/Snackbar';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 
-import DrawerPage from "@/components/DrawerPage";
-import DrawerPageHeader from "@/components/DrawerPageHeader";
-import { usePageTitle } from "@/hooks/usePageTitle";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { PERMISSIONS } from "@/constants/permissions";
 import {
   usePermissionMatrixQuery,
-  usePermissionMatrixUpdateMutation,
   usePermissionMatrixSyncMutation,
+  usePermissionMatrixUpdateMutation,
   usePublicPermissionMatrixQuery,
   usePublicPermissionMatrixUpdateMutation,
   useSupportPermissionMatrixQuery,
   useSupportPermissionMatrixUpdateMutation,
-} from "@/api/usersApi";
+} from '@/api/usersApi';
+import DrawerPage from '@/components/DrawerPage';
+import DrawerPageHeader from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
-import PermissionMatrix from "./PermissionMatrix";
+import PermissionMatrix from './PermissionMatrix';
 
-const ROLE_ORDER = ["system", "super_admin", "admin", "editor", "viewer"];
+const ROLE_ORDER = ['system', 'super_admin', 'admin', 'editor', 'viewer'];
 
 const RolesPage = memo(() => {
-  usePageTitle("Roles");
+  usePageTitle('Roles');
 
   const adminServerRef = useRef(null);
   const stdServerRef = useRef(null);
@@ -36,12 +36,12 @@ const RolesPage = memo(() => {
 
   const { hasPermission, isSuperAdmin } = useCheckPermission();
 
-  const [activeTab, setActiveTab] = useState("admin");
-  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState('admin');
+  const [search, setSearch] = useState('');
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
 
   // Admin roles data
@@ -50,12 +50,11 @@ const RolesPage = memo(() => {
     isFetching: adminFetching,
     isError: adminError,
   } = usePermissionMatrixQuery(
-    { targetMode: "administration" },
-    { refetchOnMountOrArgChange: true, skip: activeTab !== "admin" },
+    { targetMode: 'administration' },
+    { refetchOnMountOrArgChange: true, skip: activeTab !== 'admin' },
   );
 
-  const [updateAdminMatrix, { isLoading: adminSaving }] =
-    usePermissionMatrixUpdateMutation();
+  const [updateAdminMatrix, { isLoading: adminSaving }] = usePermissionMatrixUpdateMutation();
 
   const [adminRows, setAdminRows] = useState(null);
 
@@ -65,14 +64,12 @@ const RolesPage = memo(() => {
     isFetching: stdFetching,
     isError: stdError,
   } = usePermissionMatrixQuery(
-    { targetMode: "default" },
-    { refetchOnMountOrArgChange: true, skip: activeTab !== "standard" },
+    { targetMode: 'default' },
+    { refetchOnMountOrArgChange: true, skip: activeTab !== 'standard' },
   );
 
-  const [updateStdMatrix, { isLoading: stdSaving }] =
-    usePermissionMatrixUpdateMutation();
-  const [syncStdMatrix, { isLoading: stdSyncing }] =
-    usePermissionMatrixSyncMutation();
+  const [updateStdMatrix, { isLoading: stdSaving }] = usePermissionMatrixUpdateMutation();
+  const [syncStdMatrix, { isLoading: stdSyncing }] = usePermissionMatrixSyncMutation();
 
   const [stdRows, setStdRows] = useState(null);
 
@@ -82,12 +79,11 @@ const RolesPage = memo(() => {
     isFetching: pubFetching,
     isError: pubError,
   } = usePublicPermissionMatrixQuery(
-    { targetMode: "default" },
-    { refetchOnMountOrArgChange: true, skip: activeTab !== "public" },
+    { targetMode: 'default' },
+    { refetchOnMountOrArgChange: true, skip: activeTab !== 'public' },
   );
 
-  const [updatePubMatrix, { isLoading: pubSaving }] =
-    usePublicPermissionMatrixUpdateMutation();
+  const [updatePubMatrix, { isLoading: pubSaving }] = usePublicPermissionMatrixUpdateMutation();
 
   const [pubRows, setPubRows] = useState(null);
 
@@ -97,12 +93,11 @@ const RolesPage = memo(() => {
     isFetching: supFetching,
     isError: supError,
   } = useSupportPermissionMatrixQuery(
-    { targetMode: "default" },
-    { refetchOnMountOrArgChange: true, skip: activeTab !== "support" },
+    { targetMode: 'default' },
+    { refetchOnMountOrArgChange: true, skip: activeTab !== 'support' },
   );
 
-  const [updateSupMatrix, { isLoading: supSaving }] =
-    useSupportPermissionMatrixUpdateMutation();
+  const [updateSupMatrix, { isLoading: supSaving }] = useSupportPermissionMatrixUpdateMutation();
 
   const [supRows, setSupRows] = useState(null);
 
@@ -148,7 +143,7 @@ const RolesPage = memo(() => {
         isError: adminError,
         isSaving: adminSaving,
         mutation: updateAdminMatrix,
-        targetMode: "administration",
+        targetMode: 'administration',
       },
       standard: {
         rows: stdRows,
@@ -158,7 +153,7 @@ const RolesPage = memo(() => {
         isError: stdError,
         isSaving: stdSaving,
         mutation: updateStdMatrix,
-        targetMode: "default",
+        targetMode: 'default',
       },
       public: {
         rows: pubRows,
@@ -168,7 +163,7 @@ const RolesPage = memo(() => {
         isError: pubError,
         isSaving: pubSaving,
         mutation: updatePubMatrix,
-        targetMode: "default",
+        targetMode: 'default',
       },
       support: {
         rows: supRows,
@@ -178,7 +173,7 @@ const RolesPage = memo(() => {
         isError: supError,
         isSaving: supSaving,
         mutation: updateSupMatrix,
-        targetMode: "default",
+        targetMode: 'default',
       },
     }),
     [
@@ -205,50 +200,33 @@ const RolesPage = memo(() => {
     ],
   );
 
-  const {
-    rows,
-    setRows,
-    serverRef,
-    isFetching,
-    isError,
-    isSaving,
-    mutation,
-    targetMode,
-  } = tabConfig[activeTab] ?? tabConfig.admin;
+  const { rows, setRows, serverRef, isFetching, isError, isSaving, mutation, targetMode } =
+    tabConfig[activeTab] ?? tabConfig.admin;
 
-  const canEdit = useMemo(
-    () => hasPermission(PERMISSIONS.roles.edit),
-    [hasPermission],
-  );
+  const canEdit = useMemo(() => hasPermission(PERMISSIONS.roles.edit), [hasPermission]);
 
-  const disabledRoles = useMemo(
-    () => (isSuperAdmin ? [] : ["super_admin"]),
-    [isSuperAdmin],
-  );
+  const disabledRoles = useMemo(() => (isSuperAdmin ? [] : ['super_admin']), [isSuperAdmin]);
 
   const roles = useMemo(() => {
     let currentOrder = ROLE_ORDER;
 
-    if (activeTab !== "admin")
-      currentOrder = currentOrder.filter((r) => r !== "super_admin");
+    if (activeTab !== 'admin') currentOrder = currentOrder.filter(r => r !== 'super_admin');
     if (!rows || rows.length === 0) return currentOrder;
 
     const sample = rows[0];
-    const keys = Object.keys(sample).filter((k) => k !== "name");
+    const keys = Object.keys(sample).filter(k => k !== 'name');
 
-    return currentOrder.filter((r) => keys.includes(r));
+    return currentOrder.filter(r => keys.includes(r));
   }, [rows, activeTab]);
 
   const isDirty = useMemo(() => {
     if (!rows || !serverRef.current) return false;
     return JSON.stringify(rows) !== JSON.stringify(serverRef.current);
-  }, [rows]);
+  }, [rows, serverRef]);
 
   const handleChange = useCallback(
-    (updater) => {
-      setRows((prev) =>
-        typeof updater === "function" ? updater(prev) : updater,
-      );
+    updater => {
+      setRows(prev => (typeof updater === 'function' ? updater(prev) : updater));
     },
     [setRows],
   );
@@ -262,36 +240,33 @@ const RolesPage = memo(() => {
   }, []);
 
   const handleCloseSnackbar = useCallback((_, reason) => {
-    if (reason === "clickaway") return;
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    if (reason === 'clickaway') return;
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   const handleSave = useCallback(async () => {
     if (!rows) return;
 
     try {
-      await mutation({ targetMode, rows: rows }).unwrap();
+      await mutation({ targetMode, rows }).unwrap();
       serverRef.current = rows;
       setRows([...rows]);
-      showSnackbar("Permissions saved successfully", "success");
-    } catch (err) {
-      showSnackbar("Failed to save permissions", "error");
+      showSnackbar('Permissions saved successfully', 'success');
+    } catch {
+      showSnackbar('Failed to save permissions', 'error');
     }
   }, [rows, mutation, targetMode, serverRef, setRows, showSnackbar]);
 
   const handleApply = useCallback(async () => {
     try {
-      await syncStdMatrix({ targetMode: "default" }).unwrap();
-      showSnackbar("Permissions synced to projects successfully", "success");
+      await syncStdMatrix({ targetMode: 'default' }).unwrap();
+      showSnackbar('Permissions synced to projects successfully', 'success');
     } catch (err) {
-      showSnackbar(
-        err?.data?.error || "Failed to sync permissions to projects",
-        "error",
-      );
+      showSnackbar(err?.data?.error || 'Failed to sync permissions to projects', 'error');
     }
   }, [syncStdMatrix, showSnackbar]);
 
-  const handleSearchChange = useCallback((value) => {
+  const handleSearchChange = useCallback(value => {
     setSearch(value);
   }, []);
 
@@ -300,15 +275,15 @@ const RolesPage = memo(() => {
   }, []);
 
   const extraContent = (
-    <Box sx={{ display: "flex", gap: "0.5rem" }}>
-      {activeTab === "standard" && canEdit && !isDirty && (
+    <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+      {activeTab === 'standard' && canEdit && !isDirty && (
         <Button
           variant="contained"
           size="small"
           onClick={handleApply}
           disabled={stdSyncing || isSaving}
         >
-          {stdSyncing ? "Applying..." : "Apply to Projects"}
+          {stdSyncing ? 'Applying...' : 'Apply to Projects'}
         </Button>
       )}
       {canEdit && isDirty && (
@@ -327,7 +302,7 @@ const RolesPage = memo(() => {
             onClick={handleSave}
             disabled={isSaving}
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </>
       )}
@@ -335,16 +310,36 @@ const RolesPage = memo(() => {
   );
 
   const tabsElement = (
-    <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
-      <Tab label="Admin Roles" value="admin" sx={styles.tab} />
-      <Tab label="Standard Roles" value="standard" sx={styles.tab} />
-      <Tab label="Public Project" value="public" sx={styles.tab} />
-      <Tab label="Support Project" value="support" sx={styles.tab} />
+    <Tabs
+      value={activeTab}
+      onChange={handleTabChange}
+      sx={styles.tabs}
+    >
+      <Tab
+        label="Admin Roles"
+        value="admin"
+        sx={styles.tab}
+      />
+      <Tab
+        label="Standard Roles"
+        value="standard"
+        sx={styles.tab}
+      />
+      <Tab
+        label="Public Project"
+        value="public"
+        sx={styles.tab}
+      />
+      <Tab
+        label="Support Project"
+        value="support"
+        sx={styles.tab}
+      />
     </Tabs>
   );
 
   return (
-    <DrawerPage sx={{ overflow: "hidden" }}>
+    <DrawerPage sx={{ overflow: 'hidden' }}>
       <DrawerPageHeader
         title="Roles"
         tabs={tabsElement}
@@ -356,12 +351,8 @@ const RolesPage = memo(() => {
       />
 
       <Box sx={styles.content}>
-        {isError && (
-          <Box sx={styles.errorContainer}>Failed to load permissions.</Box>
-        )}
-        {isFetching && !rows && (
-          <Box sx={styles.loadingContainer}>Loading permissions...</Box>
-        )}
+        {isError && <Box sx={styles.errorContainer}>Failed to load permissions.</Box>}
+        {isFetching && !rows && <Box sx={styles.loadingContainer}>Loading permissions...</Box>}
         {rows && (
           <PermissionMatrix
             rows={rows}
@@ -378,12 +369,12 @@ const RolesPage = memo(() => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -392,48 +383,48 @@ const RolesPage = memo(() => {
   );
 });
 
-RolesPage.displayName = "RolesPage";
+RolesPage.displayName = 'RolesPage';
 
 const styles = {
   tabs: ({ palette }) => ({
-    minHeight: "2.5rem",
-    "& .MuiTabs-indicator": {
+    minHeight: '2.5rem',
+    '& .MuiTabs-indicator': {
       backgroundColor: palette.text.secondary,
     },
   }),
   tab: ({ palette }) => ({
-    textTransform: "none",
-    minHeight: "2.5rem",
-    padding: "0.5rem 1rem",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    minHeight: '2.5rem',
+    padding: '0.5rem 1rem',
+    fontSize: '0.8125rem',
     fontWeight: 500,
     color: palette.text.metrics,
-    "&.Mui-selected": {
+    '&.Mui-selected': {
       color: palette.text.secondary,
     },
   }),
   content: {
     flex: 1,
     minHeight: 0,
-    display: "flex",
-    flexDirection: "column",
-    padding: "0 1.5rem 1rem",
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '0 1.5rem 1rem',
   },
   errorContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    padding: "3rem",
-    color: "error.main",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    padding: '3rem',
+    color: 'error.main',
   },
   loadingContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    padding: "3rem",
-    color: "text.metrics",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    padding: '3rem',
+    color: 'text.metrics',
   },
 };
 

@@ -1,14 +1,14 @@
 const CSS_COLOR_KEYWORDS = [
-  "transparent",
-  "none",
-  "inherit",
-  "initial",
-  "unset",
-  "green",
-  "red",
-  "blue",
-  "white",
-  "black",
+  'transparent',
+  'none',
+  'inherit',
+  'initial',
+  'unset',
+  'green',
+  'red',
+  'blue',
+  'white',
+  'black',
 ];
 
 /**
@@ -16,8 +16,8 @@ const CSS_COLOR_KEYWORDS = [
  * @param {string} value - The color string to validate
  * @returns {boolean} True if valid color
  */
-export const isValidColor = (value) => {
-  if (!value || typeof value !== "string") return false;
+export const isValidColor = value => {
+  if (!value || typeof value !== 'string') return false;
 
   if (isGradient(value)) return true;
 
@@ -40,6 +40,5 @@ export const isValidColor = (value) => {
  * @param {string} value - The color string to check
  * @returns {boolean} True if the value is a gradient
  */
-export const isGradient = (value) =>
-  typeof value === "string" &&
-  (value.startsWith("linear-gradient") || value.startsWith("radial-gradient"));
+export const isGradient = value =>
+  typeof value === 'string' && (value.startsWith('linear-gradient') || value.startsWith('radial-gradient'));

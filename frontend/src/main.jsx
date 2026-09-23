@@ -1,49 +1,49 @@
-import React, { memo, useEffect, useMemo } from "react";
-import ReactDOM from "react-dom/client";
-import { Provider, useDispatch, useSelector } from "react-redux";
-import io from "socket.io-client";
+import React, { memo, useEffect, useMemo } from 'react';
 
-import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import ReactDOM from 'react-dom/client';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import io from 'socket.io-client';
 
-import App from "./App";
-import getDesignTokens from "./MainTheme";
-import store, { setSocketConnected } from "./store";
-import { VITE_SERVER_URL, VITE_DEV_TOKEN } from "./utils/env";
+import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+
+import App from './App';
+import getDesignTokens from './MainTheme';
+import store, { setSocketConnected } from './store';
+import { VITE_DEV_TOKEN, VITE_SERVER_URL } from './utils/env';
 
 const ThemeWrapper = memo(({ children }) => {
-  const mode = useSelector((state) => state.settings.mode);
+  const mode = useSelector(state => state.settings.mode);
   const dispatch = useDispatch();
 
   const theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
 
   useEffect(() => {
     const socketServer = VITE_SERVER_URL
-      ? VITE_SERVER_URL.replace(/\/api\/v\d+\/?$/, "")
+      ? VITE_SERVER_URL.replace(/\/api\/v\d+\/?$/, '')
       : window.location.origin;
 
     const ioOptions = {
-      path: "/socket.io/",
+      path: '/socket.io/',
       reconnectionDelayMax: 2000,
       extraHeaders: {},
     };
 
-    if (VITE_DEV_TOKEN)
-      ioOptions.extraHeaders.Authorization = `Bearer ${VITE_DEV_TOKEN}`;
+    if (VITE_DEV_TOKEN) ioOptions.extraHeaders.Authorization = `Bearer ${VITE_DEV_TOKEN}`;
 
     const socketIo = io(socketServer, ioOptions);
 
-    socketIo.on("connect", () => {
+    socketIo.on('connect', () => {
       dispatch(setSocketConnected(true));
     });
 
-    socketIo.on("connect_error", () => {
+    socketIo.on('connect_error', () => {
       dispatch(setSocketConnected(false));
     });
 
-    socketIo.on("disconnect", () => {
+    socketIo.on('disconnect', () => {
       dispatch(setSocketConnected(false));
     });
 
@@ -55,14 +55,14 @@ const ThemeWrapper = memo(({ children }) => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        {children}
-      </LocalizationProvider>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>{children}</LocalizationProvider>
     </ThemeProvider>
   );
 });
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+ThemeWrapper.displayName = 'ThemeWrapper';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>
       <ThemeWrapper>

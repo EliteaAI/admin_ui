@@ -1,102 +1,101 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
+import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
+import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
+import BuildOutlined from '@mui/icons-material/BuildOutlined';
+import CableOutlined from '@mui/icons-material/CableOutlined';
+import HelpOutlineOutlined from '@mui/icons-material/HelpOutlineOutlined';
+import HttpOutlined from '@mui/icons-material/HttpOutlined';
+import PowerSettingsNewOutlined from '@mui/icons-material/PowerSettingsNewOutlined';
+import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
+import SmartToyOutlined from '@mui/icons-material/SmartToyOutlined';
+import SyncAltOutlined from '@mui/icons-material/SyncAltOutlined';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 
-import HttpOutlined from "@mui/icons-material/HttpOutlined";
-import CableOutlined from "@mui/icons-material/CableOutlined";
-import SyncAltOutlined from "@mui/icons-material/SyncAltOutlined";
-import SmartToyOutlined from "@mui/icons-material/SmartToyOutlined";
-import BuildOutlined from "@mui/icons-material/BuildOutlined";
-import AutoAwesomeOutlined from "@mui/icons-material/AutoAwesomeOutlined";
-import ScheduleOutlined from "@mui/icons-material/ScheduleOutlined";
-import AssignmentOutlined from "@mui/icons-material/AssignmentOutlined";
-import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
-import PowerSettingsNewOutlined from "@mui/icons-material/PowerSettingsNewOutlined";
-
-import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
 import {
+  GridTableBody,
   GridTableContainer,
   GridTableHeader,
-  GridTableBody,
-  GridTableRow,
   GridTablePagination,
-} from "@/components/GridTable";
+  GridTableRow,
+} from '@/components/GridTable';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
 
 const EVENT_TYPE_CONFIG = {
-  api: { icon: HttpOutlined, color: "#3b82f6", label: "API" },
-  socketio: { icon: CableOutlined, color: "#8b5cf6", label: "Socket.IO" },
-  rpc: { icon: SyncAltOutlined, color: "#6366f1", label: "RPC" },
-  agent: { icon: SmartToyOutlined, color: "#f59e0b", label: "Agent" },
-  tool: { icon: BuildOutlined, color: "#10b981", label: "Tool" },
-  llm: { icon: AutoAwesomeOutlined, color: "#ec4899", label: "LLM" },
-  schedule: { icon: ScheduleOutlined, color: "#f59e0b", label: "Schedule" },
+  api: { icon: HttpOutlined, color: '#3b82f6', label: 'API' },
+  socketio: { icon: CableOutlined, color: '#8b5cf6', label: 'Socket.IO' },
+  rpc: { icon: SyncAltOutlined, color: '#6366f1', label: 'RPC' },
+  agent: { icon: SmartToyOutlined, color: '#f59e0b', label: 'Agent' },
+  tool: { icon: BuildOutlined, color: '#10b981', label: 'Tool' },
+  llm: { icon: AutoAwesomeOutlined, color: '#ec4899', label: 'LLM' },
+  schedule: { icon: ScheduleOutlined, color: '#f59e0b', label: 'Schedule' },
   admin_task: {
     icon: AssignmentOutlined,
-    color: "#06b6d4",
-    label: "Admin Task",
+    color: '#06b6d4',
+    label: 'Admin Task',
   },
   lifecycle: {
     icon: PowerSettingsNewOutlined,
-    color: "#22c55e",
-    label: "Lifecycle",
+    color: '#22c55e',
+    label: 'Lifecycle',
   },
 };
 
 const DEFAULT_EVENT_CONFIG = {
   icon: HelpOutlineOutlined,
-  color: "#94a3b8",
-  label: "Unknown",
+  color: '#94a3b8',
+  label: 'Unknown',
 };
 
 const AUDIT_COLUMNS = [
-  { field: "timestamp", label: "Time", width: "9rem", sortable: true },
-  { field: "event_type", label: "Type", width: "3rem", sortable: true },
-  { field: "action", label: "Action", width: "minmax(0, 1fr)", sortable: true },
+  { field: 'timestamp', label: 'Time', width: '9rem', sortable: true },
+  { field: 'event_type', label: 'Type', width: '3rem', sortable: true },
+  { field: 'action', label: 'Action', width: 'minmax(0, 1fr)', sortable: true },
   {
-    field: "user_email",
-    label: "User",
-    width: "10rem",
+    field: 'user_email',
+    label: 'User',
+    width: '10rem',
     sortable: true,
     hideBelow: 800,
   },
   {
-    field: "status_code",
-    label: "Status",
-    width: "4rem",
+    field: 'status_code',
+    label: 'Status',
+    width: '4rem',
     sortable: true,
     hideBelow: 900,
   },
   {
-    field: "duration_ms",
-    label: "Duration",
-    width: "5.5rem",
+    field: 'duration_ms',
+    label: 'Duration',
+    width: '5.5rem',
     sortable: true,
     hideBelow: 900,
   },
   {
-    field: "project_id",
-    label: "Project",
-    width: "4.5rem",
+    field: 'project_id',
+    label: 'Project',
+    width: '4.5rem',
     sortable: true,
     hideBelow: 1000,
   },
 ];
 
 function formatTimestamp(value) {
-  if (!value) return "-";
+  if (!value) return '-';
   try {
     const d = new Date(value);
     return d.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
     });
   } catch {
     return String(value);
@@ -104,13 +103,13 @@ function formatTimestamp(value) {
 }
 
 function formatDuration(ms) {
-  if (ms == null) return "-";
-  if (ms < 1) return "<1ms";
+  if (ms == null) return '-';
+  if (ms < 1) return '<1ms';
   if (ms < 1000) return `${Math.round(ms)}ms`;
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-const AuditTrailTable = memo(function AuditTrailTable(props) {
+const AuditTrailTable = memo(props => {
   const {
     rows = [],
     total = 0,
@@ -126,12 +125,11 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
 
   const [hoveredRowId, setHoveredRowId] = useState(null);
 
-  const { visibleColumns, dataColumns, gridTemplateColumns } =
-    useResponsiveColumns({
-      columns: AUDIT_COLUMNS,
-      containerWidth: window.innerWidth,
-      showCheckbox: false,
-    });
+  const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
+    columns: AUDIT_COLUMNS,
+    containerWidth: window.innerWidth,
+    showCheckbox: false,
+  });
 
   const paginationProps = useMemo(
     () => ({
@@ -151,7 +149,7 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
 
   const renderCell = useCallback(
     (column, value, row) => {
-      if (column.field === "timestamp") {
+      if (column.field === 'timestamp') {
         return (
           <Typography
             variant="bodySmall"
@@ -163,24 +161,26 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
         );
       }
 
-      if (column.field === "event_type") {
+      if (column.field === 'event_type') {
         const config = EVENT_TYPE_CONFIG[value] || DEFAULT_EVENT_CONFIG;
         const IconComponent = config.icon;
         return (
-          <Tooltip title={config.label} placement="top" arrow>
+          <Tooltip
+            title={config.label}
+            placement="top"
+            arrow
+          >
             <Box sx={styles.iconCell}>
-              <IconComponent
-                sx={{ fontSize: "1.125rem", color: config.color }}
-              />
+              <IconComponent sx={{ fontSize: '1.125rem', color: config.color }} />
             </Box>
           </Tooltip>
         );
       }
 
-      if (column.field === "action") {
+      if (column.field === 'action') {
         const isError = row.is_error;
         const hasTrace = row.trace_id;
-        let display = value || "-";
+        let display = value || '-';
         if (row.tool_name || row.model_name) {
           display = `${value} [${row.tool_name || row.model_name}]`;
         }
@@ -193,13 +193,11 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
               variant="bodyMedium"
               sx={{
                 ...styles.cellText,
-                color: isError ? "error.main" : "text.secondary",
-                cursor: hasTrace ? "pointer" : "default",
-                "&:hover": hasTrace ? { textDecoration: "underline" } : {},
+                color: isError ? 'error.main' : 'text.secondary',
+                cursor: hasTrace ? 'pointer' : 'default',
+                '&:hover': hasTrace ? { textDecoration: 'underline' } : {},
               }}
-              onClick={
-                hasTrace ? () => onTraceClick?.(row.trace_id) : undefined
-              }
+              onClick={hasTrace ? () => onTraceClick?.(row.trace_id) : undefined}
             >
               {display}
             </Typography>
@@ -207,15 +205,15 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
         );
       }
 
-      if (column.field === "status_code") {
-        if (value == null) return "-";
+      if (column.field === 'status_code') {
+        if (value == null) return '-';
         const isErr = value >= 400;
         return (
           <Typography
             variant="bodyMedium"
             sx={{
               ...styles.cellText,
-              color: isErr ? "error.main" : "text.secondary",
+              color: isErr ? 'error.main' : 'text.secondary',
             }}
           >
             {value}
@@ -223,7 +221,7 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
         );
       }
 
-      if (column.field === "duration_ms") {
+      if (column.field === 'duration_ms') {
         return (
           <Typography
             variant="bodyMedium"
@@ -241,7 +239,7 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
           color="text.secondary"
           sx={styles.cellText}
         >
-          {value != null ? String(value) : "-"}
+          {value != null ? String(value) : '-'}
         </Typography>
       );
     },
@@ -269,7 +267,7 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
         />
 
         <GridTableBody>
-          {rows.map((row) => (
+          {rows.map(row => (
             <GridTableRow
               key={row.id}
               row={row}
@@ -291,36 +289,38 @@ const AuditTrailTable = memo(function AuditTrailTable(props) {
   );
 });
 
+AuditTrailTable.displayName = 'AuditTrailTable';
+
 const styles = {
   tableContainer: {
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
-    position: "relative",
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
   },
   loadingOverlay: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.04)",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
     zIndex: 2,
-    pointerEvents: "none",
+    pointerEvents: 'none',
   },
   cellText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   iconCell: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 };
 

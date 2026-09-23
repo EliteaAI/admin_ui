@@ -1,40 +1,40 @@
-import { memo, useCallback, useMemo } from "react";
-import { Box, Divider, Switch, TextField, Typography } from "@mui/material";
-import LinksEditor from "@/components/SchemaForm/LinksEditor";
-import ResourceVersionRow from "@/components/SchemaForm/ResourceVersionRow";
+import { memo, useCallback, useMemo } from 'react';
 
-const HelpCenterCard = memo((props) => {
+import { Box, Divider, Switch, TextField, Typography } from '@mui/material';
+
+import LinksEditor from '@/components/SchemaForm/LinksEditor';
+import ResourceVersionRow from '@/components/SchemaForm/ResourceVersionRow';
+
+const HelpCenterCard = memo(props => {
   const { card, values, onChange, systemInfo } = props;
 
-  const key = (field) => `resources_${card.id}_${field}`;
-  const getCardValue = (field, defaultValue) =>
-    values?.[key(field)] ?? defaultValue;
+  const key = useCallback(field => `resources_${card.id}_${field}`, [card.id]);
+  const getCardValue = (field, defaultValue) => values?.[key(field)] ?? defaultValue;
 
-  const enabled = getCardValue("enabled", true);
-  const title = getCardValue("title", "");
-  const description = getCardValue("description", "");
-  const links = getCardValue("links", []);
-  const versionValue = getCardValue("version", "");
-  const upgradeDateValue = getCardValue("upgrade_date", "");
+  const enabled = getCardValue('enabled', true);
+  const title = getCardValue('title', '');
+  const description = getCardValue('description', '');
+  const links = getCardValue('links', []);
+  const versionValue = getCardValue('version', '');
+  const upgradeDateValue = getCardValue('upgrade_date', '');
 
   const handleToggle = () => {
-    onChange(key("enabled"), !enabled);
+    onChange(key('enabled'), !enabled);
   };
 
-  const handleTitleChange = (event) => {
-    onChange(key("title"), event.target.value);
+  const handleTitleChange = event => {
+    onChange(key('title'), event.target.value);
   };
 
-  const handleDescriptionChange = (event) => {
-    onChange(key("description"), event.target.value);
+  const handleDescriptionChange = event => {
+    onChange(key('description'), event.target.value);
   };
 
   const handleLinksChange = useCallback(
-    (newLinks) => {
-      onChange(key("links"), newLinks);
+    newLinks => {
+      onChange(key('links'), newLinks);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [card.id, onChange],
+    [key, onChange],
   );
 
   const versionRows = useMemo(() => {
@@ -43,19 +43,19 @@ const HelpCenterCard = memo((props) => {
     const rows = [];
 
     rows.push({
-      id: "version",
-      label: "Release Version",
+      id: 'version',
+      label: 'Release Version',
       value: versionValue,
       labelKey: null,
-      valueKey: key("version"),
+      valueKey: key('version'),
     });
 
     rows.push({
-      id: "upgrade_date",
-      label: "Released on",
+      id: 'upgrade_date',
+      label: 'Released on',
       value: upgradeDateValue,
       labelKey: null,
-      valueKey: key("upgrade_date"),
+      valueKey: key('upgrade_date'),
     });
 
     for (const plugin of systemInfo?.plugins ?? []) {
@@ -69,37 +69,47 @@ const HelpCenterCard = memo((props) => {
     }
 
     return rows;
-  }, [
-    card.hasVersionLabels,
-    card.id,
-    systemInfo,
-    versionValue,
-    upgradeDateValue,
-  ]);
+  }, [card.hasVersionLabels, key, systemInfo, versionValue, upgradeDateValue]);
 
   return (
     <>
       <Box sx={styles.card}>
         <Box sx={styles.cardHeader}>
           <Box sx={styles.cardLabel}>
-            <Typography variant="subtitle1" sx={styles.cardTitle}>
+            <Typography
+              variant="subtitle1"
+              sx={styles.cardTitle}
+            >
               {card.label}
             </Typography>
-            <Typography variant="caption" sx={styles.cardHint}>
+            <Typography
+              variant="caption"
+              sx={styles.cardHint}
+            >
               {card.hint}
             </Typography>
           </Box>
-          <Switch checked={enabled} onChange={handleToggle} size="small" />
+          <Switch
+            checked={enabled}
+            onChange={handleToggle}
+            size="small"
+          />
         </Box>
 
         {card.hasContent && (
           <>
             <Box sx={styles.fieldSection}>
               <Box sx={styles.fieldHeader}>
-                <Typography variant="subtitle1" sx={styles.fieldTitle}>
+                <Typography
+                  variant="subtitle1"
+                  sx={styles.fieldTitle}
+                >
                   Card Title
                 </Typography>
-                <Typography variant="caption" sx={styles.fieldHint}>
+                <Typography
+                  variant="caption"
+                  sx={styles.fieldHint}
+                >
                   Text displayed as the card heading on the Help Center page.
                 </Typography>
               </Box>
@@ -115,10 +125,16 @@ const HelpCenterCard = memo((props) => {
 
             <Box sx={styles.fieldSection}>
               <Box sx={styles.fieldHeader}>
-                <Typography variant="body2" sx={styles.fieldTitle}>
+                <Typography
+                  variant="body2"
+                  sx={styles.fieldTitle}
+                >
                   Card Description
                 </Typography>
-                <Typography variant="caption" sx={styles.fieldHint}>
+                <Typography
+                  variant="caption"
+                  sx={styles.fieldHint}
+                >
                   Subtitle shown below the title on the Help Center page.
                 </Typography>
               </Box>
@@ -135,14 +151,23 @@ const HelpCenterCard = memo((props) => {
             {card.hasLinks && (
               <Box sx={styles.fieldSection}>
                 <Box sx={styles.fieldHeader}>
-                  <Typography variant="body2" sx={styles.fieldTitle}>
+                  <Typography
+                    variant="body2"
+                    sx={styles.fieldTitle}
+                  >
                     Links
                   </Typography>
-                  <Typography variant="caption" sx={styles.fieldHint}>
+                  <Typography
+                    variant="caption"
+                    sx={styles.fieldHint}
+                  >
                     Links displayed inside the card body.
                   </Typography>
                 </Box>
-                <LinksEditor value={links} onChange={handleLinksChange} />
+                <LinksEditor
+                  value={links}
+                  onChange={handleLinksChange}
+                />
               </Box>
             )}
           </>
@@ -152,30 +177,33 @@ const HelpCenterCard = memo((props) => {
       {versionRows.length > 0 && (
         <Box sx={styles.versionCard}>
           <Box sx={styles.versionHeader}>
-            <Typography variant="body2" sx={styles.versionTitle}>
+            <Typography
+              variant="body2"
+              sx={styles.versionTitle}
+            >
               System Information
             </Typography>
-            <Typography variant="caption" sx={styles.versionHint}>
-              Version and date are editable. Plugin versions are sourced from
-              the runtime environment.
+            <Typography
+              variant="caption"
+              sx={styles.versionHint}
+            >
+              Version and date are editable. Plugin versions are sourced from the runtime environment.
             </Typography>
           </Box>
           <Box sx={styles.versionContent}>
             {versionRows
-              .filter((r) => r.valueKey)
-              .map((row) => (
+              .filter(r => r.valueKey)
+              .map(row => (
                 <ResourceVersionRow
                   key={row.id}
                   row={row}
                   onChange={onChange}
                 />
               ))}
-            {versionRows.some((r) => !r.valueKey) && (
-              <Divider sx={{ my: "0.25rem" }} />
-            )}
+            {versionRows.some(r => !r.valueKey) && <Divider sx={{ my: '0.25rem' }} />}
             {versionRows
-              .filter((r) => !r.valueKey)
-              .map((row) => (
+              .filter(r => !r.valueKey)
+              .map(row => (
                 <ResourceVersionRow
                   key={row.id}
                   row={row}
@@ -189,86 +217,84 @@ const HelpCenterCard = memo((props) => {
   );
 });
 
-HelpCenterCard.displayName = "HelpCenterCard";
+HelpCenterCard.displayName = 'HelpCenterCard';
 
 const styles = {
   card: ({ palette }) => ({
     border: `1px solid ${palette.border.table}`,
-    borderRadius: "0.5rem",
-    overflow: "hidden",
+    borderRadius: '0.5rem',
+    overflow: 'hidden',
   }),
   cardHeader: ({ palette }) => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "1rem 1.25rem",
-    backgroundColor:
-      palette.background.tabPanel || palette.background.userInputBackground,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '1rem 1.25rem',
+    backgroundColor: palette.background.tabPanel || palette.background.userInputBackground,
   }),
   cardLabel: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.125rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.125rem',
   },
   cardTitle: ({ palette }) => ({
     color: palette.text.secondary,
     fontWeight: 600,
-    fontSize: "0.875rem",
+    fontSize: '0.875rem',
   }),
   cardHint: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.75rem",
+    fontSize: '0.75rem',
   }),
   fieldSection: ({ palette }) => ({
-    padding: "1rem 1.25rem",
+    padding: '1rem 1.25rem',
     borderTop: `1px solid ${palette.border.table}`,
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.625rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.625rem',
   }),
   fieldHeader: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.125rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.125rem',
   },
   fieldTitle: {
     fontWeight: 600,
-    fontSize: "0.875rem",
+    fontSize: '0.875rem',
   },
   fieldHint: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.75rem",
+    fontSize: '0.75rem',
   }),
   textField: {
-    "& .MuiInputBase-input": { fontSize: "0.8125rem" },
+    '& .MuiInputBase-input': { fontSize: '0.8125rem' },
   },
   versionCard: ({ palette }) => ({
     border: `1px solid ${palette.border.table}`,
-    borderRadius: "0.5rem",
-    overflow: "hidden",
+    borderRadius: '0.5rem',
+    overflow: 'hidden',
   }),
   versionHeader: ({ palette }) => ({
-    padding: "1rem 1.25rem",
-    backgroundColor:
-      palette.background.tabPanel || palette.background.userInputBackground,
+    padding: '1rem 1.25rem',
+    backgroundColor: palette.background.tabPanel || palette.background.userInputBackground,
     borderBottom: `1px solid ${palette.border.table}`,
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.125rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.125rem',
   }),
   versionTitle: {
     fontWeight: 600,
-    fontSize: "0.875rem",
+    fontSize: '0.875rem',
   },
   versionHint: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.75rem",
+    fontSize: '0.75rem',
   }),
   versionContent: ({ palette }) => ({
-    display: "flex",
-    flexDirection: "column",
-    padding: "0.75rem 1.25rem",
-    gap: "0.5rem",
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '0.75rem 1.25rem',
+    gap: '0.5rem',
     backgroundColor: palette.background.default,
   }),
 };

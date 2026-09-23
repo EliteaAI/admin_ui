@@ -1,17 +1,10 @@
-import { adminApi } from "./adminApi";
+import { adminApi } from './adminApi';
 
 export const budgetsApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     projectBudgetList: build.query({
-      query: ({
-        limit = 20,
-        offset = 0,
-        search,
-        sort_by,
-        sort_order,
-        project_type,
-      } = {}) => ({
-        url: "/elitea_core/project_budgets/administration",
+      query: ({ limit = 20, offset = 0, search, sort_by, sort_order, project_type } = {}) => ({
+        url: '/elitea_core/project_budgets/administration',
         params: {
           limit,
           offset,
@@ -21,19 +14,13 @@ export const budgetsApi = adminApi.injectEndpoints({
           ...(project_type && { project_type }),
         },
       }),
-      providesTags: ["Budgets"],
+      providesTags: ['Budgets'],
     }),
 
     projectBudgetUpdate: build.mutation({
-      query: ({
-        projectId,
-        monthly_limit,
-        enabled,
-        currency = "USD",
-        member_default_limit,
-      }) => ({
+      query: ({ projectId, monthly_limit, enabled, currency = 'USD', member_default_limit }) => ({
         url: `/elitea_core/project_budget/administration/${projectId}/budget`,
-        method: "PUT",
+        method: 'PUT',
         body: {
           monthly_limit,
           enabled,
@@ -43,7 +30,7 @@ export const budgetsApi = adminApi.injectEndpoints({
           ...(member_default_limit !== undefined && { member_default_limit }),
         },
       }),
-      invalidatesTags: ["Budgets"],
+      invalidatesTags: ['Budgets'],
     }),
 
     userBudgetList: build.query({
@@ -51,22 +38,16 @@ export const budgetsApi = adminApi.injectEndpoints({
         url: `/elitea_core/user_budgets/administration/${projectId}`,
         params,
       }),
-      providesTags: ["Budgets"],
+      providesTags: ['Budgets'],
     }),
 
     userBudgetUpdate: build.mutation({
-      query: ({
-        projectId,
-        userId,
-        monthly_limit,
-        enabled,
-        currency = "USD",
-      }) => ({
+      query: ({ projectId, userId, monthly_limit, enabled, currency = 'USD' }) => ({
         url: `/elitea_core/user_budget/administration/${projectId}/user_budget/${userId}`,
-        method: "PUT",
+        method: 'PUT',
         body: { monthly_limit, enabled, currency },
       }),
-      invalidatesTags: ["Budgets"],
+      invalidatesTags: ['Budgets'],
     }),
   }),
 });

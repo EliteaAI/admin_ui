@@ -1,7 +1,7 @@
-import { adminApi } from "./adminApi";
+import { adminApi } from './adminApi';
 
 export const auditTrailApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     auditTrailList: build.query({
       query: ({
         limit = 50,
@@ -39,20 +39,11 @@ export const auditTrailApi = adminApi.injectEndpoints({
           ...(duration_max != null && { duration_max }),
         },
       }),
-      providesTags: ["AuditTrail"],
+      providesTags: ['AuditTrail'],
     }),
 
     auditHeatmap: build.query({
-      query: ({
-        date_from,
-        date_to,
-        search,
-        event_type,
-        is_error,
-        user_id,
-        project_id,
-        trace_id,
-      } = {}) => ({
+      query: ({ date_from, date_to, search, event_type, is_error, user_id, project_id, trace_id } = {}) => ({
         url: `/elitea_core/audit_heatmap/administration`,
         params: {
           ...(date_from && { date_from }),
@@ -65,7 +56,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
           ...(trace_id && { trace_id }),
         },
       }),
-      providesTags: ["AuditHeatmap"],
+      providesTags: ['AuditHeatmap'],
     }),
 
     auditTraceList: build.query({
@@ -103,20 +94,11 @@ export const auditTrailApi = adminApi.injectEndpoints({
           ...(duration_max != null && { duration_max }),
         },
       }),
-      providesTags: ["AuditTraceList"],
+      providesTags: ['AuditTraceList'],
     }),
 
     auditTraceHeatmap: build.query({
-      query: ({
-        date_from,
-        date_to,
-        search,
-        event_type,
-        is_error,
-        user_id,
-        project_id,
-        trace_id,
-      } = {}) => ({
+      query: ({ date_from, date_to, search, event_type, is_error, user_id, project_id, trace_id } = {}) => ({
         url: `/elitea_core/audit_trace_heatmap/administration`,
         params: {
           ...(date_from && { date_from }),
@@ -129,7 +111,7 @@ export const auditTrailApi = adminApi.injectEndpoints({
           ...(trace_id && { trace_id }),
         },
       }),
-      providesTags: ["AuditTraceHeatmap"],
+      providesTags: ['AuditTraceHeatmap'],
     }),
   }),
 });

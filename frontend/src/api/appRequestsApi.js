@@ -1,7 +1,7 @@
-import { adminApi } from "./adminApi";
+import { adminApi } from './adminApi';
 
 export const appRequestsApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     appRequestsList: build.query({
       query: ({
         limit = 20,
@@ -14,7 +14,7 @@ export const appRequestsApi = adminApi.injectEndpoints({
         sort_by,
         sort_order,
       } = {}) => ({
-        url: "admin/moderation_statuses/administration",
+        url: 'admin/moderation_statuses/administration',
         params: {
           limit,
           offset,
@@ -27,13 +27,13 @@ export const appRequestsApi = adminApi.injectEndpoints({
           ...(sort_order && { sort_order }),
         },
       }),
-      providesTags: ["AppRequests"],
+      providesTags: ['AppRequests'],
     }),
 
     appRequestUpdate: build.mutation({
       query: ({ id, status, rejection_comment = null, meta = {} }) => ({
-        url: "admin/moderation_status/administration",
-        method: "PUT",
+        url: 'admin/moderation_status/administration',
+        method: 'PUT',
         body: {
           id,
           status,
@@ -41,10 +41,9 @@ export const appRequestsApi = adminApi.injectEndpoints({
           meta,
         },
       }),
-      invalidatesTags: ["AppRequests"],
+      invalidatesTags: ['AppRequests'],
     }),
   }),
 });
 
-export const { useAppRequestsListQuery, useAppRequestUpdateMutation } =
-  appRequestsApi;
+export const { useAppRequestsListQuery, useAppRequestUpdateMutation } = appRequestsApi;

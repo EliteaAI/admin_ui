@@ -1,60 +1,56 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
-import IconButton from "@mui/material/IconButton";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
-import Tooltip from "@mui/material/Tooltip";
-import DeleteIcon from "@mui/icons-material/Delete";
-import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
+import DeleteIcon from '@mui/icons-material/Delete';
+import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Tooltip from '@mui/material/Tooltip';
 
-import DrawerPage from "@/components/DrawerPage";
-import DrawerPageHeader from "@/components/DrawerPageHeader";
-import {
-  useProjectListQuery,
-  useLazyProjectListQuery,
-  useProjectSuspendMutation,
-} from "@/api/projectsApi";
-import { useDebounceValue } from "@/hooks/useDebounceValue";
-import { usePageTitle } from "@/hooks/usePageTitle";
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { PERMISSIONS } from "@/constants/permissions";
-import { exportToExcel } from "@/utils/exportToExcel";
+import { useLazyProjectListQuery, useProjectListQuery, useProjectSuspendMutation } from '@/api/projectsApi';
+import DrawerPage from '@/components/DrawerPage';
+import DrawerPageHeader from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { useDebounceValue } from '@/hooks/useDebounceValue';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { exportToExcel } from '@/utils/exportToExcel';
 
-import ProjectsTable from "./ProjectsTable";
-import DeleteProjectDialog from "./DeleteProjectDialog";
-import CreateProjectDialog from "./CreateProjectDialog";
-import AddProjectAdminDialog from "./AddProjectAdminDialog";
-import ProjectActivityDrawer from "./ProjectActivityDrawer";
-import BackupProjectDialog from "./BackupProjectDialog";
-import RestoreProjectDialog from "./RestoreProjectDialog";
+import AddProjectAdminDialog from './AddProjectAdminDialog';
+import BackupProjectDialog from './BackupProjectDialog';
+import CreateProjectDialog from './CreateProjectDialog';
+import DeleteProjectDialog from './DeleteProjectDialog';
+import ProjectActivityDrawer from './ProjectActivityDrawer';
+import ProjectsTable from './ProjectsTable';
+import RestoreProjectDialog from './RestoreProjectDialog';
 
-const PROJECT_TYPES = ["team", "personal"];
+const PROJECT_TYPES = ['team', 'personal'];
 const EXPORT_COLUMNS = [
-  { header: "Name", key: "name" },
-  { header: "ID", key: "id" },
-  { header: "Owners", key: "owner_name" },
+  { header: 'Name', key: 'name' },
+  { header: 'ID', key: 'id' },
+  { header: 'Owners', key: 'owner_name' },
   {
-    header: "Admins",
-    key: "admin_names",
-    transform: (v) => (Array.isArray(v) ? v.join(", ") : v || ""),
+    header: 'Admins',
+    key: 'admin_names',
+    transform: v => (Array.isArray(v) ? v.join(', ') : v || ''),
   },
-  { header: "Status", key: "status" },
+  { header: 'Status', key: 'status' },
 ];
 
 const ProjectsPage = memo(() => {
-  usePageTitle("Projects");
+  usePageTitle('Projects');
   const { hasPermission } = useCheckPermission();
 
   const [activeTab, setActiveTab] = useState(0);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const debouncedSearch = useDebounceValue(search, 300);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteIds, setDeleteIds] = useState([]);
@@ -76,20 +72,11 @@ const ProjectsPage = memo(() => {
 
   const projectType = PROJECT_TYPES[activeTab];
 
-  const canEdit = useMemo(
-    () => hasPermission(PERMISSIONS.projects.edit),
-    [hasPermission],
-  );
+  const canEdit = useMemo(() => hasPermission(PERMISSIONS.projects.edit), [hasPermission]);
 
-  const canBackup = useMemo(
-    () => hasPermission(PERMISSIONS.projects.backup.download),
-    [hasPermission],
-  );
+  const canBackup = useMemo(() => hasPermission(PERMISSIONS.projects.backup.download), [hasPermission]);
 
-  const canRestore = useMemo(
-    () => hasPermission(PERMISSIONS.projects.restore.apply),
-    [hasPermission],
-  );
+  const canRestore = useMemo(() => hasPermission(PERMISSIONS.projects.restore.apply), [hasPermission]);
 
   const { data, isFetching, isError } = useProjectListQuery(
     {
@@ -110,40 +97,40 @@ const ProjectsPage = memo(() => {
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
     setPage(0);
-    setSearch("");
+    setSearch('');
     setSelectedIds([]);
   }, []);
 
-  const handleSearchChange = useCallback((value) => {
+  const handleSearchChange = useCallback(value => {
     setSearch(value);
     setPage(0);
     setSelectedIds([]);
   }, []);
 
-  const handleSort = useCallback((field) => {
-    setSortBy((prev) => {
+  const handleSort = useCallback(field => {
+    setSortBy(prev => {
       if (prev === field) {
-        setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
+        setSortOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
         return prev;
       }
-      setSortOrder("asc");
+      setSortOrder('asc');
       return field;
     });
     setPage(0);
   }, []);
 
-  const handlePageChange = useCallback((newPage) => {
+  const handlePageChange = useCallback(newPage => {
     setPage(newPage);
     setSelectedIds([]);
   }, []);
 
-  const handlePageSizeChange = useCallback((newPageSize) => {
+  const handlePageSizeChange = useCallback(newPageSize => {
     setPageSize(newPageSize);
     setPage(0);
     setSelectedIds([]);
   }, []);
 
-  const handleDelete = useCallback((ids) => {
+  const handleDelete = useCallback(ids => {
     setDeleteIds(ids);
     setDeleteOpen(true);
   }, []);
@@ -163,7 +150,7 @@ const ProjectsPage = memo(() => {
   }, []);
 
   // Add admin handlers
-  const handleAddAdmin = useCallback((project) => {
+  const handleAddAdmin = useCallback(project => {
     setAddAdminProject(project);
     setAddAdminOpen(true);
   }, []);
@@ -175,14 +162,14 @@ const ProjectsPage = memo(() => {
 
   // Suspend handler
   const handleSuspend = useCallback(
-    async (project) => {
-      const newSuspended = project.status !== "suspended";
+    async project => {
+      const newSuspended = project.status !== 'suspended';
       try {
         await suspendProject({
           projectId: project.id,
           suspended: newSuspended,
         }).unwrap();
-      } catch (err) {
+      } catch {
         // Error handling via RTK Query cache invalidation
       }
     },
@@ -193,35 +180,32 @@ const ProjectsPage = memo(() => {
     setExporting(true);
 
     try {
-      const fetchAll = async (projectType) => {
+      const fetchAll = async type => {
         const first = await fetchProjects({
           limit: 1,
           offset: 0,
-          project_type: projectType,
+          project_type: type,
         }).unwrap();
 
-        const total = first?.total ?? 0;
+        const totalCount = first?.total ?? 0;
 
-        if (total === 0) return [];
+        if (totalCount === 0) return [];
 
         const result = await fetchProjects({
-          limit: total,
+          limit: totalCount,
           offset: 0,
-          project_type: projectType,
+          project_type: type,
         }).unwrap();
 
         return result?.rows ?? [];
       };
 
-      const [teamRows, personalRows] = await Promise.all([
-        fetchAll("team"),
-        fetchAll("personal"),
-      ]);
+      const [teamRows, personalRows] = await Promise.all([fetchAll('team'), fetchAll('personal')]);
 
-      await exportToExcel("Projects.xlsx", [
-        { sheetName: "Team Projects", columns: EXPORT_COLUMNS, rows: teamRows },
+      await exportToExcel('Projects.xlsx', [
+        { sheetName: 'Team Projects', columns: EXPORT_COLUMNS, rows: teamRows },
         {
-          sheetName: "Personal Projects",
+          sheetName: 'Personal Projects',
           columns: EXPORT_COLUMNS,
           rows: personalRows,
         },
@@ -234,7 +218,7 @@ const ProjectsPage = memo(() => {
   }, [fetchProjects]);
 
   // Activity drawer handlers
-  const handleActivity = useCallback((project) => {
+  const handleActivity = useCallback(project => {
     setActivityProject(project);
     setActivityOpen(true);
   }, []);
@@ -244,7 +228,7 @@ const ProjectsPage = memo(() => {
     setActivityProject(null);
   }, []);
 
-  const handleBackup = useCallback((project) => {
+  const handleBackup = useCallback(project => {
     setBackupProject(project);
     setBackupOpen(true);
   }, []);
@@ -254,7 +238,7 @@ const ProjectsPage = memo(() => {
     setBackupProject(null);
   }, []);
 
-  const handleRestore = useCallback((project) => {
+  const handleRestore = useCallback(project => {
     setRestoreProject(project);
     setRestoreOpen(true);
   }, []);
@@ -277,7 +261,10 @@ const ProjectsPage = memo(() => {
           Delete ({selectedIds.length})
         </Button>
       )}
-      <Tooltip title="Export to Excel" placement="top">
+      <Tooltip
+        title="Export to Excel"
+        placement="top"
+      >
         <Box component="span">
           <IconButton
             disabled={exporting}
@@ -286,7 +273,10 @@ const ProjectsPage = memo(() => {
             sx={styles.exportButton}
           >
             {exporting ? (
-              <CircularProgress size={16} sx={{ color: "icon.fill.send" }} />
+              <CircularProgress
+                size={16}
+                sx={{ color: 'icon.fill.send' }}
+              />
             ) : (
               <FileDownloadOutlined sx={styles.exportIcon} />
             )}
@@ -296,13 +286,23 @@ const ProjectsPage = memo(() => {
     </>
   );
 
-  const teamLabel = `Team Projects${counts.team != null ? ` (${counts.team})` : ""}`;
-  const personalLabel = `Personal Projects${counts.personal != null ? ` (${counts.personal})` : ""}`;
+  const teamLabel = `Team Projects${counts.team != null ? ` (${counts.team})` : ''}`;
+  const personalLabel = `Personal Projects${counts.personal != null ? ` (${counts.personal})` : ''}`;
 
   const tabsElement = (
-    <Tabs value={activeTab} onChange={handleTabChange} sx={styles.tabs}>
-      <Tab label={teamLabel} sx={styles.tab} />
-      <Tab label={personalLabel} sx={styles.tab} />
+    <Tabs
+      value={activeTab}
+      onChange={handleTabChange}
+      sx={styles.tabs}
+    >
+      <Tab
+        label={teamLabel}
+        sx={styles.tab}
+      />
+      <Tab
+        label={personalLabel}
+        sx={styles.tab}
+      />
     </Tabs>
   );
 
@@ -316,7 +316,7 @@ const ProjectsPage = memo(() => {
           search={search}
           onSearchChange={handleSearchChange}
           searchPlaceholder="Search by Name, ID and Owner"
-          searchInputSx={{ "& input::placeholder": { fontSize: "0.75rem" } }}
+          searchInputSx={{ '& input::placeholder': { fontSize: '0.75rem' } }}
           showAddButton={canEdit}
           onAdd={handleCreateOpen}
           addButtonTooltip="Create project"
@@ -355,7 +355,10 @@ const ProjectsPage = memo(() => {
         onClose={handleDeleteClose}
         projectIds={deleteIds}
       />
-      <CreateProjectDialog open={createOpen} onClose={handleCreateClose} />
+      <CreateProjectDialog
+        open={createOpen}
+        onClose={handleCreateClose}
+      />
       <AddProjectAdminDialog
         open={addAdminOpen}
         onClose={handleAddAdminClose}
@@ -380,59 +383,59 @@ const ProjectsPage = memo(() => {
   );
 });
 
-ProjectsPage.displayName = "ProjectsPage";
+ProjectsPage.displayName = 'ProjectsPage';
 
 const styles = {
   tabs: ({ palette }) => ({
-    minHeight: "2.5rem",
-    "& .MuiTabs-indicator": {
+    minHeight: '2.5rem',
+    '& .MuiTabs-indicator': {
       backgroundColor: palette.text.secondary,
     },
   }),
   tab: ({ palette }) => ({
-    textTransform: "none",
-    minHeight: "2.5rem",
-    padding: "0.5rem 1rem",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    minHeight: '2.5rem',
+    padding: '0.5rem 1rem',
+    fontSize: '0.8125rem',
     fontWeight: 500,
     color: palette.text.metrics,
-    "&.Mui-selected": {
+    '&.Mui-selected': {
       color: palette.text.secondary,
     },
   }),
   tableContainer: {
     flex: 1,
     minHeight: 0,
-    display: "flex",
-    maxWidth: "100%",
+    display: 'flex',
+    maxWidth: '100%',
   },
   errorContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    width: "100%",
-    padding: "3rem",
-    color: "error.main",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    width: '100%',
+    padding: '3rem',
+    color: 'error.main',
   },
   exportButton: ({ palette }) => ({
-    minWidth: "1.75rem",
-    width: "1.75rem",
-    height: "1.75rem",
-    padding: ".5rem",
+    minWidth: '1.75rem',
+    width: '1.75rem',
+    height: '1.75rem',
+    padding: '.5rem',
     backgroundColor: palette.background.button.primary.default,
-    borderRadius: "50%",
-    "&:hover": {
+    borderRadius: '50%',
+    '&:hover': {
       backgroundColor: palette.background.button.primary.hover,
     },
-    "&.Mui-disabled": {
+    '&.Mui-disabled': {
       backgroundColor: palette.background.button.primary.default,
       opacity: 0.6,
     },
   }),
   exportIcon: ({ palette }) => ({
-    width: "1rem",
-    height: "1rem",
+    width: '1rem',
+    height: '1rem',
     fill: palette.icon.fill.send,
   }),
 };

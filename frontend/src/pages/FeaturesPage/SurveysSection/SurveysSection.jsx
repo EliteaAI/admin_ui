@@ -1,28 +1,29 @@
-import { memo, useCallback, useEffect, useState } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogActions from "@mui/material/DialogActions";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { memo, useCallback, useEffect, useState } from 'react';
+
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Snackbar from '@mui/material/Snackbar';
 
 import {
-  useSurveysListQuery,
   useSurveyCreateMutation,
-  useSurveyUpdateMutation,
   useSurveyDeleteMutation,
-} from "@/api/surveysApi";
+  useSurveyUpdateMutation,
+  useSurveysListQuery,
+} from '@/api/surveysApi';
 
-import SurveysTable from "./SurveysTable";
-import SurveyEditForm from "./SurveyEditForm";
+import SurveyEditForm from './SurveyEditForm';
+import SurveysTable from './SurveysTable';
 
 const NEW_SURVEY = {
-  name: "",
-  description: "",
+  name: '',
+  description: '',
   enabled: false,
   dismissible: false,
   questions: [],
@@ -32,7 +33,7 @@ const NEW_SURVEY = {
  * SurveysSection – used inside FeaturesPage as a sub-section.
  * Shows table of surveys; clicking a row opens an edit form.
  */
-const SurveysSection = memo((props) => {
+const SurveysSection = memo(props => {
   const { addRef } = props;
 
   const { data: surveys = [], isFetching } = useSurveysListQuery();
@@ -48,11 +49,11 @@ const SurveysSection = memo((props) => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
 
-  const handleRowClick = useCallback((row) => {
+  const handleRowClick = useCallback(row => {
     setEditingSurvey(structuredClone(row));
     setIsNew(false);
   }, []);
@@ -76,7 +77,7 @@ const SurveysSection = memo((props) => {
     };
   }, [addRef, handleAddNew]);
 
-  const handleDeleteRequest = useCallback((row) => {
+  const handleDeleteRequest = useCallback(row => {
     setDeleteTarget(row);
   }, []);
 
@@ -93,14 +94,14 @@ const SurveysSection = memo((props) => {
       }
       setSnackbar({
         open: true,
-        message: "Survey deleted",
-        severity: "success",
+        message: 'Survey deleted',
+        severity: 'success',
       });
     } catch (err) {
       setSnackbar({
         open: true,
-        message: `Failed to delete: ${err?.data?.error || err?.message || "Unknown error"}`,
-        severity: "error",
+        message: `Failed to delete: ${err?.data?.error || err?.message || 'Unknown error'}`,
+        severity: 'error',
       });
     }
   }, [deleteTarget, deleteSurvey, editingSurvey]);
@@ -110,16 +111,16 @@ const SurveysSection = memo((props) => {
   }, []);
 
   const handleSave = useCallback(
-    async (surveyData) => {
+    async surveyData => {
       const payload = {
         name: surveyData.name,
         description: surveyData.description || null,
         enabled: surveyData.enabled ?? false,
         dismissible: surveyData.dismissible ?? false,
-        questions: (surveyData.questions || []).map((q) => ({
+        questions: (surveyData.questions || []).map(q => ({
           ...(q.id ? { id: q.id } : {}),
           title: q.title,
-          question_type: q.question_type || "open",
+          question_type: q.question_type || 'open',
           options: q.options ?? null,
           position: q.position ?? 0,
         })),
@@ -134,8 +135,8 @@ const SurveysSection = memo((props) => {
           setIsNew(false);
           setSnackbar({
             open: true,
-            message: "Survey created successfully",
-            severity: "success",
+            message: 'Survey created successfully',
+            severity: 'success',
           });
         } else {
           const result = await updateSurvey({
@@ -148,15 +149,15 @@ const SurveysSection = memo((props) => {
           setEditingSurvey(structuredClone(updated));
           setSnackbar({
             open: true,
-            message: "Survey saved successfully",
-            severity: "success",
+            message: 'Survey saved successfully',
+            severity: 'success',
           });
         }
       } catch (err) {
         setSnackbar({
           open: true,
-          message: `Failed to save: ${err?.data?.error || err?.message || "Unknown error"}`,
-          severity: "error",
+          message: `Failed to save: ${err?.data?.error || err?.message || 'Unknown error'}`,
+          severity: 'error',
         });
       }
     },
@@ -164,7 +165,7 @@ const SurveysSection = memo((props) => {
   );
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   return (
@@ -197,16 +198,22 @@ const SurveysSection = memo((props) => {
         />
       )}
 
-      <Dialog open={!!deleteTarget} onClose={handleDeleteCancel}>
+      <Dialog
+        open={!!deleteTarget}
+        onClose={handleDeleteCancel}
+      >
         <DialogTitle>Delete Survey</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete &quot;{deleteTarget?.name}&quot;?
-            This will also delete all associated questions and captured answers.
+            Are you sure you want to delete &quot;{deleteTarget?.name}&quot;? This will also delete all
+            associated questions and captured answers.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleDeleteCancel} variant="text">
+          <Button
+            onClick={handleDeleteCancel}
+            variant="text"
+          >
             Cancel
           </Button>
           <Button
@@ -223,13 +230,13 @@ const SurveysSection = memo((props) => {
         open={snackbar.open}
         autoHideDuration={5000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -238,25 +245,27 @@ const SurveysSection = memo((props) => {
   );
 });
 
+SurveysSection.displayName = 'SurveysSection';
+
 const styles = {
   root: {
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
     flex: 1,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   editContainer: {
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
     flex: 1,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   editToolbar: {
-    padding: "0.75rem 1.5rem 0",
+    padding: '0.75rem 1.5rem 0',
   },
   backButton: {
-    textTransform: "none",
-    fontSize: "0.8125rem",
+    textTransform: 'none',
+    fontSize: '0.8125rem',
   },
 };
 

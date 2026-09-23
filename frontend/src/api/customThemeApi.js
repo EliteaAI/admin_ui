@@ -1,8 +1,9 @@
-import { adminApi } from "./adminApi";
-import { V2_BASE } from "@/utils/env";
+import { V2_BASE } from '@/utils/env';
+
+import { adminApi } from './adminApi';
 
 export const customThemeApi = adminApi.injectEndpoints({
-  endpoints: (build) => ({
+  endpoints: build => ({
     /**
      * Get custom theme configuration for admin view
      * Returns full theme data with metadata
@@ -11,7 +12,7 @@ export const customThemeApi = adminApi.injectEndpoints({
       query: () => ({
         url: `${V2_BASE}/admin/custom_theme/administration`,
       }),
-      providesTags: ["CustomTheme"],
+      providesTags: ['CustomTheme'],
     }),
 
     /**
@@ -19,12 +20,12 @@ export const customThemeApi = adminApi.injectEndpoints({
      * Creates or updates the theme palette
      */
     customThemeSave: build.mutation({
-      query: (body) => ({
+      query: body => ({
         url: `${V2_BASE}/admin/custom_theme/administration`,
-        method: "PUT",
+        method: 'PUT',
         body,
       }),
-      invalidatesTags: ["CustomTheme"],
+      invalidatesTags: ['CustomTheme'],
     }),
 
     /**
@@ -34,9 +35,9 @@ export const customThemeApi = adminApi.injectEndpoints({
     customThemeDelete: build.mutation({
       query: () => ({
         url: `${V2_BASE}/admin/custom_theme/administration`,
-        method: "DELETE",
+        method: 'DELETE',
       }),
-      invalidatesTags: ["CustomTheme"],
+      invalidatesTags: ['CustomTheme'],
     }),
 
     /**
@@ -45,9 +46,9 @@ export const customThemeApi = adminApi.injectEndpoints({
      * Note: No invalidatesTags - we update local state directly to preserve unsaved palette changes
      */
     customThemeLogoUpload: build.mutation({
-      query: (formData) => ({
+      query: formData => ({
         url: `${V2_BASE}/admin/custom_theme_logo/administration`,
-        method: "POST",
+        method: 'POST',
         body: formData,
       }),
     }),
@@ -60,7 +61,7 @@ export const customThemeApi = adminApi.injectEndpoints({
     customThemeLogoDelete: build.mutation({
       query: () => ({
         url: `${V2_BASE}/admin/custom_theme_logo/administration`,
-        method: "DELETE",
+        method: 'DELETE',
       }),
     }),
   }),

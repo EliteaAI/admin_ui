@@ -1,4 +1,5 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from 'react';
+
 import {
   Alert,
   Box,
@@ -12,38 +13,32 @@ import {
   Select,
   Snackbar,
   Typography,
-} from "@mui/material";
+} from '@mui/material';
 
-import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { PERMISSIONS } from "@/constants/permissions";
-import {
-  useModelPriceSourcesQuery,
-  useModelPriceReimportMutation,
-} from "@/api/modelPricesApi";
+import { useModelPriceReimportMutation, useModelPriceSourcesQuery } from '@/api/modelPricesApi';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useCheckPermission } from '@/hooks/useCheckPermission';
 
 const SOURCE_LABELS = {
-  litellm: "LiteLLM",
-  azure_foundry: "Azure AI Foundry",
-  bedrock: "AWS Bedrock",
-  custom: "Custom",
+  litellm: 'LiteLLM',
+  azure_foundry: 'Azure AI Foundry',
+  bedrock: 'AWS Bedrock',
+  custom: 'Custom',
 };
 
-const sourceLabel = (id) => SOURCE_LABELS[id] || id;
+const sourceLabel = id => SOURCE_LABELS[id] || id;
 
 const ModelPricesSource = memo(() => {
   const { hasPermission } = useCheckPermission();
-  const canReimport = useMemo(
-    () => hasPermission(PERMISSIONS.modelPrices.reimport),
-    [hasPermission],
-  );
+  const canReimport = useMemo(() => hasPermission(PERMISSIONS.modelPrices.reimport), [hasPermission]);
 
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    severity: "success",
+    message: '',
+    severity: 'success',
   });
 
   const { data: sourcesData } = useModelPriceSourcesQuery(undefined, {
@@ -52,13 +47,13 @@ const ModelPricesSource = memo(() => {
   const [reimport, { isLoading }] = useModelPriceReimportMutation();
 
   const sources = sourcesData?.sources || [];
-  const activeSource = sourcesData?.active || "";
+  const activeSource = sourcesData?.active || '';
   const selectedSource = selected || activeSource;
   const label = sourceLabel(selectedSource);
-  const isCustom = selectedSource === "custom";
+  const isCustom = selectedSource === 'custom';
 
   const handleReimport = useCallback(async () => {
-    setError("");
+    setError('');
     try {
       const result = await reimport({ source_id: selectedSource }).unwrap();
       const counts = result?.counts || {};
@@ -67,32 +62,27 @@ const ModelPricesSource = memo(() => {
         open: true,
         message: isCustom
           ? `Model prices cleared (${counts.deleted ?? 0} removed). ` +
-            "The scheduled daily refresh will do nothing while Custom is " +
-            "active. Restart the pylons to apply the change to cost estimation."
+            'The scheduled daily refresh will do nothing while Custom is ' +
+            'active. Restart the pylons to apply the change to cost estimation.'
           : `Prices re-imported from ${label} ` +
             `(${counts.deleted ?? 0} removed, ${counts.inserted ?? 0} imported). ` +
-            "Restart the pylons to apply the change to cost estimation.",
-        severity: "warning",
+            'Restart the pylons to apply the change to cost estimation.',
+        severity: 'warning',
       });
     } catch (err) {
-      setError(
-        err?.data?.error ??
-          err?.data?.message ??
-          err?.error ??
-          "Failed to re-import prices.",
-      );
+      setError(err?.data?.error ?? err?.data?.message ?? err?.error ?? 'Failed to re-import prices.');
     }
-  }, [selectedSource, label, reimport]);
+  }, [selectedSource, label, isCustom, reimport]);
 
-  const handleCloseSnackbar = useCallback(
-    () => setSnackbar((prev) => ({ ...prev, open: false })),
-    [],
-  );
+  const handleCloseSnackbar = useCallback(() => setSnackbar(prev => ({ ...prev, open: false })), []);
 
   if (!canReimport) {
     return (
       <Box sx={styles.root}>
-        <Typography variant="body2" sx={styles.description}>
+        <Typography
+          variant="body2"
+          sx={styles.description}
+        >
           You do not have permission to change the model prices source.
         </Typography>
       </Box>
@@ -101,35 +91,45 @@ const ModelPricesSource = memo(() => {
 
   return (
     <Box sx={styles.root}>
-      <Typography variant="body2" sx={styles.description}>
-        Choose the upstream catalog that model prices are imported from. The
-        active source also feeds the scheduled price refresh. Importing is
-        destructive: it deletes all current prices, including custom overrides,
-        and replaces them with a fresh import from the chosen source. Choose
-        "Custom" to manage prices entirely by hand — this clears the table and
-        disables the scheduled refresh.
+      <Typography
+        variant="body2"
+        sx={styles.description}
+      >
+        Choose the upstream catalog that model prices are imported from. The active source also feeds the
+        scheduled price refresh. Importing is destructive: it deletes all current prices, including custom
+        overrides, and replaces them with a fresh import from the chosen source. Choose &quot;Custom&quot; to
+        manage prices entirely by hand — this clears the table and disables the scheduled refresh.
       </Typography>
 
       <Box sx={styles.card}>
         <Box sx={styles.cardRow}>
-          <Box sx={[styles.cardLabel, { width: "100%" }]}>
-            <Typography variant="body2" sx={styles.cardTitle}>
+          <Box sx={[styles.cardLabel, { width: '100%' }]}>
+            <Typography
+              variant="body2"
+              sx={styles.cardTitle}
+            >
               Import From
             </Typography>
-            <Typography variant="caption" sx={styles.cardHint}>
+            <Typography
+              variant="caption"
+              sx={styles.cardHint}
+            >
               {activeSource
                 ? `Currently active source: ${sourceLabel(activeSource)}.`
-                : "No active source configured yet."}
+                : 'No active source configured yet.'}
             </Typography>
             <Select
               size="small"
               value={selectedSource}
-              onChange={(event) => setSelected(event.target.value)}
+              onChange={event => setSelected(event.target.value)}
               sx={styles.select}
               fullWidth
             >
-              {sources.map((s) => (
-                <MenuItem key={s} value={s}>
+              {sources.map(s => (
+                <MenuItem
+                  key={s}
+                  value={s}
+                >
                   {sourceLabel(s)}
                 </MenuItem>
               ))}
@@ -141,7 +141,7 @@ const ModelPricesSource = memo(() => {
                 color="error"
                 disabled={!selectedSource}
                 onClick={() => {
-                  setError("");
+                  setError('');
                   setConfirmOpen(true);
                 }}
               >
@@ -158,38 +158,42 @@ const ModelPricesSource = memo(() => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>
-          {isCustom ? "Switch to custom prices" : "Re-import model prices"}
-        </DialogTitle>
+        <DialogTitle>{isCustom ? 'Switch to custom prices' : 'Re-import model prices'}</DialogTitle>
         <DialogContent>
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert
+              severity="error"
+              sx={{ mb: 2 }}
+            >
               {error}
             </Alert>
           )}
           {isCustom ? (
             <>
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                This will <strong>delete all current model prices</strong>,
-                including custom overrides, leaving the table empty. This
-                cannot be undone.
+              <Alert
+                severity="warning"
+                sx={{ mb: 2 }}
+              >
+                This will <strong>delete all current model prices</strong>, including custom overrides,
+                leaving the table empty. This cannot be undone.
               </Alert>
               <DialogContentText>
-                Use "Add custom price" on the Model Prices page to populate
-                the table by hand. The scheduled daily refresh will do
-                nothing while Custom is active.
+                Use &quot;Add custom price&quot; on the Model Prices page to populate the table by hand. The
+                scheduled daily refresh will do nothing while Custom is active.
               </DialogContentText>
             </>
           ) : (
             <>
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                This will <strong>delete all current model prices</strong>,
-                including custom overrides, and replace them with a fresh
-                import from <strong>{label}</strong>. This cannot be undone.
+              <Alert
+                severity="warning"
+                sx={{ mb: 2 }}
+              >
+                This will <strong>delete all current model prices</strong>, including custom overrides, and
+                replace them with a fresh import from <strong>{label}</strong>. This cannot be undone.
               </Alert>
               <DialogContentText>
-                The import runs against the source first — if it returns
-                nothing, the current prices are left unchanged.
+                The import runs against the source first — if it returns nothing, the current prices are left
+                unchanged.
               </DialogContentText>
             </>
           )}
@@ -210,11 +214,11 @@ const ModelPricesSource = memo(() => {
           >
             {isLoading
               ? isCustom
-                ? "Clearing..."
-                : "Re-importing..."
+                ? 'Clearing...'
+                : 'Re-importing...'
               : isCustom
-                ? "Clear & switch to Custom"
-                : "Delete & re-import"}
+                ? 'Clear & switch to Custom'
+                : 'Delete & re-import'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -223,13 +227,13 @@ const ModelPricesSource = memo(() => {
         open={snackbar.open}
         autoHideDuration={10000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
@@ -238,54 +242,53 @@ const ModelPricesSource = memo(() => {
   );
 });
 
-ModelPricesSource.displayName = "ModelPricesSource";
+ModelPricesSource.displayName = 'ModelPricesSource';
 
 const styles = {
   root: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1.25rem",
-    padding: "1.5rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+    padding: '1.5rem',
   },
   description: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.8125rem",
+    fontSize: '0.8125rem',
     lineHeight: 1.6,
   }),
   card: ({ palette }) => ({
     border: `1px solid ${palette.border.table}`,
-    borderRadius: "0.5rem",
-    overflow: "hidden",
+    borderRadius: '0.5rem',
+    overflow: 'hidden',
   }),
   cardRow: ({ palette }) => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "1rem 1.25rem",
-    backgroundColor:
-      palette.background.tabPanel || palette.background.userInputBackground,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '1rem 1.25rem',
+    backgroundColor: palette.background.tabPanel || palette.background.userInputBackground,
   }),
   cardLabel: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.125rem",
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.125rem',
   },
   cardTitle: {
     fontWeight: 600,
-    fontSize: "0.875rem",
+    fontSize: '0.875rem',
   },
   cardHint: ({ palette }) => ({
     color: palette.text.metrics,
-    fontSize: "0.75rem",
+    fontSize: '0.75rem',
   }),
   select: {
-    marginTop: "0.75rem",
-    "& .MuiSelect-select": {
-      fontSize: "0.875rem",
+    marginTop: '0.75rem',
+    '& .MuiSelect-select': {
+      fontSize: '0.875rem',
     },
   },
   actionRow: {
-    marginTop: "0.75rem",
+    marginTop: '0.75rem',
   },
 };
 
