@@ -1,6 +1,6 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 
-import SvgIcon from '@mui/material/SvgIcon';
+import { SvgIcon } from '@mui/material';
 
 const EliteAIcon = memo(props => {
   return (

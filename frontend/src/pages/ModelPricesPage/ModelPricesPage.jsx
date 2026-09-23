@@ -1,25 +1,23 @@
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import MenuItem from '@mui/material/MenuItem';
-import Snackbar from '@mui/material/Snackbar';
-import TextField from '@mui/material/TextField';
+import { Alert, Box, MenuItem, Snackbar, TextField } from '@mui/material';
 
-import { useModelPriceListQuery } from '@/api/modelPricesApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { useDebounceValue } from '@/hooks/useDebounceValue';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useModelPriceListQuery } from '@/api/modelPrices.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import ModelPriceDialog from './ModelPriceDialog';
-import ModelPricesTable from './ModelPricesTable';
-import ResetPriceDialog from './ResetPriceDialog';
-import { MODEL_MODES } from './constants';
+import ModelPriceDialog from './components/ModelPriceDialog';
+import ModelPricesTable from './components/ModelPricesTable';
+import ResetPriceDialog from './components/ResetPriceDialog';
+import { MODEL_MODES } from './constants/modelPrices.constants';
 
-export default function ModelPricesPage() {
+const ModelPricesPage = memo(() => {
+  const styles = modelPricesPageStyles();
+
   usePageTitle('Model Prices');
 
   const { hasPermission } = useCheckPermission();
@@ -188,9 +186,12 @@ export default function ModelPricesPage() {
       </Snackbar>
     </>
   );
-}
+});
 
-const styles = {
+ModelPricesPage.displayName = 'ModelPricesPage';
+
+/** @type {MuiSx} */
+const modelPricesPageStyles = () => ({
   headerControls: {
     display: 'flex',
     alignItems: 'center',
@@ -208,4 +209,6 @@ const styles = {
   errorContainer: {
     padding: '1rem',
   },
-};
+});
+
+export default ModelPricesPage;

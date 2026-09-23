@@ -1,11 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Snackbar from '@mui/material/Snackbar';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
+import { Alert, Box, Button, Snackbar, Tab, Tabs } from '@mui/material';
 
 import {
   usePermissionMatrixQuery,
@@ -15,18 +10,20 @@ import {
   usePublicPermissionMatrixUpdateMutation,
   useSupportPermissionMatrixQuery,
   useSupportPermissionMatrixUpdateMutation,
-} from '@/api/usersApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { usePageTitle } from '@/hooks/usePageTitle';
+} from '@/api/users.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import PermissionMatrix from './PermissionMatrix';
+import { PermissionMatrix } from './components/PermissionMatrix';
 
 const ROLE_ORDER = ['system', 'super_admin', 'admin', 'editor', 'viewer'];
 
 const RolesPage = memo(() => {
+  const styles = rolesPageStyles();
+
   usePageTitle('Roles');
 
   const adminServerRef = useRef(null);
@@ -275,7 +272,7 @@ const RolesPage = memo(() => {
   }, []);
 
   const extraContent = (
-    <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+    <Box sx={styles.headerActions}>
       {activeTab === 'standard' && canEdit && !isDirty && (
         <Button
           variant="contained"
@@ -385,11 +382,12 @@ const RolesPage = memo(() => {
 
 RolesPage.displayName = 'RolesPage';
 
-const styles = {
+/** @type {MuiSx} */
+const rolesPageStyles = () => ({
   tabs: ({ palette }) => ({
     minHeight: '2.5rem',
     '& .MuiTabs-indicator': {
-      backgroundColor: palette.text.secondary,
+      backgroundColor: palette.background.tabIndicator,
     },
   }),
   tab: ({ palette }) => ({
@@ -426,6 +424,10 @@ const styles = {
     padding: '3rem',
     color: 'text.metrics',
   },
-};
+  headerActions: {
+    display: 'flex',
+    gap: '0.5rem',
+  },
+});
 
 export default RolesPage;

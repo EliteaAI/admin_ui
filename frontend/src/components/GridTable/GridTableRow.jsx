@@ -1,9 +1,6 @@
 import { memo, useCallback } from 'react';
 
-import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import { Box, Checkbox, Tooltip, Typography } from '@mui/material';
 
 const GridTableRow = memo(props => {
   const {
@@ -101,6 +98,7 @@ const GridTableRow = memo(props => {
 
 GridTableRow.displayName = 'GridTableRow';
 
+/** @type {MuiSx} */
 const gridTableRowStyles = (isSelected, isHovered, gridTemplateColumns, showCheckbox) => ({
   row: ({ palette }) => ({
     display: 'grid',

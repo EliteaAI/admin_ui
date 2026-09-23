@@ -1,6 +1,8 @@
-import SvgIcon from '@mui/material/SvgIcon';
+import { memo } from 'react';
 
-export default function LogoutIcon(props) {
+import { SvgIcon } from '@mui/material';
+
+const LogoutIcon = memo(props => {
   return (
     <SvgIcon
       {...props}
@@ -32,4 +34,8 @@ export default function LogoutIcon(props) {
       />
     </SvgIcon>
   );
-}
+});
+
+LogoutIcon.displayName = 'LogoutIcon';
+
+export default LogoutIcon;

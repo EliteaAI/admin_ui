@@ -1,13 +1,8 @@
 import { memo } from 'react';
 
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import Typography from '@mui/material/Typography';
+import { Box, IconButton, MenuItem, Select, Typography } from '@mui/material';
 
-import ArrowLeftIcon from '@/components/Icons/ArrowLeftIcon';
-import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
+import { ArrowLeftIcon, ArrowRightIcon } from '@/components/Icons';
 
 const GridTablePagination = memo(props => {
   const {
@@ -95,6 +90,7 @@ const GridTablePagination = memo(props => {
 
 GridTablePagination.displayName = 'GridTablePagination';
 
+/** @type {MuiSx} */
 const gridTablePaginationStyles = () => ({
   footer: ({ palette }) => ({
     display: 'flex',
@@ -128,16 +124,18 @@ const gridTablePaginationStyles = () => ({
     minWidth: '4.5rem',
     textAlign: 'center',
   },
-  paginationButton: isDisabled => ({
-    padding: '0.375rem',
-    minWidth: 0,
-    cursor: isDisabled ? 'not-allowed' : 'pointer',
-    opacity: isDisabled ? 0.4 : 1,
-    transition: 'opacity 0.2s ease',
-    '&:hover': {
-      backgroundColor: isDisabled ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
-    },
-  }),
+  paginationButton:
+    isDisabled =>
+    ({ palette }) => ({
+      padding: '0.375rem',
+      minWidth: 0,
+      cursor: isDisabled ? 'not-allowed' : 'pointer',
+      opacity: isDisabled ? 0.4 : 1,
+      transition: 'opacity 0.2s ease',
+      '&:hover': {
+        backgroundColor: isDisabled ? 'transparent' : palette.background.paginationHover,
+      },
+    }),
   arrowIcon:
     isDisabled =>
     ({ palette }) => ({

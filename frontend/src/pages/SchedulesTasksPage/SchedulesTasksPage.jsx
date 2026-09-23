@@ -1,17 +1,16 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
+import { Tab, Tabs } from '@mui/material';
 
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import ActiveTasksTab from './ActiveTasksTab';
-import SchedulesTab from './SchedulesTab';
-import TasksTab from './TasksTab';
+import { ActiveTasksTab } from './components/ActiveTasksTab';
+import { SchedulesTab } from './components/SchedulesTab';
+import { TasksTab } from './components/TasksTab';
 
 const TABS = ['active-tasks', 'tasks', 'schedules'];
 const DEFAULT_TAB = 'active-tasks';
@@ -23,6 +22,8 @@ const tabFromHash = () => {
 };
 
 const SchedulesTasksPage = memo(() => {
+  const styles = schedulesTasksPageStyles();
+
   usePageTitle('Schedules & Tasks');
 
   const { hasPermission } = useCheckPermission();
@@ -102,11 +103,12 @@ const SchedulesTasksPage = memo(() => {
 
 SchedulesTasksPage.displayName = 'SchedulesTasksPage';
 
-const styles = {
+/** @type {MuiSx} */
+const schedulesTasksPageStyles = () => ({
   tabs: ({ palette }) => ({
     minHeight: '2.5rem',
     '& .MuiTabs-indicator': {
-      backgroundColor: palette.text.secondary,
+      backgroundColor: palette.background.tabIndicator,
     },
   }),
   tab: ({ palette }) => ({
@@ -120,6 +122,6 @@ const styles = {
       color: palette.text.secondary,
     },
   }),
-};
+});
 
 export default SchedulesTasksPage;

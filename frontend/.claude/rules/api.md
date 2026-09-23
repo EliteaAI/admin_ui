@@ -8,18 +8,17 @@ paths:
 
 ## RTK Query
 
-All HTTP goes through RTK Query. `axios` is installed but unused, so don't add it. No raw `fetch` in
-components.
+All HTTP goes through RTK Query. `axios` is not a dependency: don't add it. No raw `fetch` in components.
 
-- `api/adminApi.js` is the single base API: `fetchBaseQuery` with `baseUrl: V2_BASE` (`/api/v2`),
+- `api/admin.api.js` is the single base API: `fetchBaseQuery` with `baseUrl: V2_BASE` (`/api/v2`),
   `credentials: 'include'`, and `Authorization: Bearer <VITE_DEV_TOKEN>` in dev only. Don't create a second
   `createApi`.
-- One file per backend domain: `api/<domain>Api.js`:
+- One file per backend domain: `api/<domain>.api.js`:
 
 ```js
-import { adminApi } from './adminApi';
+import { adminApi } from './admin.api';
 
-export const widgetsApi = adminApi.injectEndpoints({
+const widgetsApi = adminApi.injectEndpoints({
   endpoints: build => ({
     widgetList: build.query({
       query: ({ limit = 20, offset = 0, search, sort_by, sort_order } = {}) => ({
@@ -51,7 +50,7 @@ export const { useWidgetListQuery, useWidgetUpdateMutation } = widgetsApi;
 
 ### Rules
 
-- **Tags**: add every new tag to `tagTypes` in `adminApi.js`. Queries `providesTags`; every mutation that
+- **Tags**: add every new tag to `tagTypes` in `admin.api.js`. Queries `providesTags`; every mutation that
   changes list data `invalidatesTags`. A missing invalidation means a stale table after save.
 - **Endpoint names**: `<entity><Action>` in camelCase (`secretList`, `secretReveal`, `secretCreate`,
   `projectBudgetUpdate`, `userSuspend`). Hooks come out as `use<Entity><Action>Query/Mutation`, and lazy
@@ -63,19 +62,22 @@ export const { useWidgetListQuery, useWidgetUpdateMutation } = widgetsApi;
 - Optional query params: spread conditionally (`...(search && { search })`) so empty values aren't sent.
 - Omit (don't null) body fields the caller doesn't manage when the backend treats "absent" as "unchanged". Add
   a short comment explaining it.
-- Response shaping: `transformResponse` in the endpoint, or a pure helper in `utils/` / the page folder. Don't
-  reshape in several components.
-- Export all generated hooks with one destructuring statement at the bottom of the file.
+- Response shaping: `transformResponse` in the endpoint, or a pure helper in the module's `helpers/` (or
+  `src/helpers/` when shared). Don't reshape in several components.
+- Export the generated hooks with one destructuring statement at the bottom of the file, and only those. The
+  injected API object stays unexported. Remove endpoints and hooks nothing uses.
 - The backend enforces permissions. The UI only hides actions. Never rely on UI gating for security.
 
 ## Redux store
 
 - `store/index.js` configures the store: `settings` (`mode`, `socketConnected`, `sideBarCollapsed`), `user`
-  (`user`, `permissions`, `roles`, seeded from `admin_ui_config`) and `adminApi`.
+  (`user`, `permissions`, `roles`) and `adminApi`.
 - Server data belongs in RTK Query, never duplicated into slices.
-- New client-state slices go in `store/<name>.slice.js` (`createSlice`, export `actions` and `default`
-  reducer, plus selector functions `export const selectX = state => state.<name>.x;`). Register them in
-  `store/index.js` and re-export their actions from there.
-- If a component rendered in Storybook reads the slice, mirror it in `.storybook/storybookStore.js`.
+- Each slice lives in `store/<name>.slice.js` (`settings.slice.js`, `user.slice.js`):
+  `export const <name>Slice = createSlice(…)` and `export const { actionA, actionB } = <name>Slice.actions;`.
+  Register the reducer in `store/index.js` and re-export the actions from there, so components import actions
+  from `@/store` only.
+- The `user` slice seeds its initial state from `getAdminConfig()` (`@/helpers/env.helpers`), never from
+  `globalThis.admin_ui_config` directly.
 - `localStorage` persistence (like `mode` and `sideBarCollapsed`) happens inside reducers. Keep the key names
   stable.

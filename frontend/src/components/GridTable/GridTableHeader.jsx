@@ -1,10 +1,8 @@
 import { memo } from 'react';
 
-import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
-import Typography from '@mui/material/Typography';
+import { Box, Checkbox, Typography } from '@mui/material';
 
-import SortArrows from '@/components/Icons/SortArrows';
+import { SortArrows } from '@/components/Icons';
 
 const GridTableHeader = memo(props => {
   const {
@@ -49,14 +47,9 @@ const GridTableHeader = memo(props => {
           >
             {isSortable && (
               <Box sx={styles.sortButton}>
-                <SortArrows
-                  style={{
-                    width: '1rem',
-                    height: '1rem',
-                    transform:
-                      isActive && sortConfig?.direction === 'desc' ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease',
-                  }}
+                <Box
+                  component={SortArrows}
+                  sx={styles.sortIcon(isActive && sortConfig?.direction === 'desc')}
                 />
               </Box>
             )}
@@ -77,6 +70,7 @@ const GridTableHeader = memo(props => {
 
 GridTableHeader.displayName = 'GridTableHeader';
 
+/** @type {MuiSx} */
 const gridTableHeaderStyles = (gridTemplateColumns, showCheckbox) => ({
   header: ({ palette }) => ({
     display: 'grid',
@@ -128,6 +122,12 @@ const gridTableHeaderStyles = (gridTemplateColumns, showCheckbox) => ({
     padding: '0.375rem',
     borderRadius: '1rem',
   },
+  sortIcon: isDescending => ({
+    width: '1rem',
+    height: '1rem',
+    transform: isDescending ? 'rotate(180deg)' : 'rotate(0deg)',
+    transition: 'transform 0.2s ease',
+  }),
   headerText: {
     flex: 1,
     minWidth: 0,

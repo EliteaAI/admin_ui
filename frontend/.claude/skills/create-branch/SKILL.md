@@ -34,7 +34,9 @@ Examples:
 
 1. Git commands work from anywhere inside the repo. The git root is `admin_ui/`, one level above `frontend/`.
 2. Run `git status` to make sure the working tree is clean. If there are uncommitted changes, warn the user
-   and stop. `static/dist` is hidden locally (skip-worktree), so a local build does not count as a change.
+   and stop. (To move existing uncommitted work onto a new branch, use the `ship-changes` skill, which
+   branches with `git switch -c` and keeps the changes.) `static/dist` is hidden locally (skip-worktree), so a
+   local build does not count as a change.
 3. Fetch the latest from origin: `git fetch origin`.
 4. Create the branch from `origin/main`: `git checkout -b <branch-name> origin/main`.
 5. Confirm the branch was created and report its name.

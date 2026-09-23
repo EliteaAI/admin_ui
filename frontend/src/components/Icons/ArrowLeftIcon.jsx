@@ -1,4 +1,6 @@
-export default function ArrowLeftIcon(props) {
+import { memo } from 'react';
+
+const ArrowLeftIcon = memo(props => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -11,4 +13,8 @@ export default function ArrowLeftIcon(props) {
       <path d="M10.354 3.646a.5.5 0 0 1 0 .708L6.707 8l3.647 3.646a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .708 0z" />
     </svg>
   );
-}
+});
+
+ArrowLeftIcon.displayName = 'ArrowLeftIcon';
+
+export default ArrowLeftIcon;

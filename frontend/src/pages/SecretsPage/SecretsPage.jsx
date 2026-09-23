@@ -1,26 +1,25 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from '@mui/material/Box';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Typography from '@mui/material/Typography';
+import { Box, Tab, Tabs, Typography } from '@mui/material';
 
-import { useSecretListQuery } from '@/api/secretsApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { useDebounceValue } from '@/hooks/useDebounceValue';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { useTableSort } from '@/hooks/useTableSort';
+import { useSecretListQuery } from '@/api/secrets.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
+import { useTableSort } from '@/hooks/useTableSort.hooks';
 
-import CreateSecretDialog from './CreateSecretDialog';
-import DeleteSecretDialog from './DeleteSecretDialog';
-import EditSecretDialog from './EditSecretDialog';
-import SecretsTable from './SecretsTable';
-import { isInternalSecret } from './constants';
+import CreateSecretDialog from './components/CreateSecretDialog';
+import DeleteSecretDialog from './components/DeleteSecretDialog';
+import EditSecretDialog from './components/EditSecretDialog';
+import SecretsTable from './components/SecretsTable';
+import { isInternalSecret } from './helpers/secrets.helpers';
 
 const SecretsPage = memo(() => {
+  const styles = secretsPageStyles();
+
   usePageTitle('Secrets');
 
   const { hasPermission } = useCheckPermission();
@@ -212,11 +211,12 @@ const SecretsPage = memo(() => {
 
 SecretsPage.displayName = 'SecretsPage';
 
-const styles = {
+/** @type {MuiSx} */
+const secretsPageStyles = () => ({
   tabs: ({ palette }) => ({
     minHeight: '2.5rem',
     '& .MuiTabs-indicator': {
-      backgroundColor: palette.text.secondary,
+      backgroundColor: palette.background.tabIndicator,
     },
   }),
   tab: ({ palette }) => ({
@@ -241,6 +241,6 @@ const styles = {
     height: '100%',
     padding: '2rem',
   },
-};
+});
 
 export default SecretsPage;

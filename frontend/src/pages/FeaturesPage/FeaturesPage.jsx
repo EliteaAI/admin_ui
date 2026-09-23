@@ -1,21 +1,19 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  AccountBalanceWalletOutlined as AccountBalanceWalletOutlinedIcon,
-  AlternateEmailOutlined as AlternateEmailIcon,
-  BoltOutlined as BoltIcon,
-  ExtensionOutlined as ExtensionIcon,
-  ForumOutlined as ForumOutlinedIcon,
-  LightbulbOutlined as LightbulbOutlinedIcon,
-  MenuBookOutlined as MenuBookIcon,
-  PaidOutlined as PaidOutlinedIcon,
-  PaletteOutlined as PaletteOutlinedIcon,
-  PollOutlined as PollOutlinedIcon,
-  PublishOutlined as PublishIcon,
-  RecordVoiceOverOutlined as RecordVoiceOverOutlinedIcon,
-  RestartAlt as RestartAltIcon,
-  SupportAgentOutlined as SupportAgentIcon,
-} from '@mui/icons-material';
+import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmailOutlined';
+import BoltIcon from '@mui/icons-material/BoltOutlined';
+import ExtensionIcon from '@mui/icons-material/ExtensionOutlined';
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
+import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import MenuBookIcon from '@mui/icons-material/MenuBookOutlined';
+import PaidOutlinedIcon from '@mui/icons-material/PaidOutlined';
+import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
+import PollOutlinedIcon from '@mui/icons-material/PollOutlined';
+import PublishIcon from '@mui/icons-material/PublishOutlined';
+import RecordVoiceOverOutlinedIcon from '@mui/icons-material/RecordVoiceOverOutlined';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import SupportAgentIcon from '@mui/icons-material/SupportAgentOutlined';
 import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
 
 import {
@@ -23,21 +21,21 @@ import {
   useConfigSchemasQuery,
   useConfigValuesQuery,
   useConfigValuesSaveMutation,
-} from '@/api/configurationApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import AutoRoutingSettings from '@/components/SchemaForm/AutoRoutingSettings';
-import ChatMentions from '@/components/SchemaForm/ChatMentions';
-import CostBudgets from '@/components/SchemaForm/CostBudgets';
-import { CustomThemeSection } from '@/components/SchemaForm/CustomThemeSection';
-import GuardrailsSection from '@/components/SchemaForm/GuardrailsSection';
-import HelpCenterSection from '@/components/SchemaForm/HelpCenterSection';
-import ModelPricesSource from '@/components/SchemaForm/ModelPricesSource';
-import SupportAssistant from '@/components/SchemaForm/SupportAssistant';
-import VoiceFeatures from '@/components/SchemaForm/VoiceFeatures';
-import { usePageTitle } from '@/hooks/usePageTitle';
+} from '@/api/configuration.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { GuardrailsSection } from '@/components/SchemaForm';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import SurveysSection from './SurveysSection/SurveysSection';
+import AutoRoutingSettings from './components/AutoRoutingSettings';
+import ChatMentions from './components/ChatMentions';
+import CostBudgets from './components/CostBudgets';
+import { CustomThemeSection } from './components/CustomThemeSection';
+import { HelpCenterSection } from './components/HelpCenterSection';
+import ModelPricesSource from './components/ModelPricesSource';
+import SupportAssistant from './components/SupportAssistant';
+import { SurveysSection } from './components/SurveysSection';
+import VoiceFeatures from './components/VoiceFeatures';
 
 // Sections sourced from the shared "guardrails" backend section are selected by
 // config-path prefix (e.g. "publishing_guardrail.*"), so any new field added to
@@ -148,6 +146,8 @@ const FEATURES_SECTIONS = [
 const SELF_SAVING_SECTIONS = ['auto_routing', 'surveys', 'model_prices_source', 'custom_theme'];
 
 const FeaturesPage = memo(() => {
+  const styles = featuresPageStyles();
+
   const [activeSection, setActiveSection] = useState(
     () => window.location.hash.slice(1) || FEATURES_SECTIONS[0].id,
   );
@@ -502,7 +502,8 @@ const FeaturesPage = memo(() => {
 
 FeaturesPage.displayName = 'FeaturesPage';
 
-const styles = {
+/** @type {MuiSx} */
+const featuresPageStyles = () => ({
   content: {
     display: 'flex',
     flex: 1,
@@ -511,7 +512,7 @@ const styles = {
   sectionSidebar: ({ palette }) => ({
     width: '13rem',
     minWidth: '13rem',
-    borderRight: `1px solid ${palette.border.table}`,
+    borderRight: `0.0625rem solid ${palette.border.table}`,
     padding: '0.75rem',
     display: 'flex',
     flexDirection: 'column',
@@ -561,7 +562,7 @@ const styles = {
     flex: 1,
   },
   actionBar: ({ palette }) => ({
-    borderTop: `1px solid ${palette.border.table}`,
+    borderTop: `0.0625rem solid ${palette.border.table}`,
     padding: '0.75rem 1.5rem',
     display: 'flex',
     alignItems: 'center',
@@ -594,6 +595,6 @@ const styles = {
     textTransform: 'none',
     fontSize: '0.75rem',
   },
-};
+});
 
 export default FeaturesPage;

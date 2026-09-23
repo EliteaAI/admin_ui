@@ -2,30 +2,24 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Tooltip from '@mui/material/Tooltip';
+import { Box, Button, CircularProgress, IconButton, Tab, Tabs, Tooltip } from '@mui/material';
 
-import { useLazyProjectListQuery, useProjectListQuery, useProjectSuspendMutation } from '@/api/projectsApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { useDebounceValue } from '@/hooks/useDebounceValue';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { exportToExcel } from '@/utils/exportToExcel';
+import { useLazyProjectListQuery, useProjectListQuery, useProjectSuspendMutation } from '@/api/projects.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { exportToExcel } from '@/helpers/exportToExcel.helpers';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import AddProjectAdminDialog from './AddProjectAdminDialog';
-import BackupProjectDialog from './BackupProjectDialog';
-import CreateProjectDialog from './CreateProjectDialog';
-import DeleteProjectDialog from './DeleteProjectDialog';
-import ProjectActivityDrawer from './ProjectActivityDrawer';
-import ProjectsTable from './ProjectsTable';
-import RestoreProjectDialog from './RestoreProjectDialog';
+import AddProjectAdminDialog from './components/AddProjectAdminDialog';
+import BackupProjectDialog from './components/BackupProjectDialog';
+import CreateProjectDialog from './components/CreateProjectDialog';
+import DeleteProjectDialog from './components/DeleteProjectDialog';
+import { ProjectActivityDrawer } from './components/ProjectActivityDrawer';
+import ProjectsTable from './components/ProjectsTable';
+import RestoreProjectDialog from './components/RestoreProjectDialog';
 
 const PROJECT_TYPES = ['team', 'personal'];
 const EXPORT_COLUMNS = [
@@ -41,6 +35,8 @@ const EXPORT_COLUMNS = [
 ];
 
 const ProjectsPage = memo(() => {
+  const styles = projectsPageStyles();
+
   usePageTitle('Projects');
   const { hasPermission } = useCheckPermission();
 
@@ -385,11 +381,12 @@ const ProjectsPage = memo(() => {
 
 ProjectsPage.displayName = 'ProjectsPage';
 
-const styles = {
+/** @type {MuiSx} */
+const projectsPageStyles = () => ({
   tabs: ({ palette }) => ({
     minHeight: '2.5rem',
     '& .MuiTabs-indicator': {
-      backgroundColor: palette.text.secondary,
+      backgroundColor: palette.background.tabIndicator,
     },
   }),
   tab: ({ palette }) => ({
@@ -438,6 +435,6 @@ const styles = {
     height: '1rem',
     fill: palette.icon.fill.send,
   }),
-};
+});
 
 export default ProjectsPage;

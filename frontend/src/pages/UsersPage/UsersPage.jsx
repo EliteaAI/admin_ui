@@ -4,32 +4,26 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Tooltip from '@mui/material/Tooltip';
+import { Box, Button, CircularProgress, IconButton, Tab, Tabs, Tooltip } from '@mui/material';
 
 import {
   useLazyUserListQuery,
   useUserListQuery,
   useUserSetAdminRoleMutation,
   useUserSuspendMutation,
-} from '@/api/usersApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { useDebounceValue } from '@/hooks/useDebounceValue';
-import { usePageTitle } from '@/hooks/usePageTitle';
+} from '@/api/users.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { exportToExcel } from '@/helpers/exportToExcel.helpers';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 import { setRoles } from '@/store';
-import { exportToExcel } from '@/utils/exportToExcel';
 
-import DeleteUserDialog from './DeleteUserDialog';
-import UserActivityDrawer from './UserActivityDrawer';
-import UsersTable from './UsersTable';
+import DeleteUserDialog from './components/DeleteUserDialog';
+import UserActivityDrawer from './components/UserActivityDrawer';
+import UsersTable from './components/UsersTable';
 
 const USER_TYPES = ['platform', 'system'];
 const EXPORT_COLUMNS = [
@@ -45,6 +39,8 @@ const EXPORT_COLUMNS = [
 ];
 
 const UsersPage = memo(() => {
+  const styles = usersPageStyles();
+
   usePageTitle('Users');
   const dispatch = useDispatch();
   const { hasPermission } = useCheckPermission();
@@ -350,11 +346,12 @@ const UsersPage = memo(() => {
 
 UsersPage.displayName = 'UsersPage';
 
-const styles = {
+/** @type {MuiSx} */
+const usersPageStyles = () => ({
   tabs: ({ palette }) => ({
     minHeight: '2.5rem',
     '& .MuiTabs-indicator': {
-      backgroundColor: palette.text.secondary,
+      backgroundColor: palette.background.tabIndicator,
     },
   }),
   tab: ({ palette }) => ({
@@ -403,6 +400,6 @@ const styles = {
     height: '1rem',
     fill: palette.icon.fill.send,
   }),
-};
+});
 
 export default UsersPage;

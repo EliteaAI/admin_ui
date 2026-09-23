@@ -2,16 +2,11 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Skeleton from '@mui/material/Skeleton';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import { Box, Chip, IconButton, Skeleton, Tooltip, Typography } from '@mui/material';
 
-import { useAppRequestUpdateMutation, useAppRequestsListQuery } from '@/api/appRequestsApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
+import { useAppRequestListQuery, useAppRequestUpdateMutation } from '@/api/appRequests.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
 import {
   GridTableBody,
   GridTableContainer,
@@ -19,11 +14,11 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/components/GridTable';
-import { useDebounceValue } from '@/hooks/useDebounceValue';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
+import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns.hooks';
 
-import RejectRequestDialog from './RejectRequestDialog';
+import RejectRequestDialog from './components/RejectRequestDialog';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
@@ -71,6 +66,8 @@ const COLUMNS = [
 ];
 
 const AppRequestsPage = memo(() => {
+  const styles = useMemo(() => appRequestsPageStyles(), []);
+
   usePageTitle('App Requests');
 
   const [search, setSearch] = useState('');
@@ -83,7 +80,7 @@ const AppRequestsPage = memo(() => {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectRequest, setRejectRequest] = useState(null);
 
-  const { data, isFetching, isError } = useAppRequestsListQuery(
+  const { data, isFetching, isError } = useAppRequestListQuery(
     {
       limit: pageSize,
       offset: page * pageSize,
@@ -189,70 +186,73 @@ const AppRequestsPage = memo(() => {
     [total, page, pageSize, handlePageChange, handlePageSizeChange],
   );
 
-  const renderCell = useCallback((column, value) => {
-    if (column.field === 'status') {
-      const cfg = STATUS_CONFIG[value] || STATUS_CONFIG.pending;
+  const renderCell = useCallback(
+    (column, value) => {
+      if (column.field === 'status') {
+        const cfg = STATUS_CONFIG[value] || STATUS_CONFIG.pending;
 
-      return (
-        <Chip
-          label={cfg.label}
-          size="small"
-          color={cfg.color}
-          variant="outlined"
-        />
-      );
-    }
-
-    if (column.field === 'created_at') {
-      if (!value) return '-';
-
-      try {
-        return new Date(value).toLocaleString();
-      } catch {
-        return String(value);
+        return (
+          <Chip
+            label={cfg.label}
+            size="small"
+            color={cfg.color}
+            variant="outlined"
+          />
+        );
       }
-    }
 
-    if (column.field === 'entity_id') {
-      const display = value ? value.replace(/_/g, ' ') : '-';
+      if (column.field === 'created_at') {
+        if (!value) return '-';
+
+        try {
+          return new Date(value).toLocaleString();
+        } catch {
+          return String(value);
+        }
+      }
+
+      if (column.field === 'entity_id') {
+        const display = value ? value.replace(/_/g, ' ') : '-';
+
+        return (
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={[styles.cellText, styles.capitalize]}
+          >
+            {display}
+          </Typography>
+        );
+      }
+      if (column.field === 'description') {
+        return (
+          <Tooltip
+            title={value || ''}
+            placement="top-start"
+          >
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+              sx={styles.cellText}
+            >
+              {value || '-'}
+            </Typography>
+          </Tooltip>
+        );
+      }
 
       return (
         <Typography
           variant="bodyMedium"
           color="text.secondary"
-          sx={{ ...styles.cellText, textTransform: 'capitalize' }}
+          sx={styles.cellText}
         >
-          {display}
+          {value || '-'}
         </Typography>
       );
-    }
-    if (column.field === 'description') {
-      return (
-        <Tooltip
-          title={value || ''}
-          placement="top-start"
-        >
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            sx={styles.cellText}
-          >
-            {value || '-'}
-          </Typography>
-        </Tooltip>
-      );
-    }
-
-    return (
-      <Typography
-        variant="bodyMedium"
-        color="text.secondary"
-        sx={styles.cellText}
-      >
-        {value || '-'}
-      </Typography>
-    );
-  }, []);
+    },
+    [styles],
+  );
 
   const renderActions = useCallback(
     row => {
@@ -285,7 +285,7 @@ const AppRequestsPage = memo(() => {
         </Box>
       );
     },
-    [handleApprove, handleRejectClick],
+    [styles, handleApprove, handleRejectClick],
   );
 
   return (
@@ -362,7 +362,8 @@ const AppRequestsPage = memo(() => {
 
 AppRequestsPage.displayName = 'AppRequestsPage';
 
-const styles = {
+/** @type {MuiSx} */
+const appRequestsPageStyles = () => ({
   tableContainer: {
     flex: 1,
     overflow: 'hidden',
@@ -395,6 +396,9 @@ const styles = {
     display: 'flex',
     gap: '0.125rem',
   },
-};
+  capitalize: {
+    textTransform: 'capitalize',
+  },
+});
 
 export default AppRequestsPage;

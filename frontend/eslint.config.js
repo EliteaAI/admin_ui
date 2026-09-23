@@ -2,7 +2,6 @@ import importPlugin from 'eslint-plugin-import';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
-import storybook from 'eslint-plugin-storybook';
 import globals from 'globals';
 
 import babelParser from '@babel/eslint-parser';
@@ -15,11 +14,9 @@ export default [
       'dist/**',
       'build/**',
       'coverage/**',
-      'storybook-static/**',
       '*.min.js',
       '*.bundle.js',
       '.vscode/**',
-      '.storybook/**',
     ],
   },
   // Base configuration
@@ -57,7 +54,6 @@ export default [
       },
       globals: {
         ...globals.browser,
-        styled: 'readonly', // Injected by @rollup/plugin-inject in vite.config.js
         __APP_VERSION__: 'readonly', // Defined in vite.config.js
       },
     },
@@ -115,5 +111,4 @@ export default [
       'import/extensions': ['.js', '.jsx', '.svg'],
     },
   },
-  ...storybook.configs['flat/recommended'],
 ];
