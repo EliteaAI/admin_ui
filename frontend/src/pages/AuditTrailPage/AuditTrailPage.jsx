@@ -1,25 +1,20 @@
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
+import { Box, Chip, Tab, Tabs } from '@mui/material';
 
 import {
   useAuditHeatmapQuery,
   useAuditTraceHeatmapQuery,
   useAuditTraceListQuery,
   useAuditTrailListQuery,
-} from '@/api/auditTrailApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { useDebounceValue } from '@/hooks/useDebounceValue';
-import { usePageTitle } from '@/hooks/usePageTitle';
+} from '@/api/auditTrail.api';
+import { AuditHeatmap, AuditTraceTable, AuditTrailTable } from '@/components/AuditEventViews';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import AuditHeatmap from './AuditHeatmap';
-import AuditTraceTable from './AuditTraceTable';
-import AuditTrailFilters from './AuditTrailFilters';
-import AuditTrailTable from './AuditTrailTable';
+import AuditTrailFilters from './components/AuditTrailFilters';
 
 const USER_EVENT_TYPES = ['api', 'socketio', 'rpc', 'agent', 'tool', 'llm'];
 const SYSTEM_EVENT_TYPES = ['schedule', 'admin_task', 'lifecycle'];
@@ -41,17 +36,17 @@ const SYSTEM_EVENT_TYPE_OPTIONS = [
   { value: 'lifecycle', label: 'Lifecycle' },
 ];
 
-function getTodayRange() {
+const getTodayRange = () => {
   const from = new Date();
   from.setHours(0, 0, 0, 0);
   const to = new Date();
   to.setHours(23, 59, 59, 999);
   return { from, to };
-}
+};
 
 const DEFAULT_PRESET = 'Today';
 
-function getDefaultFilters() {
+const getDefaultFilters = () => {
   const { from, to } = getTodayRange();
   return {
     event_type: '',
@@ -61,9 +56,11 @@ function getDefaultFilters() {
     project_id: '',
     user_id: '',
   };
-}
+};
 
-function AuditTrailPage() {
+const AuditTrailPage = memo(() => {
+  const styles = auditTrailPageStyles();
+
   usePageTitle('Audit Trail');
 
   const [auditTab, setAuditTab] = useState('user');
@@ -430,13 +427,16 @@ function AuditTrailPage() {
       </Box>
     </DrawerPage>
   );
-}
+});
 
-const styles = {
+AuditTrailPage.displayName = 'AuditTrailPage';
+
+/** @type {MuiSx} */
+const auditTrailPageStyles = () => ({
   headerTabs: ({ palette }) => ({
     minHeight: '2.5rem',
     '& .MuiTabs-indicator': {
-      backgroundColor: palette.text.secondary,
+      backgroundColor: palette.background.tabIndicator,
     },
   }),
   headerTab: ({ palette }) => ({
@@ -458,7 +458,7 @@ const styles = {
   tabs: ({ palette }) => ({
     minHeight: '2.5rem',
     '& .MuiTabs-indicator': {
-      backgroundColor: palette.text.secondary,
+      backgroundColor: palette.background.tabIndicator,
     },
   }),
   tab: ({ palette }) => ({
@@ -487,6 +487,6 @@ const styles = {
     padding: '3rem',
     color: 'error.main',
   },
-};
+});
 
 export default AuditTrailPage;

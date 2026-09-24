@@ -60,7 +60,8 @@ Use the GitHub MCP tools to gather context:
 
 For each changed file, read the **full file** from the local repo (check out the PR branch first if needed, or
 read at the head SHA). Reviewing only the diff leads to shallow feedback. Also read
-`constants/permissions.js`, `routes.js`, `App.jsx` and `Sidebar.jsx` when the PR adds a page or a permission.
+`constants/permissions.constants.js`, `constants/routes.constants.js`, `App.jsx` and `Sidebar.jsx` when the PR
+adds a page or a permission.
 
 ### 3. Review the code
 
@@ -73,7 +74,8 @@ Check the changes against these categories, in priority order:
 - Broken user flows: dialog doesn't reset on close, page not reset to 0 on search/filter change
 - Mutations missing `invalidatesTags`, so the table goes stale after save
 - Permission gating missing or using the wrong `PERMISSIONS` key. A new page not registered in all of
-  `routes.js`, `ROUTE_PERMISSIONS`, `SIDEBAR_PERMISSIONS`, `App.jsx` (`guard()`) and `Sidebar.jsx`
+  `constants/routes.constants.js`, `ROUTE_PERMISSIONS`, `SIDEBAR_PERMISSIONS`, `App.jsx` (`guard()`) and
+  `Sidebar.jsx`
 - Security concerns: secrets rendered or logged, XSS via `dangerouslySetInnerHTML`, user input in URLs without
   `encodeURIComponent`
 
@@ -87,20 +89,26 @@ Check the changes against these categories, in priority order:
 
 #### C. Code reuse and duplication (Important)
 
-- Re-implementing what `DrawerPage`, `DrawerPageHeader`, `GridTable*`, `useTableSort`, `useResponsiveColumns`,
+- Re-implementing what `DrawerPage`, `DrawerPageHeader`, `GridTable*`, `CollapsibleSection`,
+  `LogViewerDrawer`, `AuditEventViews`, `SchemaForm`, `useTableSort`, `useResponsiveColumns`,
   `useDebounceValue`, `usePageTitle`, `useCheckPermission` already do
-- Duplicated logic that already exists in `utils/`, `hooks/` or another page
+- Duplicated logic that already exists in `helpers/`, `hooks/` or another page
 - Hardcoded routes or permission strings instead of `RouteDefinitions` / `PERMISSIONS`
 - Raw `fetch`/`axios` instead of RTK Query endpoints
 
 #### D. Architecture compliance (Important)
 
 - Upward imports: `components/` → `pages/`, `hooks/` → components/pages, `api/` → anything but
-  `adminApi`/`utils/env`
-- New page → page imports (the existing `AuditTrailPage` imports are legacy exceptions)
-- Page-only code placed in `components/`, or shared code left inside a page folder
-- Server data copied into Redux slices or local state instead of read from RTK Query
-- `globalThis.admin_ui_config` read directly instead of via `@/utils/env`
+  `./admin.api`/`@/helpers/env.helpers`
+- Page → page imports
+- Structure (`CLAUDE.md` → Architecture): a file not placed by usage (single-module code in `src/components/`,
+  `src/hooks/`, `src/helpers/`; shared code left inside a module), a module without the standard shape or
+  `index.js`, a private file imported from outside its module, another module imported by file path instead of
+  its barrel, loose files in `src/components/`, a shared module named after a page instead of what it provides
+- A new or moved module without its `index.js` barrel, or a barrel exporting more than the root `.jsx` files
+- Server data copied into Redux slices or local state instead of read from RTK Query, or a new slice outside
+  `store/<name>.slice.js`
+- `globalThis.admin_ui_config` read directly instead of via `@/helpers/env.helpers`
 - `../` imports instead of `@/`
 - Any FSD-style directories (`[fsd]/`, `features/`, `entities/`, `widgets/`, `shared/`). This repo doesn't use
   FSD.
@@ -117,19 +125,21 @@ Check the changes against these categories, in priority order:
 
 - Raw HTML elements (`<div>`, `<span>`, `<button>`, `<table>`, …) instead of MUI / GridTable
 - `px` units or MUI spacing shorthands instead of `rem`
-- `style={{}}`, `styled()`, or large inline `sx` objects instead of a `camelCaseNameStyles` style function
-  below the component with `/** @type {MuiSx} */`
+- `style={{}}`, `styled()`, module-level `const styles`, or inline `sx` objects with more than one property
+  instead of a `camelCaseNameStyles` style function below the component with `/** @type {MuiSx} */`
+- `styles` used in a hook's dependencies without `useMemo(() => fooStyles(), [])`
 - `useTheme` imported from `@emotion/react`
-- Hardcoded colors instead of palette tokens, or a new token added to only one of `lightPalette.js` /
-  `darkPalette.js`
+- Hardcoded colors (including `palette.mode === 'dark' ? … : …`) instead of palette tokens, or a new token
+  added to only one of `theme/light.palette.js` / `theme/dark.palette.js`
 - **Wrong palette token for the CSS property**: `background.*` only for backgrounds, `border.*` only for
   borders, `text.*` only for text color, `icon.*` only for icons
-- MUI imported from the barrel (`@mui/material`) instead of per path
+- MUI components imported per path (`@mui/material/Box`) instead of from the `@mui/material` barrel
 
 #### G. File naming
 
-- Component files not PascalCase, or a page entry not `pages/<Name>Page/<Name>Page.jsx`
-- New hook/helper/constant files missing the `.hooks.js` / `.helpers.js` / `.constants.js` suffix
+- Component files or module folders not PascalCase, or a page module not `pages/<Name>Page/<Name>Page.jsx`
+- Non-component files not named `<name>.<role>.js` (`.hooks.js`, `.helpers.js`, `.constants.js`, `.api.js`,
+  `.slice.js`, `.theme.js`, `.palette.js`)
 - Tests outside a `__tests__/` folder
 
 #### H. General best practices
@@ -137,14 +147,15 @@ Check the changes against these categories, in priority order:
 - Overly complex logic that could be simplified
 - Missing `useCallback` / `useMemo` where it matters (props passed to children, dependency arrays)
 - Comments that explain "what" instead of "why", or unnecessary comments
-- Dead code, unused imports, `console.log` left behind
+- Dead code: unused files, components, exports, endpoints, hooks or dependencies; an exported injected API
+  object; commented-out code; unused imports; `console.log` or `eslint-disable` left behind
 
 ### 4. Filter and prioritize findings
 
 - Only comment on things that genuinely matter. Do not nitpick.
 - Group several small issues in the same file area into one comment when appropriate.
-- If the PR only touches legacy code, don't demand a full conversion to the new conventions. Flag convention
-  issues only in newly written or substantially rewritten code.
+- The whole codebase follows the conventions, so flag violations in any code the PR adds or changes. Don't ask
+  for changes to untouched code outside the diff.
 - Skip files that were only renamed or moved with no logic change.
 - Never review `static/dist/**`, lock files or other generated files. But if `static/dist` or a
   `metadata.json` version bump is **in** the PR, flag it: CI owns those.

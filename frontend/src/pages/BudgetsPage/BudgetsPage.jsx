@@ -1,34 +1,27 @@
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import Snackbar from '@mui/material/Snackbar';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Tooltip from '@mui/material/Tooltip';
+import { Alert, Box, CircularProgress, IconButton, Snackbar, Tab, Tabs, Tooltip } from '@mui/material';
 
 import {
   useLazyProjectBudgetListQuery,
   useProjectBudgetListQuery,
   useProjectBudgetUpdateMutation,
   useUserBudgetUpdateMutation,
-} from '@/api/budgetsApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { useDebounceValue } from '@/hooks/useDebounceValue';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { exportToExcel } from '@/utils/exportToExcel';
+} from '@/api/budgets.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { exportToExcel } from '@/helpers/exportToExcel.helpers';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import BudgetEditDialog from './BudgetEditDialog';
-import BudgetsTable from './BudgetsTable';
-import UserBudgetsDrawer from './UserBudgetsDrawer';
+import BudgetEditDialog from './components/BudgetEditDialog';
+import BudgetsTable from './components/BudgetsTable';
+import UserBudgetsDrawer from './components/UserBudgetsDrawer';
 
 // Tab index -> project_type filter
 const TAB_TYPES = ['team', 'personal'];
@@ -89,7 +82,9 @@ const PERSONAL_EXPORT_COLUMNS = [
   ...EXPORT_BUDGET_COLUMNS,
 ];
 
-export default function BudgetsPage() {
+const BudgetsPage = memo(() => {
+  const styles = budgetsPageStyles();
+
   usePageTitle('Budgets');
 
   const { hasPermission } = useCheckPermission();
@@ -273,7 +268,7 @@ export default function BudgetsPage() {
         <InfoOutlined sx={styles.infoIcon} />
       </Tooltip>
       <Tooltip title="Reload budget data">
-        <span>
+        <Box component="span">
           <IconButton
             size="small"
             onClick={refetch}
@@ -281,10 +276,10 @@ export default function BudgetsPage() {
           >
             <RefreshOutlined fontSize="small" />
           </IconButton>
-        </span>
+        </Box>
       </Tooltip>
       <Tooltip title="Export to Excel">
-        <span>
+        <Box component="span">
           <IconButton
             size="small"
             onClick={handleExport}
@@ -292,7 +287,7 @@ export default function BudgetsPage() {
           >
             {exporting ? <CircularProgress size={16} /> : <FileDownloadOutlined fontSize="small" />}
           </IconButton>
-        </span>
+        </Box>
       </Tooltip>
     </Box>
   );
@@ -370,13 +365,16 @@ export default function BudgetsPage() {
       </Snackbar>
     </>
   );
-}
+});
 
-const styles = {
+BudgetsPage.displayName = 'BudgetsPage';
+
+/** @type {MuiSx} */
+const budgetsPageStyles = () => ({
   tabs: ({ palette }) => ({
     minHeight: '2.5rem',
     '& .MuiTabs-indicator': {
-      backgroundColor: palette.text.secondary,
+      backgroundColor: palette.background.tabIndicator,
     },
   }),
   tab: ({ palette }) => ({
@@ -408,4 +406,6 @@ const styles = {
   errorContainer: {
     padding: '1rem',
   },
-};
+});
+
+export default BudgetsPage;

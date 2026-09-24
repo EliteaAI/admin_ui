@@ -1,28 +1,25 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Snackbar from '@mui/material/Snackbar';
-import Typography from '@mui/material/Typography';
+import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
 
 import {
   useConfigRestartMutation,
   useConfigSchemasQuery,
   useConfigValuesQuery,
   useConfigValuesSaveMutation,
-} from '@/api/configurationApi';
-import { useTaskStartMutation } from '@/api/tasksApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import SchemaForm from '@/components/SchemaForm/SchemaForm';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { usePageTitle } from '@/hooks/usePageTitle';
+} from '@/api/configuration.api';
+import { useTaskStartMutation } from '@/api/tasks.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { SchemaForm } from '@/components/SchemaForm';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 const LiteLLMPage = memo(() => {
+  const styles = liteLLMPageStyles();
+
   usePageTitle('LiteLLM');
 
   const { hasPermission } = useCheckPermission();
@@ -285,7 +282,8 @@ const LiteLLMPage = memo(() => {
 
 LiteLLMPage.displayName = 'LiteLLMPage';
 
-const styles = {
+/** @type {MuiSx} */
+const liteLLMPageStyles = () => ({
   content: {
     flex: 1,
     display: 'flex',
@@ -311,7 +309,7 @@ const styles = {
     padding: '3rem',
   },
   actionBar: ({ palette }) => ({
-    borderTop: `1px solid ${palette.border.table}`,
+    borderTop: `0.0625rem solid ${palette.border.table}`,
     padding: '0.75rem 1.5rem',
     display: 'flex',
     alignItems: 'center',
@@ -344,6 +342,6 @@ const styles = {
     textTransform: 'none',
     fontSize: '0.75rem',
   },
-};
+});
 
 export default LiteLLMPage;

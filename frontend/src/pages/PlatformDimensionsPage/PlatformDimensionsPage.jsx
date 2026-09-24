@@ -5,13 +5,7 @@ import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Snackbar from '@mui/material/Snackbar';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import { Alert, Box, Chip, IconButton, Snackbar, Tooltip, Typography } from '@mui/material';
 
 import {
   usePlatformDimensionCreateMutation,
@@ -19,17 +13,21 @@ import {
   usePlatformDimensionListQuery,
   usePlatformDimensionResyncMutation,
   usePlatformDimensionUpdateMutation,
-} from '@/api/platformDimensionsApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
+} from '@/api/platformDimensions.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
 import { GridTableBody, GridTableContainer, GridTableHeader, GridTableRow } from '@/components/GridTable';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { useResponsiveColumns } from '@/hooks/useResponsiveColumns';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
+import { useResponsiveColumns } from '@/hooks/useResponsiveColumns.hooks';
 
-import PlatformDimensionDialog from './PlatformDimensionDialog';
-import { EVALUATOR_LABELS, IMPORTANCE_LABELS, POLARITY_LABELS } from './constants';
+import PlatformDimensionDialog from './components/PlatformDimensionDialog';
+import {
+  EVALUATOR_LABELS,
+  IMPORTANCE_LABELS,
+  POLARITY_LABELS,
+} from './constants/platformDimensions.constants';
 
 const COLUMNS = [
   { field: 'name', label: 'Name', width: '1.2fr', sortable: false },
@@ -83,6 +81,8 @@ const describeSync = result => {
 };
 
 const PlatformDimensionsPage = memo(() => {
+  const styles = useMemo(() => platformDimensionsPageStyles(), []);
+
   usePageTitle('Platform dimensions');
 
   const { hasPermission } = useCheckPermission();
@@ -188,93 +188,96 @@ const PlatformDimensionsPage = memo(() => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-  const renderCell = useCallback((column, value, row) => {
-    if (column.field === 'scale') {
-      return (
-        <Typography
-          variant="bodyMedium"
-          sx={platformDimensionsPageStyles.cellText}
-        >
-          {getScaleLabel(row)}
-        </Typography>
-      );
-    }
-
-    if (column.field === 'allowed_engines') {
-      return (
-        <Typography
-          variant="bodyMedium"
-          sx={platformDimensionsPageStyles.cellText}
-        >
-          {(value ?? []).map(engine => EVALUATOR_LABELS[engine] ?? engine).join(' · ')}
-        </Typography>
-      );
-    }
-
-    if (column.field === 'default_weight') {
-      const importanceKey = IMPORTANCE_MAP[value] ?? null;
-      const importanceLabel = importanceKey ? IMPORTANCE_LABELS[importanceKey] : (value ?? '-');
-      return (
-        <Typography
-          variant="bodyMedium"
-          sx={platformDimensionsPageStyles.cellText}
-        >
-          {importanceLabel}
-        </Typography>
-      );
-    }
-
-    if (column.field === 'polarity') {
-      return (
-        <Typography
-          variant="bodyMedium"
-          sx={platformDimensionsPageStyles.cellText}
-        >
-          {POLARITY_LABELS[value] ?? value}
-        </Typography>
-      );
-    }
-
-    if (column.field === 'is_active') {
-      return (
-        <Chip
-          label={value ? 'Active' : 'Inactive'}
-          size="small"
-          color={value ? 'primary' : 'default'}
-          variant="outlined"
-        />
-      );
-    }
-
-    if (column.field === 'name') {
-      return (
-        <Tooltip
-          title={row.description || ''}
-          placement="top"
-        >
+  const renderCell = useCallback(
+    (column, value, row) => {
+      if (column.field === 'scale') {
+        return (
           <Typography
             variant="bodyMedium"
-            sx={platformDimensionsPageStyles.cellText}
+            sx={styles.cellText}
           >
-            {value || '-'}
+            {getScaleLabel(row)}
           </Typography>
-        </Tooltip>
-      );
-    }
+        );
+      }
 
-    return (
-      <Typography
-        variant="bodyMedium"
-        sx={platformDimensionsPageStyles.cellText}
-      >
-        {value ?? '-'}
-      </Typography>
-    );
-  }, []);
+      if (column.field === 'allowed_engines') {
+        return (
+          <Typography
+            variant="bodyMedium"
+            sx={styles.cellText}
+          >
+            {(value ?? []).map(engine => EVALUATOR_LABELS[engine] ?? engine).join(' · ')}
+          </Typography>
+        );
+      }
+
+      if (column.field === 'default_weight') {
+        const importanceKey = IMPORTANCE_MAP[value] ?? null;
+        const importanceLabel = importanceKey ? IMPORTANCE_LABELS[importanceKey] : (value ?? '-');
+        return (
+          <Typography
+            variant="bodyMedium"
+            sx={styles.cellText}
+          >
+            {importanceLabel}
+          </Typography>
+        );
+      }
+
+      if (column.field === 'polarity') {
+        return (
+          <Typography
+            variant="bodyMedium"
+            sx={styles.cellText}
+          >
+            {POLARITY_LABELS[value] ?? value}
+          </Typography>
+        );
+      }
+
+      if (column.field === 'is_active') {
+        return (
+          <Chip
+            label={value ? 'Active' : 'Inactive'}
+            size="small"
+            color={value ? 'primary' : 'default'}
+            variant="outlined"
+          />
+        );
+      }
+
+      if (column.field === 'name') {
+        return (
+          <Tooltip
+            title={row.description || ''}
+            placement="top"
+          >
+            <Typography
+              variant="bodyMedium"
+              sx={styles.cellText}
+            >
+              {value || '-'}
+            </Typography>
+          </Tooltip>
+        );
+      }
+
+      return (
+        <Typography
+          variant="bodyMedium"
+          sx={styles.cellText}
+        >
+          {value ?? '-'}
+        </Typography>
+      );
+    },
+    [styles],
+  );
 
   const renderActions = useCallback(
     row => (
-      <Box sx={platformDimensionsPageStyles.actionsRow}>
+      <Box sx={styles.actionsRow}>
         <Tooltip title={canEdit ? 'Edit dimension' : 'No permission to edit'}>
           <Box component="span">
             <IconButton
@@ -324,7 +327,7 @@ const PlatformDimensionsPage = memo(() => {
         </Tooltip>
       </Box>
     ),
-    [canEdit, canDeactivate, isSyncing, openEdit, handleSync, handleToggleActive],
+    [styles, canEdit, canDeactivate, isSyncing, openEdit, handleSync, handleToggleActive],
   );
 
   const headerControls = useMemo(
@@ -360,9 +363,9 @@ const PlatformDimensionsPage = memo(() => {
           addButtonDisabled={!canCreate}
         />
 
-        <Box sx={platformDimensionsPageStyles.tableContainer}>
+        <Box sx={styles.tableContainer}>
           {isError ? (
-            <Box sx={platformDimensionsPageStyles.errorContainer}>Failed to load platform dimensions.</Box>
+            <Box sx={styles.errorContainer}>Failed to load platform dimensions.</Box>
           ) : (
             <GridTableContainer
               isLoading={isFetching}
@@ -423,7 +426,7 @@ const PlatformDimensionsPage = memo(() => {
 PlatformDimensionsPage.displayName = 'PlatformDimensionsPage';
 
 /** @type {MuiSx} */
-const platformDimensionsPageStyles = {
+const platformDimensionsPageStyles = () => ({
   tableContainer: {
     flexGrow: 1,
     minHeight: 0,
@@ -443,6 +446,6 @@ const platformDimensionsPageStyles = {
     alignItems: 'center',
     gap: '0.25rem',
   },
-};
+});
 
 export default PlatformDimensionsPage;

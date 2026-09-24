@@ -1,69 +1,29 @@
-import {
-  Navigate,
-  Route,
-  RouterProvider,
-  createBrowserRouter,
-  createRoutesFromElements,
-} from 'react-router-dom';
+import { memo } from 'react';
 
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
 
-import Layout from '@/components/Layout/Layout';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { SIDEBAR_PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import AppRequestsPage from '@/pages/AppRequestsPage/AppRequestsPage';
-import AuditTrailPage from '@/pages/AuditTrailPage/AuditTrailPage';
-import BudgetsPage from '@/pages/BudgetsPage/BudgetsPage';
-import ConfigurationPage from '@/pages/ConfigurationPage/ConfigurationPage';
-import FeaturesPage from '@/pages/FeaturesPage/FeaturesPage';
-import LiteLLMPage from '@/pages/LiteLLMPage/LiteLLMPage';
-import ModelPricesPage from '@/pages/ModelPricesPage/ModelPricesPage';
-import PlatformDimensionsPage from '@/pages/PlatformDimensionsPage/PlatformDimensionsPage';
-import ProjectsPage from '@/pages/ProjectsPage/ProjectsPage';
-import ReportsPage from '@/pages/ReportsPage/ReportsPage';
-import RolesPage from '@/pages/RolesPage/RolesPage';
-import SchedulesTasksPage from '@/pages/SchedulesTasksPage/SchedulesTasksPage';
-import SecretsPage from '@/pages/SecretsPage/SecretsPage';
-import UsersPage from '@/pages/UsersPage/UsersPage';
-import { RouteDefinitions } from '@/routes';
+import { DefaultRedirect } from '@/components/DefaultRedirect';
+import { Layout } from '@/components/Layout';
+import { NotFound } from '@/components/NotFound';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { RouteDefinitions } from '@/constants/routes.constants';
+import { getEnvVar } from '@/helpers/env.helpers';
+import { AppRequestsPage } from '@/pages/AppRequestsPage';
+import { AuditTrailPage } from '@/pages/AuditTrailPage';
+import { BudgetsPage } from '@/pages/BudgetsPage';
+import { ConfigurationPage } from '@/pages/ConfigurationPage';
+import { FeaturesPage } from '@/pages/FeaturesPage';
+import { LiteLLMPage } from '@/pages/LiteLLMPage';
+import { ModelPricesPage } from '@/pages/ModelPricesPage';
+import { PlatformDimensionsPage } from '@/pages/PlatformDimensionsPage';
+import { ProjectsPage } from '@/pages/ProjectsPage';
+import { ReportsPage } from '@/pages/ReportsPage';
+import { RolesPage } from '@/pages/RolesPage';
+import { SchedulesTasksPage } from '@/pages/SchedulesTasksPage';
+import { SecretsPage } from '@/pages/SecretsPage';
+import { UsersPage } from '@/pages/UsersPage';
 
-const basename = globalThis.admin_ui_config?.vite_base_uri ?? '';
-
-function NotFound() {
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-      }}
-    >
-      <Typography
-        variant="headingLarge"
-        color="text.secondary"
-      >
-        404 — Page not found
-      </Typography>
-    </Box>
-  );
-}
-
-const DefaultRedirect = () => {
-  const { hasAnyPermission } = useCheckPermission();
-
-  const sidebarKeys = Object.keys(SIDEBAR_PERMISSIONS);
-  const firstAllowed = sidebarKeys.find(key => hasAnyPermission(SIDEBAR_PERMISSIONS[key]));
-
-  return (
-    <Navigate
-      to={firstAllowed ? `/${firstAllowed}` : RouteDefinitions.Users}
-      replace
-    />
-  );
-};
+const basename = getEnvVar('vite_base_uri') ?? '';
 
 const guard = (path, element) => {
   return <ProtectedRoute path={path}>{element}</ProtectedRoute>;
@@ -141,8 +101,8 @@ const router = createBrowserRouter(
   { basename },
 );
 
-function App() {
-  return <RouterProvider router={router} />;
-}
+const App = memo(() => <RouterProvider router={router} />);
+
+App.displayName = 'App';
 
 export default App;

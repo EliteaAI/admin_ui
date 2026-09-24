@@ -7,23 +7,26 @@ import FullscreenExitOutlined from '@mui/icons-material/FullscreenExitOutlined';
 import FullscreenOutlined from '@mui/icons-material/FullscreenOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import Drawer from '@mui/material/Drawer';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Drawer,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import { search, searchKeymap } from '@codemirror/search';
 import { EditorView, keymap } from '@codemirror/view';
 import CodeMirror from '@uiw/react-codemirror';
 
-import { LEVEL_COLORS, LOG_LEVELS, filterLogsByLevel } from './logLevels';
+import { LEVEL_COLORS, LOG_LEVELS } from './constants/logLevels.constants';
+import { filterLogsByLevel } from './helpers/logLevels.helpers';
 
 const LogViewerDrawer = memo(props => {
   const {
@@ -42,6 +45,8 @@ const LogViewerDrawer = memo(props => {
     onScrollTop,
     onScrollBottom,
   } = props;
+
+  const styles = logViewerDrawerStyles();
 
   const [downloadAnchor, setDownloadAnchor] = useState(null);
   const [fullscreen, setFullscreen] = useState(false);
@@ -148,7 +153,7 @@ const LogViewerDrawer = memo(props => {
               {headerExtra}
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', gap: '0.25rem' }}>
+          <Box sx={styles.headerActions}>
             <Tooltip title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
               <IconButton
                 size="small"
@@ -207,11 +212,6 @@ const LogViewerDrawer = memo(props => {
                     extensions={extensions}
                     readOnly
                     onCreateEditor={handleCreateEditor}
-                    style={{
-                      flex: 1,
-                      overflow: 'hidden',
-                      fontSize: '0.75rem',
-                    }}
                   />
                   <Box sx={styles.scrollButtons}>
                     <Tooltip
@@ -298,7 +298,8 @@ const LogViewerDrawer = memo(props => {
 
 LogViewerDrawer.displayName = 'LogViewerDrawer';
 
-const styles = {
+/** @type {MuiSx} */
+const logViewerDrawerStyles = () => ({
   drawer: fullscreen => ({
     '& .MuiDrawer-paper': {
       width: fullscreen ? '100vw' : '50vw',
@@ -324,6 +325,10 @@ const styles = {
     flexDirection: 'column',
     gap: '0.125rem',
     overflow: 'hidden',
+  },
+  headerActions: {
+    display: 'flex',
+    gap: '0.25rem',
   },
   headerMeta: {
     display: 'flex',
@@ -364,6 +369,11 @@ const styles = {
     display: 'flex',
     position: 'relative',
     overflow: 'hidden',
+    '& .cm-theme-dark, & .cm-theme-light': {
+      flex: 1,
+      overflow: 'hidden',
+      fontSize: '0.75rem',
+    },
     '& .cm-editor': {
       flex: 1,
       height: '100%',
@@ -394,10 +404,10 @@ const styles = {
   },
   scrollButton: ({ palette }) => ({
     backgroundColor: palette.background.paper,
-    border: `1px solid ${palette.border?.table || palette.divider}`,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+    border: `0.0625rem solid ${palette.border.table}`,
+    boxShadow: palette.boxShadow.floating,
     '&:hover': {
-      backgroundColor: palette.action?.hover || 'rgba(0,0,0,0.08)',
+      backgroundColor: palette.action.hover,
     },
   }),
   loading: {
@@ -427,6 +437,6 @@ const styles = {
     textTransform: 'none',
     fontSize: '0.8125rem',
   },
-};
+});
 
 export default LogViewerDrawer;

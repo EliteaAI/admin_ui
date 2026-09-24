@@ -21,7 +21,6 @@ npm run dev          # dev server at http://localhost:5174 (proxies /api to VITE
 npm run build        # production build → ../static/dist (hidden from git locally, see below)
 npm run lint         # eslint
 npm run format       # prettier (formatting + import sorting)
-npm run storybook    # Storybook at http://localhost:6006
 ```
 
 Dev setup: copy `.env.example` to `.env` and set `VITE_SERVER_URL` (e.g. `http://<host>/api/v2`),
@@ -45,76 +44,140 @@ Dev setup: copy `.env.example` to `.env` and set `VITE_SERVER_URL` (e.g. `http:/
   git checkout -- static/dist && git pull
   ```
 
-## Architecture: Page-Colocated Layered Structure
+## Architecture: Modules, Colocated by Usage
 
-Admin UI does **not** use Feature-Sliced Design. It uses a flat structure: code is grouped by technical role
-(`api/`, `hooks/`, `components/`, …), and each route owns a page folder that holds everything used only by
-that page. Keep that structure. Do not introduce `[fsd]/`, `features/`, `entities/`, `widgets/` or `shared/`.
+Admin UI does **not** use Feature-Sliced Design. `src/` has a small set of top-level role folders, and all UI
+lives in **modules** that share one shape. Where a file goes depends on **who uses it**. Do not introduce
+`[fsd]/`, `features/`, `entities/`, `widgets/` or `shared/`.
+
+### Top level
 
 ```
 frontend/src/
-  main.jsx               → entry: Redux Provider, ThemeWrapper (MUI theme + socket.io), LocalizationProvider
-  App.jsx                → router: routes wrapped in guard() → <ProtectedRoute>
-  routes.js              → RouteDefinitions (route path constants)
-  MainTheme.js           → MUI theme: typography variants, component overrides
-  lightPalette.js / darkPalette.js → palette tokens (the only place hex colors live)
-  store/                 → Redux store: settings + user slices, adminApi reducer
-  pages/<Name>Page/      → one folder per route: page component + page-only dialogs, drawers, tables,
-                           constants, helpers. Big sub-areas get a nested folder (FeaturesPage/SurveysSection/)
-  components/            → UI shared by 2+ pages or by the app shell
-                           (Layout, DrawerPage, DrawerPageHeader, GridTable, SchemaForm, LogViewerDrawer, Icons…)
-  hooks/                 → shared React hooks (permissions, sorting, debounce, page title, sockets…)
-  api/                   → RTK Query: adminApi.js (base) + one <domain>Api.js per backend domain
-  constants/             → app-wide constants (permissions.js: PERMISSIONS, SIDEBAR_/ROUTE_PERMISSIONS)
-  utils/                 → pure helpers + env.js (runtime config access)
+  main.jsx          → entry: Redux <Provider> + <ThemeWrapper> + <App />
+  App.jsx           → router: every route wrapped in guard() → <ProtectedRoute>
+  api/              → RTK Query: admin.api.js (base createApi) + one <domain>.api.js per backend domain
+  components/       → shared modules: used by 2+ pages, or by the app shell (App.jsx / main.jsx)
+  constants/        → app-wide constants: permissions.constants.js, routes.constants.js
+  helpers/          → app-wide pure helpers: env.helpers.js (runtime config), exportToExcel.helpers.js
+  hooks/            → hooks used by 2+ modules
+  pages/            → one module per route: <Name>Page/
+  store/            → Redux: index.js (store + action re-exports) + <name>.slice.js per slice
+  theme/            → main.theme.js (MUI theme), light.palette.js / dark.palette.js (the only place hex colors live)
 ```
+
+Nothing else lives at the top level. `components/` contains **only module folders**, never loose files.
+
+### Module shape
+
+A **module** is a shared component folder (`components/<Name>/`), a page folder (`pages/<Name>Page/`) or a
+section of a page or shared module (`…/components/<Name>/`). Every module has the same shape. Subfolders exist
+only when they have content.
+
+```
+<Name>/
+  <Name>.jsx        public component(s): the ONLY .jsx files at the module root
+  index.js          barrel: `export { default as <Name> } from './<Name>';` per public component. Always present
+  components/       private components of this module (flat .jsx files, or section modules, see below)
+  constants/        <name>.constants.js used only inside this module
+  helpers/          <name>.helpers.js used only inside this module
+  hooks/            use<Name>.hooks.js used only inside this module
+```
+
+- **Public vs private**: a `.jsx` at the module root is public and exported by `index.js`. Everything under
+  `components/`, `constants/`, `helpers/` and `hooks/` is private to the module and never imported from
+  outside it.
+- **Section modules**: a private component that has private files of its own (sub-components, constants,
+  helpers) becomes a folder with the same shape, e.g. `pages/FeaturesPage/components/SurveysSection/`. A
+  private component without its own files stays a single `.jsx` in `components/`. Nest at most one level:
+  sections do not contain sections.
+- Most shared modules have one public component (`DrawerPage`). Kits expose several (`GridTable`:
+  `GridTableContainer`, `GridTableHeader`, …; `Icons`: every custom SVG icon).
+
+Example:
+
+```
+pages/SchedulesTasksPage/
+  SchedulesTasksPage.jsx
+  index.js
+  components/
+    TaskLogDrawer.jsx              used by two tabs of this page
+    ActiveTasksTab/                section module
+      ActiveTasksTab.jsx
+      index.js
+      components/ ActiveTasksNodeCard.jsx, CopyableCell.jsx, StackDumpDrawer.jsx
+      constants/  activeTasks.constants.js
+      helpers/    activeTasks.helpers.js
+    SchedulesTab/ …
+    TasksTab/ …
+  hooks/
+    useTaskLogSocket.hooks.js
+```
+
+### Where a file goes: decided by usage
+
+| The file is used by…                               | It lives in                                                              |
+| -------------------------------------------------- | ------------------------------------------------------------------------ |
+| one file only (constants)                          | the top of that file                                                     |
+| one module (page, section or shared module)        | that module: `components/`, `constants/`, `helpers/` or `hooks/`         |
+| several sections of one page                       | the page module's own `components/` / `constants/` / … folder            |
+| 2+ pages, or the app shell (`App.jsx`, `main.jsx`) | `src/components/<Name>/`, `src/hooks/`, `src/helpers/`, `src/constants/` |
+| any page (backend call)                            | `src/api/<domain>.api.js`                                                |
+| any page (permission key / route path)             | `src/constants/permissions.constants.js` / `routes.constants.js`         |
+| any module (custom SVG icon)                       | `src/components/Icons/` — always, it is the project's single icon set    |
+
+When usage changes, the file moves: a page-private component that a second page starts to use moves to
+`src/components/<Name>/`, and a shared module that only one page still uses moves into that page. This is why
+the Audit Trail page keeps `AuditTrailFilters` in its own `components/`, while the audit tables and heatmap
+live in `src/components/AuditEventViews/`: the Users and Projects activity drawers use them too.
+
+**Shared modules are named after what they are, never after a page or feature.** A name like
+`components/AuditTrail/` suggests it belongs to the Audit Trail page and invites page-only code into it. Name
+the thing it provides instead: `AuditEventViews`, `GridTable`, `LogViewerDrawer`, `SchemaForm`. When a page's
+component becomes shared and moves to `src/components/`, rename it if its name ties it to that page.
+
+### Imports
+
+- **Across modules, import through the barrel, by name**:
+  `import { GridTableRow } from '@/components/GridTable';`, `import { UsersPage } from '@/pages/UsersPage';`.
+  Never reach into another module's files (`@/components/AuditEventViews/components/…` from outside
+  `AuditEventViews` is an error).
+- **Inside a module**: import files directly. Use `./` for the same folder or a subfolder
+  (`./components/CreateSecretDialog`, `./constants/secrets.constants`) and `@/…` for anything else
+  (`@/pages/SecretsPage/helpers/secrets.helpers` from `SecretsPage/components/`).
+- Top-level role folders are imported by file: `@/hooks/useTableSort.hooks`,
+  `@/constants/permissions.constants`, `@/api/users.api`, `@/helpers/env.helpers`, `@/store`.
+- Never `../`.
 
 ### Layers and import direction (top → bottom)
 
 ```
-app shell (main, App, routes, theme, store)
+app shell (main.jsx, App.jsx, store/, theme/)
   → pages/
     → components/
       → hooks/
         → api/
-          → constants/ · utils/
+          → constants/ · helpers/
 ```
 
 A layer may import only from layers **below** it:
 
-- `pages/` may import from `components/`, `hooks/`, `api/`, `constants/`, `utils/` and actions from `@/store`.
-- `components/` must **never** import from `pages/`.
+- `pages/` may import from `components/`, `hooks/`, `api/`, `constants/`, `helpers/` and actions from
+  `@/store`.
+- `components/` must **never** import from `pages/`. Shared components may dispatch actions from `@/store`.
 - `hooks/` must not import components or pages.
-- `api/` imports only `./adminApi` and `@/utils/env`.
-- `constants/` and `utils/` are pure. They import nothing from the project, except `utils/env.js`, which reads
-  `globalThis.admin_ui_config`.
-- **No page → page imports in new code.** When a second page needs something from a page folder, move it down
-  to `components/` (UI), `hooks/` (hook) or `utils/` (pure logic), then update every importer. The existing
-  `UsersPage`/`ProjectsPage` → `AuditTrailPage/{AuditHeatmap,AuditTrailTable,AuditTraceTable}` imports are
-  known legacy exceptions. Do not add more.
-
-### Where new code goes
-
-| You are adding…                               | Put it in                                                  |
-| --------------------------------------------- | ---------------------------------------------------------- |
-| A new admin section (route)                   | `pages/<Name>Page/<Name>Page.jsx` (see `/add-page` skill)  |
-| A dialog / drawer / table used by one page    | that page's folder: `pages/<Name>Page/<Thing>.jsx`         |
-| A large sub-area of a page with several files | nested folder: `pages/<Name>Page/<Area>Section/`           |
-| UI used by 2+ pages or by the layout          | `components/<Name>.jsx` or `components/<Group>/<Name>.jsx` |
-| A Configuration/Features schema-driven field  | `components/SchemaForm/`                                   |
-| A hook used by 2+ files                       | `hooks/use<Name>.hooks.js`                                 |
-| A backend call                                | `api/<domain>Api.js` via `adminApi.injectEndpoints()`      |
-| A permission key                              | `constants/permissions.js`                                 |
-| A pure helper used by 2+ places               | `utils/<name>.helpers.js`                                  |
-| Constants / helpers used by one page only     | `pages/<Name>Page/<name>.constants.js` / `.helpers.js`     |
-| Constants used by one file only               | top of that file                                           |
+- `api/` imports only `./admin.api` and `@/helpers/env.helpers`.
+- `constants/` and `helpers/` are pure and import nothing from the project, except `helpers/env.helpers.js`,
+  which reads `globalThis.admin_ui_config`.
+- **No page → page imports.** Move the shared piece down (see the placement table) and update every importer.
 
 ### Runtime config and auth
 
 - The backend (`routes/ui.py`) injects `window.admin_ui_config` into `index.html`: `vite_server_url`,
   `vite_base_uri`, `user_id`, `user_name`, `user_email`, `permissions`, `roles`, plus any `extra_ui_config`.
-- Read it only through `@/utils/env` (`getEnvVar(name)` falls back to `import.meta.env.VITE_<NAME>`). Never
-  read `globalThis.admin_ui_config` directly in components.
+- Read it only through `@/helpers/env.helpers`: `getEnvVar(name)` (falls back to
+  `import.meta.env.VITE_<NAME>`) or `getAdminConfig()` for the whole object. Nothing else reads
+  `globalThis.admin_ui_config`.
 - Requests use cookie auth (`credentials: 'include'`). In dev, `VITE_DEV_TOKEN` is sent as a Bearer token.
 - RBAC: `permissions`/`roles` land in the `user` slice. Check them with `useCheckPermission()`
   (`hasPermission`, `hasAnyPermission`, `isSuperAdmin`, …) against keys from `PERMISSIONS`. Routes are gated
@@ -123,8 +186,8 @@ A layer may import only from layers **below** it:
 
 ## Code Style Guide
 
-These conventions match EliteaUI. Existing files don't all follow them yet. **All new code, and any component
-you substantially rewrite, must follow them.** Do not refactor untouched legacy code as a side effect.
+These conventions match EliteaUI, and the whole of `src/` follows them. **All new and changed code must follow
+them too.**
 
 ### Components
 
@@ -137,11 +200,10 @@ set `displayName`. Use a `default` export.
 ```jsx
 import { memo, useCallback } from 'react';
 
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import { Box, Typography } from '@mui/material';
 
-import { PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 
 const ProjectCard = memo(props => {
   const { project, isActive = false, onSelect, sx } = props;
@@ -214,9 +276,8 @@ const SearchField = memo(
 SearchField.displayName = 'SearchField';
 ```
 
-Legacy forms you will see and should **not** copy into new code: `function Foo({ a, b })` declarations,
-`memo(function Foo(props) { … })`, `memo(({ a, b }) => …)`, missing `displayName`. When you substantially edit
-such a component, convert it to the pattern above.
+Forms that are **not** allowed: `function Foo({ a, b })` declarations, `memo(function Foo(props) { … })`,
+`memo(({ a, b }) => …)`, `export default memo(Foo)`, missing `displayName`.
 
 `PropTypes` is not used (`react/prop-types` is off). Don't add it to new components. If an existing component
 already declares `propTypes`, keep them in sync when you change its props.
@@ -231,10 +292,10 @@ files or modules, no `style={{}}` props.**
   `/** @type {MuiSx} */`.
 - It returns an object of named style keys. It may take arguments for conditional styles.
 - Use `({ palette }) => ({ … })` for theme-dependent keys.
-- **`rem` units only**: never `px` (`0.0625rem` = 1px). MUI spacing shorthands (`mb: 2`, `px: 3`) are legacy.
-  Use explicit `rem` values in new code.
-- **Never hardcode colors.** Use palette tokens. Hex/rgba values belong only in `lightPalette.js` /
-  `darkPalette.js`. If a token is missing, add it to **both** palettes.
+- **`rem` units only**: never `px` (`0.0625rem` = 1px). No MUI spacing shorthands (`mb: 2`, `px: 3`): use
+  explicit properties with `rem` values (`marginBottom: '1rem'`).
+- **Never hardcode colors.** Use palette tokens. Hex/rgba values belong only in `theme/light.palette.js` /
+  `theme/dark.palette.js`. If a token is missing, add it to **both** palettes.
 - **Use semantically correct tokens**:
   - `background.*` / `*.background.*` → only `backgroundColor` / `background`
   - `border.*` → only `border`, `borderColor`, `outline`
@@ -244,13 +305,18 @@ files or modules, no `style={{}}` props.**
 - No layout props directly on `Box` (`display`, `flexDirection`, …). Put them in `sx`.
 - Trivial one-property `sx` inline (e.g. `sx={{ flex: 1 }}`) is tolerated. Anything more goes in the style
   function.
-- Legacy files use a module-level `const styles = { … }` object. Leave them alone unless you are rewriting the
-  component, and then switch to the style function.
+- No module-level `const styles = { … }` objects. When a style function is used inside a hook (e.g. a
+  `renderCell` `useCallback`), memoize it: `const styles = useMemo(() => fooStyles(), []);` and list `styles`
+  in the dependency array.
 
 ### MUI components and imports
 
-- **Import MUI per component path** (this repo's convention, not the barrel):
-  `import Box from '@mui/material/Box';`, `import EditOutlined from '@mui/icons-material/EditOutlined';`
+- **Import MUI components from the `@mui/material` barrel**, as one named import per file:
+  `import { Box, Checkbox, Typography } from '@mui/material';`. Never use per-component paths
+  (`import Box from '@mui/material/Box'`).
+- Icons stay per path (the icons barrel is too heavy for the dev server):
+  `import EditOutlined from '@mui/icons-material/EditOutlined';`
+- Theme utilities (`useTheme`, `createTheme`, `ThemeProvider`, `alpha`) come from `@mui/material/styles`.
 - Never use raw HTML elements when MUI has an equivalent:
 
 | Instead of    | Use                                                        |
@@ -265,7 +331,7 @@ files or modules, no `style={{}}` props.**
 | `<a>`         | React Router `<Link>` or MUI `<Link>`                      |
 | `<table>`     | the project's `GridTable*` components (not MUI X DataGrid) |
 
-- Custom typography variants (from `MainTheme.js`): `headingLarge`, `headingMedium`, `headingSmall`,
+- Custom typography variants (from `theme/main.theme.js`): `headingLarge`, `headingMedium`, `headingSmall`,
   `labelMedium`, `labelSmall`, `labelTiny`, `bodyMedium`, `bodySmall`, `bodySmall2`, `subtitle`.
 - `useTheme` comes from `@mui/material/styles` (never `@emotion/react`).
 - Custom SVG icons live in `components/Icons/`. Otherwise use `@mui/icons-material` `*Outlined` icons.
@@ -284,17 +350,16 @@ files or modules, no `style={{}}` props.**
 | Permission checks                      | `useCheckPermission` + `PERMISSIONS`                                       |
 | Collapsible block                      | `@/components/CollapsibleSection`                                          |
 | Log viewers                            | `@/components/LogViewerDrawer`                                             |
-| Plugin/config forms                    | `@/components/SchemaForm`                                                  |
-| Excel export                           | `@/utils/exportToExcel`, `@/utils/exportSurveyXlsx`                        |
+| Audit event tables and heatmap         | `@/components/AuditEventViews`                                             |
+| Schema-driven config forms             | `@/components/SchemaForm` (`SchemaForm`, `GuardrailsSection`)              |
+| Excel export                           | `@/helpers/exportToExcel.helpers`                                          |
 
 ### Hooks
 
-- Shared hooks: `hooks/use<Name>.hooks.js`. Named exports only. Page-only hooks may live in the page folder
-  with the same naming.
+- File naming `use<Name>.hooks.js`, named exports only. Placement by usage: `src/hooks/` when 2+ modules use
+  it, otherwise the module's own `hooks/` folder.
 - Wrap callbacks in `useCallback` and derived values in `useMemo`, with complete dependency arrays
   (`react-hooks/exhaustive-deps` is an error).
-- Existing hooks keep their legacy names (`useTableSort.js`, …). Import them as they are. Do not rename them
-  as a side effect.
 
 ```js
 import { useCallback, useState } from 'react';
@@ -321,66 +386,85 @@ export const useDialogState = (initialTarget = null) => {
 
 - `UPPER_SNAKE_CASE` for constant names. Named exports.
 - **Used in one file only**: define at the top of that file (e.g. a table's `COLUMNS` array).
-- **Shared within one page**: `pages/<Name>Page/<name>.constants.js`.
-- **App-wide**: `constants/<name>.constants.js`, except permission keys, which always go in
-  `constants/permissions.js`.
-- Routes live in `RouteDefinitions` (`@/routes`). Never hardcode route strings.
+- **Used across one module**: that module's `constants/<name>.constants.js`.
+- **App-wide**: `src/constants/<name>.constants.js`. Permission keys always go in
+  `constants/permissions.constants.js`, route paths in `constants/routes.constants.js`.
+- Routes live in `RouteDefinitions` (`@/constants/routes.constants`). Never hardcode route strings.
 
 ### Helpers
 
 - File naming: `<name>.helpers.js`. Pure arrow functions, named exports, no side effects, no React.
-- Page-only helpers go in the page folder. Shared helpers go in `utils/`.
+- Placement by usage: the module's own `helpers/` folder, or `src/helpers/` when 2+ modules use it.
+
+### No dead code
+
+- Every file is imported by something, and every export is imported somewhere else. Delete unused components,
+  files, endpoints and exports instead of keeping them "just in case". Values used only inside their own file
+  are plain `const`, not exported.
+- RTK Query: export only the generated hooks that code uses. The injected API object
+  (`const secretsApi = adminApi.injectEndpoints(…)`) is not exported. An endpoint that no hook user calls is
+  removed.
+- `package.json` lists only packages the code imports (or that tooling and peer dependencies need). Remove a
+  dependency in the same change that removes its last use. No Storybook, no unused Vite plugins.
+- No commented-out code, `console.log`, or `eslint-disable` comments.
 
 ### API layer (RTK Query)
 
-- One file per backend domain: `api/<domain>Api.js` using `adminApi.injectEndpoints()`.
-- Register every new tag in `tagTypes` in `api/adminApi.js`. Queries `providesTags`; mutations
+- One file per backend domain: `api/<domain>.api.js` using `adminApi.injectEndpoints()`.
+- Register every new tag in `tagTypes` in `api/admin.api.js`. Queries `providesTags`; mutations
   `invalidatesTags`.
 - Endpoint names follow `<entity><Action>`: `secretList`, `secretCreate`, `projectBudgetUpdate`. The generated
   hooks (`useSecretListQuery`, `useLazySecretRevealQuery`, `useSecretCreateMutation`) are destructured and
-  exported at the bottom of the file.
+  exported at the bottom of the file. Only hooks are exported, not the injected API object.
 - No `axios`/`fetch` in components. Every HTTP call goes through RTK Query. Details: `.claude/rules/api.md`.
 
 ### Redux
 
 - The store (`store/index.js`) holds `settings` (theme mode, socket status, sidebar state), `user` (user,
   permissions, roles) and the `adminApi` reducer. Import actions from `@/store`.
-- Server data belongs in RTK Query, not in slices. Add a slice only for real cross-page client state, as
-  `store/<name>.slice.js`, registered in `store/index.js`. Mirror it in `.storybook/storybookStore.js` if
-  components in stories read it.
+- Each slice lives in `store/<name>.slice.js` (`settings.slice.js`, `user.slice.js`) and exports the slice and
+  its actions. `store/index.js` configures the store and re-exports all actions, so components import from
+  `@/store` only.
+- Server data belongs in RTK Query, not in slices. Add a slice only for real cross-page client state, and
+  register it in `store/index.js`.
 - Selectors: `useSelector(state => state.settings.mode)`.
 
 ### Barrel files (`index.js`)
 
-Multi-file component folders expose a barrel (`GridTable/`, `LogViewerDrawer/`,
-`SchemaForm/CustomThemeSection/`). Add one when a `components/` folder has 2+ public files:
+Every module folder (`components/<Name>/`, `pages/<Name>Page/`, section folders) has an `index.js` with one
+named export per public component, and nothing else:
 
 ```js
+export { default as GridTableBody } from './GridTableBody';
 export { default as GridTableContainer } from './GridTableContainer';
-export * from './customTheme.constants';
 ```
 
-Page folders don't need a barrel. `App.jsx` imports `@/pages/<Name>Page/<Name>Page` directly.
+- Type folders (`components/`, `constants/`, `helpers/`, `hooks/`) and top-level role folders (`api/`,
+  `hooks/`, `helpers/`, `constants/`) have **no** barrel. Import their files directly.
+- Private files are never re-exported. If another module needs one, move it (see "Where a file goes").
+- `App.jsx` imports pages through their barrels: `import { UsersPage } from '@/pages/UsersPage';`.
 
 ## File Naming Conventions
 
-| Category               | Convention                                       | Example                             |
-| ---------------------- | ------------------------------------------------ | ----------------------------------- |
-| Component files        | `PascalCase.jsx`                                 | `DeleteSecretDialog.jsx`            |
-| Page entry             | `pages/<Name>Page/<Name>Page.jsx`                | `pages/SecretsPage/SecretsPage.jsx` |
-| Component/page folders | `PascalCase/`                                    | `GridTable/`, `SurveysSection/`     |
-| Top-level role folders | lowercase                                        | `api/`, `hooks/`, `utils/`          |
-| Hook files             | `use<Name>.hooks.js`                             | `useDialogState.hooks.js`           |
-| Helper files           | `camelCase.helpers.js`                           | `budgetFormat.helpers.js`           |
-| Constant files         | `camelCase.constants.js`                         | `secrets.constants.js`              |
-| API files              | `camelCaseApi.js`                                | `modelPricesApi.js`                 |
-| Redux slice files      | `camelCase.slice.js`                             | `store/filters.slice.js`            |
-| Story files            | `PascalCase.stories.jsx` (next to the component) | `ExampleButton.stories.jsx`         |
-| Test files             | `<name>.test.js(x)` inside `__tests__/`          | `__tests__/SecretsTable.test.jsx`   |
-| Barrel files           | `index.js`                                       | always `index.js`                   |
+Every **component** file is `PascalCase.jsx`. Every **non-component** file is `<name>.<role>.js`, so the role
+is visible from the name wherever the file lives.
 
-Legacy names (`constants.js`, `format.js`, `groupTasks.js`, `useTableSort.js`) stay until a dedicated
-refactor. Don't rename files as a side effect of an unrelated change.
+| Category            | Convention                                    | Example                                                   |
+| ------------------- | --------------------------------------------- | --------------------------------------------------------- |
+| Component files     | `PascalCase.jsx`                              | `DeleteSecretDialog.jsx`                                  |
+| Module folders      | `PascalCase/`, named after the main component | `GridTable/`, `SurveysSection/`                           |
+| Page module         | `pages/<Name>Page/<Name>Page.jsx`             | `pages/SecretsPage/SecretsPage.jsx`                       |
+| Type / role folders | lowercase                                     | `components/`, `constants/`, `helpers/`, `hooks/`, `api/` |
+| Hook files          | `use<Name>.hooks.js`                          | `useTableSort.hooks.js`                                   |
+| Helper files        | `camelCase.helpers.js`                        | `budgetFormat.helpers.js`, `env.helpers.js`               |
+| Constant files      | `camelCase.constants.js`                      | `permissions.constants.js`, `secrets.constants.js`        |
+| API files           | `camelCase.api.js`                            | `admin.api.js`, `modelPrices.api.js`                      |
+| Redux slice files   | `camelCase.slice.js`                          | `store/settings.slice.js`                                 |
+| Theme files         | `camelCase.theme.js` / `camelCase.palette.js` | `theme/main.theme.js`, `theme/dark.palette.js`            |
+| Test files          | `<name>.test.js(x)` inside `__tests__/`       | `__tests__/SecretsTable.test.jsx`                         |
+| Barrel files        | `index.js`                                    | always `index.js`                                         |
+
+The only files without a role suffix are `main.jsx`, `App.jsx`, `store/index.js` and barrels.
 
 ## Import Ordering
 
@@ -393,8 +477,9 @@ groups:
 4. `@/` project imports
 5. Relative imports (`./`)
 
-The `@` alias maps to `src/`. Use `@/` for anything outside the current folder. Use `./` only inside the same
-folder. Never use `../`.
+The `@` alias maps to `src/`. Use `./` for the same folder or a subfolder of the importing file, `@/` for
+everything else, never `../`. Other modules are imported through their barrel (see "Imports" under
+Architecture).
 
 ## Formatting and linting
 
@@ -414,12 +499,9 @@ Run `npm run format` and `npm run lint` before committing (see the `/prepare-com
 ## Testing and verification
 
 - **Build**: `npm run build` must pass for every change.
-- **Storybook**: stories use CSF3 (`export default { title, component }` + named story objects), colocated as
-  `<Component>.stories.jsx`. The decorator in `.storybook/preview.jsx` provides the theme, the Redux
-  `storybookStore` and the date localization.
-- **Unit tests**: no runner script is configured yet. If you add tests, use Vitest + React Testing Library,
-  put them in a co-located `__tests__/` folder (never next to source files), wrap renders in `ThemeProvider`,
-  select by `data-testid`, and add the `test` script in the same change.
+- **Unit tests**: no test runner is installed. If you add tests, add Vitest + React Testing Library, put them
+  in a co-located `__tests__/` folder (never next to source files), wrap renders in `ThemeProvider`, select by
+  `data-testid`, and add the `test` script in the same change.
 - **Manual check**: for UI changes, run `npm run dev` against a real backend and test in the browser. Admin
   actions often need specific permissions, so say which role you checked with.
 - Report checks you skipped or that failed, with the reason. Never report them as passing.
@@ -433,20 +515,26 @@ Run `npm run format` and `npm run lint` before committing (see the `/prepare-com
   `fix: [EL-6368] Hide Chat Mentions from Configuration page`.
 - Never commit `static/dist/**` or `metadata.json` version bumps. CI owns both.
 - No AI attribution in commits or PRs.
+- Workflow skills: `/prepare-commit` (format, lint, build) → `/create-branch` → `/commit-changes` →
+  `/prepare-pr`. `/ship-changes` runs all four in order for the current working-tree changes.
 
 ## Key Conventions Checklist
 
-- [ ] Code sits in the right layer: page-only → page folder; shared → `components/` / `hooks/` / `utils/`
+- [ ] Each file sits where its usage puts it: one module → inside that module (`components/`, `constants/`,
+      `helpers/`, `hooks/`); 2+ pages or the app shell → `src/components/<Name>/`, `src/hooks/`,
+      `src/helpers/`, `src/constants/`
+- [ ] Every module has the standard shape and an `index.js` barrel; other modules are imported through it
 - [ ] No imports upward (`components/` → `pages/`) and no new page → page imports
 - [ ] One file = one component
 - [ ] `memo(props => { … })`, props destructured in the body, `displayName` set, `export default`
 - [ ] Arrow functions only (no `function` declarations)
 - [ ] Style function below the component, `camelCaseNameStyles`, `/** @type {MuiSx} */`
 - [ ] `rem` units, palette tokens only, semantically correct token families
-- [ ] MUI components, no raw HTML. MUI imported per path
+- [ ] MUI components, no raw HTML. MUI imported from the `@mui/material` barrel, icons per path
 - [ ] Existing building blocks reused (`DrawerPage`, `DrawerPageHeader`, `GridTable`, hooks)
 - [ ] Permission-gated actions use `useCheckPermission` + `PERMISSIONS`
-- [ ] API calls via RTK Query with tags registered in `adminApi.js`
+- [ ] API calls via RTK Query with tags registered in `admin.api.js`
 - [ ] `useCallback` for handlers passed to children or used in deps; `useMemo` for derived arrays/objects
-- [ ] File names follow the table above; `@/` imports, no `../`
+- [ ] File names follow the table above (`PascalCase.jsx` or `<name>.<role>.js`); no `../` imports
+- [ ] No dead code: no unused files, exports, endpoints or dependencies
 - [ ] `npm run format`, `npm run lint`, `npm run build` pass; nothing from `static/dist` staged

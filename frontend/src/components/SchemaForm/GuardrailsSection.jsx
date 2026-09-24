@@ -1,22 +1,16 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import BlockIcon from '@mui/icons-material/BlockOutlined';
 import BoltIcon from '@mui/icons-material/BoltOutlined';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExtensionIcon from '@mui/icons-material/ExtensionOutlined';
 import GppMaybeIcon from '@mui/icons-material/GppMaybeOutlined';
 import PublishIcon from '@mui/icons-material/PublishOutlined';
-import RestoreIcon from '@mui/icons-material/RestoreOutlined';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Collapse from '@mui/material/Collapse';
-import IconButton from '@mui/material/IconButton';
-import Switch from '@mui/material/Switch';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import { Box, Typography } from '@mui/material';
 
-import SchemaField from './SchemaField';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
+
+import GuardrailsFieldCard from './components/GuardrailsFieldCard';
 
 const SECTION_CONFIG = [
   {
@@ -64,174 +58,21 @@ const sectionClaimsField = (section, field) =>
   (section.fields?.includes(field.key) ?? false) ||
   (section.pathPrefix ? field.path?.startsWith(section.pathPrefix) : false);
 
-const FieldCard = memo(props => {
-  const { field, values, onChange } = props;
-  const styles = guardRailsStyles();
-
-  const isBoolean = field.type === 'boolean';
-  const hasBuiltinDefault = typeof field.builtin_default === 'string' && field.builtin_default.length > 0;
-  const atBuiltinDefault = hasBuiltinDefault && (values[field.key] || '') === field.builtin_default;
-  const expandable = useMemo(() => {
-    if (field.type === 'object' && !field.additionalProperties?.type) return true;
-
-    if (
-      field.type === 'array' &&
-      field.items?.type !== 'string' &&
-      !(field.items?.type === 'integer' && field.enum_source) &&
-      !(field.items?.type === 'object' && field.items?.properties?.login)
-    )
-      return true;
-
-    return false;
-  }, [field]);
-
-  return (
-    <Box sx={[styles.fieldCard, expandable && styles.fieldCardExpand]}>
-      <Box sx={styles.fieldHeader}>
-        <Box sx={styles.fieldTitleRow}>
-          <Typography
-            variant="body2"
-            sx={styles.fieldTitle}
-          >
-            {field.title || field.key}
-          </Typography>
-          {field.requires_restart && (
-            <Chip
-              label="Reload required"
-              size="small"
-              color="warning"
-              variant="outlined"
-              sx={styles.restartChip}
-            />
-          )}
-        </Box>
-        {isBoolean && (
-          <Switch
-            checked={!!values[field.key]}
-            onChange={e => onChange(field.key, e.target.checked)}
-            size="small"
-          />
-        )}
-        {!isBoolean && hasBuiltinDefault && (
-          <Tooltip
-            title={
-              atBuiltinDefault ? 'Already matches the built-in defaults' : 'Restore to built-in defaults'
-            }
-            placement="top"
-          >
-            <Box component="span">
-              <IconButton
-                size="small"
-                disabled={atBuiltinDefault}
-                onClick={() => onChange(field.key, field.builtin_default)}
-                aria-label={`restore-default-${field.key}`}
-              >
-                <RestoreIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          </Tooltip>
-        )}
-      </Box>
-      {field.description && (
-        <Typography
-          variant="caption"
-          sx={styles.fieldDescription}
-        >
-          {field.description}
-        </Typography>
-      )}
-      {!isBoolean && (
-        <Box sx={[styles.fieldControl, expandable && styles.fieldControlExpand]}>
-          <SchemaField
-            field={field}
-            value={values[field.key]}
-            onChange={val => onChange(field.key, val)}
-          />
-        </Box>
-      )}
-    </Box>
-  );
-});
-
-FieldCard.displayName = 'FieldCard';
-
-const CollapsibleSection = props => {
-  const { section, fields, values, onChange, expanded, onToggle } = props;
-
-  const styles = guardRailsStyles();
-
-  const IconComponent = section.icon;
-  const hasFields = fields.length > 0;
-
-  if (!hasFields) return null;
-
-  return (
-    <Box sx={styles.sectionContainer}>
-      <Box
-        sx={styles.sectionHeader(expanded)}
-        onClick={onToggle}
-      >
-        <Box sx={styles.sectionTitleRow}>
-          <IconComponent sx={styles.sectionIcon} />
-          <Typography
-            variant="body1"
-            sx={styles.sectionTitle}
-          >
-            {section.title}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={styles.fieldCount}
-          >
-            {fields.length} {fields.length === 1 ? 'setting' : 'settings'}
-          </Typography>
-        </Box>
-        <IconButton
-          size="small"
-          sx={styles.expandIcon(expanded)}
-          onClick={e => {
-            e.stopPropagation();
-            onToggle();
-          }}
-        >
-          <ExpandMoreIcon />
-        </IconButton>
-      </Box>
-      <Collapse
-        in={expanded}
-        timeout="auto"
-        unmountOnExit
-      >
-        <Box sx={styles.sectionContent}>
-          {fields.map(field => (
-            <FieldCard
-              key={field.key}
-              field={field}
-              values={values}
-              onChange={onChange}
-            />
-          ))}
-        </Box>
-      </Collapse>
-    </Box>
-  );
-};
-
 const GuardrailsSection = memo(props => {
   const { fields, values, sectionDescription, onChange, defaultExpanded = false } = props;
 
-  const styles = guardRailsStyles();
+  const styles = guardrailsSectionStyles();
 
   const [expandedSections, setExpandedSections] = useState(() =>
     defaultExpanded ? Object.fromEntries(SECTION_CONFIG.map(s => [s.id, true])) : {},
   );
 
-  const toggleSection = sectionId => {
+  const toggleSection = useCallback(sectionId => {
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId],
     }));
-  };
+  }, []);
 
   // Filter visible fields based on visible_when conditions
   const visibleFields = useMemo(() => {
@@ -300,19 +141,27 @@ const GuardrailsSection = memo(props => {
       {groupedSections.map(section => (
         <CollapsibleSection
           key={section.id}
-          section={section}
-          fields={section.fields}
-          values={values}
-          onChange={onChange}
+          icon={section.icon}
+          title={section.title}
+          count={section.fields.length}
           expanded={!!expandedSections[section.id]}
           onToggle={() => toggleSection(section.id)}
-        />
+        >
+          {section.fields.map(field => (
+            <GuardrailsFieldCard
+              key={field.key}
+              field={field}
+              values={values}
+              onChange={onChange}
+            />
+          ))}
+        </CollapsibleSection>
       ))}
 
       {ungroupedFields.length > 0 && (
         <Box sx={styles.ungroupedSection}>
           {ungroupedFields.map(field => (
-            <FieldCard
+            <GuardrailsFieldCard
               key={field.key}
               field={field}
               values={values}
@@ -328,7 +177,7 @@ const GuardrailsSection = memo(props => {
 GuardrailsSection.displayName = 'GuardrailsSection';
 
 /** @type {MuiSx} */
-const guardRailsStyles = () => ({
+const guardrailsSectionStyles = () => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -346,121 +195,10 @@ const guardRailsStyles = () => ({
     justifyContent: 'center',
     padding: '3rem',
   },
-  sectionContainer: ({ palette }) => ({
-    borderRadius: '0.5rem',
-    border: `1px solid ${palette.border.table}`,
-    overflow: 'visible',
-  }),
-  sectionHeader:
-    expanded =>
-    ({ palette }) => ({
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0.75rem 1rem',
-      minHeight: '3rem',
-      cursor: 'pointer',
-      backgroundColor: expanded ? palette.background.userInputBackgroundActive : 'transparent',
-      borderRadius: expanded ? '0.5rem 0.5rem 0 0' : '0.5rem',
-      transition: 'background-color 0.2s ease',
-
-      '&:hover': {
-        backgroundColor: palette.background.userInputBackgroundActive,
-      },
-    }),
-  sectionTitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    flexShrink: 0,
-  },
-  sectionIcon: ({ palette }) => ({
-    fontSize: '1.25rem',
-    color: palette.text.metrics,
-  }),
-  sectionTitle: ({ palette }) => ({
-    fontWeight: 600,
-    fontSize: '0.875rem',
-    color: palette.text.secondary,
-    whiteSpace: 'nowrap',
-  }),
-  fieldCount: ({ palette }) => ({
-    color: palette.text.metrics,
-    fontSize: '0.75rem',
-    backgroundColor: palette.background.hover,
-    padding: '0.125rem 0.5rem',
-    borderRadius: '0.25rem',
-    whiteSpace: 'nowrap',
-    flexShrink: 0,
-  }),
-  expandIcon: expanded => ({
-    transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-    transition: 'transform 0.2s ease',
-    flexShrink: 0,
-  }),
-  sectionContent: ({ palette }) => ({
-    padding: '1rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    borderTop: `1px solid ${palette.border.table}`,
-    backgroundColor: 'transparent',
-    borderRadius: '0 0 0.5rem 0.5rem',
-  }),
   ungroupedSection: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-  },
-  fieldCard: ({ palette }) => ({
-    padding: '0.875rem 1rem',
-    borderRadius: '0.5rem',
-    border: `1px solid ${palette.border.table}`,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    backgroundColor: 'transparent',
-  }),
-  fieldHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '0.75rem',
-    minHeight: '1.75rem',
-  },
-  fieldTitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
-  fieldTitle: ({ palette }) => ({
-    fontWeight: 600,
-    fontSize: '0.8125rem',
-    color: palette.text.secondary,
-  }),
-  fieldDescription: ({ palette }) => ({
-    color: palette.text.metrics,
-    fontSize: '0.75rem',
-    lineHeight: 1.5,
-  }),
-  fieldControl: {
-    marginTop: '0.375rem',
-  },
-  fieldCardExpand: {
-    minHeight: '12.5rem',
-  },
-  fieldControlExpand: {
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '9.375rem',
-  },
-  restartChip: {
-    fontSize: '0.625rem',
-    height: '1.125rem',
-    '& .MuiChip-label': {
-      padding: '0 0.375rem',
-    },
   },
 });
 

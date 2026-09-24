@@ -52,18 +52,19 @@ through H. That file is the single source of truth for what to look for:
 - **A. Business logic issues** (Critical), including permission gating and page registration
 - **B. Code that could crash the app** (Critical)
 - **C. Code reuse and duplication** (Important)
-- **D. Architecture compliance** (Important): layer direction, no page → page imports, no FSD directories
+- **D. Architecture compliance** (Important): module shape and barrels, placement by usage, imports through
+  barrels, layer direction, no page → page imports, no FSD directories
 - **E. Component and code conventions**
 - **F. Styling conventions**, including semantic palette token usage
 - **G. File naming**
-- **H. General best practices**
+- **H. General best practices**, including dead code (unused files, exports, endpoints, dependencies)
 
 ### 4. Filter and prioritize findings
 
 - Only report things that genuinely matter. Do not nitpick.
 - Group several small issues in the same file area into one finding.
-- Don't demand a full convention conversion of legacy code the user merely touched. Flag conventions in new or
-  substantially rewritten code.
+- The whole codebase follows the conventions, so flag violations in any added or changed code. Don't ask for
+  changes to untouched code.
 - Skip pure renames and moves with no logic change.
 - Prioritize: business bugs > crashes > duplication > architecture > conventions > style.
 - Skip generated files, lock files and build artifacts.

@@ -1,172 +1,16 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import Switch from '@mui/material/Switch';
-import Typography from '@mui/material/Typography';
+import { Box, Typography } from '@mui/material';
 
-import SchemaField from './SchemaField';
+import ActionFieldCard from './components/ActionFieldCard';
+import FieldCard from './components/FieldCard';
+import { buildPylonLabels } from './helpers/schemaForm.helpers';
 
-const UUID_RE = /_([a-f0-9]{8})-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+const SchemaForm = memo(props => {
+  const { fields, values, sectionDescription, onChange, onAction } = props;
 
-function pylonBaseName(pylonId) {
-  if (!pylonId) return '';
-  return pylonId.replace(UUID_RE, '');
-}
+  const styles = schemaFormStyles();
 
-function buildPylonLabels(pylonIds) {
-  const bases = {};
-  for (const pid of pylonIds) {
-    const base = pylonBaseName(pid);
-    if (!bases[base]) bases[base] = [];
-    bases[base].push(pid);
-  }
-  const labels = {};
-  for (const [base, pids] of Object.entries(bases)) {
-    if (pids.length === 1) {
-      labels[pids[0]] = base;
-    } else {
-      for (const pid of pids) {
-        const match = pid.match(UUID_RE);
-        const short = match ? match[1] : '';
-        labels[pid] = `${base} (${short})`;
-      }
-    }
-  }
-  return labels;
-}
-
-// Check if a field renders a JSON editor (should expand to fill space)
-const isJsonEditor = field => {
-  if (field.type === 'object' && !field.additionalProperties?.type) return true;
-  if (
-    field.type === 'array' &&
-    field.items?.type !== 'string' &&
-    !(field.items?.type === 'integer' && field.enum_source) &&
-    !(field.items?.type === 'object' && field.items?.properties?.login)
-  )
-    return true;
-  return false;
-};
-
-function ActionFieldCard({ field, onAction }) {
-  const [running, setRunning] = useState(false);
-  const [result, setResult] = useState(null);
-
-  const handleClick = async () => {
-    setRunning(true);
-    setResult(null);
-    try {
-      await onAction?.(field);
-      setResult({ ok: true, message: 'Task started' });
-    } catch (err) {
-      setResult({ ok: false, message: err?.message || 'Failed to start task' });
-    } finally {
-      setRunning(false);
-    }
-  };
-
-  return (
-    <Box sx={styles.fieldCard}>
-      <Box sx={styles.fieldHeader}>
-        <Box sx={styles.fieldTitleRow}>
-          <Typography
-            variant="body2"
-            sx={styles.fieldTitle}
-          >
-            {field.title || field.key}
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={
-            running ? <CircularProgress size={14} /> : <PlayArrowIcon sx={{ fontSize: '0.875rem' }} />
-          }
-          onClick={handleClick}
-          disabled={running}
-          sx={styles.actionButton}
-        >
-          {running ? 'Running...' : 'Run'}
-        </Button>
-      </Box>
-      {field.description && (
-        <Typography
-          variant="caption"
-          sx={styles.fieldDescription}
-        >
-          {field.description}
-        </Typography>
-      )}
-      {result && (
-        <Typography
-          variant="caption"
-          sx={{ color: result.ok ? 'success.main' : 'error.main', mt: 0.25 }}
-        >
-          {result.message}
-        </Typography>
-      )}
-    </Box>
-  );
-}
-
-function FieldCard({ field, values, onChange }) {
-  const isBoolean = field.type === 'boolean';
-  const expandable = isJsonEditor(field);
-
-  return (
-    <Box sx={[styles.fieldCard, expandable && styles.fieldCardExpand]}>
-      <Box sx={styles.fieldHeader}>
-        <Box sx={styles.fieldTitleRow}>
-          <Typography
-            variant="body2"
-            sx={styles.fieldTitle}
-          >
-            {field.title || field.key}
-          </Typography>
-          {field.requires_restart && (
-            <Chip
-              label="Reload required"
-              size="small"
-              color="warning"
-              variant="outlined"
-              sx={styles.restartChip}
-            />
-          )}
-        </Box>
-        {isBoolean && (
-          <Switch
-            checked={!!values[field.key]}
-            onChange={e => onChange(field.key, e.target.checked)}
-            size="small"
-          />
-        )}
-      </Box>
-      {field.description && (
-        <Typography
-          variant="caption"
-          sx={styles.fieldDescription}
-        >
-          {field.description}
-        </Typography>
-      )}
-      {!isBoolean && (
-        <Box sx={[styles.fieldControl, expandable && styles.fieldControlExpand]}>
-          <SchemaField
-            field={field}
-            value={values[field.key]}
-            onChange={val => onChange(field.key, val)}
-          />
-        </Box>
-      )}
-    </Box>
-  );
-}
-
-const SchemaForm = memo(({ fields, values, sectionDescription, onChange, onAction }) => {
   const visibleFields = useMemo(() => {
     return fields.filter(field => {
       if (!field.visible_when) return true;
@@ -278,7 +122,8 @@ const SchemaForm = memo(({ fields, values, sectionDescription, onChange, onActio
 
 SchemaForm.displayName = 'SchemaForm';
 
-const styles = {
+/** @type {MuiSx} */
+const schemaFormStyles = () => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -296,61 +141,6 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '3rem',
-  },
-  fieldCard: ({ palette }) => ({
-    padding: '0.875rem 1rem',
-    borderRadius: '0.5rem',
-    border: `1px solid ${palette.border.table}`,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  }),
-  fieldHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '0.75rem',
-    minHeight: '1.75rem',
-  },
-  fieldTitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
-  fieldTitle: ({ palette }) => ({
-    fontWeight: 600,
-    fontSize: '0.8125rem',
-    color: palette.text.secondary,
-  }),
-  fieldDescription: ({ palette }) => ({
-    color: palette.text.metrics,
-    fontSize: '0.75rem',
-    lineHeight: 1.5,
-  }),
-  fieldControl: {
-    marginTop: '0.375rem',
-  },
-  fieldCardExpand: {
-    flex: 1,
-    minHeight: 0,
-  },
-  fieldControlExpand: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: 0,
-  },
-  restartChip: {
-    fontSize: '0.625rem',
-    height: '1.125rem',
-    '& .MuiChip-label': {
-      padding: '0 0.375rem',
-    },
-  },
-  actionButton: {
-    textTransform: 'none',
-    fontSize: '0.75rem',
   },
   pylonGroup: {
     display: 'flex',
@@ -373,9 +163,9 @@ const styles = {
   }),
   pylonLine: ({ palette }) => ({
     flex: 1,
-    height: '1px',
-    backgroundColor: palette.border.table,
+    height: 0,
+    borderTop: `0.0625rem solid ${palette.border.table}`,
   }),
-};
+});
 
 export default SchemaForm;

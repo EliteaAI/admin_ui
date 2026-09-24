@@ -2,23 +2,26 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import Typography from '@mui/material/Typography';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Typography,
+} from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
-import { useLazySurveyAnswersQuery, useSurveysListQuery } from '@/api/surveysApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { exportSurveyXlsx } from '@/utils/exportSurveyXlsx';
+import { useLazySurveyAnswersQuery, useSurveyListQuery } from '@/api/surveys.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
+
+import { exportSurveyXlsx } from './helpers/exportSurveyXlsx.helpers';
 
 const DATE_PRESETS = [
   {
@@ -68,9 +71,11 @@ const DATE_PRESETS = [
 ];
 
 const ReportsPage = memo(() => {
+  const styles = reportsPageStyles();
+
   usePageTitle('Reports');
 
-  const { data: surveys = [], isLoading: surveysLoading } = useSurveysListQuery();
+  const { data: surveys = [], isLoading: surveysLoading } = useSurveyListQuery();
   const [triggerAnswers, { isFetching }] = useLazySurveyAnswersQuery();
 
   const [selectedSurveyId, setSelectedSurveyId] = useState('');
@@ -271,7 +276,7 @@ const ReportsPage = memo(() => {
           <Alert
             severity="info"
             onClose={() => setError('')}
-            sx={{ mb: 2 }}
+            sx={styles.gapBelow}
           >
             {error}
           </Alert>
@@ -375,7 +380,8 @@ const ReportsPage = memo(() => {
   );
 });
 
-const styles = {
+/** @type {MuiSx} */
+const reportsPageStyles = () => ({
   generateButton: {
     fontSize: '0.75rem',
     textTransform: 'none',
@@ -395,9 +401,9 @@ const styles = {
     flexDirection: 'column',
     gap: '1rem',
     padding: '1rem',
-    border: `1px solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.table}`,
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.tabPanel || palette.background.userInputBackground,
+    backgroundColor: palette.background.tabPanel,
   }),
   sectionTitle: ({ palette }) => ({
     fontWeight: 600,
@@ -457,7 +463,7 @@ const styles = {
     borderCollapse: 'collapse',
     fontSize: '0.8125rem',
     '& th, & td': {
-      border: `1px solid ${palette.border.table}`,
+      border: `0.0625rem solid ${palette.border.table}`,
       padding: '0.5rem 0.75rem',
       textAlign: 'left',
       whiteSpace: 'nowrap',
@@ -478,7 +484,10 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
-};
+  gapBelow: {
+    marginBottom: '1rem',
+  },
+});
 
 ReportsPage.displayName = 'ReportsPage';
 

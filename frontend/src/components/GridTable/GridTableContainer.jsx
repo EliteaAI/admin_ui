@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import { Box, Typography } from '@mui/material';
 
 const GridTableContainer = memo(props => {
   const {
@@ -49,6 +48,7 @@ const GridTableContainer = memo(props => {
 
 GridTableContainer.displayName = 'GridTableContainer';
 
+/** @type {MuiSx} */
 const gridTableContainerStyles = () => ({
   root: {
     flex: 1,

@@ -1,9 +1,9 @@
 ---
 name: add-page
 description:
-  Scaffold a new admin section in admin_ui - route constant, permission keys, page folder with
-  DrawerPage/DrawerPageHeader/GridTable, App.jsx guarded route, Sidebar entry and RTK Query API file. Use when
-  the user asks to add a new page, section, route or sidebar item to the admin UI.
+  Scaffold a new admin section in admin_ui - route constant, permission keys, page module (with index.js)
+  using DrawerPage/DrawerPageHeader/GridTable, App.jsx guarded route, Sidebar entry and RTK Query API file.
+  Use when the user asks to add a new page, section, route or sidebar item to the admin UI.
 ---
 
 # Add Page
@@ -15,7 +15,7 @@ Create a new admin section wired end to end: route, permissions, page, router, s
 Ask for anything missing:
 
 - **Name**: e.g. `Widgets` → `WidgetsPage`, path `/widgets`
-- **Sidebar label and placement**: top list (`topMenuItems`) or bottom list (`bottomMenuItems`)
+- **Sidebar label and placement**: top list (`TOP_MENU_ITEMS`) or bottom list (`BOTTOM_MENU_ITEMS`)
 - **Backend endpoints** the page uses (URL, method, params). Never invent endpoints. If the backend isn't
   ready, ask.
 - **Permission keys** the backend checks (from the endpoint's `check_api([...])`)
@@ -24,27 +24,29 @@ Ask for anything missing:
 
 Read `.claude/rules/pages.md` and `.claude/rules/api.md` first. Then:
 
-1. **Route**: `src/routes.js` → `Widgets: '/widgets'` in `RouteDefinitions`.
-2. **Permissions**: `src/constants/permissions.js`:
+1. **Route**: `src/constants/routes.constants.js` → `Widgets: '/widgets'` in `RouteDefinitions`.
+2. **Permissions**: `src/constants/permissions.constants.js`:
    - `PERMISSIONS.widgets = { view: '…', create: '…', edit: '…', delete: '…' }`
    - `SIDEBAR_PERMISSIONS.widgets = [PERMISSIONS.widgets.view]` (key = path without the slash; quote keys that
      contain dashes)
    - `ROUTE_PERMISSIONS['/widgets'] = SIDEBAR_PERMISSIONS.widgets`
-3. **API**: `src/api/widgetsApi.js` with `adminApi.injectEndpoints()`. Add the new tag (e.g. `'Widgets'`) to
-   `tagTypes` in `src/api/adminApi.js`.
-4. **Page folder**: `src/pages/WidgetsPage/`
+3. **API**: `src/api/widgets.api.js` with `adminApi.injectEndpoints()`. Add the new tag (e.g. `'Widgets'`) to
+   `tagTypes` in `src/api/admin.api.js`.
+4. **Page module**: `src/pages/WidgetsPage/` with the standard module shape (see `CLAUDE.md` → Module shape)
    - `WidgetsPage.jsx`: `usePageTitle`, permission flags, search/page/pageSize state, the query,
      `DrawerPage` + `DrawerPageHeader`, error state, the table, dialogs as siblings
-   - `WidgetsTable.jsx`: `GridTable*` components, `COLUMNS` constant, `useResponsiveColumns`, `renderCell` /
-     `renderActions`
-   - one file per dialog/drawer (`CreateWidgetDialog.jsx`, `DeleteWidgetDialog.jsx`, …)
-   - `widgets.constants.js` / `widgets.helpers.js` only if they are shared within the page
+   - `index.js`: `export { default as WidgetsPage } from './WidgetsPage';`
+   - `components/WidgetsTable.jsx`: `GridTable*` components, `COLUMNS` constant, `useResponsiveColumns`,
+     `renderCell` / `renderActions`
+   - `components/`: one file per dialog/drawer (`CreateWidgetDialog.jsx`, `DeleteWidgetDialog.jsx`, …)
+   - `constants/widgets.constants.js` / `helpers/widgets.helpers.js` only if several files of the page use
+     them
    - Every component follows the `CLAUDE.md` pattern: `memo(props => …)`, `displayName`, a style function with
-     `/** @type {MuiSx} */`, `rem`, palette tokens, per-path MUI imports
-5. **Router**: `src/App.jsx` → import the page and add
+     `/** @type {MuiSx} */`, `rem`, palette tokens, MUI imported from the `@mui/material` barrel
+5. **Router**: `src/App.jsx` → `import { WidgetsPage } from '@/pages/WidgetsPage';` and add
    `<Route path={RouteDefinitions.Widgets} element={guard(RouteDefinitions.Widgets, <WidgetsPage />)} />`
    before the `*` route.
-6. **Sidebar**: `src/components/Layout/Sidebar.jsx` → add
+6. **Sidebar**: `src/components/Layout/components/Sidebar.jsx` → add
    `{ id: 'widgets', label: 'Widgets', icon: <Some>OutlinedIcon, url: RouteDefinitions.Widgets }` to the
    chosen list. `id` must equal the `SIDEBAR_PERMISSIONS` key.
 

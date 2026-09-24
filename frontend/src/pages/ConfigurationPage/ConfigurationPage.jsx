@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import CampaignIcon from '@mui/icons-material/CampaignOutlined';
@@ -11,31 +11,25 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import SecurityIcon from '@mui/icons-material/SecurityOutlined';
 import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent';
 import SettingsIcon from '@mui/icons-material/SettingsOutlined';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Snackbar from '@mui/material/Snackbar';
-import Typography from '@mui/material/Typography';
+import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
 
 import {
   useConfigRestartMutation,
   useConfigSchemasQuery,
   useConfigValuesQuery,
   useConfigValuesSaveMutation,
-} from '@/api/configurationApi';
-import DrawerPage from '@/components/DrawerPage';
-import DrawerPageHeader from '@/components/DrawerPageHeader';
-import AdvancedSection from '@/components/SchemaForm/AdvancedSection';
-import DedicatedBanner from '@/components/SchemaForm/DedicatedBanner';
-import GuardrailsSection from '@/components/SchemaForm/GuardrailsSection';
-import MaintenanceSection from '@/components/SchemaForm/MaintenanceSection';
-import SchemaForm from '@/components/SchemaForm/SchemaForm';
-import { CONFIG_SECTION_PERMISSIONS } from '@/constants/permissions';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
-import { usePageTitle } from '@/hooks/usePageTitle';
+} from '@/api/configuration.api';
+import { DrawerPage } from '@/components/DrawerPage';
+import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { GuardrailsSection, SchemaForm } from '@/components/SchemaForm';
+import { CONFIG_SECTION_PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import ServiceDescriptorsSection from '../ServiceDescriptorsPage/ServiceDescriptorsSection';
+import { AdvancedSection } from './components/AdvancedSection';
+import DedicatedBanner from './components/DedicatedBanner';
+import MaintenanceSection from './components/MaintenanceSection';
+import { ServiceDescriptorsSection } from './components/ServiceDescriptorsSection';
 
 const SECTION_ICONS = {
   guardrails: SecurityIcon,
@@ -81,7 +75,9 @@ const SECTION_ORDER = [
   'service_descriptors',
 ];
 
-function ConfigurationPage() {
+const ConfigurationPage = memo(() => {
+  const styles = configurationPageStyles();
+
   const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);
   const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
@@ -357,7 +353,7 @@ function ConfigurationPage() {
                 );
               case 'service_descriptors':
                 return (
-                  <Box sx={{ ...styles.formScroll, padding: 0 }}>
+                  <Box sx={[styles.formScroll, styles.noPadding]}>
                     <ServiceDescriptorsSection />
                   </Box>
                 );
@@ -490,10 +486,13 @@ function ConfigurationPage() {
       </Snackbar>
     </DrawerPage>
   );
-}
+});
+
+ConfigurationPage.displayName = 'ConfigurationPage';
 
 /** @type {MuiSx} */
-const styles = {
+/** @type {MuiSx} */
+const configurationPageStyles = () => ({
   content: {
     display: 'flex',
     flex: 1,
@@ -502,7 +501,7 @@ const styles = {
   sectionSidebar: ({ palette }) => ({
     width: '13rem',
     minWidth: '13rem',
-    borderRight: `1px solid ${palette.border.table}`,
+    borderRight: `0.0625rem solid ${palette.border.table}`,
     padding: '0.75rem',
     display: 'flex',
     flexDirection: 'column',
@@ -556,7 +555,7 @@ const styles = {
     fontSize: '0.8125rem',
   },
   actionBar: ({ palette }) => ({
-    borderTop: `1px solid ${palette.border.table}`,
+    borderTop: `0.0625rem solid ${palette.border.table}`,
     padding: '0.75rem 1.5rem',
     display: 'flex',
     alignItems: 'center',
@@ -589,6 +588,9 @@ const styles = {
     textTransform: 'none',
     fontSize: '0.75rem',
   },
-};
+  noPadding: {
+    padding: 0,
+  },
+});
 
 export default ConfigurationPage;
