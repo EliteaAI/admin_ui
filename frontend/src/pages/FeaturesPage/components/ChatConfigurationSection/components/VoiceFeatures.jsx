@@ -90,7 +90,6 @@ const voiceFeaturesStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '1.25rem',
-    padding: '1.5rem',
   },
   description: ({ palette }) => ({
     color: palette.text.metrics,

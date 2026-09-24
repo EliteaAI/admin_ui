@@ -2,10 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import BlockIcon from '@mui/icons-material/BlockOutlined';
-import BoltIcon from '@mui/icons-material/BoltOutlined';
-import ExtensionIcon from '@mui/icons-material/ExtensionOutlined';
 import GppMaybeIcon from '@mui/icons-material/GppMaybeOutlined';
-import PublishIcon from '@mui/icons-material/PublishOutlined';
 import { Box, Typography } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
@@ -26,26 +23,6 @@ const SECTION_CONFIG = [
     fields: ['sensitive_tools', 'sensitive_action_company_name', 'sensitive_action_message_template'],
   },
   {
-    id: 'mcp_configuration',
-    title: 'MCP Configuration',
-    icon: ExtensionIcon,
-    // pathPrefix claims every field under this config namespace, so new
-    // mcp_exposure.* fields nest here automatically.
-    pathPrefix: 'mcp_exposure.',
-  },
-  {
-    id: 'block_agent_publishing',
-    title: 'Agent Publishing',
-    icon: PublishIcon,
-    pathPrefix: 'publishing_guardrail.',
-  },
-  {
-    id: 'skill_publishing',
-    title: 'Skill Publishing',
-    icon: BoltIcon,
-    pathPrefix: 'skill_publishing_guardrail.',
-  },
-  {
     id: 'enhance_with_ai',
     title: 'Enhance with AI',
     icon: AutoAwesomeIcon,
@@ -59,13 +36,11 @@ const sectionClaimsField = (section, field) =>
   (section.pathPrefix ? field.path?.startsWith(section.pathPrefix) : false);
 
 const GuardrailsSection = memo(props => {
-  const { fields, values, sectionDescription, onChange, defaultExpanded = false } = props;
+  const { fields, values, sectionDescription, onChange } = props;
 
   const styles = guardrailsSectionStyles();
 
-  const [expandedSections, setExpandedSections] = useState(() =>
-    defaultExpanded ? Object.fromEntries(SECTION_CONFIG.map(s => [s.id, true])) : {},
-  );
+  const [expandedSections, setExpandedSections] = useState({});
 
   const toggleSection = useCallback(sectionId => {
     setExpandedSections(prev => ({
