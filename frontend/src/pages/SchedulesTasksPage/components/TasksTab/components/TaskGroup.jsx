@@ -21,7 +21,7 @@ const TaskGroup = memo(props => {
     onSelect,
   } = props;
 
-  const styles = taskGroupStyles();
+  const styles = taskGroupStyles(isToggleable);
 
   const handleToggle = useCallback(() => {
     if (isToggleable) onToggle(group);
@@ -74,7 +74,7 @@ const TaskGroup = memo(props => {
 TaskGroup.displayName = 'TaskGroup';
 
 /** @type {MuiSx} */
-const taskGroupStyles = () => ({
+const taskGroupStyles = isToggleable => ({
   container: ({ palette }) => ({
     marginBottom: '0.25rem',
     borderRadius: '0.375rem',
@@ -85,11 +85,11 @@ const taskGroupStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     padding: '0.4375rem 0.5rem',
-    cursor: 'pointer',
+    cursor: isToggleable ? 'pointer' : 'default',
     userSelect: 'none',
     backgroundColor: palette.background.subtle.raised,
     '&:hover': {
-      backgroundColor: palette.action.hover,
+      backgroundColor: isToggleable ? palette.action.hover : palette.background.subtle.raised,
     },
     '&:focus-visible': {
       outline: `0.125rem solid ${palette.primary.main}`,

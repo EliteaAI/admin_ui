@@ -75,4 +75,4 @@ export const GENERAL_TASK_GROUPS = [
 /** Catch-all for "General" tasks not listed above (e.g. newly registered ones). */
 export const GENERAL_UNGROUPED_GROUP = 'General - Ungrouped';
 
-export const DEFAULT_EXPANDED_GROUP = GENERAL_TASK_GROUPS[0].group;
+export const DEFAULT_EXPANDED_GROUP = 'General - Models & AI Runtime';
