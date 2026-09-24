@@ -10,13 +10,13 @@ import {
 } from '@/api/configuration.api';
 import { DrawerPage } from '@/components/DrawerPage';
 import { DrawerPageHeader } from '@/components/DrawerPageHeader';
-import { GuardrailsSection } from '@/components/SchemaForm';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import { ChatConfigurationSection } from './components/ChatConfigurationSection';
 import { CostBudgetsSection } from './components/CostBudgetsSection';
 import { CustomThemeSection } from './components/CustomThemeSection';
 import { HelpCenterSection } from './components/HelpCenterSection';
+import McpConfigurationSection from './components/McpConfigurationSection';
 import PublishingSection from './components/PublishingSection';
 import SupportAssistant from './components/SupportAssistant';
 import { SurveysSection } from './components/SurveysSection';
@@ -90,11 +90,6 @@ const FeaturesPage = memo(() => {
     const guardrailsSchema = schemasData?.sections?.find(s => s.id === 'guardrails');
     return guardrailsSchema?.fields || [];
   }, [schemasData]);
-
-  const mcpFields = useMemo(
-    () => guardrailsFields.filter(f => f.path?.startsWith('mcp_exposure.')),
-    [guardrailsFields],
-  );
 
   // Sections with their own field validation report upwards so Save can block
   const [sectionValid, setSectionValid] = useState(true);
@@ -217,12 +212,9 @@ const FeaturesPage = memo(() => {
       case 'mcp_configuration':
         return (
           <Box sx={styles.formScroll}>
-            <GuardrailsSection
-              fields={mcpFields}
-              values={guardrailsDraft.values}
-              sectionDescription=""
-              onChange={guardrailsDraft.onChange}
-              defaultExpanded
+            <McpConfigurationSection
+              guardrailsDraft={guardrailsDraft}
+              guardrailsFields={guardrailsFields}
             />
           </Box>
         );
