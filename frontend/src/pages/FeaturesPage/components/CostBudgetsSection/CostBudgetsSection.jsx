@@ -39,7 +39,8 @@ const CostBudgetsSection = memo(props => {
         title="Cost Budgets"
         count={COST_BUDGETS_SETTINGS_COUNT}
         expanded={!!expanded.cost_budgets || !budgetsValid}
-        onToggle={() => toggle('cost_budgets')}
+        sectionId="cost_budgets"
+        onToggle={toggle}
         keepMounted
       >
         <CostBudgets
@@ -54,7 +55,8 @@ const CostBudgetsSection = memo(props => {
         title="Model Prices Source"
         count={MODEL_PRICES_SOURCE_SETTINGS_COUNT}
         expanded={!!expanded.model_prices_source}
-        onToggle={() => toggle('model_prices_source')}
+        sectionId="model_prices_source"
+        onToggle={toggle}
         keepMounted
       >
         <ModelPricesSource />

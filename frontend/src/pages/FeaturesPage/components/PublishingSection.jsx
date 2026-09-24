@@ -48,7 +48,8 @@ const PublishingSection = memo(props => {
           title={block.title}
           count={block.fields.length}
           expanded={!!expanded[block.id]}
-          onToggle={() => toggle(block.id)}
+          sectionId={block.id}
+          onToggle={toggle}
           keepMounted
         >
           <GuardrailsSection

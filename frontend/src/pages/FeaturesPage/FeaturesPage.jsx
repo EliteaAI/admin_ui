@@ -136,6 +136,8 @@ const FeaturesPage = memo(() => {
     const dirtyDrafts = activeDrafts.filter(draft => draft.isDirty);
 
     try {
+      // Sections are saved one by one. If a later save fails, the ones before it stay saved and
+      // are marked clean; only the failed section keeps its unsaved edits (and Discard resets just that one).
       for (const draft of dirtyDrafts) {
         const cleanedValues = cleanValuesForSave(draft.values);
 

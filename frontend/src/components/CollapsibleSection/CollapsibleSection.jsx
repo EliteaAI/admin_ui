@@ -4,16 +4,28 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, Collapse, IconButton, Typography } from '@mui/material';
 
 const CollapsibleSection = memo(props => {
-  const { icon: IconComponent, title, count, expanded, onToggle, keepMounted = false, children } = props;
+  // sectionId is passed back to onToggle, so a list of sections can share one stable toggle callback
+  const {
+    icon: IconComponent,
+    title,
+    count,
+    expanded,
+    onToggle,
+    sectionId,
+    keepMounted = false,
+    children,
+  } = props;
 
   const contentId = useId();
+
+  const handleToggle = useCallback(() => onToggle(sectionId), [onToggle, sectionId]);
 
   const handleChevronClick = useCallback(
     e => {
       e.stopPropagation();
-      onToggle();
+      handleToggle();
     },
-    [onToggle],
+    [handleToggle],
   );
 
   const handleHeaderKeyDown = useCallback(
@@ -22,9 +34,9 @@ const CollapsibleSection = memo(props => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
 
       e.preventDefault();
-      onToggle();
+      handleToggle();
     },
-    [onToggle],
+    [handleToggle],
   );
 
   // A string count is already a label, a number gets the default wording
@@ -41,7 +53,7 @@ const CollapsibleSection = memo(props => {
     <Box sx={styles.sectionContainer}>
       <Box
         sx={styles.sectionHeader(expanded)}
-        onClick={onToggle}
+        onClick={handleToggle}
         onKeyDown={handleHeaderKeyDown}
         role="button"
         tabIndex={0}

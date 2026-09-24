@@ -1,20 +1,19 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import ExtensionIcon from '@mui/icons-material/ExtensionOutlined';
 import { Box } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { GuardrailsSection } from '@/components/SchemaForm';
-import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.hooks';
-
-const MCP_BLOCK_ID = 'mcp_configuration';
 
 const McpConfigurationSection = memo(props => {
   const { guardrailsDraft, guardrailsFields } = props;
 
   const styles = mcpConfigurationSectionStyles();
 
-  const { expanded, toggle } = useExpandedBlocks(null);
+  const [expanded, setExpanded] = useState(false);
+
+  const handleToggle = useCallback(() => setExpanded(prev => !prev), []);
 
   // Prefix-based so any new mcp_exposure.* field shows up here automatically
   const mcpFields = useMemo(
@@ -28,8 +27,8 @@ const McpConfigurationSection = memo(props => {
         icon={ExtensionIcon}
         title="MCP Configuration"
         count={mcpFields.length}
-        expanded={!!expanded[MCP_BLOCK_ID]}
-        onToggle={() => toggle(MCP_BLOCK_ID)}
+        expanded={expanded}
+        onToggle={handleToggle}
         keepMounted
       >
         <GuardrailsSection
@@ -46,10 +45,8 @@ McpConfigurationSection.displayName = 'McpConfigurationSection';
 
 /** @type {MuiSx} */
 const mcpConfigurationSectionStyles = () => ({
+  // Same page padding as the other grouped Features pages
   root: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
     padding: '1.5rem',
   },
 });
