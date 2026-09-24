@@ -1,7 +1,9 @@
+export { default as AgentIcon } from './AgentIcon';
 export { default as ArrowLeftIcon } from './ArrowLeftIcon';
 export { default as ArrowRightIcon } from './ArrowRightIcon';
 export { default as EliteAIcon } from './EliteAIcon';
 export { default as LogoutIcon } from './LogoutIcon';
+export { default as ModelIcon } from './ModelIcon';
 export { default as MoonIcon } from './MoonIcon';
 export { default as PlusIcon } from './PlusIcon';
 export { default as SearchIcon } from './SearchIcon';

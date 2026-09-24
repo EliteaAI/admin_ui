@@ -1,14 +1,27 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useId } from 'react';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, Collapse, IconButton, Typography } from '@mui/material';
 
 const CollapsibleSection = memo(props => {
-  const { icon: IconComponent, title, count, expanded, onToggle, children } = props;
+  const { icon: IconComponent, title, count, expanded, onToggle, keepMounted = false, children } = props;
+
+  const contentId = useId();
 
   const handleChevronClick = useCallback(
     e => {
       e.stopPropagation();
+      onToggle();
+    },
+    [onToggle],
+  );
+
+  const handleHeaderKeyDown = useCallback(
+    e => {
+      if (e.target !== e.currentTarget) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+
+      e.preventDefault();
       onToggle();
     },
     [onToggle],
@@ -29,6 +42,11 @@ const CollapsibleSection = memo(props => {
       <Box
         sx={styles.sectionHeader(expanded)}
         onClick={onToggle}
+        onKeyDown={handleHeaderKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-expanded={!!expanded}
+        aria-controls={contentId}
       >
         <Box sx={styles.sectionTitleRow}>
           {IconComponent && <IconComponent sx={styles.sectionIcon} />}
@@ -51,14 +69,17 @@ const CollapsibleSection = memo(props => {
           size="small"
           sx={styles.expandIcon(expanded)}
           onClick={handleChevronClick}
+          tabIndex={-1}
+          aria-hidden
         >
           <ExpandMoreIcon />
         </IconButton>
       </Box>
       <Collapse
         in={expanded}
+        id={contentId}
         timeout="auto"
-        unmountOnExit
+        unmountOnExit={!keepMounted}
       >
         <Box sx={styles.sectionContent}>{children}</Box>
       </Collapse>
@@ -95,10 +116,11 @@ const collapsibleSectionStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    flexShrink: 0,
+    minWidth: 0,
   },
   sectionIcon: ({ palette }) => ({
     fontSize: '1.25rem',
+    flexShrink: 0,
     color: palette.text.metrics,
   }),
   sectionTitle: ({ palette }) => ({
@@ -106,6 +128,9 @@ const collapsibleSectionStyles = () => ({
     fontSize: '0.875rem',
     color: palette.text.secondary,
     whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    minWidth: 0,
   }),
   fieldCount: ({ palette }) => ({
     color: palette.text.metrics,

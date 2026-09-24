@@ -1,25 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
-import AlternateEmailIcon from '@mui/icons-material/AlternateEmailOutlined';
-import BoltIcon from '@mui/icons-material/BoltOutlined';
-import ExtensionIcon from '@mui/icons-material/ExtensionOutlined';
-import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import MenuBookIcon from '@mui/icons-material/MenuBookOutlined';
-import PaidOutlinedIcon from '@mui/icons-material/PaidOutlined';
-import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
-import PollOutlinedIcon from '@mui/icons-material/PollOutlined';
-import PublishIcon from '@mui/icons-material/PublishOutlined';
-import RecordVoiceOverOutlinedIcon from '@mui/icons-material/RecordVoiceOverOutlined';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import SupportAgentIcon from '@mui/icons-material/SupportAgentOutlined';
-import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
+import { Alert, Box, Button, ButtonBase, CircularProgress, Snackbar, Typography } from '@mui/material';
 
 import {
   useConfigRestartMutation,
   useConfigSchemasQuery,
-  useConfigValuesQuery,
   useConfigValuesSaveMutation,
 } from '@/api/configuration.api';
 import { DrawerPage } from '@/components/DrawerPage';
@@ -27,131 +13,31 @@ import { DrawerPageHeader } from '@/components/DrawerPageHeader';
 import { GuardrailsSection } from '@/components/SchemaForm';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import AutoRoutingSettings from './components/AutoRoutingSettings';
-import ChatMentions from './components/ChatMentions';
-import CostBudgets from './components/CostBudgets';
+import { ChatConfigurationSection } from './components/ChatConfigurationSection';
+import { CostBudgetsSection } from './components/CostBudgetsSection';
 import { CustomThemeSection } from './components/CustomThemeSection';
 import { HelpCenterSection } from './components/HelpCenterSection';
-import ModelPricesSource from './components/ModelPricesSource';
+import PublishingSection from './components/PublishingSection';
 import SupportAssistant from './components/SupportAssistant';
 import { SurveysSection } from './components/SurveysSection';
-import VoiceFeatures from './components/VoiceFeatures';
-
-// Sections sourced from the shared "guardrails" backend section are selected by
-// config-path prefix (e.g. "publishing_guardrail.*"), so any new field added to
-// admin_schema.json under that namespace shows up here automatically — no key list
-// to maintain. Sections with their own backend section use pathPrefix: null.
-const FEATURES_SECTIONS = [
-  {
-    id: 'auto_routing',
-    title: 'Auto Model Selection',
-    icon: BoltIcon,
-    backendSectionId: null,
-    pathPrefix: null,
-  },
-  {
-    id: 'mcp_configuration',
-    title: 'MCP Configuration',
-    icon: ExtensionIcon,
-    backendSectionId: 'guardrails',
-    pathPrefix: 'mcp_exposure.',
-  },
-  {
-    id: 'agent_publishing',
-    title: 'Agent Publishing',
-    icon: PublishIcon,
-    backendSectionId: 'guardrails',
-    pathPrefix: 'publishing_guardrail.',
-  },
-  {
-    id: 'skill_publishing',
-    title: 'Skill Publishing',
-    icon: BoltIcon,
-    backendSectionId: 'guardrails',
-    pathPrefix: 'skill_publishing_guardrail.',
-  },
-  {
-    id: 'help_center',
-    title: 'Help Center',
-    icon: MenuBookIcon,
-    backendSectionId: 'resources',
-    pathPrefix: null,
-  },
-  {
-    id: 'support_assistant',
-    title: 'Support Assistant',
-    icon: SupportAgentIcon,
-    backendSectionId: 'support_assistant',
-    pathPrefix: null,
-  },
-  {
-    id: 'voice_features',
-    title: 'Voice Features',
-    icon: RecordVoiceOverOutlinedIcon,
-    backendSectionId: 'voice_features',
-    pathPrefix: null,
-  },
-  {
-    id: 'chat_mentions',
-    title: 'Chat Mentions',
-    icon: AlternateEmailIcon,
-    backendSectionId: 'chat_mentions',
-    pathPrefix: null,
-  },
-  {
-    id: 'cost_budgets',
-    title: 'Cost Budgets',
-    icon: AccountBalanceWalletOutlinedIcon,
-    backendSectionId: 'cost_budgets',
-    pathPrefix: null,
-  },
-  {
-    id: 'model_prices_source',
-    title: 'Model Prices Source',
-    icon: PaidOutlinedIcon,
-    backendSectionId: null,
-    pathPrefix: null,
-  },
-  {
-    id: 'midturn_injection',
-    title: 'Mid-turn Input',
-    icon: ForumOutlinedIcon,
-    backendSectionId: 'guardrails',
-    pathPrefix: 'midturn_injection_guardrail.',
-  },
-  {
-    id: 'next_input_suggestion',
-    title: 'Next-Input Suggestions',
-    icon: LightbulbOutlinedIcon,
-    backendSectionId: 'guardrails',
-    pathPrefix: 'next_input_suggestion_guardrail.',
-  },
-  {
-    id: 'surveys',
-    title: 'Surveys',
-    icon: PollOutlinedIcon,
-    backendSectionId: null,
-    pathPrefix: null,
-  },
-  {
-    id: 'custom_theme',
-    title: 'Custom Theme',
-    icon: PaletteOutlinedIcon,
-    backendSectionId: null,
-    pathPrefix: null,
-  },
-];
-
-// Sections that own their save flow and so hide the shared action bar
-const SELF_SAVING_SECTIONS = ['auto_routing', 'surveys', 'model_prices_source', 'custom_theme'];
+import { FEATURES_SECTIONS, LEGACY_SECTION_REDIRECTS } from './constants/features.constants';
+import {
+  cleanValuesForSave,
+  mergeRequiredRestarts,
+  resolveSectionFromHash,
+} from './helpers/features.helpers';
+import { useConfigSectionDraft } from './hooks/useConfigSectionDraft.hooks';
 
 const FeaturesPage = memo(() => {
   const styles = featuresPageStyles();
 
-  const [activeSection, setActiveSection] = useState(
-    () => window.location.hash.slice(1) || FEATURES_SECTIONS[0].id,
+  // Old links to sections that are now blocks open the parent page with that block expanded
+  const [initialTarget] = useState(() =>
+    resolveSectionFromHash(window.location.hash.slice(1), FEATURES_SECTIONS, LEGACY_SECTION_REDIRECTS),
   );
-  const [localValues, setLocalValues] = useState({});
+  const [activeSection, setActiveSection] = useState(initialTarget.page);
+  const [deepLinkBlock, setDeepLinkBlock] = useState(initialTarget.block);
+
   const addSurveyRef = useRef(null);
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
@@ -159,7 +45,6 @@ const FeaturesPage = memo(() => {
     message: '',
     severity: 'success',
   });
-  const serverValuesRef = useRef({});
 
   const activeDef = useMemo(
     () => FEATURES_SECTIONS.find(s => s.id === activeSection) ?? FEATURES_SECTIONS[0],
@@ -168,21 +53,28 @@ const FeaturesPage = memo(() => {
 
   const { data: schemasData } = useConfigSchemasQuery();
 
-  const {
-    data: valuesData,
-    isFetching: valuesFetching,
-    isLoading: valuesLoading,
-  } = useConfigValuesQuery(
-    { sectionId: activeDef.backendSectionId },
-    { refetchOnMountOrArgChange: true, skip: !activeDef.backendSectionId },
+  // One draft per backend config section; only the sections the active page edits are fetched
+  const usesSection = sectionId => activeDef.backendSectionIds.includes(sectionId);
+  const guardrailsDraft = useConfigSectionDraft('guardrails', { skip: !usesSection('guardrails') });
+  const voiceDraft = useConfigSectionDraft('voice_features', { skip: !usesSection('voice_features') });
+  const mentionsDraft = useConfigSectionDraft('chat_mentions', { skip: !usesSection('chat_mentions') });
+  const budgetsDraft = useConfigSectionDraft('cost_budgets', { skip: !usesSection('cost_budgets') });
+  const supportDraft = useConfigSectionDraft('support_assistant', {
+    skip: !usesSection('support_assistant'),
+  });
+  const resourcesDraft = useConfigSectionDraft('resources', { skip: !usesSection('resources') });
+
+  const allDrafts = useMemo(
+    () => [guardrailsDraft, voiceDraft, mentionsDraft, budgetsDraft, supportDraft, resourcesDraft],
+    [guardrailsDraft, voiceDraft, mentionsDraft, budgetsDraft, supportDraft, resourcesDraft],
+  );
+  const activeDrafts = useMemo(
+    () => allDrafts.filter(draft => activeDef.backendSectionIds.includes(draft.sectionId)),
+    [allDrafts, activeDef],
   );
 
-  useEffect(() => {
-    if (valuesData?.values) {
-      serverValuesRef.current = valuesData.values;
-      setLocalValues(valuesData.values);
-    }
-  }, [valuesData]);
+  const isDirty = activeDrafts.some(draft => draft.isDirty);
+  const isLoading = activeDrafts.some(draft => draft.isLoading);
 
   useEffect(() => {
     window.location.hash = activeSection;
@@ -191,23 +83,18 @@ const FeaturesPage = memo(() => {
   const [saveValues, { isLoading: saving }] = useConfigValuesSaveMutation();
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
 
-  const isDirty = useMemo(
-    () => JSON.stringify(localValues) !== JSON.stringify(serverValuesRef.current),
-    [localValues],
-  );
-
   const pageTitle = `Features: ${activeDef.title}`;
   usePageTitle(pageTitle);
 
   const guardrailsFields = useMemo(() => {
-    if (!activeDef.pathPrefix) return [];
     const guardrailsSchema = schemasData?.sections?.find(s => s.id === 'guardrails');
-    return (guardrailsSchema?.fields || []).filter(f => f.path?.startsWith(activeDef.pathPrefix));
-  }, [activeDef, schemasData]);
+    return guardrailsSchema?.fields || [];
+  }, [schemasData]);
 
-  const handleFieldChange = useCallback((key, value) => {
-    setLocalValues(prev => ({ ...prev, [key]: value }));
-  }, []);
+  const mcpFields = useMemo(
+    () => guardrailsFields.filter(f => f.path?.startsWith('mcp_exposure.')),
+    [guardrailsFields],
+  );
 
   // Sections with their own field validation report upwards so Save can block
   const [sectionValid, setSectionValid] = useState(true);
@@ -218,52 +105,55 @@ const FeaturesPage = memo(() => {
         const confirmed = window.confirm('You have unsaved changes. Discard them?');
         if (!confirmed) return;
       }
+      // Drafts outlive the page (guardrails is shared by several), so unsaved edits are dropped here
+      allDrafts.forEach(draft => draft.discard());
       setActiveSection(sectionId);
+      setDeepLinkBlock(null);
       setPendingRestarts([]);
       // The unmounting section's validity must not keep blocking Save here
       setSectionValid(true);
     },
-    [isDirty],
+    [isDirty, allDrafts],
   );
 
   const handleDiscard = useCallback(() => {
-    setLocalValues(serverValuesRef.current);
+    activeDrafts.forEach(draft => draft.discard());
+  }, [activeDrafts]);
+
+  const showRestarts = useCallback(restarts => {
+    setPendingRestarts(restarts);
+    if (!restarts.length) return false;
+
+    const summary = restarts
+      .map(r => (r.plugins?.length ? `${r.plugins.join(', ')} on ${r.pylon_id}` : r.pylon_id))
+      .join('; ');
+    setSnackbar({
+      open: true,
+      message: `Configuration saved. Reload required: ${summary}`,
+      severity: 'warning',
+    });
+    return true;
   }, []);
 
+  // Each backend section with unsaved changes is saved by its own request, as before the grouping
   const handleSave = useCallback(async () => {
+    const restarts = [];
+    const dirtyDrafts = activeDrafts.filter(draft => draft.isDirty);
+
     try {
-      const cleanedValues = Object.fromEntries(
-        Object.entries(localValues).map(([key, value]) => {
-          if (key.endsWith('_links') && Array.isArray(value)) {
-            return [key, value.filter(link => link.title?.trim() !== '' || link.url?.trim() !== '')];
-          }
-          return [key, value];
-        }),
-      );
+      for (const draft of dirtyDrafts) {
+        const cleanedValues = cleanValuesForSave(draft.values);
 
-      const result = await saveValues({
-        sectionId: activeDef.backendSectionId,
-        values: cleanedValues,
-      }).unwrap();
+        const result = await saveValues({
+          sectionId: draft.sectionId,
+          values: cleanedValues,
+        }).unwrap();
 
-      serverValuesRef.current = cleanedValues;
-      setLocalValues({ ...cleanedValues });
+        draft.markSaved(cleanedValues);
+        restarts.push(...(result.requires_restart ?? []));
+      }
 
-      if (result.requires_restart?.length > 0) {
-        const normalized = result.requires_restart.map(r =>
-          typeof r === 'string' ? { pylon_id: r, plugins: [] } : r,
-        );
-        setPendingRestarts(normalized);
-        const summary = normalized
-          .map(r => (r.plugins?.length ? `${r.plugins.join(', ')} on ${r.pylon_id}` : r.pylon_id))
-          .join('; ');
-        setSnackbar({
-          open: true,
-          message: `Configuration saved. Reload required: ${summary}`,
-          severity: 'warning',
-        });
-      } else {
-        setPendingRestarts([]);
+      if (!showRestarts(mergeRequiredRestarts(restarts))) {
         setSnackbar({
           open: true,
           message: 'Configuration saved successfully',
@@ -271,13 +161,15 @@ const FeaturesPage = memo(() => {
         });
       }
     } catch (err) {
+      // Sections saved before the failure stay saved, so their reloads are still offered
+      setPendingRestarts(mergeRequiredRestarts(restarts));
       setSnackbar({
         open: true,
         message: `Failed to save: ${err?.data?.error || err?.message || 'Unknown error'}`,
         severity: 'error',
       });
     }
-  }, [activeDef, localValues, saveValues]);
+  }, [activeDrafts, saveValues, showRestarts]);
 
   const handleReload = useCallback(
     async (pylonId, plugins) => {
@@ -304,8 +196,8 @@ const FeaturesPage = memo(() => {
   }, []);
 
   const renderContent = () => {
-    const isLoading = activeDef.backendSectionId && (activeDef.pathPrefix ? valuesLoading : valuesFetching);
-
+    // Only the first load blocks the page: a refetch after Save must not remount the blocks
+    // and collapse whatever the admin had open
     if (isLoading)
       return (
         <Box sx={styles.loadingContainer}>
@@ -314,12 +206,8 @@ const FeaturesPage = memo(() => {
       );
 
     switch (activeSection) {
-      case 'auto_routing':
-        return <AutoRoutingSettings />;
       case 'surveys':
         return <SurveysSection addRef={addSurveyRef} />;
-      case 'model_prices_source':
-        return <ModelPricesSource />;
       case 'custom_theme':
         return (
           <Box sx={styles.formScroll}>
@@ -327,18 +215,46 @@ const FeaturesPage = memo(() => {
           </Box>
         );
       case 'mcp_configuration':
-      case 'agent_publishing':
-      case 'skill_publishing':
-      case 'midturn_injection':
-      case 'next_input_suggestion':
         return (
           <Box sx={styles.formScroll}>
             <GuardrailsSection
-              fields={guardrailsFields}
-              values={localValues}
+              fields={mcpFields}
+              values={guardrailsDraft.values}
               sectionDescription=""
-              onChange={handleFieldChange}
+              onChange={guardrailsDraft.onChange}
               defaultExpanded
+            />
+          </Box>
+        );
+      case 'chat_configuration':
+        return (
+          <Box sx={styles.formScroll}>
+            <ChatConfigurationSection
+              voiceDraft={voiceDraft}
+              mentionsDraft={mentionsDraft}
+              guardrailsDraft={guardrailsDraft}
+              guardrailsFields={guardrailsFields}
+              initialBlock={deepLinkBlock}
+            />
+          </Box>
+        );
+      case 'publishing':
+        return (
+          <Box sx={styles.formScroll}>
+            <PublishingSection
+              guardrailsDraft={guardrailsDraft}
+              guardrailsFields={guardrailsFields}
+              initialBlock={deepLinkBlock}
+            />
+          </Box>
+        );
+      case 'cost_budgets':
+        return (
+          <Box sx={styles.formScroll}>
+            <CostBudgetsSection
+              budgetsDraft={budgetsDraft}
+              onValidityChange={setSectionValid}
+              initialBlock={deepLinkBlock}
             />
           </Box>
         );
@@ -346,8 +262,8 @@ const FeaturesPage = memo(() => {
         return (
           <Box sx={styles.formScroll}>
             <HelpCenterSection
-              values={localValues}
-              onChange={handleFieldChange}
+              values={resourcesDraft.values}
+              onChange={resourcesDraft.onChange}
             />
           </Box>
         );
@@ -355,36 +271,8 @@ const FeaturesPage = memo(() => {
         return (
           <Box sx={styles.formScroll}>
             <SupportAssistant
-              values={localValues}
-              onChange={handleFieldChange}
-            />
-          </Box>
-        );
-      case 'voice_features':
-        return (
-          <Box sx={styles.formScroll}>
-            <VoiceFeatures
-              values={localValues}
-              onChange={handleFieldChange}
-            />
-          </Box>
-        );
-      case 'chat_mentions':
-        return (
-          <Box sx={styles.formScroll}>
-            <ChatMentions
-              values={localValues}
-              onChange={handleFieldChange}
-            />
-          </Box>
-        );
-      case 'cost_budgets':
-        return (
-          <Box sx={styles.formScroll}>
-            <CostBudgets
-              values={localValues}
-              onChange={handleFieldChange}
-              onValidityChange={setSectionValid}
+              values={supportDraft.values}
+              onChange={supportDraft.onChange}
             />
           </Box>
         );
@@ -409,9 +297,10 @@ const FeaturesPage = memo(() => {
             const IconComponent = section.icon;
             const isActive = activeSection === section.id;
             return (
-              <Box
+              <ButtonBase
                 key={section.id}
                 onClick={() => handleSectionChange(section.id)}
+                aria-current={isActive ? 'page' : undefined}
                 sx={styles.sectionItem(isActive)}
               >
                 <IconComponent sx={{ fontSize: '1rem' }} />
@@ -421,7 +310,7 @@ const FeaturesPage = memo(() => {
                 >
                   {section.title}
                 </Typography>
-              </Box>
+              </ButtonBase>
             );
           })}
         </Box>
@@ -429,7 +318,7 @@ const FeaturesPage = memo(() => {
         <Box sx={styles.formArea}>
           {renderContent()}
 
-          {!SELF_SAVING_SECTIONS.includes(activeSection) && (
+          {!activeDef.selfSaving && (
             <Box sx={styles.actionBar}>
               <Box sx={styles.actionButtons}>
                 <Button
@@ -527,6 +416,9 @@ const featuresPageStyles = () => ({
       gap: '0.5rem',
       padding: '0.5rem 0.75rem',
       borderRadius: '0.375rem',
+      width: '100%',
+      justifyContent: 'flex-start',
+      textAlign: 'left',
       cursor: 'pointer',
       transition: 'all 0.15s ease',
       backgroundColor: isActive ? palette.background.userInputBackgroundActive : 'transparent',

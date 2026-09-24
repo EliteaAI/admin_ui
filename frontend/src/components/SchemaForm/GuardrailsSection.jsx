@@ -5,10 +5,10 @@ import BlockIcon from '@mui/icons-material/BlockOutlined';
 import BoltIcon from '@mui/icons-material/BoltOutlined';
 import ExtensionIcon from '@mui/icons-material/ExtensionOutlined';
 import GppMaybeIcon from '@mui/icons-material/GppMaybeOutlined';
-import PublishIcon from '@mui/icons-material/PublishOutlined';
 import { Box, Typography } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { AgentIcon } from '@/components/Icons';
 
 import GuardrailsFieldCard from './components/GuardrailsFieldCard';
 
@@ -36,7 +36,7 @@ const SECTION_CONFIG = [
   {
     id: 'block_agent_publishing',
     title: 'Agent Publishing',
-    icon: PublishIcon,
+    icon: AgentIcon,
     pathPrefix: 'publishing_guardrail.',
   },
   {
@@ -59,7 +59,8 @@ const sectionClaimsField = (section, field) =>
   (section.pathPrefix ? field.path?.startsWith(section.pathPrefix) : false);
 
 const GuardrailsSection = memo(props => {
-  const { fields, values, sectionDescription, onChange, defaultExpanded = false } = props;
+  // ungrouped renders the fields flat, for callers that already wrap them in their own collapsible block
+  const { fields, values, sectionDescription, onChange, defaultExpanded = false, ungrouped = false } = props;
 
   const styles = guardrailsSectionStyles();
 
@@ -94,6 +95,8 @@ const GuardrailsSection = memo(props => {
 
   // Group fields by section (explicit key list or config-path prefix)
   const groupedSections = useMemo(() => {
+    if (ungrouped) return [];
+
     const fieldsByKey = {};
     visibleFields.forEach(field => {
       fieldsByKey[field.key] = field;
@@ -107,12 +110,14 @@ const GuardrailsSection = memo(props => {
         ? section.fields.map(key => fieldsByKey[key]).filter(Boolean)
         : visibleFields.filter(field => sectionClaimsField(section, field)),
     })).filter(section => section.fields.length > 0);
-  }, [visibleFields]);
+  }, [visibleFields, ungrouped]);
 
   // Find fields not claimed by any section
   const ungroupedFields = useMemo(() => {
+    if (ungrouped) return visibleFields;
+
     return visibleFields.filter(field => !SECTION_CONFIG.some(section => sectionClaimsField(section, field)));
-  }, [visibleFields]);
+  }, [visibleFields, ungrouped]);
 
   if (visibleFields.length === 0) {
     return (
