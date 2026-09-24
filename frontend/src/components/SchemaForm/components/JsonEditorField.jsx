@@ -18,7 +18,6 @@ const JsonEditorField = memo(props => {
   const [parseError, setParseError] = useState(null);
   const userEditingRef = useRef(false);
 
-  // Sync from external value when it changes (e.g. async fetch completes)
   useEffect(() => {
     if (userEditingRef.current) return;
     try {
@@ -30,7 +29,8 @@ const JsonEditorField = memo(props => {
     } catch {
       // ignore
     }
-  }, [value, localStr]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   const handleChange = useCallback(
     val => {
