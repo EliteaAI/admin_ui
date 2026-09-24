@@ -77,7 +77,6 @@ const ChatConfigurationSection = memo(props => {
           fields={midturnFields}
           values={guardrailsDraft.values}
           onChange={guardrailsDraft.onChange}
-          ungrouped
         />
       ),
     },
@@ -91,7 +90,6 @@ const ChatConfigurationSection = memo(props => {
           fields={nextInputFields}
           values={guardrailsDraft.values}
           onChange={guardrailsDraft.onChange}
-          ungrouped
         />
       ),
     },

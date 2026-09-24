@@ -36,7 +36,6 @@ const McpConfigurationSection = memo(props => {
           fields={mcpFields}
           values={guardrailsDraft.values}
           onChange={guardrailsDraft.onChange}
-          ungrouped
         />
       </CollapsibleSection>
     </Box>

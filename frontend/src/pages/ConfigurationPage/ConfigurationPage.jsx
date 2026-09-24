@@ -52,7 +52,7 @@ const MOVED_TO_FEATURES = [
   'cost_budgets',
 ];
 // Guardrails-section fields whose config path starts with one of these prefixes have
-// been relocated to the Features page (see FeaturesPage FEATURES_SECTIONS), so they are
+// been relocated to the Features page (see FeaturesPage features.constants), so they are
 // hidden here. Prefix-based so new publishing_guardrail.*/mcp_exposure.* fields added to
 // admin_schema.json stay out of Guardrails automatically.
 const FEATURES_GUARDRAILS_PREFIXES = [

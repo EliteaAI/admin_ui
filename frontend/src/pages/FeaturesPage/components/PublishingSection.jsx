@@ -55,7 +55,6 @@ const PublishingSection = memo(props => {
             fields={block.fields}
             values={guardrailsDraft.values}
             onChange={guardrailsDraft.onChange}
-            ungrouped
           />
         </CollapsibleSection>
       ))}
