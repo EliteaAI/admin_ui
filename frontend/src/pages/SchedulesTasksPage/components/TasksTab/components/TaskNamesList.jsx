@@ -1,10 +1,11 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
-import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
+import { Box, Skeleton, Typography } from '@mui/material';
 
 import { groupTasks } from '@/pages/SchedulesTasksPage/components/TasksTab/helpers/groupTasks.helpers';
+import { DEFAULT_EXPANDED_GROUP } from '@/pages/SchedulesTasksPage/components/TasksTab/helpers/taskGroups.constants';
+
+import TaskGroup from './TaskGroup';
 
 const TaskNamesList = memo(props => {
   const {
@@ -20,7 +21,7 @@ const TaskNamesList = memo(props => {
 
   const styles = taskNamesListStyles();
 
-  const [expanded, setExpanded] = useState({ General: true });
+  const [expanded, setExpanded] = useState({ [DEFAULT_EXPANDED_GROUP]: true });
 
   const lowerSearch = search.trim().toLowerCase();
 
@@ -76,70 +77,20 @@ const TaskNamesList = memo(props => {
             {lowerSearch ? 'No matching tasks' : 'No tasks available'}
           </Typography>
         ) : (
-          groups.map(({ group, items }) => {
-            const isOpen = lowerSearch ? true : !!expanded[group];
-            return (
-              <Box
-                key={group}
-                sx={styles.groupContainer}
-              >
-                <Box
-                  sx={styles.groupHeader}
-                  onClick={() => !lowerSearch && toggleGroup(group)}
-                  role={lowerSearch ? undefined : 'button'}
-                >
-                  {isOpen ? (
-                    <KeyboardArrowDown sx={styles.chevron} />
-                  ) : (
-                    <KeyboardArrowRight sx={styles.chevron} />
-                  )}
-                  <Typography
-                    variant="bodySmall"
-                    sx={styles.groupName}
-                    noWrap
-                  >
-                    {group}
-                  </Typography>
-                  <Box sx={styles.countChip}>{items.length}</Box>
-                </Box>
-
-                {isOpen &&
-                  items.map(name => {
-                    const isSelected = selectedTask === name;
-                    const count = runningCounts[name] || 0;
-                    const desc = taskDescriptions[name];
-                    const item = (
-                      <Box
-                        key={name}
-                        onClick={() => onSelect(isSelected ? null : name)}
-                        sx={[styles.item, isSelected && styles.itemSelected]}
-                      >
-                        <Typography
-                          variant="bodySmall"
-                          sx={styles.itemText}
-                          noWrap
-                        >
-                          {name}
-                        </Typography>
-                        {count > 0 && <Box sx={styles.badge}>{count}</Box>}
-                      </Box>
-                    );
-                    return desc ? (
-                      <Tooltip
-                        key={name}
-                        title={desc}
-                        placement="right"
-                        arrow
-                      >
-                        {item}
-                      </Tooltip>
-                    ) : (
-                      item
-                    );
-                  })}
-              </Box>
-            );
-          })
+          groups.map(({ group, items }) => (
+            <TaskGroup
+              key={group}
+              group={group}
+              items={items}
+              isOpen={lowerSearch ? true : !!expanded[group]}
+              isToggleable={!lowerSearch}
+              onToggle={toggleGroup}
+              taskDescriptions={taskDescriptions}
+              selectedTask={selectedTask}
+              runningCounts={runningCounts}
+              onSelect={onSelect}
+            />
+          ))
         )}
       </Box>
     </Box>
@@ -168,87 +119,6 @@ const taskNamesListStyles = () => ({
     overflow: 'auto',
     padding: '0 0.375rem 0.5rem',
   },
-  groupContainer: ({ palette }) => ({
-    marginBottom: '0.25rem',
-    borderRadius: '0.375rem',
-    border: `0.0625rem solid ${palette.border.subtle.strong}`,
-    overflow: 'hidden',
-  }),
-  groupHeader: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0.4375rem 0.5rem',
-    cursor: 'pointer',
-    userSelect: 'none',
-    backgroundColor: palette.background.subtle.raised,
-    '&:hover': {
-      backgroundColor: palette.action.hover,
-    },
-  }),
-  chevron: {
-    fontSize: '1.125rem',
-    color: 'text.secondary',
-    marginRight: '0.25rem',
-    flexShrink: 0,
-  },
-  groupName: {
-    flex: 1,
-    fontWeight: 600,
-    fontSize: '0.75rem',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  countChip: ({ palette }) => ({
-    minWidth: '1.375rem',
-    height: '1.125rem',
-    borderRadius: '0.5625rem',
-    backgroundColor: palette.background.subtle.strong,
-    color: palette.text.secondary,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '0.6875rem',
-    fontWeight: 600,
-    flexShrink: 0,
-    marginLeft: '0.5rem',
-    padding: '0 0.375rem',
-  }),
-  item: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0.5rem 0.625rem 0.5rem 1.75rem',
-    cursor: 'pointer',
-    transition: 'background-color 0.15s',
-    '&:hover': {
-      backgroundColor: palette.action.hover,
-    },
-  }),
-  itemSelected: ({ palette }) => ({
-    backgroundColor: palette.action.selected,
-    '&:hover': {
-      backgroundColor: palette.action.selected,
-    },
-  }),
-  itemText: {
-    fontSize: '0.8125rem',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  badge: ({ palette }) => ({
-    minWidth: '1.25rem',
-    height: '1.25rem',
-    borderRadius: '0.625rem',
-    backgroundColor: palette.success.main,
-    color: palette.success.contrastText,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '0.6875rem',
-    fontWeight: 600,
-    flexShrink: 0,
-    marginLeft: '0.5rem',
-  }),
   emptyState: ({ palette }) => ({
     color: palette.text.disabled,
     fontSize: '0.75rem',
