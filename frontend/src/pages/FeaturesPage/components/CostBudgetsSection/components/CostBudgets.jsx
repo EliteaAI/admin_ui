@@ -4,6 +4,7 @@ import { Box, MenuItem, Select, Switch, TextField, Typography } from '@mui/mater
 
 import {
   DEFAULT_LIMIT_FIELDS,
+  WARNING_DISMISSIBLE_FIELD,
   WARNING_THRESHOLD_FIELDS,
 } from '@/pages/FeaturesPage/components/CostBudgetsSection/constants/costBudgets.constants';
 
@@ -46,6 +47,8 @@ const CostBudgets = memo(props => {
   const enforcing = mode === 'enforce';
   const budgetsOn = mode !== 'off';
   const defaultsEnabled = !!values?.cost_budgets_defaults_enabled;
+  // Missing means the backend default, which is dismissible
+  const warningsDismissible = values?.[WARNING_DISMISSIBLE_FIELD.key] !== false;
 
   const activeMode = MODE_OPTIONS.find(o => o.value === mode) || MODE_OPTIONS[0];
 
@@ -53,6 +56,11 @@ const CostBudgets = memo(props => {
 
   const handleToggleDefaults = useCallback(
     e => onChange('cost_budgets_defaults_enabled', e.target.checked),
+    [onChange],
+  );
+
+  const handleToggleDismissible = useCallback(
+    e => onChange(WARNING_DISMISSIBLE_FIELD.key, e.target.checked),
     [onChange],
   );
 
@@ -235,6 +243,31 @@ const CostBudgets = memo(props => {
             </Box>
           </Box>
         ))}
+
+      {budgetsOn && (
+        <Box sx={styles.card}>
+          <Box sx={styles.cardRow}>
+            <Box sx={styles.cardLabel}>
+              <Typography
+                variant="body2"
+                sx={styles.cardTitle}
+              >
+                {WARNING_DISMISSIBLE_FIELD.title}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={styles.cardHint}
+              >
+                {WARNING_DISMISSIBLE_FIELD.hint}
+              </Typography>
+            </Box>
+            <Switch
+              checked={warningsDismissible}
+              onChange={handleToggleDismissible}
+            />
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 });

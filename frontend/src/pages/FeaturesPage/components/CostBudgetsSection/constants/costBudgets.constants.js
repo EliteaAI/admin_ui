@@ -34,5 +34,11 @@ export const WARNING_THRESHOLD_FIELDS = [
   },
 ];
 
-// Mode select and the apply-defaults toggle, plus every limit and warning threshold field
-export const COST_BUDGETS_SETTINGS_COUNT = 2 + DEFAULT_LIMIT_FIELDS.length + WARNING_THRESHOLD_FIELDS.length;
+export const WARNING_DISMISSIBLE_FIELD = {
+  key: 'usage_warnings_dismissible',
+  title: 'Allow Users To Dismiss Budget Warnings',
+  hint: 'Show a close button on the budget warning banner. A dismissed warning returns when spend reaches the next level (90% and 95%).',
+};
+
+// Mode select, the apply-defaults and dismissible toggles, plus every limit and threshold field
+export const COST_BUDGETS_SETTINGS_COUNT = 3 + DEFAULT_LIMIT_FIELDS.length + WARNING_THRESHOLD_FIELDS.length;
