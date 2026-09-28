@@ -1,6 +1,6 @@
 /**
  * Color category definitions for the Custom Theme editor.
- * All 505 palette token paths from EliteaUI darkPalette.js / lightPalette.js
+ * All 523 palette token paths from EliteaUI darkPalette.js / lightPalette.js
  * organized into logical categories with human-readable labels.
  */
 import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined';
@@ -187,6 +187,46 @@ export const COLOR_CATEGORIES = [
         label: 'Badge Background',
         hint: 'Badge and chip backgrounds',
       },
+      {
+        key: 'background.overlay.faint',
+        label: 'Overlay Faint',
+        hint: 'Faintest translucent overlay over surfaces',
+      },
+      {
+        key: 'background.overlay.soft',
+        label: 'Overlay Soft',
+        hint: 'Soft translucent overlay for hover states',
+      },
+      {
+        key: 'background.overlay.medium',
+        label: 'Overlay Medium',
+        hint: 'Medium translucent overlay for skeletons and drop targets',
+      },
+      {
+        key: 'background.overlay.strong',
+        label: 'Overlay Strong',
+        hint: 'Strong translucent overlay',
+      },
+      {
+        key: 'background.overlay.dim',
+        label: 'Overlay Dim',
+        hint: 'Dimming overlay behind content',
+      },
+      {
+        key: 'background.overlay.sensitive.default',
+        label: 'Sensitive Overlay Default',
+        hint: 'Overlay for sensitive/masked content',
+      },
+      {
+        key: 'background.overlay.sensitive.hover',
+        label: 'Sensitive Overlay Hover',
+        hint: 'Sensitive content overlay on hover',
+      },
+      {
+        key: 'background.overlay.versionHover',
+        label: 'Version Hover Overlay',
+        hint: 'Overlay for version items on hover',
+      },
     ],
   },
   {
@@ -219,6 +259,11 @@ export const COLOR_CATEGORIES = [
         key: 'border.hover',
         label: 'Hover Border',
         hint: 'Border color on hover state',
+      },
+      {
+        key: 'border.sectionHover',
+        label: 'Section Hover Border',
+        hint: 'Border color for sections on hover',
       },
       {
         key: 'border.inputHover',
@@ -337,6 +382,16 @@ export const COLOR_CATEGORIES = [
         hint: 'Accent color for emphasized text',
       },
       { key: 'text.link', label: 'Link Text', hint: 'Hyperlink text color' },
+      {
+        key: 'text.linkHover',
+        label: 'Link Hover Text',
+        hint: 'Hyperlink text color on hover',
+      },
+      {
+        key: 'text.linkHoverSecondary',
+        label: 'Secondary Link Hover Text',
+        hint: 'Secondary hyperlink text color on hover',
+      },
       {
         key: 'text.visitedLink',
         label: 'Visited Link',
@@ -1121,6 +1176,16 @@ export const COLOR_CATEGORIES = [
         hint: 'Category tag selected background',
       },
       {
+        key: 'components.categoryTag.background.hover',
+        label: 'Category Tag Hover',
+        hint: 'Category tag hover background',
+      },
+      {
+        key: 'components.categoryTag.background.hoverSelected',
+        label: 'Category Tag Hover Selected',
+        hint: 'Selected category tag hover background',
+      },
+      {
         key: 'components.categoryTag.text.default',
         label: 'Category Tag Text Default',
         hint: 'Category tag text default',
@@ -1209,6 +1274,11 @@ export const COLOR_CATEGORIES = [
         key: 'components.chip.background.default',
         label: 'Chip Default Background',
         hint: 'Default chip background',
+      },
+      {
+        key: 'components.chip.background.positive',
+        label: 'Chip Positive Background',
+        hint: 'Positive chip background',
       },
       {
         key: 'components.chipWithCheckIcon.background.default',
@@ -1989,6 +2059,16 @@ export const COLOR_CATEGORIES = [
         hint: 'NPS survey subtle accent',
       },
       {
+        key: 'components.npsSurvey.heartGradient.start',
+        label: 'NPS Heart Gradient Start',
+        hint: 'NPS heart icon gradient start color',
+      },
+      {
+        key: 'components.npsSurvey.heartGradient.end',
+        label: 'NPS Heart Gradient End',
+        hint: 'NPS heart icon gradient end color',
+      },
+      {
         key: 'components.npsSurvey.optionBackground',
         label: 'NPS Option Background',
         hint: 'NPS option background',
@@ -2174,6 +2254,11 @@ export const COLOR_CATEGORIES = [
         key: 'components.flowEditor.edge.stroke',
         label: 'Flow Edge Stroke',
         hint: 'Flow edge stroke color',
+      },
+      {
+        key: 'components.flowEditor.edge.shadow',
+        label: 'Flow Edge Shadow',
+        hint: 'Flow edge shadow color',
       },
       {
         key: 'components.flowEditor.nodeColors.toolkit',
