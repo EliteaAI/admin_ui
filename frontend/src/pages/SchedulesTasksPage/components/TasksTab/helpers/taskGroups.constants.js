@@ -23,6 +23,7 @@ export const GENERAL_TASK_GROUPS = [
       'migrate_confluence_api_version',
       'migrate_toolkit_selected_tools',
       'migrate_toolkit_settings_fields',
+      'set_index_schedule_expiration',
     ],
   },
   {
