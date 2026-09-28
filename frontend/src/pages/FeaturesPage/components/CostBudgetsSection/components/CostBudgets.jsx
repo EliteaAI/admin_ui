@@ -264,6 +264,7 @@ const CostBudgets = memo(props => {
             <Switch
               checked={warningsDismissible}
               onChange={handleToggleDismissible}
+              slotProps={{ input: { 'aria-label': WARNING_DISMISSIBLE_FIELD.title } }}
             />
           </Box>
         </Box>
