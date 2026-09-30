@@ -17,7 +17,16 @@ const schedulesApi = adminApi.injectEndpoints({
       }),
       invalidatesTags: ['Schedules'],
     }),
+
+    scheduleRunNow: build.mutation({
+      query: ({ id }) => ({
+        url: '/scheduling/schedules/administration/0',
+        method: 'POST',
+        body: { id },
+      }),
+      invalidatesTags: ['Schedules'],
+    }),
   }),
 });
 
-export const { useScheduleListQuery, useScheduleUpdateMutation } = schedulesApi;
+export const { useScheduleListQuery, useScheduleUpdateMutation, useScheduleRunNowMutation } = schedulesApi;
