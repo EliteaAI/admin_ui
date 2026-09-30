@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Alert, Box, Skeleton, Snackbar, Typography } from '@mui/material';
 
-import { useScheduleListQuery, useScheduleUpdateMutation } from '@/api/schedules.api';
+import { useScheduleListQuery, useScheduleRunNowMutation, useScheduleUpdateMutation } from '@/api/schedules.api';
 import { useTableSort } from '@/hooks/useTableSort.hooks';
 
 import ScheduleHistoryDrawer from './components/ScheduleHistoryDrawer';
@@ -29,6 +29,9 @@ const SchedulesTab = memo(props => {
     refetchOnMountOrArgChange: true,
   });
   const [updateSchedule] = useScheduleUpdateMutation();
+  const [runNow] = useScheduleRunNowMutation();
+  const [runningId, setRunningId] = useState(null);
+  const [notice, setNotice] = useState('');
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [error, setError] = useState('');
 
@@ -72,6 +75,23 @@ const SchedulesTab = memo(props => {
     },
     [applyUpdate],
   );
+
+  const handleRunNow = useCallback(
+    async schedule => {
+      setRunningId(schedule.id);
+      try {
+        await runNow({ id: schedule.id }).unwrap();
+        setNotice(`${schedule.name} executed`);
+      } catch (err) {
+        setError(`${schedule.name}: ${describeUpdateError(err)}`);
+      } finally {
+        setRunningId(null);
+      }
+    },
+    [runNow],
+  );
+
+  const handleNoticeClose = useCallback(() => setNotice(''), []);
 
   const handleErrorClose = useCallback(() => setError(''), []);
 
@@ -131,6 +151,8 @@ const SchedulesTab = memo(props => {
           here.
           <br />
           Click a schedule name to view its execution history.
+          <br />
+          Use the play button to run a schedule immediately, regardless of its cron timing.
         </Typography>
       </Box>
       <SchedulesTable
@@ -139,6 +161,8 @@ const SchedulesTab = memo(props => {
         onSort={handleSort}
         onToggleActive={readOnly ? undefined : handleToggleActive}
         onCronUpdate={readOnly ? undefined : handleCronUpdate}
+        onRunNow={readOnly ? undefined : handleRunNow}
+        runningId={runningId}
         onScheduleClick={handleScheduleClick}
       />
       <ScheduleHistoryDrawer
@@ -146,6 +170,21 @@ const SchedulesTab = memo(props => {
         onClose={handleDrawerClose}
         schedule={selectedSchedule}
       />
+      <Snackbar
+        open={!!notice}
+        autoHideDuration={4000}
+        onClose={handleNoticeClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleNoticeClose}
+          severity="success"
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {notice}
+        </Alert>
+      </Snackbar>
       <Snackbar
         open={!!error}
         autoHideDuration={6000}

@@ -4,7 +4,8 @@ import cronstrue from 'cronstrue';
 import { Link } from 'react-router-dom';
 
 import LockOutlined from '@mui/icons-material/LockOutlined';
-import { Box, Input, Switch, Tooltip, Typography } from '@mui/material';
+import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded';
+import { Box, CircularProgress, IconButton, Input, Switch, Tooltip, Typography } from '@mui/material';
 
 import { GridTableBody, GridTableContainer, GridTableHeader, GridTableRow } from '@/components/GridTable';
 import { PERMISSIONS } from '@/constants/permissions.constants';
@@ -18,6 +19,7 @@ const SCHEDULE_COLUMNS = [
   { field: 'active', label: 'Active', width: '5rem', sortable: false },
   { field: 'rpc_func', label: 'Function', width: '1fr', sortable: true },
   { field: 'last_run', label: 'Last Run', width: '12rem', sortable: true },
+  { field: 'run', label: '', width: '3rem', sortable: false },
 ];
 
 const CONFIG_SECTION_TITLES = {
@@ -38,7 +40,7 @@ const describeCron = expr => {
 };
 
 const SchedulesTable = memo(props => {
-  const { schedules, sortConfig, onSort, onToggleActive, onCronUpdate, onScheduleClick } = props;
+  const { schedules, sortConfig, onSort, onToggleActive, onCronUpdate, onScheduleClick, onRunNow, runningId } = props;
 
   const styles = useMemo(() => schedulesTableStyles(), []);
 
@@ -173,6 +175,25 @@ const SchedulesTable = memo(props => {
         );
       }
 
+      if (column.field === 'run') {
+        if (!onRunNow) return null;
+        const running = runningId === row.id;
+        return (
+          <Tooltip title="Run now">
+            <Box component="span">
+              <IconButton
+                size="small"
+                aria-label={`Run ${row.name} now`}
+                disabled={runningId != null}
+                onClick={() => onRunNow(row)}
+              >
+                {running ? <CircularProgress size={16} /> : <PlayArrowRounded fontSize="small" />}
+              </IconButton>
+            </Box>
+          </Tooltip>
+        );
+      }
+
       if (column.field === 'last_run') {
         if (!value) {
           return (
@@ -216,6 +237,8 @@ const SchedulesTable = memo(props => {
       onToggleActive,
       onCronUpdate,
       onScheduleClick,
+      onRunNow,
+      runningId,
       editingCronId,
       cronDraft,
       handleCronClick,
