@@ -10,7 +10,7 @@ import { getNestedValue } from '@/pages/FeaturesPage/components/CustomThemeSecti
 import ColorPickerField from './ColorPickerField';
 
 const ColorCategoryGroup = memo(props => {
-  const { category, palette, onChange, defaultExpanded = false } = props;
+  const { category, palette, baseModeLabel, onChange, defaultExpanded = false } = props;
 
   const styles = colorCategoryGroupStyles();
 
@@ -20,11 +20,11 @@ const ColorCategoryGroup = memo(props => {
     setExpanded(prev => !prev);
   }, []);
 
-  // How many of this category's tokens the theme actually defines
+  // How many of this category's tokens the theme customizes, the rest inherit from the base theme
   const countLabel = useMemo(() => {
-    const filledCount = category.colors.filter(color => getNestedValue(palette, color.key)).length;
+    const customizedCount = category.colors.filter(color => getNestedValue(palette, color.key)).length;
 
-    return `${filledCount}/${category.colors.length} colors`;
+    return `${customizedCount}/${category.colors.length} customized`;
   }, [category, palette]);
 
   return (
@@ -52,6 +52,7 @@ const ColorCategoryGroup = memo(props => {
             hint={color.hint}
             colorKey={color.key}
             value={getNestedValue(palette, color.key) || ''}
+            baseModeLabel={baseModeLabel}
             onChange={onChange}
           />
         ))}
@@ -77,6 +78,7 @@ ColorCategoryGroup.propTypes = {
     ).isRequired,
   }).isRequired,
   palette: PropTypes.object,
+  baseModeLabel: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   defaultExpanded: PropTypes.bool,
 };

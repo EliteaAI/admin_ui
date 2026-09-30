@@ -3,7 +3,8 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { Box, Popover, TextField, Tooltip, Typography } from '@mui/material';
+import RestartAltOutlinedIcon from '@mui/icons-material/RestartAltOutlined';
+import { Box, Chip, IconButton, Popover, TextField, Tooltip, Typography } from '@mui/material';
 
 import {
   isGradient,
@@ -12,7 +13,7 @@ import {
 import { Sketch } from '@uiw/react-color';
 
 const ColorPickerField = memo(props => {
-  const { label, hint, value, onChange, colorKey } = props;
+  const { label, hint, value, baseModeLabel, onChange, colorKey } = props;
 
   const styles = colorPickerFieldStyles();
 
@@ -53,6 +54,11 @@ const ColorPickerField = memo(props => {
     [colorKey, onChange],
   );
 
+  const handleReset = useCallback(() => {
+    setLocalValue('');
+    onChange(colorKey, '');
+  }, [colorKey, onChange]);
+
   const handleInputBlur = useCallback(() => {
     // Restore to last valid value if invalid
     if (!isValidColor(localValue) && localValue !== '') {
@@ -63,29 +69,58 @@ const ColorPickerField = memo(props => {
   const open = Boolean(anchorEl);
   const gradient = isGradient(localValue);
   const hasColor = localValue && isValidColor(localValue);
+  // Only a value stored in the theme overrides the base theme, an empty field inherits from it
+  const isCustomized = Boolean(value);
 
   return (
     <Box sx={styles.root}>
       <Box sx={styles.labelRow}>
-        <Typography
-          variant="body2"
-          sx={styles.label}
-        >
-          {label}
-        </Typography>
-        {hint && (
-          <Tooltip
-            title={hint}
-            arrow
-            placement="top"
+        <Box sx={styles.labelGroup}>
+          <Typography
+            variant="body2"
+            sx={styles.label}
           >
-            <InfoOutlinedIcon sx={styles.infoIcon} />
-          </Tooltip>
-        )}
+            {label}
+          </Typography>
+          {hint && (
+            <Tooltip
+              title={hint}
+              arrow
+              placement="top"
+            >
+              <InfoOutlinedIcon sx={styles.infoIcon} />
+            </Tooltip>
+          )}
+        </Box>
+        <Tooltip
+          title={
+            isCustomized
+              ? `Overrides the ${baseModeLabel} base theme`
+              : `Uses the ${baseModeLabel} base theme color`
+          }
+          arrow
+          placement="top"
+        >
+          <Chip
+            label={isCustomized ? 'Custom' : 'Inherited'}
+            size="small"
+            color={isCustomized ? 'primary' : 'default'}
+            variant="outlined"
+            sx={styles.statusChip}
+          />
+        </Tooltip>
       </Box>
 
       <Box sx={styles.inputRow}>
-        <Tooltip title={gradient ? "Gradients can't use picker" : 'Click to pick color'}>
+        <Tooltip
+          title={
+            gradient
+              ? "Gradients can't use picker"
+              : isCustomized
+                ? 'Click to pick color'
+                : `Inherited from ${baseModeLabel}, click to customize`
+          }
+        >
           <Box
             sx={[
               styles.swatch,
@@ -102,7 +137,7 @@ const ColorPickerField = memo(props => {
           value={localValue}
           onChange={handleInputChange}
           onBlur={handleInputBlur}
-          placeholder="#000000"
+          placeholder={`From ${baseModeLabel}`}
           sx={styles.input}
           slotProps={{
             input: {
@@ -110,6 +145,19 @@ const ColorPickerField = memo(props => {
             },
           }}
         />
+
+        {isCustomized && (
+          <Tooltip title={`Reset to ${baseModeLabel}`}>
+            <IconButton
+              size="small"
+              onClick={handleReset}
+              aria-label={`Reset ${label} to ${baseModeLabel}`}
+              sx={styles.resetButton}
+            >
+              <RestartAltOutlinedIcon sx={styles.resetIcon} />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
 
       <Popover
@@ -148,6 +196,7 @@ ColorPickerField.propTypes = {
   label: PropTypes.string.isRequired,
   hint: PropTypes.string,
   value: PropTypes.string,
+  baseModeLabel: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   colorKey: PropTypes.string.isRequired,
 };
@@ -163,7 +212,22 @@ const colorPickerFieldStyles = () => ({
   labelRow: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+  },
+  labelGroup: {
+    display: 'flex',
+    alignItems: 'center',
     gap: '0.25rem',
+    minWidth: 0,
+  },
+  statusChip: {
+    flexShrink: 0,
+    fontSize: '0.625rem',
+    height: '1.125rem',
+    '& .MuiChip-label': {
+      padding: '0 0.375rem',
+    },
   },
   label: {
     fontSize: '0.75rem',
@@ -222,6 +286,13 @@ const colorPickerFieldStyles = () => ({
   inputInner: {
     height: '1.75rem',
   },
+  resetButton: {
+    padding: '0.25rem',
+  },
+  resetIcon: ({ palette }) => ({
+    fontSize: '1rem',
+    color: palette.icon.main,
+  }),
   popover: {
     overflow: 'visible',
   },
