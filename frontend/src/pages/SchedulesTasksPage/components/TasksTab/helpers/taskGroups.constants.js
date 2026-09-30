@@ -52,6 +52,7 @@ export const GENERAL_TASK_GROUPS = [
       'danger_sanitize_secrets_with_value',
       'migrate_mcp_client_secrets',
       'migrate_provider_hub_secrets',
+      'prune_system_tokens',
       'recreate_project_tokens',
       'seed_llm_keys',
       'sync_pgvector_credentials',
