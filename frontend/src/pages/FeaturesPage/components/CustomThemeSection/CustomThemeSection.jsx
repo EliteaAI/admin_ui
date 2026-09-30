@@ -73,6 +73,9 @@ const CustomThemeSection = memo(() => {
   // Determine if theme exists
   const themeExists = Boolean(themeData?.exists && themeData?.theme);
 
+  // Colors the theme doesn't define fall back to this base theme
+  const baseModeLabel = PALETTE_MODES.find(option => option.value === mode)?.label ?? mode;
+
   // Sync local state from server data
   useEffect(() => {
     if (themeData?.theme) {
@@ -140,11 +143,10 @@ const CustomThemeSection = memo(() => {
         formData.append('file', file);
 
         const result = await uploadLogo(formData).unwrap();
-        // Update logo URL - same URL works for both preview and storage
+        // The upload is persisted by the server right away, so it is not a pending theme change.
         // No refetch needed, preserves any unsaved palette changes
         setLogoPreviewUrl(result.logo_url);
         setLogoUrl(result.logo_url);
-        setHasChanges(true);
 
         setSnackbar({
           open: true,
@@ -161,10 +163,10 @@ const CustomThemeSection = memo(() => {
 
   const handleLogoDelete = useCallback(async () => {
     try {
+      // The deletion is persisted by the server right away, so it is not a pending theme change
       await deleteLogo().unwrap();
       setLogoUrl(null);
       setLogoPreviewUrl(null);
-      setHasChanges(true);
 
       setSnackbar({
         open: true,
@@ -379,11 +381,34 @@ const CustomThemeSection = memo(() => {
       </CollapsibleSection>
 
       {/* Color categories */}
+      <Alert
+        severity="info"
+        variant="outlined"
+        sx={styles.inheritanceNote}
+      >
+        Colors you don&apos;t customize inherit their values from the{' '}
+        <Box
+          component="span"
+          sx={styles.emphasis}
+        >
+          {baseModeLabel}
+        </Box>{' '}
+        base theme. Colors marked{' '}
+        <Box
+          component="span"
+          sx={styles.emphasis}
+        >
+          Custom
+        </Box>{' '}
+        override it. Clear or reset a color to inherit it again.
+      </Alert>
+
       {COLOR_CATEGORIES.map(category => (
         <ColorCategoryGroup
           key={category.id}
           category={category}
           palette={palette}
+          baseModeLabel={baseModeLabel}
           onChange={handleColorChange}
           defaultExpanded={false}
         />
@@ -507,6 +532,12 @@ const customThemeSectionStyles = () => ({
   actionButton: {
     height: '2.25rem',
     fontSize: '0.875rem',
+  },
+  inheritanceNote: {
+    fontSize: '0.8125rem',
+  },
+  emphasis: {
+    fontWeight: 600,
   },
   dialogActions: {
     paddingLeft: '1.5rem',
