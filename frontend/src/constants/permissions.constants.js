@@ -15,7 +15,6 @@ export const PERMISSIONS = {
 
   // Projects section
   projects: {
-    section: 'projects',
     list: 'projects.projects',
     view: 'projects.projects.projects.view',
     edit: 'projects.projects.projects.edit',
@@ -48,7 +47,6 @@ export const PERMISSIONS = {
 
   // Configuration section
   configuration: {
-    section: 'configuration',
     users: 'configuration.users',
     roles: 'configuration.roles',
     advanced: 'configuration.advanced',
@@ -57,29 +55,7 @@ export const PERMISSIONS = {
 
   // Runtime section (super_admin only)
   runtime: {
-    section: 'runtime',
     plugins: 'runtime.plugins',
-  },
-
-  // Migration section (super_admin only)
-  migration: {
-    section: 'migration',
-    db: 'migration.db',
-    permissions: 'migration.permissions',
-  },
-
-  // Modes section
-  modes: {
-    section: 'modes',
-    users: 'modes.users',
-  },
-
-  // Invites section
-  invites: {
-    section: 'invites',
-    platform: 'invites.platform',
-    bulkUsers: 'invites.bulkusers',
-    bulkProjects: 'invites.bulkprojects',
   },
 
   // Secrets section
@@ -151,15 +127,15 @@ export const ADMIN_ROLES = {
 export const SIDEBAR_PERMISSIONS = {
   users: [PERMISSIONS.users.section],
   roles: [PERMISSIONS.roles.section, PERMISSIONS.roles.permissions.view],
-  projects: [PERMISSIONS.projects.section, PERMISSIONS.projects.list],
+  projects: [PERMISSIONS.projects.list],
   budgets: [PERMISSIONS.budgets.view],
   'platform-dimensions': [PERMISSIONS.platformDimensions.view],
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
   'model-prices': [PERMISSIONS.modelPrices.view],
   'app-requests': [PERMISSIONS.users.section],
-  configuration: [PERMISSIONS.configuration.section, PERMISSIONS.runtime.plugins],
-  features: [PERMISSIONS.configuration.section, PERMISSIONS.runtime.plugins],
+  configuration: [PERMISSIONS.runtime.plugins],
+  features: [PERMISSIONS.runtime.plugins],
   'audit-trail': [PERMISSIONS.auditTrail.view],
   'schedules-tasks': [PERMISSIONS.scheduling.view, PERMISSIONS.runtime.plugins],
   reports: [PERMISSIONS.surveys.reports],
@@ -168,7 +144,7 @@ export const SIDEBAR_PERMISSIONS = {
 /**
  * Permissions required for each Configuration page sub-section.
  * "advanced" and "service_descriptors" are restricted by super_admin role.
- * All other sections require the base configuration permission.
+ * All other sections require runtime.plugins (the page gate).
  */
 export const CONFIG_SECTION_PERMISSIONS = {
   advanced: [PERMISSIONS.configuration.advanced],
