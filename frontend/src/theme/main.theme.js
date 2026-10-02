@@ -375,6 +375,17 @@ const getDesignTokens = mode => ({
           lineHeight: '16px',
           padding: '6px 16px',
           minWidth: '48px',
+          // MUI keeps text line height via a zero-width ::before; under `gap` it becomes an extra flex item
+          '&::before': {
+            display: 'none',
+          },
+          // the inner margin duplicates `gap`; the outer optical offset (-4px) stays as in MUI
+          '& .MuiButton-startIcon': {
+            marginRight: 0,
+          },
+          '& .MuiButton-endIcon': {
+            marginLeft: 0,
+          },
           '& .MuiButton-startIcon, & .MuiButton-endIcon': {
             '& > svg': {
               width: '16px',
