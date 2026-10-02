@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -34,8 +34,11 @@ import { CollapsibleSection } from '@/components/CollapsibleSection';
 import ColorCategoryGroup from './components/ColorCategoryGroup';
 import ImportExportButtons from './components/ImportExportButtons';
 import LogoUploader from './components/LogoUploader';
+import ThemePresetSelect from './components/ThemePresetSelect';
 import { COLOR_CATEGORIES, PALETTE_MODES } from './constants/customTheme.constants';
+import { THEME_PRESETS } from './constants/themePresets.constants';
 import { setNestedValue, unsetNestedValue } from './helpers/nestedValue.helpers';
+import { findMatchingPresetId, isSamePalette } from './helpers/themePresets.helpers';
 
 const CustomThemeSection = memo(() => {
   const styles = customThemeSectionStyles();
@@ -52,6 +55,7 @@ const CustomThemeSection = memo(() => {
   // Local state
   const [mode, setMode] = useState('dark');
   const [palette, setPalette] = useState({});
+  const [presetId, setPresetId] = useState('');
   const [logoUrl, setLogoUrl] = useState(null); // Actual URL for saving
   const [logoPreviewUrl, setLogoPreviewUrl] = useState(null); // Preview URL for display
   const [hasChanges, setHasChanges] = useState(false);
@@ -76,11 +80,18 @@ const CustomThemeSection = memo(() => {
   // Colors the theme doesn't define fall back to this base theme
   const baseModeLabel = PALETTE_MODES.find(option => option.value === mode)?.label ?? mode;
 
+  // A preset stays selected after manual edits, flagged as modified once the palette differs from it
+  const isPresetModified = useMemo(() => {
+    const preset = THEME_PRESETS.find(item => item.id === presetId);
+    return Boolean(preset) && !isSamePalette(preset.palette, palette);
+  }, [presetId, palette]);
+
   // Sync local state from server data
   useEffect(() => {
     if (themeData?.theme) {
       setMode(themeData.theme.mode || 'dark');
       setPalette(themeData.theme.palette || {});
+      setPresetId(findMatchingPresetId(themeData.theme.mode || 'dark', themeData.theme.palette || {}));
       // logo_url is the public static URL - works for both preview and storage
       setLogoUrl(themeData.theme.logo_url || null);
       setLogoPreviewUrl(themeData.theme.logo_url || null);
@@ -91,6 +102,16 @@ const CustomThemeSection = memo(() => {
   // Handlers
   const handleModeChange = useCallback(event => {
     setMode(event.target.value);
+    // Presets belong to one base mode
+    setPresetId('');
+    setHasChanges(true);
+  }, []);
+
+  // Replaces the palette as a draft, the logo is kept and nothing is saved until Save Changes
+  const handlePresetSelect = useCallback(preset => {
+    setMode(preset.mode);
+    setPalette(preset.palette);
+    setPresetId(preset.id);
     setHasChanges(true);
   }, []);
 
@@ -116,7 +137,8 @@ const CustomThemeSection = memo(() => {
         return;
       }
 
-      if (PALETTE_MODES.some(option => option.value === json.mode)) {
+      const isKnownMode = PALETTE_MODES.some(option => option.value === json.mode);
+      if (isKnownMode) {
         setMode(json.mode);
       }
 
@@ -125,6 +147,7 @@ const CustomThemeSection = memo(() => {
       delete paletteData.mode;
       delete paletteData.logo_url;
       setPalette(paletteData);
+      setPresetId(isKnownMode ? findMatchingPresetId(json.mode, paletteData) : '');
       setHasChanges(true);
 
       setSnackbar({
@@ -217,6 +240,7 @@ const CustomThemeSection = memo(() => {
       // Reset local state
       setMode('dark');
       setPalette({});
+      setPresetId('');
       setLogoUrl(null);
       setLogoPreviewUrl(null);
       setHasChanges(false);
@@ -235,6 +259,7 @@ const CustomThemeSection = memo(() => {
   const handleCreate = useCallback(() => {
     // Initialize with empty palette - user will fill in colors
     setPalette({});
+    setPresetId('');
     setMode('dark');
     setLogoUrl(null);
     setLogoPreviewUrl(null);
@@ -326,6 +351,14 @@ const CustomThemeSection = memo(() => {
               ))}
             </Select>
           </FormControl>
+
+          <ThemePresetSelect
+            mode={mode}
+            value={presetId}
+            isModified={isPresetModified}
+            onSelect={handlePresetSelect}
+            disabled={isSaving}
+          />
 
           <ImportExportButtons
             palette={palette}
