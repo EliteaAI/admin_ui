@@ -40,7 +40,16 @@ const describeCron = expr => {
 };
 
 const SchedulesTable = memo(props => {
-  const { schedules, sortConfig, onSort, onToggleActive, onCronUpdate, onScheduleClick, onRunNow, runningId } = props;
+  const {
+    schedules,
+    sortConfig,
+    onSort,
+    onToggleActive,
+    onCronUpdate,
+    onScheduleClick,
+    onRunNow,
+    runningId,
+  } = props;
 
   const styles = useMemo(() => schedulesTableStyles(), []);
 

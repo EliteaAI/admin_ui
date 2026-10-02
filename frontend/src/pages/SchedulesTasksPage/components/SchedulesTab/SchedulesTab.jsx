@@ -2,7 +2,11 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Alert, Box, Skeleton, Snackbar, Typography } from '@mui/material';
 
-import { useScheduleListQuery, useScheduleRunNowMutation, useScheduleUpdateMutation } from '@/api/schedules.api';
+import {
+  useScheduleListQuery,
+  useScheduleRunNowMutation,
+  useScheduleUpdateMutation,
+} from '@/api/schedules.api';
 import { useTableSort } from '@/hooks/useTableSort.hooks';
 
 import ScheduleHistoryDrawer from './components/ScheduleHistoryDrawer';
