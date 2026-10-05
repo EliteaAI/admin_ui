@@ -15,7 +15,7 @@
     "default": {
       "primary": "linear-gradient(270deg, #f1fffb 0%, #fff9f4 100%)",
       "secondary": "#FFFFFF",
-      "tertiary": "#fafafa"
+      "tertiary": "#FFFEFD"
     },
     "panel": "#41475708",
     "surface": {
@@ -417,7 +417,7 @@
     "dataGrid": {
       "background": {
         "main": "#e1e5e9",
-        "secondary": "#fafafa",
+        "secondary": "#FFFEFD",
         "row": {
           "selected": "#00ad3d14"
         }
@@ -431,7 +431,7 @@
         "placeholderSecondary": "#adafb7",
         "disabled": "#777A83"
       },
-      "border": "#fafafa"
+      "border": "#FFFEFD"
     },
     "select": {
       "hover": "#3d44561a",
@@ -794,7 +794,7 @@
     },
     "onboarding": {
       "background": "linear-gradient(247.51deg, #a1c5ff99 0.02%, #a1c5ff1f 50.21%, #a1d6ff99 99.64%)",
-      "bodyBackground": "#fafafa"
+      "bodyBackground": "#FFFEFD"
     },
     "welcome": {
       "background": {
