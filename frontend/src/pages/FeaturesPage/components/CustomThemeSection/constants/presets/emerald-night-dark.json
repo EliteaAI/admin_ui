@@ -11,16 +11,16 @@
     "error": "#d7161614",
     "warning": "#e9791214",
     "attention": "#e979120d",
-    "avatar": "#1a1f28",
+    "avatar": "#1b221f",
     "default": {
-      "primary": "#0E131D",
-      "secondary": "#181F2A",
-      "tertiary": "#101721"
+      "primary": "#0F1312",
+      "secondary": "#1b221f",
+      "tertiary": "#141917"
     },
     "panel": "#ffffff08",
     "surface": {
-      "default": "#181F2A",
-      "secondary": "#0E131D",
+      "default": "#1b221f",
+      "secondary": "#0F1312",
       "interactive": {
         "default": "#ffffff0d",
         "active": "#ffffff1a",
@@ -38,7 +38,7 @@
       "hover": "#30d4913d"
     },
     "tooltip": "#CAD0D8",
-    "aiAnswer": "#262b34",
+    "aiAnswer": "#252e2a",
     "badge": "#ffffff33",
     "overlay": {
       "faint": "rgba(255, 255, 255, 0.02)",
@@ -54,8 +54,8 @@
     }
   },
   "border": {
-    "default": "#262b34",
-    "lines": "#3B3E46",
+    "default": "#252e2a",
+    "lines": "#35423d",
     "subtle": "#ffffff1a",
     "cardGradient": "linear-gradient(180deg, #ffffff12 0%, #ffffff00 100%)",
     "hover": "#A9B7C1",
@@ -63,12 +63,12 @@
     "tips": "#29b8f566",
     "attention": "#e9791266",
     "error": "#d7161666",
-    "sectionHover": "rgba(38, 43, 52, 1)"
+    "sectionHover": "#252e2a"
   },
   "boxShadow": {
     "default": "0 0 0.5rem 0 #ffffff24",
     "onboarding": "0rem 3.975rem 4.2625rem -3.8125rem #30d49133",
-    "listbox": "0 0.25rem 1.875rem #181F2A",
+    "listbox": "0 0.25rem 1.875rem #1b221f",
     "aiAnswer": "0 0.125rem 0.4375rem 0 #0000001f",
     "dialog": "0 0 1.475rem 0 #FFFFFF0D"
   },
@@ -89,9 +89,9 @@
     "linkHoverSecondary": "#29B8F5",
     "visitedLink": "#29b8f5b3",
     "alwaysWhite": "#FFFFFF",
-    "alwaysDark": "#0E131D",
+    "alwaysDark": "#0F1312",
     "showMore": "#29b47b",
-    "tooltip": "#0E131D"
+    "tooltip": "#0F1312"
   },
   "alert": {
     "info": {
@@ -127,7 +127,7 @@
     "default": "#A9B7C1",
     "primary": "#ABB3B9",
     "secondary": "#FFFFFF",
-    "send": "#0E131D",
+    "send": "#0F1312",
     "trophy": "#FFD3A0",
     "subtle": "#CAD0D8",
     "tips": "#29B8F5",
@@ -141,11 +141,11 @@
     "inactive": "#29b8f5",
     "magicAssistant": "#f47cff",
     "error": "#D71616",
-    "delete": "#181F2A",
+    "delete": "#1b221f",
     "info": "#006DD1",
     "warningHigh": "#E8B747",
     "accent": "#30D491",
-    "onPrimary": "#0E131D",
+    "onPrimary": "#0F1312",
     "indexResult": {
       "success": "#15A42A",
       "error": "#D71616",
@@ -199,11 +199,11 @@
     },
     "card": {
       "background": {
-        "default": "#181F2A",
-        "hover": "#0c1119",
+        "default": "#1b221f",
+        "hover": "#0C100E",
         "highlighted": "#30d49126",
-        "gradient": "linear-gradient(0deg, #121820 0%, #1D232C 100%)",
-        "borderGradient": "linear-gradient(0deg, #1B1E24 0%, #2F353D 100%)",
+        "gradient": "linear-gradient(0deg, #0E1312 0%, #1F2523 100%)",
+        "borderGradient": "linear-gradient(0deg, #171B17 0%, #343936 100%)",
         "hoverBorderGradient": "linear-gradient(0deg, #30d49166 0%, #30D491 100%)"
       },
       "shadow": {
@@ -229,7 +229,7 @@
         "secondary": {
           "default": "#ffffff1a",
           "hover": "#ffffff33",
-          "pressed": "#0E131D",
+          "pressed": "#0F1312",
           "disabled": "#686C76"
         },
         "tertiary": {
@@ -273,8 +273,8 @@
         }
       },
       "text": {
-        "primary": "#0E131D",
-        "secondary": "#0E131D",
+        "primary": "#0F1312",
+        "secondary": "#0F1312",
         "disabled": "#686C76",
         "showMore": "#29b47b",
         "auxiliary": "#59dda7",
@@ -312,8 +312,8 @@
     },
     "categoryTag": {
       "background": {
-        "default": "#181F2A",
-        "hover": "#262b34",
+        "default": "#1b221f",
+        "hover": "#252e2a",
         "selected": "#50346C",
         "hoverSelected": "#3C2257"
       },
@@ -325,8 +325,8 @@
     },
     "styledChip": {
       "background": {
-        "default": "#181F2A",
-        "hover": "#262b34",
+        "default": "#1b221f",
+        "hover": "#252e2a",
         "active": {
           "default": "#50346C",
           "hover": "#3C2257"
@@ -350,7 +350,7 @@
         "default": "#ffffff0d",
         "hover": "#ffffff1a",
         "active": "#30d4911a",
-        "cover": "#10172180"
+        "cover": "#14191780"
       },
       "text": {
         "default": "#686C76"
@@ -361,9 +361,9 @@
         "normal": "transparent",
         "hover": "#ffffff0f",
         "selected": "#30d4911a",
-        "editor": "#262b34",
-        "topCover": "linear-gradient(360deg, #10172100 0%, #0E131D 100%)",
-        "bottomCover": "linear-gradient(180deg, #10172100 0%, #0E131D 100%)",
+        "editor": "#252e2a",
+        "topCover": "linear-gradient(360deg, #14191700 0%, #0F1312 100%)",
+        "bottomCover": "linear-gradient(180deg, #14191700 0%, #0F1312 100%)",
         "starter": {
           "strong": "#3C2257",
           "subtle": "#50346C"
@@ -404,7 +404,7 @@
         },
         "disabled": {
           "on": {
-            "thumb": "#1c604b",
+            "thumb": "#1c6045",
             "track": "#30d4914d"
           },
           "off": {
@@ -416,8 +416,8 @@
     },
     "dataGrid": {
       "background": {
-        "main": "#262b34",
-        "secondary": "#101721",
+        "main": "#252e2a",
+        "secondary": "#141917",
         "row": {
           "selected": "#30d49129"
         }
@@ -426,12 +426,12 @@
     "input": {
       "text": {
         "label": "#A9B7C1",
-        "primary": "#0E131D",
-        "placeholder": "#3B3E46",
+        "primary": "#0F1312",
+        "placeholder": "#35423d",
         "placeholderSecondary": "#686C76",
         "disabled": "#ffffff80"
       },
-      "border": "#101721"
+      "border": "#141917"
     },
     "select": {
       "hover": "#ffffff1a",
@@ -470,7 +470,7 @@
         "off": "#FFFFFF"
       },
       "active": "#FFFFFF",
-      "mark": "#0E131D",
+      "mark": "#0F1312",
       "disabled": "#686C76",
       "radio": {
         "default": "#A9B7C1",
@@ -489,8 +489,8 @@
         "disabled": "#ffffff1a"
       },
       "text": {
-        "default": "#30D491",
-        "pressed": "#29b47b",
+        "default": "#5BF3B6",
+        "pressed": "#5fdeaa",
         "disabled": "#A9B7C1"
       },
       "border": {
@@ -506,8 +506,8 @@
         "disabled": "#ffffff1a"
       },
       "text": {
-        "default": "#30D491",
-        "pressed": "#29b47b",
+        "default": "#5BF3B6",
+        "pressed": "#5fdeaa",
         "disabled": "#A9B7C1"
       }
     },
@@ -522,7 +522,7 @@
       }
     },
     "suggestionChip": {
-      "border": "#3B3E46",
+      "border": "#35423d",
       "background": {
         "default": "transparent",
         "hover": "#ffffff1a"
@@ -550,7 +550,7 @@
     },
     "tagEditor": {
       "background": {
-        "tag": "#262b34"
+        "tag": "#252e2a"
       },
       "shadow": "0 0.5rem 0.75rem 0 #0000004d"
     },
@@ -580,7 +580,7 @@
     },
     "listItem": {
       "background": {
-        "default": "#181F2A"
+        "default": "#1b221f"
       }
     },
     "chatStarter": {
@@ -612,9 +612,9 @@
           "disabled": "#c428dd66"
         },
         "secondary": {
-          "default": "#3d44561a",
+          "default": "#3c4b451a",
           "hover": "#3d455726",
-          "pressed": "#3d445633"
+          "pressed": "#3c4b4533"
         }
       }
     },
@@ -636,17 +636,17 @@
       "border": "#29b47b"
     },
     "notificationItem": {
-      "border": "#0E131D"
+      "border": "#0F1312"
     },
     "editingPlaceholder": {
       "border": "#006DD1"
     },
     "editInline": {
-      "border": "#181F2A"
+      "border": "#1b221f"
     },
     "userInput": {
       "border": {
-        "base": "#1a5746",
+        "base": "#1b573e",
         "glow": "#30D491"
       },
       "shadow": {
@@ -659,8 +659,8 @@
     },
     "tableRow": {
       "background": {
-        "default": "#181F2A",
-        "hover": "#262b34"
+        "default": "#1b221f",
+        "hover": "#252e2a"
       }
     },
     "slider": {
@@ -668,24 +668,24 @@
       "markActive": "#A9B7C1"
     },
     "aiAnswer": {
-      "background": "#262b34",
-      "actionsGradient": "linear-gradient(270deg, #262B34 82.5%, #262b3400 100%)"
+      "background": "#252e2a",
+      "actionsGradient": "linear-gradient(270deg, #252e2a 82.5%, #252e2a00 100%)"
     },
     "userMessage": {
-      "actionsGradient": "linear-gradient(270deg, #262B34 82.5%, #262b3400 100%)",
+      "actionsGradient": "linear-gradient(270deg, #252e2a 82.5%, #252e2a00 100%)",
       "highlightBackground": "#50346c80",
       "highlightBorder": "#50346C"
     },
     "contextBudget": {
-      "trackBackground": "#3B3E46"
+      "trackBackground": "#35423d"
     },
     "usageMeter": {
-      "trackBackground": "#3B3E46"
+      "trackBackground": "#35423d"
     },
     "autocompleteChip": {
       "background": {
-        "default": "#181F2A",
-        "hover": "#262b34",
+        "default": "#1b221f",
+        "hover": "#252e2a",
         "disabled": "#ffffff1a"
       },
       "text": {
@@ -699,7 +699,7 @@
       }
     },
     "notificationList": {
-      "background": "#262b34"
+      "background": "#252e2a"
     },
     "sidebar": {
       "background": "linear-gradient(180deg, #052119 0%, #03140F 100%)",
@@ -711,33 +711,33 @@
       }
     },
     "imageAttachment": {
-      "background": "linear-gradient(0deg, #262B34 0%, #262b3400 100%)"
+      "background": "linear-gradient(0deg, #252e2a 0%, #252e2a00 100%)"
     },
     "contextDialog": {
-      "background": "#181F2A"
+      "background": "#1b221f"
     },
     "agentModal": {
       "background": {
-        "default": "linear-gradient(199.39deg, #082c20 0%, #2c2241 100%)",
-        "borderGradient": "linear-gradient(224.97deg, #1f7457 0%, #654c7e 100%)"
+        "default": "linear-gradient(199.39deg, #082c20 0%, #2c223a 100%)",
+        "borderGradient": "linear-gradient(224.97deg, #207452 0%, #654c7e 100%)"
       },
       "content": {
         "background": {
-          "default": "#0E131D",
-          "borderGradient": "linear-gradient(224.97deg, #1f7457 0%, #654c7e 100%)"
+          "default": "#0F1312",
+          "borderGradient": "linear-gradient(224.97deg, #207452 0%, #654c7e 100%)"
         }
       }
     },
     "skillHubModal": {
       "background": {
-        "default": "linear-gradient(199.39deg, #082c20 0%, #2c2241 100%)",
-        "borderGradient": "linear-gradient(224.97deg, #1f7457 0%, #654c7e 100%)"
+        "default": "linear-gradient(199.39deg, #082c20 0%, #2c223a 100%)",
+        "borderGradient": "linear-gradient(224.97deg, #207452 0%, #654c7e 100%)"
       }
     },
     "aiAssistantModal": {
       "background": {
-        "panel": "#181F2A",
-        "editor": "#0c1119"
+        "panel": "#1b221f",
+        "editor": "#0C100E"
       }
     },
     "deprecated": {
@@ -745,19 +745,19 @@
       "text": "#FFFFFF"
     },
     "settingsPage": {
-      "background": "#0E131D"
+      "background": "#0F1312"
     },
     "indexDetail": {
       "background": {
-        "left": "#151C25",
-        "right": "#151C25"
+        "left": "#181e1b",
+        "right": "#181e1b"
       }
     },
     "codePreview": {
-      "background": "#151C25"
+      "background": "#181e1b"
     },
     "flowEditor": {
-      "background": "#0E131D",
+      "background": "#0F1312",
       "node": {
         "border": "#686C76"
       },
@@ -792,7 +792,7 @@
       "background": "#30d49133"
     },
     "chatSubmenu": {
-      "dividerBackground": "#3B3E46"
+      "dividerBackground": "#35423d"
     },
     "mcp": {
       "background": {
@@ -824,7 +824,7 @@
     },
     "onboarding": {
       "background": "linear-gradient(247.51deg, #a1c5ff99 0.02%, #a1c5ff1f 50.21%, #a1d6ff99 99.64%)",
-      "bodyBackground": "#0c1119"
+      "bodyBackground": "#0C100E"
     },
     "welcome": {
       "background": {
@@ -839,7 +839,7 @@
       }
     },
     "interactiveTour": {
-      "backdrop": "#3b3e4680",
+      "backdrop": "#35423d80",
       "background": {
         "card": "linear-gradient(360deg, #122543 0%, #194386 100%)",
         "borderGradient": "linear-gradient(186.77deg, #2773EE 5.31%, #1A3C74 94.69%)"
@@ -940,15 +940,15 @@
       }
     },
     "table": {
-      "border": "#262b34"
+      "border": "#252e2a"
     },
     "tooltip": {
       "background": {
         "default": "#CAD0D8",
-        "code": "#3d445633"
+        "code": "#3c4b4533"
       },
       "text": {
-        "default": "#0E131D"
+        "default": "#0F1312"
       }
     },
     "categorySection": {
@@ -970,7 +970,7 @@
         "positive": "#2ab37a66"
       },
       "border": {
-        "default": "#3B3E46",
+        "default": "#35423d",
         "active": "#30D491"
       },
       "text": {

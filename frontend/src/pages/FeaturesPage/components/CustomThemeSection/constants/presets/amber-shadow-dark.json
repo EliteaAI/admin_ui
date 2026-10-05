@@ -202,8 +202,8 @@
         "default": "#1c1b1a",
         "hover": "#090908",
         "highlighted": "#d7b96526",
-        "gradient": "linear-gradient(0deg, #0C0B09 0%, #181614 100%)",
-        "borderGradient": "linear-gradient(0deg, #1B1E24 0%, #2F353D 100%)",
+        "gradient": "linear-gradient(0deg, #0D0D0B 0%, #1A1918 100%)",
+        "borderGradient": "linear-gradient(0deg, #171514 0%, #292725 100%)",
         "hoverBorderGradient": "linear-gradient(0deg, #d7b96566 0%, #D7B965 100%)"
       },
       "shadow": {
@@ -490,7 +490,7 @@
       },
       "text": {
         "default": "#D7B965",
-        "pressed": "#b79d56",
+        "pressed": "#e0c988",
         "disabled": "#A9B7C1"
       },
       "border": {
@@ -507,7 +507,7 @@
       },
       "text": {
         "default": "#D7B965",
-        "pressed": "#b79d56",
+        "pressed": "#e0c988",
         "disabled": "#A9B7C1"
       }
     },
