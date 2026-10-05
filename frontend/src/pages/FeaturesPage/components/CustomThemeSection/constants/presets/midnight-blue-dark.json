@@ -489,8 +489,8 @@
         "disabled": "#ffffff1a"
       },
       "text": {
-        "default": "#61A0FF",
-        "pressed": "#5288d9",
+        "default": "#A3C9FF",
+        "pressed": "#85b5ff",
         "disabled": "#A9B7C1"
       },
       "border": {
@@ -506,8 +506,8 @@
         "disabled": "#ffffff1a"
       },
       "text": {
-        "default": "#61A0FF",
-        "pressed": "#5288d9",
+        "default": "#A3C9FF",
+        "pressed": "#85b5ff",
         "disabled": "#A9B7C1"
       }
     },
