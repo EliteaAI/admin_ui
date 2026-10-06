@@ -2664,6 +2664,11 @@ export const COLOR_CATEGORIES = [
         hint: 'Entity icon default background',
       },
       {
+        key: 'components.entityIcon.background.hover',
+        label: 'Entity Icon Hover Background',
+        hint: 'Background shown when hovering over an editable entity icon to change its image',
+      },
+      {
         key: 'components.entityIcon.background.trophy',
         label: 'Entity Icon Trophy',
         hint: 'Trophy entity icon background',
