@@ -864,6 +864,7 @@
     "entityIcon": {
       "background": {
         "default": "#3d44561a",
+        "hover": "#cbced6",
         "trophy": "#48433F",
         "checkedBox": "#777A83",
         "entityGradient": "linear-gradient(45.36deg, #777a7c4d 16.25%, #e2e2e24d 87.07%)",
