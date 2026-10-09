@@ -1,21 +1,29 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Alert, Box, Switch, Typography } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Alert, Box, FormControl, MenuItem, Select, Switch, Tooltip, Typography } from '@mui/material';
 
 import { useAutoRoutingSettingsQuery, useAutoRoutingSettingsSaveMutation } from '@/api/autoRouting.api';
+
+const NOT_SET = '';
+const CLASSIFIER_TOOLTIP =
+  'Default classifier for projects that have not chosen their own. The classifier decides which model Auto uses for each request, so pick a fast, low-cost model (Haiku, Luna, Gemini Flash, mini/nano). Projects can override it in Project Settings → Chat configuration.';
+
+const classifierKey = ({ project_id: projectId, name }) => `${projectId}/${name}`;
 
 const AutoRoutingSettings = memo(() => {
   const { data, error: readError, isFetching } = useAutoRoutingSettingsQuery();
   const [save, { isLoading }] = useAutoRoutingSettingsSaveMutation();
   const [error, setError] = useState('');
   const change = useCallback(
-    async (key, checked) => {
+    async (key, value) => {
       setError('');
       try {
         await save({
           available: data.available,
           project_default: data.project_default,
-          [key]: checked,
+          classifier: data.classifier ?? null,
+          [key]: value,
         }).unwrap();
       } catch (failure) {
         setError(failure?.data?.error || 'Unable to update Auto model selection');
@@ -24,9 +32,46 @@ const AutoRoutingSettings = memo(() => {
     [save, data],
   );
 
+  // A saved classifier that is no longer offered stays visible (marked unavailable) instead of being dropped
+  const classifier = data?.classifier ?? null;
+  const classifierOptions = data?.classifier_options;
+  const isClassifierUnavailable =
+    Boolean(classifier) &&
+    !(classifierOptions ?? []).some(option => classifierKey(option) === classifierKey(classifier));
+  const classifierItems = useMemo(() => {
+    const items = (classifierOptions ?? []).map(({ name, project_id, display_name }) => ({
+      name,
+      project_id,
+      display_name: display_name || name,
+    }));
+    if (isClassifierUnavailable)
+      items.push({ ...classifier, display_name: `${classifier.name} (unavailable)`, unavailable: true });
+    return new Map(items.map(item => [classifierKey(item), item]));
+  }, [classifierOptions, classifier, isClassifierUnavailable]);
+
   const handleAvailableChange = useCallback((_, value) => change('available', value), [change]);
 
   const handleProjectDefaultChange = useCallback((_, value) => change('project_default', value), [change]);
+
+  const handleClassifierChange = useCallback(
+    event => {
+      const item = classifierItems.get(event.target.value);
+      change('classifier', item ? { name: item.name, project_id: item.project_id } : null);
+    },
+    [change, classifierItems],
+  );
+
+  const renderClassifierValue = useCallback(
+    key => (
+      <Typography
+        variant="body2"
+        noWrap
+      >
+        {classifierItems.get(key)?.display_name || 'Not set'}
+      </Typography>
+    ),
+    [classifierItems],
+  );
 
   const styles = autoRoutingSettingsStyles();
 
@@ -87,6 +132,88 @@ const AutoRoutingSettings = memo(() => {
         </Box>
       </Box>
 
+      <Box sx={styles.toggleCard}>
+        <Box sx={styles.toggleRow}>
+          <Box sx={styles.toggleLabel}>
+            <Box sx={styles.titleRow}>
+              <Typography
+                variant="body2"
+                sx={styles.toggleTitle}
+              >
+                Default classifier
+              </Typography>
+              <Tooltip
+                title={CLASSIFIER_TOOLTIP}
+                arrow
+                placement="top"
+              >
+                <InfoOutlinedIcon
+                  sx={styles.infoIcon}
+                  aria-label="About the default classifier"
+                />
+              </Tooltip>
+            </Box>
+            <Typography
+              variant="caption"
+              sx={styles.toggleHint}
+            >
+              Projects inherit this classifier unless they choose their own.
+            </Typography>
+            {isClassifierUnavailable && (
+              <Typography
+                variant="caption"
+                sx={styles.warningHint}
+              >
+                The saved classifier {classifier.name} is no longer available. Choose a replacement.
+              </Typography>
+            )}
+            {classifierItems.size === 0 && (
+              <Typography
+                variant="caption"
+                sx={styles.toggleHint}
+              >
+                No models are available to choose from.
+              </Typography>
+            )}
+          </Box>
+          <FormControl
+            size="small"
+            sx={styles.classifierSelect}
+          >
+            <Select
+              value={classifier ? classifierKey(classifier) : NOT_SET}
+              disabled={!data?.can_manage || !data?.available || isFetching || isLoading}
+              onChange={handleClassifierChange}
+              displayEmpty
+              renderValue={renderClassifierValue}
+              inputProps={{ 'aria-label': 'Default classifier' }}
+            >
+              <MenuItem value={NOT_SET}>
+                <Typography variant="body2">Not set</Typography>
+              </MenuItem>
+              {[...classifierItems].map(([key, item]) => (
+                <MenuItem
+                  key={key}
+                  value={key}
+                >
+                  <Box sx={styles.classifierOption}>
+                    <Typography variant="body2">{item.display_name}</Typography>
+                    {!item.unavailable && item.display_name !== item.name && (
+                      <Typography
+                        variant="caption"
+                        sx={styles.toggleHint}
+                      >
+                        {item.name}
+                      </Typography>
+                    )}
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
+
       <Typography
         variant="body2"
         sx={styles.description}
@@ -140,6 +267,32 @@ const autoRoutingSettingsStyles = () => ({
     color: palette.text.metrics,
     fontSize: '0.75rem',
   }),
+  warningHint: ({ palette }) => ({
+    color: palette.warning.main,
+    fontSize: '0.75rem',
+  }),
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+  infoIcon: ({ palette }) => ({
+    fontSize: '0.875rem',
+    color: palette.text.secondary,
+    cursor: 'help',
+  }),
+  classifierSelect: {
+    flexShrink: 0,
+    width: '16rem',
+    '& .MuiInputBase-root': {
+      fontSize: '0.875rem',
+    },
+  },
+  classifierOption: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+  },
 });
 
 export default AutoRoutingSettings;

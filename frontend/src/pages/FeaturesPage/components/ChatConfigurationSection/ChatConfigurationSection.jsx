@@ -16,9 +16,9 @@ import ChatMentions from './components/ChatMentions';
 import VoiceFeatures from './components/VoiceFeatures';
 import { TRIGGER_FIELDS } from './constants/chatConfiguration.constants';
 
-// Fixed toggle cards, not schema-driven: "Make Auto available on this platform" and
-// "Enable Auto by default for projects"
-const AUTO_ROUTING_SETTINGS_COUNT = 2;
+// Fixed cards, not schema-driven: "Make Auto available on this platform",
+// "Enable Auto by default for projects" and "Default classifier"
+const AUTO_ROUTING_SETTINGS_COUNT = 3;
 // Fixed toggle cards, not schema-driven: "Voice Features Enabled" and "Temporarily Disable Voice Features"
 const VOICE_FEATURES_SETTINGS_COUNT = 2;
 
