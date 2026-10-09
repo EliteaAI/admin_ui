@@ -17,7 +17,7 @@ import VoiceFeatures from './components/VoiceFeatures';
 import { TRIGGER_FIELDS } from './constants/chatConfiguration.constants';
 
 // Fixed cards, not schema-driven: "Make Auto available on this platform",
-// "Enable Auto by default for projects" and "Default classifier"
+// "Enable Auto by default for projects" and "Fallback classifier"
 const AUTO_ROUTING_SETTINGS_COUNT = 3;
 // Fixed toggle cards, not schema-driven: "Voice Features Enabled" and "Temporarily Disable Voice Features"
 const VOICE_FEATURES_SETTINGS_COUNT = 2;

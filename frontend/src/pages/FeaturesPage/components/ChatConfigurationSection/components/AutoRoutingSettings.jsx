@@ -6,8 +6,14 @@ import { Alert, Box, FormControl, MenuItem, Select, Switch, Tooltip, Typography 
 import { useAutoRoutingSettingsQuery, useAutoRoutingSettingsSaveMutation } from '@/api/autoRouting.api';
 
 const NOT_SET = '';
-const CLASSIFIER_TOOLTIP =
-  'Default classifier for projects that have not chosen their own. The classifier decides which model Auto uses for each request, so pick a fast, low-cost model (Haiku, Luna, Gemini Flash, mini/nano). Projects can override it in Project Settings → Chat configuration.';
+const CLASSIFIER_TOOLTIP = (
+  <>
+    Fallback classifier for projects that have neither chosen a classifier nor set a Low-tier model in AI
+    Providers. <strong>Pick a low-tier model</strong> (Haiku, Luna, Gemini Flash, mini/nano): the classifier
+    runs on every Auto request and only chooses the answering model, so a larger model adds cost and latency
+    without improving answers.
+  </>
+);
 
 const classifierKey = ({ project_id: projectId, name }) => `${projectId}/${name}`;
 
@@ -140,7 +146,7 @@ const AutoRoutingSettings = memo(() => {
                 variant="body2"
                 sx={styles.toggleTitle}
               >
-                Default classifier
+                Fallback classifier
               </Typography>
               <Tooltip
                 title={CLASSIFIER_TOOLTIP}
@@ -149,7 +155,7 @@ const AutoRoutingSettings = memo(() => {
               >
                 <InfoOutlinedIcon
                   sx={styles.infoIcon}
-                  aria-label="About the default classifier"
+                  aria-label="About the fallback classifier"
                 />
               </Tooltip>
             </Box>
@@ -157,7 +163,7 @@ const AutoRoutingSettings = memo(() => {
               variant="caption"
               sx={styles.toggleHint}
             >
-              Projects inherit this classifier unless they choose their own.
+              Used by projects that have neither chosen a classifier nor set a Low-tier model in AI Providers.
             </Typography>
             {isClassifierUnavailable && (
               <Typography
@@ -186,7 +192,7 @@ const AutoRoutingSettings = memo(() => {
               onChange={handleClassifierChange}
               displayEmpty
               renderValue={renderClassifierValue}
-              inputProps={{ 'aria-label': 'Default classifier' }}
+              inputProps={{ 'aria-label': 'Fallback classifier' }}
             >
               <MenuItem value={NOT_SET}>
                 <Typography variant="body2">Not set</Typography>
