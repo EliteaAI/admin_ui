@@ -25,11 +25,11 @@ import PluginConfigDrawer from './components/PluginConfigDrawer';
 import PylonLogsDrawer from './components/PylonLogsDrawer';
 
 const COLUMNS = [
-  { field: 'name', label: 'Name', width: '1fr' },
-  { field: 'local_version', label: 'Version', width: '14rem' },
-  { field: 'repo_version', label: 'Repo Version', width: '14rem' },
-  { field: 'activated', label: 'Active', width: '5rem' },
-  { field: 'actions', label: 'Actions', width: '18rem' },
+  { field: 'name', label: 'Name', width: 'minmax(6rem, 1fr)' },
+  { field: 'local_version', label: 'Version', width: 'minmax(0, max-content)' },
+  { field: 'repo_version', label: 'Repo Version', width: 'minmax(0, max-content)' },
+  { field: 'activated', label: 'Active', width: '4rem' },
+  { field: 'actions', label: 'Actions', width: 'max-content' },
 ];
 
 const GRID_TEMPLATE = COLUMNS.map(c => c.width).join(' ');
@@ -506,103 +506,108 @@ const AdvancedSection = memo(() => {
               </Box>
             </Box>
             <Collapse in={!isCollapsed}>
-              <Box sx={styles.tableHeader}>
-                {COLUMNS.map(col => (
-                  <Typography
-                    key={col.field}
-                    variant="caption"
-                    sx={styles.headerCell}
-                  >
-                    {col.label}
-                  </Typography>
-                ))}
-              </Box>
-              {plugins.map(plugin => {
-                const ps = pluginStates[pluginKey(plugin.pylon_id, plugin.name)] || {};
-                const hasUpdate = ps.repoVersion && ps.repoVersion !== plugin.local_version && !ps.updated;
-                const shouldShowUpdateButton = hasUpdate || ALWAYS_SHOW_PLUGIN_UPDATE;
-                return (
-                  <Box
-                    key={plugin.name}
-                    sx={styles.tableRow}
-                  >
+              <Box sx={styles.table}>
+                <Box sx={styles.tableHeader}>
+                  {COLUMNS.map(col => (
                     <Typography
-                      variant="body2"
-                      sx={styles.cell}
+                      key={col.field}
+                      variant="caption"
+                      sx={styles.headerCell}
                     >
-                      {plugin.name}
+                      {col.label}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={styles.cell}
+                  ))}
+                </Box>
+                {plugins.map(plugin => {
+                  const ps = pluginStates[pluginKey(plugin.pylon_id, plugin.name)] || {};
+                  const hasUpdate = ps.repoVersion && ps.repoVersion !== plugin.local_version && !ps.updated;
+                  const shouldShowUpdateButton = hasUpdate || ALWAYS_SHOW_PLUGIN_UPDATE;
+                  return (
+                    <Box
+                      key={plugin.name}
+                      sx={styles.tableRow}
                     >
-                      {plugin.local_version || '-'}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={[styles.cell, hasUpdate && styles.versionHighlight]}
-                    >
-                      {ps.repoVersion || '-'}
-                    </Typography>
-                    <Box sx={styles.cell}>
-                      <Box sx={styles.statusDot(plugin.activated)} />
-                    </Box>
-                    <Box sx={styles.actionsCell}>
-                      <Button
-                        size="small"
-                        startIcon={<VisibilityOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
-                        onClick={() => handleOpenDrawer(plugin)}
-                        sx={styles.actionButton}
+                      <Typography
+                        variant="body2"
+                        title={plugin.name}
+                        sx={styles.cell}
                       >
-                        View
-                      </Button>
-                      <Button
-                        size="small"
-                        disabled
-                        startIcon={<RefreshOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
-                        onClick={() => handleReloadPlugin(plugin.pylon_id, plugin.name)}
-                        sx={styles.actionButton}
+                        {plugin.name}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        title={plugin.local_version}
+                        sx={styles.cell}
                       >
-                        Reload
-                      </Button>
-                      {ps.checking || ps.updating ? (
-                        <CircularProgress
-                          size={16}
-                          sx={styles.rowProgress}
-                        />
-                      ) : ps.updated ? (
-                        <Chip
-                          icon={<CheckCircleOutlineIcon sx={{ fontSize: '0.875rem' }} />}
-                          label="Restart needed"
-                          size="small"
-                          color="warning"
-                          sx={styles.updateChip}
-                        />
-                      ) : shouldShowUpdateButton ? (
+                        {plugin.local_version || '-'}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        title={ps.repoVersion}
+                        sx={[styles.cell, hasUpdate && styles.versionHighlight]}
+                      >
+                        {ps.repoVersion || '-'}
+                      </Typography>
+                      <Box sx={styles.cell}>
+                        <Box sx={styles.statusDot(plugin.activated)} />
+                      </Box>
+                      <Box sx={styles.actionsCell}>
                         <Button
                           size="small"
-                          color="error"
-                          variant="outlined"
-                          startIcon={<CloudDownloadOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
-                          onClick={() => handleUpdatePlugin(plugin.name, plugin.pylon_id)}
-                          sx={styles.updateButton}
+                          startIcon={<VisibilityOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
+                          onClick={() => handleOpenDrawer(plugin)}
+                          sx={styles.actionButton}
                         >
-                          Update
+                          View
                         </Button>
-                      ) : ps.repoVersion && !ps.checkError ? (
-                        <Chip
-                          icon={<CheckCircleOutlineIcon sx={{ fontSize: '0.875rem' }} />}
-                          label="Latest"
+                        <Button
                           size="small"
-                          color="primary"
-                          variant="outlined"
-                          sx={styles.updateChip}
-                        />
-                      ) : null}
+                          disabled
+                          startIcon={<RefreshOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
+                          onClick={() => handleReloadPlugin(plugin.pylon_id, plugin.name)}
+                          sx={styles.actionButton}
+                        >
+                          Reload
+                        </Button>
+                        {ps.checking || ps.updating ? (
+                          <CircularProgress
+                            size={16}
+                            sx={styles.rowProgress}
+                          />
+                        ) : ps.updated ? (
+                          <Chip
+                            icon={<CheckCircleOutlineIcon sx={{ fontSize: '0.875rem' }} />}
+                            label="Restart needed"
+                            size="small"
+                            color="warning"
+                            sx={styles.updateChip}
+                          />
+                        ) : shouldShowUpdateButton ? (
+                          <Button
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            startIcon={<CloudDownloadOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
+                            onClick={() => handleUpdatePlugin(plugin.name, plugin.pylon_id)}
+                            sx={styles.updateButton}
+                          >
+                            Update
+                          </Button>
+                        ) : ps.repoVersion && !ps.checkError ? (
+                          <Chip
+                            icon={<CheckCircleOutlineIcon sx={{ fontSize: '0.875rem' }} />}
+                            label="Latest"
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            sx={styles.updateChip}
+                          />
+                        ) : null}
+                      </Box>
                     </Box>
-                  </Box>
-                );
-              })}
+                  );
+                })}
+              </Box>
             </Collapse>
           </Box>
         );
@@ -728,9 +733,16 @@ const advancedSectionStyles = () => ({
     padding: '0.125rem 0.5rem',
     flexShrink: 0,
   },
-  tableHeader: ({ palette }) => ({
+  // Header and rows are subgrids of one grid, so content-sized columns line up across all rows
+  table: {
     display: 'grid',
     gridTemplateColumns: GRID_TEMPLATE,
+    columnGap: '1rem',
+  },
+  tableHeader: ({ palette }) => ({
+    display: 'grid',
+    gridTemplateColumns: 'subgrid',
+    gridColumn: '1 / -1',
     padding: '0.375rem 1rem',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     backgroundColor: palette.background.userInputBackground,
@@ -747,7 +759,8 @@ const advancedSectionStyles = () => ({
   }),
   tableRow: ({ palette }) => ({
     display: 'grid',
-    gridTemplateColumns: GRID_TEMPLATE,
+    gridTemplateColumns: 'subgrid',
+    gridColumn: '1 / -1',
     padding: '0.5rem 1rem',
     alignItems: 'center',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
