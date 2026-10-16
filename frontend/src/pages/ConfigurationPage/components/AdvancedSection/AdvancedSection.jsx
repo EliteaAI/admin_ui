@@ -49,6 +49,23 @@ const pluginKey = (pylonId, name) => {
   return `${pylonId}::${name}`;
 };
 
+// Local versions carry a git head suffix like "0.103 (265facf)" that repo versions never have,
+// so strip it before comparing; other qualifiers such as "(EliteaUI: x.y.z)" are kept
+const GIT_HEAD_SUFFIX = /\s*\([0-9a-f]{7,40}\)$/i;
+
+const normalizeVersion = version => {
+  if (!version || version === '-') return null;
+  return String(version).trim().replace(GIT_HEAD_SUFFIX, '').replace(/\s+/g, ' ');
+};
+
+// Returns null when either side is unknown, otherwise whether both versions match
+const versionsMatch = (localVersion, repoVersion) => {
+  const local = normalizeVersion(localVersion);
+  const repo = normalizeVersion(repoVersion);
+  if (!local || !repo) return null;
+  return local === repo;
+};
+
 const AdvancedSection = memo(() => {
   const styles = advancedSectionStyles();
 
@@ -236,7 +253,7 @@ const AdvancedSection = memo(() => {
         const updatable = results.filter(r => {
           if (r.status !== 'fulfilled' || !r.value.ok) return false;
           const plugin = plugins.find(p => p.name === r.value.pluginName);
-          return plugin && r.value.repo_version !== plugin.local_version;
+          return plugin && versionsMatch(plugin.local_version, r.value.repo_version) === false;
         }).length;
         setSnackbar({
           open: true,
@@ -520,7 +537,10 @@ const AdvancedSection = memo(() => {
                 </Box>
                 {plugins.map(plugin => {
                   const ps = pluginStates[pluginKey(plugin.pylon_id, plugin.name)] || {};
-                  const hasUpdate = ps.repoVersion && ps.repoVersion !== plugin.local_version && !ps.updated;
+                  const versionMatch = ps.checkError
+                    ? null
+                    : versionsMatch(plugin.local_version, ps.repoVersion);
+                  const hasUpdate = versionMatch === false && !ps.updated;
                   const shouldShowUpdateButton = hasUpdate || ALWAYS_SHOW_PLUGIN_UPDATE;
                   return (
                     <Box
@@ -544,7 +564,11 @@ const AdvancedSection = memo(() => {
                       <Typography
                         variant="body2"
                         title={ps.repoVersion}
-                        sx={[styles.cell, hasUpdate && styles.versionHighlight]}
+                        sx={[
+                          styles.cell,
+                          versionMatch === true && styles.versionMatch,
+                          versionMatch === false && styles.versionHighlight,
+                        ]}
                       >
                         {ps.repoVersion || '-'}
                       </Typography>
@@ -819,6 +843,10 @@ const advancedSectionStyles = () => ({
   versionHighlight: ({ palette }) => ({
     fontWeight: 600,
     color: palette.warning.main,
+  }),
+  versionMatch: ({ palette }) => ({
+    fontWeight: 600,
+    color: palette.status.published,
   }),
   rowProgress: {
     marginLeft: '0.5rem',
