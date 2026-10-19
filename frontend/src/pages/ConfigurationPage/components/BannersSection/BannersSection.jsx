@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -29,7 +29,9 @@ import { getBlockedBanners } from './helpers/banners.helpers';
 
 const getErrorMessage = err => err?.data?.error || err?.message || 'Unknown error';
 
-const BannersSection = memo(() => {
+const BannersSection = memo(props => {
+  const { onDirtyChange } = props;
+
   const styles = bannersSectionStyles();
 
   const { data: banners = [], isFetching, isError } = useBannerListQuery();
@@ -52,6 +54,11 @@ const BannersSection = memo(() => {
   });
 
   const { blocker, blocked } = useMemo(() => getBlockedBanners(banners), [banners]);
+
+  // Lets the page guard section switches, not only "Back to list"
+  useEffect(() => {
+    onDirtyChange?.(isFormDirty);
+  }, [isFormDirty, onDirtyChange]);
 
   const showSnackbar = useCallback((message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
@@ -88,7 +95,8 @@ const BannersSection = memo(() => {
 
       setReordering(true);
       try {
-        // One at a time, so a failed update stops the rest instead of leaving a half-applied order
+        // Not atomic: the first failure stops the run, but rows saved before it stay saved, so the order can
+        // end up partly applied. The list refetches after each update and shows what was stored.
         for (const { banner, position } of changed) {
           await updateBanner({ bannerId: banner.id, sort_order: position }).unwrap();
         }

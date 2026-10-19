@@ -84,6 +84,7 @@ const ConfigurationPage = memo(() => {
   const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);
   const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
+  const [bannersDirty, setBannersDirty] = useState(false);
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -204,14 +205,17 @@ const ConfigurationPage = memo(() => {
 
   const handleSectionChange = useCallback(
     sectionId => {
-      if (isDirty) {
+      if (isDirty || bannersDirty) {
         const confirmed = window.confirm('You have unsaved changes. Discard them?');
         if (!confirmed) return;
       }
+      // The banner section skips the values query, so discarded edits must be dropped here
+      setLocalValues(serverValuesRef.current);
+      setBannersDirty(false);
       setActiveSection(sectionId);
       setPendingRestarts([]);
     },
-    [isDirty],
+    [isDirty, bannersDirty],
   );
 
   const handleDiscard = useCallback(() => {
@@ -362,7 +366,7 @@ const ConfigurationPage = memo(() => {
                   </Box>
                 );
               case 'dedicated_banner':
-                return <BannersSection />;
+                return <BannersSection onDirtyChange={setBannersDirty} />;
               case 'guardrails': {
                 const guardrailsFields = activeFields.filter(
                   f => !FEATURES_GUARDRAILS_PREFIXES.some(p => f.path?.startsWith(p)),
