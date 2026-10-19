@@ -111,6 +111,11 @@ export const PERMISSIONS = {
     manage: 'models.admin.surveys.manage',
     reports: 'models.admin.surveys.reports.view',
   },
+
+  // Platform banners
+  banners: {
+    manage: 'models.admin.banners.manage',
+  },
 };
 
 /**
@@ -149,6 +154,7 @@ export const SIDEBAR_PERMISSIONS = {
 export const CONFIG_SECTION_PERMISSIONS = {
   advanced: [PERMISSIONS.configuration.advanced],
   service_descriptors: [PERMISSIONS.configuration.serviceDescriptors],
+  dedicated_banner: [PERMISSIONS.banners.manage],
 };
 
 /**

@@ -30,6 +30,7 @@ export const adminApi = createApi({
     'Budgets',
     'PlatformDimensions',
     'Surveys',
+    'Banners',
     'ModelPrices',
     'CustomTheme',
     'Maintenance',

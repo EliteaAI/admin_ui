@@ -27,7 +27,7 @@ import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import { AdvancedSection } from './components/AdvancedSection';
-import DedicatedBanner from './components/DedicatedBanner';
+import { BannersSection } from './components/BannersSection';
 import MaintenanceSection from './components/MaintenanceSection';
 import { ServiceDescriptorsSection } from './components/ServiceDescriptorsSection';
 
@@ -63,6 +63,9 @@ const FEATURES_GUARDRAILS_PREFIXES = [
   'next_input_suggestion_guardrail.',
 ];
 
+// Sections with their own save flow: no shared Save/Discard bar
+const SELF_MANAGED_SECTIONS = ['advanced', 'maintenance', 'service_descriptors', 'dedicated_banner'];
+
 const SECTION_ORDER = [
   'advanced',
   'maintenance',
@@ -81,6 +84,7 @@ const ConfigurationPage = memo(() => {
   const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);
   const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
+  const [bannersDirty, setBannersDirty] = useState(false);
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -134,7 +138,8 @@ const ConfigurationPage = memo(() => {
     isLoading: valuesLoading,
   } = useConfigValuesQuery(
     { sectionId: activeSection },
-    { skip: !activeSection, refetchOnMountOrArgChange: true },
+    // Banners live in the social plugin's own table, so this section has no plugin-config values to load
+    { skip: !activeSection || activeSection === 'dedicated_banner', refetchOnMountOrArgChange: true },
   );
 
   // Sync server values to local state
@@ -200,14 +205,17 @@ const ConfigurationPage = memo(() => {
 
   const handleSectionChange = useCallback(
     sectionId => {
-      if (isDirty) {
+      if (isDirty || bannersDirty) {
         const confirmed = window.confirm('You have unsaved changes. Discard them?');
         if (!confirmed) return;
       }
+      // The banner section skips the values query, so discarded edits must be dropped here
+      setLocalValues(serverValuesRef.current);
+      setBannersDirty(false);
       setActiveSection(sectionId);
       setPendingRestarts([]);
     },
-    [isDirty],
+    [isDirty, bannersDirty],
   );
 
   const handleDiscard = useCallback(() => {
@@ -358,18 +366,7 @@ const ConfigurationPage = memo(() => {
                   </Box>
                 );
               case 'dedicated_banner':
-                return valuesFetching ? (
-                  <Box sx={styles.loadingContainer}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.formScroll}>
-                    <DedicatedBanner
-                      values={localValues}
-                      onChange={handleFieldChange}
-                    />
-                  </Box>
-                );
+                return <BannersSection onDirtyChange={setBannersDirty} />;
               case 'guardrails': {
                 const guardrailsFields = activeFields.filter(
                   f => !FEATURES_GUARDRAILS_PREFIXES.some(p => f.path?.startsWith(p)),
@@ -408,7 +405,7 @@ const ConfigurationPage = memo(() => {
           })()}
 
           {/* Action bar */}
-          {!['advanced', 'maintenance', 'service_descriptors'].includes(activeSection) && (
+          {!SELF_MANAGED_SECTIONS.includes(activeSection) && (
             <Box sx={styles.actionBar}>
               {invalidFields.length > 0 && (
                 <Alert
