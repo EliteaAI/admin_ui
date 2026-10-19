@@ -197,10 +197,10 @@ const BannerEditForm = memo(props => {
                 >
                   {ICON_OPTIONS.map(option => (
                     <MenuItem
-                      key={option}
-                      value={option}
+                      key={option.value}
+                      value={option.value}
                     >
-                      {option}
+                      {option.label}
                     </MenuItem>
                   ))}
                 </Select>

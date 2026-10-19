@@ -6,7 +6,12 @@ export const PLACEMENT_OPTIONS = [
 
 export const STYLE_OPTIONS = ['info', 'warning'];
 
-export const ICON_OPTIONS = ['info', 'warning'];
+// 'none' hides the icon in EliteaUI
+export const ICON_OPTIONS = [
+  { value: 'info', label: 'info' },
+  { value: 'warning', label: 'warning' },
+  { value: 'none', label: 'No icon' },
+];
 
 export const NEW_BANNER = {
   name: '',
