@@ -9,6 +9,7 @@
     "build:watch": "vite build --watch",
     "preview": "vite preview",
     "lint": "eslint .",
+    "test": "vitest run",
     "format": "prettier --write \"**/**/*.{js,jsx,md}\""
   },
   "dependencies": {
@@ -60,6 +61,10 @@
     "@babel/eslint-parser": "^7.29.9",
     "@babel/preset-react": "^7.29.7",
     "@eslint/js": "^9.24.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
@@ -71,7 +76,9 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "jsdom": "^26.1.0",
     "prettier": "^3.6.2",
-    "vite": "^6.2.6"
+    "vite": "^6.2.6",
+    "vitest": "^3.2.7"
   }
 }

@@ -14,4 +14,5 @@ export const RouteDefinitions = {
   Configuration: '/configuration',
   Features: '/features',
   Reports: '/reports',
+  Governance: '/governance',
 };

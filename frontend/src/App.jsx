@@ -13,6 +13,7 @@ import { AuditTrailPage } from '@/pages/AuditTrailPage';
 import { BudgetsPage } from '@/pages/BudgetsPage';
 import { ConfigurationPage } from '@/pages/ConfigurationPage';
 import { FeaturesPage } from '@/pages/FeaturesPage';
+import { GovernancePage } from '@/pages/GovernancePage';
 import { LiteLLMPage } from '@/pages/LiteLLMPage';
 import { ModelPricesPage } from '@/pages/ModelPricesPage';
 import { PlatformDimensionsPage } from '@/pages/PlatformDimensionsPage';
@@ -96,6 +97,10 @@ const router = createBrowserRouter(
       <Route
         path={RouteDefinitions.Reports}
         element={guard(RouteDefinitions.Reports, <ReportsPage />)}
+      />
+      <Route
+        path={RouteDefinitions.Governance}
+        element={guard(RouteDefinitions.Governance, <GovernancePage />)}
       />
       <Route
         path="*"

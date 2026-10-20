@@ -39,6 +39,8 @@ export const adminApi = createApi({
     'AuditTraceHeatmap',
     'PublicPermissions',
     'SupportPermissions',
+    'GovernanceSettings',
+    'SecurityEvents',
   ],
   endpoints: () => ({}),
 });
