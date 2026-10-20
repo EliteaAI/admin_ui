@@ -13,13 +13,45 @@ const skipString = (source, start) => {
   return index < source.length ? index + 1 : -1;
 };
 
+const SIMPLE_ESCAPES = { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f', v: '\v', 0: '\0' };
+
+// Decodes the JS escape sequences of a string literal body (quotes excluded)
+const decodeEscapes = raw => {
+  let result = '';
+  let index = 0;
+  while (index < raw.length) {
+    const char = raw[index];
+    if (char !== '\\') {
+      result += char;
+      index += 1;
+      continue;
+    }
+    const next = raw[index + 1];
+    if (next === 'x') {
+      result += String.fromCharCode(parseInt(raw.slice(index + 2, index + 4), 16));
+      index += 4;
+    } else if (next === 'u' && raw[index + 2] === '{') {
+      const close = raw.indexOf('}', index + 3);
+      result += String.fromCodePoint(parseInt(raw.slice(index + 3, close), 16));
+      index = close + 1;
+    } else if (next === 'u') {
+      result += String.fromCharCode(parseInt(raw.slice(index + 2, index + 6), 16));
+      index += 6;
+    } else if (next === '\r' || next === '\n') {
+      // Line continuation: the escaped line break is not part of the value
+      index += next === '\r' && raw[index + 2] === '\n' ? 3 : 2;
+    } else {
+      result += SIMPLE_ESCAPES[next] ?? next;
+      index += 2;
+    }
+  }
+  return result;
+};
+
 const readString = (source, start) => {
   const end = skipString(source, start);
   if (end === -1) throw new Error('Unterminated string');
-  const quote = source[start];
-  const raw = source.slice(start + 1, end - 1);
-  const escaped = quote === '"' ? raw : raw.replace(/\\'/g, "'").replace(/"/g, '\\"');
-  return { value: JSON.parse(`"${escaped}"`), end };
+  return { value: decodeEscapes(source.slice(start + 1, end - 1)), end };
 };
 
 const tokenize = source => {
