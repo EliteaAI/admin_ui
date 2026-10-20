@@ -28,7 +28,7 @@ import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import { AdvancedSection } from './components/AdvancedSection';
 import { BannersSection } from './components/BannersSection';
-import MaintenanceSection from './components/MaintenanceSection';
+import { MaintenanceSection } from './components/MaintenanceSection';
 import { ServiceDescriptorsSection } from './components/ServiceDescriptorsSection';
 
 const SECTION_ICONS = {

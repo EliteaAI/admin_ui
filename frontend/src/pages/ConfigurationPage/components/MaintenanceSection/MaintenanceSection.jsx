@@ -1,12 +1,22 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Alert, Box, Button, CircularProgress, Snackbar, Switch, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Checkbox,
+  CircularProgress,
+  FormControlLabel,
+  Snackbar,
+  Switch,
+  Typography,
+} from '@mui/material';
 
 import { useMaintenanceQuery, useMaintenanceSaveMutation } from '@/api/configuration.api';
-import { html } from '@codemirror/lang-html';
-import { EditorView } from '@codemirror/view';
-import CodeMirror from '@uiw/react-codemirror';
+
+import MaintenanceMessageEditor from './components/MaintenanceMessageEditor';
+import SplashTemplateEditor from './components/SplashTemplateEditor';
+import { applyMaintenanceMessage } from './helpers/maintenanceMessage.helpers';
 
 const MaintenanceSection = memo(() => {
   const styles = maintenanceSectionStyles();
@@ -14,8 +24,11 @@ const MaintenanceSection = memo(() => {
   const { data, isLoading } = useMaintenanceQuery();
   const [saveMaintenance, { isLoading: saving }] = useMaintenanceSaveMutation();
 
+  const serverTemplate = data?.splash_template || '';
+
   const [enabled, setEnabled] = useState(false);
-  const [template, setTemplate] = useState('');
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [messageDirty, setMessageDirty] = useState(false);
   const [templateDirty, setTemplateDirty] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -26,8 +39,6 @@ const MaintenanceSection = memo(() => {
   useEffect(() => {
     if (data) {
       setEnabled(data.enabled);
-      setTemplate(data.splash_template || '');
-      setTemplateDirty(false);
     }
   }, [data]);
 
@@ -56,34 +67,45 @@ const MaintenanceSection = memo(() => {
     [saveMaintenance],
   );
 
-  const handleTemplateChange = useCallback(val => {
-    setTemplate(val);
-    setTemplateDirty(true);
-  }, []);
+  const saveTemplate = useCallback(
+    async (template, successMessage) => {
+      try {
+        await saveMaintenance({ splash_template: template }).unwrap();
+        setSnackbar({ open: true, message: successMessage, severity: 'success' });
+      } catch (err) {
+        setSnackbar({
+          open: true,
+          message: `Save failed: ${err?.data?.error || err?.message || 'Unknown error'}`,
+          severity: 'error',
+        });
+      }
+    },
+    [saveMaintenance],
+  );
 
-  const handleSaveTemplate = useCallback(async () => {
-    try {
-      await saveMaintenance({ splash_template: template }).unwrap();
-      setTemplateDirty(false);
-      setSnackbar({
-        open: true,
-        message: 'Splash template saved.',
-        severity: 'success',
-      });
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: `Save failed: ${err?.data?.error || err?.message || 'Unknown error'}`,
-        severity: 'error',
-      });
-    }
-  }, [template, saveMaintenance]);
+  const handleSaveMessage = useCallback(
+    (markdown, successMessage) => {
+      const template = applyMaintenanceMessage(serverTemplate, markdown);
+      if (template === null) {
+        setSnackbar({
+          open: true,
+          message: 'Save failed: the message panel was not found in the splash template.',
+          severity: 'error',
+        });
+        return;
+      }
+      saveTemplate(template, successMessage);
+    },
+    [saveTemplate, serverTemplate],
+  );
+
+  const handleAdvancedModeChange = useCallback(e => {
+    setAdvancedMode(e.target.checked);
+  }, []);
 
   const handleCloseSnackbar = useCallback(() => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
-
-  const extensions = useMemo(() => [html(), EditorView.lineWrapping], []);
 
   if (isLoading) {
     return (
@@ -136,43 +158,35 @@ const MaintenanceSection = memo(() => {
         )}
       </Box>
 
-      {/* Template Editor */}
-      <Box sx={styles.editorCard}>
-        <Box sx={styles.editorHeader}>
-          <Typography
-            variant="body2"
-            sx={styles.editorTitle}
-          >
-            Splash Page Template
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={styles.editorHint}
-          >
-            Custom HTML shown during maintenance. Leave empty to use the default template.
-          </Typography>
-        </Box>
-        <Box sx={styles.editorWrapper}>
-          <CodeMirror
-            value={template}
-            height="18.75rem"
-            extensions={extensions}
-            onChange={handleTemplateChange}
-            theme="dark"
-          />
-        </Box>
-        <Box sx={styles.editorFooter}>
-          <Button
+      <MaintenanceMessageEditor
+        serverTemplate={serverTemplate}
+        saving={saving}
+        saveBlocked={templateDirty}
+        onSave={handleSaveMessage}
+        onDirtyChange={setMessageDirty}
+      />
+
+      <FormControlLabel
+        control={
+          <Checkbox
             size="small"
-            variant="contained"
-            onClick={handleSaveTemplate}
-            disabled={!templateDirty || saving}
-            sx={styles.saveButton}
-          >
-            {saving ? 'Saving...' : 'Save Template'}
-          </Button>
-        </Box>
-      </Box>
+            checked={advancedMode}
+            onChange={handleAdvancedModeChange}
+          />
+        }
+        label="Advanced mode"
+        sx={styles.advancedToggle}
+      />
+
+      {advancedMode && (
+        <SplashTemplateEditor
+          serverTemplate={serverTemplate}
+          saving={saving}
+          saveBlocked={messageDirty}
+          onSave={saveTemplate}
+          onDirtyChange={setTemplateDirty}
+        />
+      )}
 
       <Snackbar
         open={snackbar.open}
@@ -251,48 +265,13 @@ const maintenanceSectionStyles = () => ({
   warningIcon: {
     fontSize: '1rem',
   },
-  editorCard: ({ palette }) => ({
-    border: `0.0625rem solid ${palette.border.table}`,
-    borderRadius: '0.5rem',
-    overflow: 'hidden',
-  }),
-  editorHeader: ({ palette }) => ({
-    padding: '1rem 1.25rem',
-    backgroundColor: palette.background.tabPanel,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
-  }),
-  editorTitle: {
-    fontWeight: 600,
-    fontSize: '0.875rem',
-  },
-  editorHint: ({ palette }) => ({
-    color: palette.text.metrics,
-    fontSize: '0.75rem',
-  }),
-  editorWrapper: {
-    '& .cm-theme-dark': {
-      display: 'flex',
-      flexDirection: 'column',
+  advancedToggle: {
+    alignSelf: 'flex-start',
+    marginTop: '-0.5rem',
+    marginBottom: '-0.5rem',
+    '& .MuiFormControlLabel-label': {
+      fontSize: '0.8125rem',
     },
-    '& .cm-editor': {
-      fontSize: '0.75rem',
-    },
-    '& .cm-scroller': {
-      overflow: 'auto',
-    },
-    '& .cm-gutters': {
-      fontSize: '0.75rem',
-    },
-  },
-  editorFooter: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'flex-end',
-    padding: '0.75rem 1.25rem',
-    borderTop: `0.0625rem solid ${palette.border.table}`,
-  }),
-  saveButton: {
-    textTransform: 'none',
-    fontSize: '0.8125rem',
   },
 });
 
