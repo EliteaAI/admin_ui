@@ -12,13 +12,13 @@ import {
 } from '@mui/material';
 
 import { useSecurityAuditSummaryQuery } from '@/api/governance.api';
-import GovernanceErrorAlert from '@/pages/GovernancePage/components/OverviewTab/components/GovernanceErrorAlert';
-import { toGovernanceError } from '@/pages/GovernancePage/components/OverviewTab/helpers/governance.helpers';
+import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
 import {
   fillPlaceholders,
   modeLabel,
   summarizeWouldDeny,
 } from '@/pages/GovernancePage/components/OverviewTab/helpers/governanceSettings.helpers';
+import { toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
 
 const SUMMARY_HOURS = 24;
 

@@ -48,10 +48,79 @@ const governanceApi = adminApi.injectEndpoints({
       }),
       providesTags: ['SecurityEvents'],
     }),
+
+    agentIdentityList: build.query({
+      query: ({
+        projectId,
+        limit = 20,
+        offset = 0,
+        state,
+        identity_mode,
+        application_id,
+        search,
+        sort_by,
+        sort_order,
+      }) => ({
+        url: `/elitea_core/agent_identities/administration/${encodeURIComponent(projectId)}`,
+        params: {
+          limit,
+          offset,
+          ...(state && { state }),
+          ...(identity_mode && { identity_mode }),
+          ...(application_id && { application_id }),
+          ...(search && { search }),
+          ...(sort_by && { sort_by }),
+          ...(sort_order && { sort_order }),
+        },
+      }),
+      providesTags: ['AgentIdentities'],
+    }),
+
+    // One binding with its full digest and the digest inputs (hashes and counts, never the instruction text)
+    agentIdentityGet: build.query({
+      query: ({ projectId, bindingId }) => ({
+        url: `/elitea_core/agent_identity/administration/${encodeURIComponent(projectId)}/${encodeURIComponent(bindingId)}`,
+      }),
+      providesTags: ['AgentIdentities'],
+    }),
+
+    // The agents of a project with their versions and the identities each version already has
+    governanceAgentList: build.query({
+      query: ({ projectId, limit = 20, offset = 0, search }) => ({
+        url: `/elitea_core/governance_agents/administration/${encodeURIComponent(projectId)}`,
+        params: { limit, offset, ...(search && { search }) },
+      }),
+      providesTags: ['AgentIdentities'],
+    }),
+
+    agentIdentityCreate: build.mutation({
+      query: ({ projectId, ...body }) => ({
+        url: `/elitea_core/agent_identities/administration/${encodeURIComponent(projectId)}`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AgentIdentities'],
+    }),
+
+    // The body is { action, expected_state }; approval_ref and policy_revision go with `activate` only.
+    // A refused change (for example CONCURRENT_CHANGE) invalidates the tag too, so the list is read again.
+    agentIdentityAction: build.mutation({
+      query: ({ projectId, bindingId, ...body }) => ({
+        url: `/elitea_core/agent_identity_action/administration/${encodeURIComponent(projectId)}/${encodeURIComponent(bindingId)}`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AgentIdentities'],
+    }),
   }),
 });
 
 export const {
+  useAgentIdentityActionMutation,
+  useAgentIdentityCreateMutation,
+  useAgentIdentityGetQuery,
+  useAgentIdentityListQuery,
+  useGovernanceAgentListQuery,
   useGovernanceSettingsGetQuery,
   useGovernanceSettingsUpdateMutation,
   useGovernanceSettingsHistoryListQuery,

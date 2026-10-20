@@ -2,7 +2,7 @@ import {
   FALLBACK_DESCRIPTIONS,
   MODE_RANK,
 } from '@/pages/GovernancePage/components/OverviewTab/constants/governanceSettings.constants';
-import { checkLabel } from '@/pages/GovernancePage/components/OverviewTab/helpers/governance.helpers';
+import { checkLabel } from '@/pages/GovernancePage/helpers/governance.helpers';
 
 // The backend text wins; a section it leaves out falls back to the design copy
 export const mergeDescriptions = descriptions => {

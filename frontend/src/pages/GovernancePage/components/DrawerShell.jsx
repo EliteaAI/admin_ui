@@ -8,7 +8,7 @@ import { GridTablePagination } from '@/components/GridTable';
 const SKELETON_COUNT = 4;
 
 /**
- * The frame the drawers of this tab share: header with close button, an error alert, an optional notice,
+ * The frame the drawers of this page share: header with close button, an error alert, an optional notice,
  * loading skeletons, an empty text, the rows (each wrapped in a divider row) and the pagination.
  * `rows` is a list of `{ key, testId, content }`; `paginationProps` is the result of `getPaginationProps(total)`.
  */

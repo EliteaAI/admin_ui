@@ -125,6 +125,8 @@ export const PERMISSIONS = {
     },
     bindings: {
       view: 'governance.bindings.view',
+      manage: 'governance.bindings.manage',
+      approve: 'governance.bindings.approve',
     },
   },
   credentials: {

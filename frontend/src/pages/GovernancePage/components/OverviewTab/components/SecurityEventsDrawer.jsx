@@ -3,9 +3,9 @@ import { memo, useMemo } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 
 import { useSecurityAuditListQuery } from '@/api/governance.api';
-import DrawerShell from '@/pages/GovernancePage/components/OverviewTab/components/DrawerShell';
-import { formatDateTime } from '@/pages/GovernancePage/components/OverviewTab/helpers/governance.helpers';
+import DrawerShell from '@/pages/GovernancePage/components/DrawerShell';
 import { useDrawerPagination } from '@/pages/GovernancePage/components/OverviewTab/hooks/useDrawerPagination.hooks';
+import { formatDateTime } from '@/pages/GovernancePage/helpers/governance.helpers';
 
 /**
  * Recent security audit events, newest first. `filters` are query filters of the audit view

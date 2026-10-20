@@ -6,8 +6,8 @@ import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import { Box, Button, Typography } from '@mui/material';
 
-import { checkLabel } from '@/pages/GovernancePage/components/OverviewTab/helpers/governance.helpers';
 import { checkSeverity } from '@/pages/GovernancePage/components/OverviewTab/helpers/governanceSettings.helpers';
+import { checkLabel } from '@/pages/GovernancePage/helpers/governance.helpers';
 
 const SEVERITY_ICONS = {
   success: CheckCircleOutline,
