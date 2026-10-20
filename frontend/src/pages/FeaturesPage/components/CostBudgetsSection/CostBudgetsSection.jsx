@@ -1,7 +1,8 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import PaidOutlinedIcon from '@mui/icons-material/PaidOutlined';
+import TravelExploreIcon from '@mui/icons-material/TravelExploreOutlined';
 import { Box } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
@@ -9,13 +10,15 @@ import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.
 
 import CostBudgets from './components/CostBudgets';
 import ModelPricesSource from './components/ModelPricesSource';
+import ToolSpend from './components/ToolSpend';
 import { COST_BUDGETS_SETTINGS_COUNT } from './constants/costBudgets.constants';
 
 // The source select; importing is an action, not a stored setting
 const MODEL_PRICES_SOURCE_SETTINGS_COUNT = 1;
 
 const CostBudgetsSection = memo(props => {
-  const { budgetsDraft, onValidityChange, initialBlock } = props;
+  const { budgetsDraft, toolSpendDraft, toolPricingDraft, toolSpendFields, toolPricingFields, onValidityChange, initialBlock } =
+    props;
 
   const styles = costBudgetsSectionStyles();
 
@@ -23,14 +26,14 @@ const CostBudgetsSection = memo(props => {
 
   // A validation error must never sit hidden inside a collapsed block
   const [budgetsValid, setBudgetsValid] = useState(true);
+  const [toolSpendValid, setToolSpendValid] = useState(true);
 
-  const handleValidityChange = useCallback(
-    valid => {
-      setBudgetsValid(valid);
-      onValidityChange(valid);
-    },
-    [onValidityChange],
-  );
+  useEffect(() => {
+    onValidityChange(budgetsValid && toolSpendValid);
+  }, [budgetsValid, toolSpendValid, onValidityChange]);
+
+
+  const toolSpendCount = toolSpendFields.length + toolPricingFields.length;
 
   return (
     <Box sx={styles.root}>
@@ -46,7 +49,7 @@ const CostBudgetsSection = memo(props => {
         <CostBudgets
           values={budgetsDraft.values}
           onChange={budgetsDraft.onChange}
-          onValidityChange={handleValidityChange}
+          onValidityChange={setBudgetsValid}
         />
       </CollapsibleSection>
 
@@ -61,6 +64,28 @@ const CostBudgetsSection = memo(props => {
       >
         <ModelPricesSource />
       </CollapsibleSection>
+
+      {toolSpendCount > 0 && (
+        <CollapsibleSection
+          icon={TravelExploreIcon}
+          title="Tool Spend"
+          count={toolSpendCount}
+          expanded={!!expanded.tool_spend || !toolSpendValid}
+          sectionId="tool_spend"
+          onToggle={toggle}
+          keepMounted
+        >
+          <ToolSpend
+            spendFields={toolSpendFields}
+            pricingFields={toolPricingFields}
+            spendValues={toolSpendDraft.values}
+            pricingValues={toolPricingDraft.values}
+            onSpendChange={toolSpendDraft.onChange}
+            onPricingChange={toolPricingDraft.onChange}
+            onValidityChange={setToolSpendValid}
+          />
+        </CollapsibleSection>
+      )}
     </Box>
   );
 });

@@ -39,7 +39,7 @@ export const FEATURES_SECTIONS = [
     id: 'cost_budgets',
     title: 'Cost Budgets',
     icon: AccountBalanceWalletOutlinedIcon,
-    backendSectionIds: ['cost_budgets'],
+    backendSectionIds: ['cost_budgets', 'tool_spend', 'tool_pricing'],
   },
   {
     id: 'help_center',
@@ -74,4 +74,6 @@ export const LEGACY_SECTION_REDIRECTS = {
   agent_publishing: { page: 'publishing', block: 'agent_publishing' },
   skill_publishing: { page: 'publishing', block: 'skill_publishing' },
   model_prices_source: { page: 'cost_budgets', block: 'model_prices_source' },
+  tool_spend: { page: 'cost_budgets', block: 'tool_spend' },
+  tool_pricing: { page: 'cost_budgets', block: 'tool_spend' },
 };

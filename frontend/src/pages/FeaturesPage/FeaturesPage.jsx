@@ -59,14 +59,34 @@ const FeaturesPage = memo(() => {
   const voiceDraft = useConfigSectionDraft('voice_features', { skip: !usesSection('voice_features') });
   const mentionsDraft = useConfigSectionDraft('chat_mentions', { skip: !usesSection('chat_mentions') });
   const budgetsDraft = useConfigSectionDraft('cost_budgets', { skip: !usesSection('cost_budgets') });
+  const toolSpendDraft = useConfigSectionDraft('tool_spend', { skip: !usesSection('tool_spend') });
+  const toolPricingDraft = useConfigSectionDraft('tool_pricing', { skip: !usesSection('tool_pricing') });
   const supportDraft = useConfigSectionDraft('support_assistant', {
     skip: !usesSection('support_assistant'),
   });
   const resourcesDraft = useConfigSectionDraft('resources', { skip: !usesSection('resources') });
 
   const allDrafts = useMemo(
-    () => [guardrailsDraft, voiceDraft, mentionsDraft, budgetsDraft, supportDraft, resourcesDraft],
-    [guardrailsDraft, voiceDraft, mentionsDraft, budgetsDraft, supportDraft, resourcesDraft],
+    () => [
+      guardrailsDraft,
+      voiceDraft,
+      mentionsDraft,
+      budgetsDraft,
+      toolSpendDraft,
+      toolPricingDraft,
+      supportDraft,
+      resourcesDraft,
+    ],
+    [
+      guardrailsDraft,
+      voiceDraft,
+      mentionsDraft,
+      budgetsDraft,
+      toolSpendDraft,
+      toolPricingDraft,
+      supportDraft,
+      resourcesDraft,
+    ],
   );
   const activeDrafts = useMemo(
     () => allDrafts.filter(draft => activeDef.backendSectionIds.includes(draft.sectionId)),
@@ -90,6 +110,14 @@ const FeaturesPage = memo(() => {
     const guardrailsSchema = schemasData?.sections?.find(s => s.id === 'guardrails');
     return guardrailsSchema?.fields || [];
   }, [schemasData]);
+  const toolSpendFields = useMemo(
+    () => schemasData?.sections?.find(s => s.id === 'tool_spend')?.fields || [],
+    [schemasData],
+  );
+  const toolPricingFields = useMemo(
+    () => schemasData?.sections?.find(s => s.id === 'tool_pricing')?.fields || [],
+    [schemasData],
+  );
 
   // Sections with their own field validation report upwards so Save can block
   const [sectionValid, setSectionValid] = useState(true);
@@ -247,6 +275,10 @@ const FeaturesPage = memo(() => {
           <Box sx={styles.formScroll}>
             <CostBudgetsSection
               budgetsDraft={budgetsDraft}
+              toolSpendDraft={toolSpendDraft}
+              toolPricingDraft={toolPricingDraft}
+              toolSpendFields={toolSpendFields}
+              toolPricingFields={toolPricingFields}
               onValidityChange={setSectionValid}
               initialBlock={deepLinkBlock}
             />

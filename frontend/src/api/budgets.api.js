@@ -3,7 +3,7 @@ import { adminApi } from './admin.api';
 const budgetsApi = adminApi.injectEndpoints({
   endpoints: build => ({
     projectBudgetList: build.query({
-      query: ({ limit = 20, offset = 0, search, sort_by, sort_order, project_type } = {}) => ({
+      query: ({ limit = 20, offset = 0, search, sort_by, sort_order, project_type, feature } = {}) => ({
         url: '/elitea_core/project_budgets/administration',
         params: {
           limit,
@@ -12,6 +12,7 @@ const budgetsApi = adminApi.injectEndpoints({
           ...(sort_by && { sort_by }),
           ...(sort_order && { sort_order }),
           ...(project_type && { project_type }),
+          ...(feature && { feature }),
         },
       }),
       providesTags: ['Budgets'],
@@ -49,6 +50,32 @@ const budgetsApi = adminApi.injectEndpoints({
       }),
       invalidatesTags: ['Budgets'],
     }),
+
+    // Tool Spend features (e.g. web search), from toolkit metadata; one admin page each
+    toolSpendFeatures: build.query({
+      query: () => ({ url: '/elitea_core/tool_spend_features/administration' }),
+    }),
+
+    // Feature limits use their own fields; only the ones passed are sent, so LLM budgets stay untouched
+    projectFeatureBudgetUpdate: build.mutation({
+      query: ({ projectId, feature, ...body }) => ({
+        url: `/elitea_core/project_budget/administration/${projectId}/budget`,
+        method: 'PUT',
+        params: { feature },
+        body,
+      }),
+      invalidatesTags: ['Budgets'],
+    }),
+
+    userFeatureBudgetUpdate: build.mutation({
+      query: ({ projectId, userId, feature, ...body }) => ({
+        url: `/elitea_core/user_budget/administration/${projectId}/user_budget/${userId}`,
+        method: 'PUT',
+        params: { feature },
+        body,
+      }),
+      invalidatesTags: ['Budgets'],
+    }),
   }),
 });
 
@@ -58,4 +85,7 @@ export const {
   useProjectBudgetUpdateMutation,
   useUserBudgetListQuery,
   useUserBudgetUpdateMutation,
+  useToolSpendFeaturesQuery,
+  useProjectFeatureBudgetUpdateMutation,
+  useUserFeatureBudgetUpdateMutation,
 } = budgetsApi;

@@ -31,7 +31,12 @@ const SchemaField = memo(props => {
 
   const handleTextChange = useCallback(e => onChange(e.target.value), [onChange]);
 
-  const handleNumberChange = useCallback(e => onChange(Number(e.target.value)), [onChange]);
+  // A nullable number cleared by the user means "no value" (e.g. unlimited), not 0
+  const nullable = Array.isArray(field.value_schema?.type) && field.value_schema.type.includes('null');
+  const handleNumberChange = useCallback(
+    e => onChange(e.target.value === '' && nullable ? null : Number(e.target.value)),
+    [onChange, nullable],
+  );
 
   const styles = schemaFieldStyles();
 

@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  MenuItem,
   Switch,
   TextField,
   Typography,
@@ -28,16 +29,32 @@ const INHERITED_SUFFIX = {
  * Current spend is shown next to the input because lowering a limit below what
  * has already been spent blocks the scope immediately.
  */
+// feature_enabled on a project row: null inherits the platform team/personal default
+const FEATURE_ENABLED_OPTIONS = [
+  { value: 'default', label: 'Default' },
+  { value: 'on', label: 'On' },
+  { value: 'off', label: 'Off' },
+];
+
+const toFeatureEnabled = value => (value === 'default' ? null : value === 'on');
+
+const fromFeatureEnabled = value => {
+  if (value === null || value === undefined) return 'default';
+  return value ? 'on' : 'off';
+};
+
 const BudgetEditDialog = memo(props => {
-  const { open, onClose, onSave, target, isSaving } = props;
+  const { open, onClose, onSave, onReset, target, isSaving, featureLabel } = props;
 
   const styles = budgetEditDialogStyles();
 
   const [unlimited, setUnlimited] = useState(false);
   const [limit, setLimit] = useState('');
   const [memberDefault, setMemberDefault] = useState('');
+  const [featureEnabled, setFeatureEnabled] = useState('default');
   const [error, setError] = useState('');
 
+  const isFeature = !!featureLabel;
   const isProject = !target?.user_id;
   // A personal project has one member, so a "default for members" is a second way to set
   // that one person's limit — and it is not enforced there
@@ -57,6 +74,7 @@ const BudgetEditDialog = memo(props => {
         ? ''
         : String(target.member_default_limit),
     );
+    setFeatureEnabled(fromFeatureEnabled(target.feature_enabled));
   }, [open, target]);
 
   const spend = Number(target?.spend || 0);
@@ -96,10 +114,21 @@ const BudgetEditDialog = memo(props => {
         // Omitted when the field is hidden, so saving a personal project cannot clear a
         // value it never showed
         ...(showsMemberDefault && { member_default_limit: parsedMemberDefault }),
+        ...(isFeature && isProject && { feature_enabled: toFeatureEnabled(featureEnabled) }),
       });
       onClose();
     } catch (err) {
       setError(err?.data?.error ?? err?.error ?? 'Failed to save the budget.');
+    }
+  };
+
+  const handleReset = async () => {
+    setError('');
+    try {
+      await onReset();
+      onClose();
+    } catch (err) {
+      setError(err?.data?.error ?? err?.error ?? 'Failed to reset the limit.');
     }
   };
 
@@ -114,7 +143,13 @@ const BudgetEditDialog = memo(props => {
       fullWidth
       maxWidth="xs"
     >
-      <DialogTitle>{target?.user_id ? 'Edit member budget' : 'Edit project budget'}</DialogTitle>
+      <DialogTitle>
+        {isFeature
+          ? `${featureLabel}: ${target?.user_id ? 'member limit' : 'project limit'}`
+          : target?.user_id
+            ? 'Edit member budget'
+            : 'Edit project budget'}
+      </DialogTitle>
 
       <DialogContent>
         <Box sx={styles.content}>
@@ -147,6 +182,27 @@ const BudgetEditDialog = memo(props => {
               {INHERITED_SUFFIX[target?.limit_source] || ''}
             </Typography>
           </Box>
+
+          {isFeature && isProject && (
+            <TextField
+              select
+              label={`${featureLabel} enabled`}
+              value={featureEnabled}
+              onChange={event => setFeatureEnabled(event.target.value)}
+              size="small"
+              fullWidth
+              helperText="Default follows the platform setting for team or personal projects."
+            >
+              {FEATURE_ENABLED_OPTIONS.map(option => (
+                <MenuItem
+                  key={option.value}
+                  value={option.value}
+                >
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
 
           <FormControlLabel
             control={
@@ -184,7 +240,10 @@ const BudgetEditDialog = memo(props => {
             helperText={
               unlimited
                 ? 'No limit will be enforced for this scope.'
-                : validationError || 'Set 0 to block all shared-model usage.'
+                : validationError ||
+                  (isFeature
+                    ? `Set 0 to block ${featureLabel.toLowerCase()} on the platform key.`
+                    : 'Set 0 to block all shared-model usage.')
             }
           />
 
@@ -205,8 +264,8 @@ const BudgetEditDialog = memo(props => {
 
           {willBlockNow && (
             <Alert severity="warning">
-              This limit is below the {formatMoney(spend, target?.currency)} already spent, so shared-model
-              calls will be blocked immediately.
+              This limit is below the {formatMoney(spend, target?.currency)} already spent, so{' '}
+              {isFeature ? featureLabel.toLowerCase() : 'shared-model'} calls will be blocked immediately.
             </Alert>
           )}
 
@@ -215,6 +274,15 @@ const BudgetEditDialog = memo(props => {
       </DialogContent>
 
       <DialogActions>
+        {isFeature && onReset && (
+          <Button
+            onClick={handleReset}
+            disabled={isSaving}
+            sx={styles.resetButton}
+          >
+            Reset to default
+          </Button>
+        )}
         <Button
           onClick={onClose}
           disabled={isSaving}
@@ -242,6 +310,9 @@ const budgetEditDialogStyles = () => ({
     flexDirection: 'column',
     gap: '1rem',
     paddingTop: '0.5rem',
+  },
+  resetButton: {
+    marginRight: 'auto',
   },
   factRow: {
     display: 'flex',

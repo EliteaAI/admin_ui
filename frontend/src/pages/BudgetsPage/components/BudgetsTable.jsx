@@ -52,6 +52,11 @@ const BUDGET_COLUMNS = [
   { field: 'actions', label: 'Actions', width: '8rem', sortable: false },
 ];
 
+// Tool Spend pages only: the project's own on/off override for the feature
+const ENABLED_COLUMN = { field: 'feature_enabled', label: 'Enabled', width: '6rem', sortable: false };
+
+const FEATURE_ENABLED_LABELS = { true: 'On', false: 'Off' };
+
 const ID_COLUMN = {
   field: 'project_id',
   label: 'ID',
@@ -93,17 +98,25 @@ const BudgetsTable = memo(props => {
     onSort,
     isFetching,
     isPersonal,
+    isFeature,
     canEdit,
     onEdit,
     onUsers,
   } = props;
+
+  const columns = useMemo(() => {
+    const base = isPersonal ? PERSONAL_COLUMNS : TEAM_COLUMNS;
+    if (!isFeature) return base;
+    const at = base.findIndex(column => column.field === 'effective_limit');
+    return [...base.slice(0, at), ENABLED_COLUMN, ...base.slice(at)];
+  }, [isPersonal, isFeature]);
 
   const styles = useMemo(() => budgetsTableStyles(), []);
 
   const [hoveredRowId, setHoveredRowId] = useState(null);
 
   const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
-    columns: isPersonal ? PERSONAL_COLUMNS : TEAM_COLUMNS,
+    columns,
     containerWidth: window.innerWidth,
     showCheckbox: false,
     actionsColumnWidth: '8rem',
@@ -175,6 +188,22 @@ const BudgetsTable = memo(props => {
               label={cfg.label}
               size="small"
               color={cfg.color}
+              variant="outlined"
+            />
+          </Tooltip>
+        );
+      }
+
+      if (column.field === 'feature_enabled') {
+        return (
+          <Tooltip
+            title={value === null || value === undefined ? 'Follows the platform default' : 'Set for this project'}
+            placement="top"
+          >
+            <Chip
+              label={FEATURE_ENABLED_LABELS[value] || 'Default'}
+              size="small"
+              color={value === false ? 'warning' : 'default'}
               variant="outlined"
             />
           </Tooltip>
