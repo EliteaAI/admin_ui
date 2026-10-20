@@ -40,7 +40,7 @@ const SOURCE_CHIPS = {
  * consuming the whole project budget.
  */
 const UserBudgetsDrawer = memo(props => {
-  const { open, onClose, project, canEdit, onEdit } = props;
+  const { open, onClose, project, canEdit, onEdit, feature, featureLabel } = props;
 
   const styles = userBudgetsDrawerStyles();
 
@@ -60,6 +60,7 @@ const UserBudgetsDrawer = memo(props => {
       search: debouncedSearch || undefined,
       sort_by: 'spend',
       sort_order: 'desc',
+      ...(feature && { feature }),
     },
     { skip: !open || !project?.project_id, refetchOnMountOrArgChange: true },
   );
@@ -103,7 +104,7 @@ const UserBudgetsDrawer = memo(props => {
             variant="titleMedium"
             component="div"
           >
-            Member budgets
+            {featureLabel ? `${featureLabel}: member limits` : 'Member budgets'}
           </Typography>
           <Typography
             variant="bodySmall"

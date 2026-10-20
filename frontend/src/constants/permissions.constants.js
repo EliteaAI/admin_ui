@@ -167,6 +167,7 @@ export const ROUTE_PERMISSIONS = {
   '/roles': SIDEBAR_PERMISSIONS.roles,
   '/projects': SIDEBAR_PERMISSIONS.projects,
   '/budgets': SIDEBAR_PERMISSIONS.budgets,
+  '/tool-spend': SIDEBAR_PERMISSIONS.budgets,
   '/platform-dimensions': SIDEBAR_PERMISSIONS['platform-dimensions'],
   '/secrets': SIDEBAR_PERMISSIONS.secrets,
   '/litellm': SIDEBAR_PERMISSIONS.litellm,

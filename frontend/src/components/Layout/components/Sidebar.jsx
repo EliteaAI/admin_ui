@@ -15,6 +15,7 @@ import ScheduleIcon from '@mui/icons-material/ScheduleOutlined';
 import SecurityIcon from '@mui/icons-material/SecurityOutlined';
 import SettingsIcon from '@mui/icons-material/SettingsOutlined';
 import SummarizeOutlinedIcon from '@mui/icons-material/SummarizeOutlined';
+import TravelExploreIcon from '@mui/icons-material/TravelExploreOutlined';
 import TuneIcon from '@mui/icons-material/TuneOutlined';
 import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import {
@@ -29,6 +30,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import { useToolSpendFeaturesQuery } from '@/api/budgets.api';
 import { ArrowLeftIcon, ArrowRightIcon, EliteAIcon, LogoutIcon } from '@/components/Icons';
 import { COLLAPSED_DRAWER_WIDTH, DRAWER_WIDTH } from '@/components/Layout/constants/layout.constants';
 import { SIDEBAR_PERMISSIONS } from '@/constants/permissions.constants';
@@ -102,6 +104,9 @@ const TOP_MENU_ITEMS = [
   },
 ];
 
+const TOOL_SPEND_SEGMENT = 'tool-spend';
+const TOOL_SPEND_ID_PREFIX = `${TOOL_SPEND_SEGMENT}-`;
+
 const BOTTOM_MENU_ITEMS = [
   {
     id: 'configuration',
@@ -140,14 +145,23 @@ const Sidebar = memo(() => {
   const styles = sidebarStyles(sideBarCollapsed, socketConnected);
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const filteredTopMenuItems = useMemo(
-    () =>
-      TOP_MENU_ITEMS.filter(item => {
-        const required = SIDEBAR_PERMISSIONS[item.id];
-        return !required || hasAnyPermission(required);
-      }),
-    [hasAnyPermission],
-  );
+  const canViewBudgets = hasAnyPermission(SIDEBAR_PERMISSIONS.budgets);
+  const { data: toolSpendFeatures } = useToolSpendFeaturesQuery(undefined, { skip: !canViewBudgets });
+
+  // One entry per Tool Spend feature right after Budgets
+  const filteredTopMenuItems = useMemo(() => {
+    const featureItems = (canViewBudgets ? toolSpendFeatures || [] : []).map(item => ({
+      // Prefixed so a feature name can never collide with a fixed entry's id or React key
+      id: `${TOOL_SPEND_ID_PREFIX}${item.feature}`,
+      label: item.label,
+      icon: TravelExploreIcon,
+      url: `${RouteDefinitions.ToolSpend}/${item.feature}`,
+    }));
+    return TOP_MENU_ITEMS.filter(item => {
+      const required = SIDEBAR_PERMISSIONS[item.id];
+      return !required || hasAnyPermission(required);
+    }).flatMap(item => (item.id === 'budgets' ? [item, ...featureItems] : [item]));
+  }, [hasAnyPermission, canViewBudgets, toolSpendFeatures]);
 
   const filteredBottomMenuItems = useMemo(
     () =>
@@ -162,6 +176,9 @@ const Sidebar = memo(() => {
     tabId => {
       const pathSegments = location.pathname.split('/');
       const lastSegment = pathSegments[pathSegments.length - 1];
+      const onToolSpend = pathSegments[pathSegments.length - 2] === TOOL_SPEND_SEGMENT;
+      // A feature page is matched by its full id, so a feature named like a fixed entry never lights both
+      if (onToolSpend) return tabId === `${TOOL_SPEND_ID_PREFIX}${lastSegment}`;
       return lastSegment === tabId;
     },
     [location.pathname],

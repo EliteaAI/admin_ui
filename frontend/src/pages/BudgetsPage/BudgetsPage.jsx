@@ -9,7 +9,9 @@ import {
   useLazyProjectBudgetListQuery,
   useProjectBudgetListQuery,
   useProjectBudgetUpdateMutation,
+  useProjectFeatureBudgetUpdateMutation,
   useUserBudgetUpdateMutation,
+  useUserFeatureBudgetUpdateMutation,
 } from '@/api/budgets.api';
 import { DrawerPage } from '@/components/DrawerPage';
 import { DrawerPageHeader } from '@/components/DrawerPageHeader';
@@ -68,6 +70,12 @@ const EXPORT_BUDGET_COLUMNS = [
   },
 ];
 
+const FEATURE_EXPORT_COLUMN = {
+  header: 'Enabled',
+  key: 'feature_enabled',
+  transform: value => (value === null || value === undefined ? 'Default' : value ? 'On' : 'Off'),
+};
+
 const TEAM_EXPORT_COLUMNS = [
   { header: 'Name', key: 'name' },
   { header: 'ID', key: 'project_id' },
@@ -82,10 +90,22 @@ const PERSONAL_EXPORT_COLUMNS = [
   ...EXPORT_BUDGET_COLUMNS,
 ];
 
-const BudgetsPage = memo(() => {
-  const styles = budgetsPageStyles();
+// Feature limits have their own field names; mapping here keeps the dialog shared
+const toFeaturePayload = ({ monthly_limit, enabled, member_default_limit, feature_enabled }) => ({
+  limit_usd: monthly_limit,
+  enabled,
+  ...(member_default_limit !== undefined && { member_default_limit_usd: member_default_limit }),
+  ...(feature_enabled !== undefined && { feature_enabled }),
+});
 
-  usePageTitle('Budgets');
+// feature set = a Tool Spend page (e.g. web search); unset = the LLM Budgets page as before
+const BudgetsPage = memo(props => {
+  const { feature, featureLabel } = props;
+  const styles = budgetsPageStyles();
+  const pageTitle = feature ? `${featureLabel || feature} limits` : 'Budgets';
+  const featureParams = useMemo(() => (feature ? { feature } : {}), [feature]);
+
+  usePageTitle(pageTitle);
 
   const { hasPermission } = useCheckPermission();
   const canEdit = useMemo(() => hasPermission(PERMISSIONS.budgets.edit), [hasPermission]);
@@ -117,6 +137,7 @@ const BudgetsPage = memo(() => {
       sort_by: sortBy,
       sort_order: sortOrder,
       project_type: projectType,
+      ...featureParams,
     },
     { refetchOnMountOrArgChange: true },
   );
@@ -125,6 +146,9 @@ const BudgetsPage = memo(() => {
 
   const [updateProjectBudget, { isLoading: isSavingProject }] = useProjectBudgetUpdateMutation();
   const [updateUserBudget, { isLoading: isSavingUser }] = useUserBudgetUpdateMutation();
+  const [updateProjectFeature, { isLoading: isSavingProjectFeature }] = useProjectFeatureBudgetUpdateMutation();
+  const [updateUserFeature, { isLoading: isSavingUserFeature }] = useUserFeatureBudgetUpdateMutation();
+  const isSaving = isSavingProject || isSavingUser || isSavingProjectFeature || isSavingUserFeature;
 
   const rows = data?.rows || [];
   const total = data?.total || 0;
@@ -164,12 +188,29 @@ const BudgetsPage = memo(() => {
     setDrawerProject(null);
   }, []);
 
+  const saveFeature = useCallback(
+    body => {
+      const target = editTarget;
+      return target?.user_id
+        ? updateUserFeature({ projectId: target.project_id, userId: target.user_id, feature, ...body }).unwrap()
+        : updateProjectFeature({ projectId: target.project_id, feature, ...body }).unwrap();
+    },
+    [editTarget, feature, updateProjectFeature, updateUserFeature],
+  );
+
+  const handleReset = useCallback(async () => {
+    await saveFeature({ reset: true });
+    setSnackbar({ open: true, message: 'Limit reset to the default.', severity: 'success' });
+  }, [saveFeature]);
+
   const handleSave = useCallback(
     async payload => {
       const target = editTarget;
 
-      // A user_id on the target means the dialog was opened from the drawer
-      if (target?.user_id) {
+      if (feature) {
+        await saveFeature(toFeaturePayload(payload));
+      } else if (target?.user_id) {
+        // A user_id on the target means the dialog was opened from the drawer
         await updateUserBudget({
           projectId: target.project_id,
           userId: target.user_id,
@@ -190,7 +231,7 @@ const BudgetsPage = memo(() => {
         severity: 'success',
       });
     },
-    [editTarget, updateProjectBudget, updateUserBudget],
+    [editTarget, feature, saveFeature, updateProjectBudget, updateUserBudget],
   );
 
   const handleCloseSnackbar = useCallback(() => {
@@ -202,7 +243,7 @@ const BudgetsPage = memo(() => {
 
     try {
       const fetchAll = async type => {
-        const probe = await fetchBudgets({ limit: 1, offset: 0, project_type: type }).unwrap();
+        const probe = await fetchBudgets({ limit: 1, offset: 0, project_type: type, ...featureParams }).unwrap();
         const totalCount = probe?.total ?? 0;
 
         if (!totalCount) return [];
@@ -211,6 +252,7 @@ const BudgetsPage = memo(() => {
           limit: totalCount,
           offset: 0,
           project_type: type,
+          ...featureParams,
         }).unwrap();
 
         return result?.rows ?? [];
@@ -218,18 +260,22 @@ const BudgetsPage = memo(() => {
 
       const [teamRows, personalRows] = await Promise.all([fetchAll('team'), fetchAll('personal')]);
 
-      await exportToExcel('Budgets.xlsx', [
-        { sheetName: 'Team Projects', columns: TEAM_EXPORT_COLUMNS, rows: teamRows },
+      await exportToExcel(`${feature ? `${feature}_limits` : 'Budgets'}.xlsx`, [
+        {
+          sheetName: 'Team Projects',
+          columns: feature ? [...TEAM_EXPORT_COLUMNS, FEATURE_EXPORT_COLUMN] : TEAM_EXPORT_COLUMNS,
+          rows: teamRows,
+        },
         {
           sheetName: 'Personal Projects',
-          columns: PERSONAL_EXPORT_COLUMNS,
+          columns: feature ? [...PERSONAL_EXPORT_COLUMNS, FEATURE_EXPORT_COLUMN] : PERSONAL_EXPORT_COLUMNS,
           rows: personalRows,
         },
       ]);
 
       setSnackbar({
         open: true,
-        message: 'Budgets exported.',
+        message: `${pageTitle} exported.`,
         severity: 'success',
       });
     } catch {
@@ -241,7 +287,7 @@ const BudgetsPage = memo(() => {
     } finally {
       setExporting(false);
     }
-  }, [fetchBudgets]);
+  }, [fetchBudgets, featureParams, feature, pageTitle]);
 
   const counts = data?.counts || {};
 
@@ -296,7 +342,7 @@ const BudgetsPage = memo(() => {
     <>
       <DrawerPage>
         <DrawerPageHeader
-          title="Budgets"
+          title={pageTitle}
           tabs={tabsElement}
           showSearchInput
           search={search}
@@ -308,7 +354,7 @@ const BudgetsPage = memo(() => {
 
         <Box sx={styles.tableContainer}>
           {isError ? (
-            <Box sx={styles.errorContainer}>Failed to load budgets.</Box>
+            <Box sx={styles.errorContainer}>Failed to load {feature ? 'limits' : 'budgets'}.</Box>
           ) : (
             <BudgetsTable
               rows={rows}
@@ -324,6 +370,7 @@ const BudgetsPage = memo(() => {
               onSort={handleSort}
               isFetching={isFetching}
               isPersonal={projectType === 'personal'}
+              isFeature={!!feature}
               canEdit={canEdit}
               onEdit={setEditTarget}
               onUsers={setDrawerProject}
@@ -335,15 +382,19 @@ const BudgetsPage = memo(() => {
       <BudgetEditDialog
         open={!!editTarget}
         target={editTarget}
-        isSaving={isSavingProject || isSavingUser}
+        isSaving={isSaving}
+        featureLabel={feature ? featureLabel || feature : undefined}
         onClose={() => setEditTarget(null)}
         onSave={handleSave}
+        onReset={feature ? handleReset : undefined}
       />
 
       <UserBudgetsDrawer
         open={!!drawerProject}
         project={drawerProject}
         canEdit={canEdit}
+        feature={feature}
+        featureLabel={featureLabel}
         onClose={() => setDrawerProject(null)}
         onEdit={setEditTarget}
       />

@@ -21,6 +21,7 @@ import { ReportsPage } from '@/pages/ReportsPage';
 import { RolesPage } from '@/pages/RolesPage';
 import { SchedulesTasksPage } from '@/pages/SchedulesTasksPage';
 import { SecretsPage } from '@/pages/SecretsPage';
+import { ToolSpendPage } from '@/pages/ToolSpendPage';
 import { UsersPage } from '@/pages/UsersPage';
 
 const basename = getEnvVar('vite_base_uri') ?? '';
@@ -51,6 +52,10 @@ const router = createBrowserRouter(
       <Route
         path={RouteDefinitions.Budgets}
         element={guard(RouteDefinitions.Budgets, <BudgetsPage />)}
+      />
+      <Route
+        path={`${RouteDefinitions.ToolSpend}/:feature`}
+        element={guard(RouteDefinitions.ToolSpend, <ToolSpendPage />)}
       />
       <Route
         path={RouteDefinitions.PlatformDimensions}
