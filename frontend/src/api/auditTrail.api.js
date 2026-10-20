@@ -42,6 +42,33 @@ const auditTrailApi = adminApi.injectEndpoints({
       providesTags: ['AuditTrail'],
     }),
 
+    auditActionGroupList: build.query({
+      query: ({
+        limit = 50,
+        offset = 0,
+        action_prefix,
+        event_type,
+        date_from,
+        date_to,
+        user_id,
+        project_id,
+      } = {}) => ({
+        url: `/elitea_core/audit/administration`,
+        params: {
+          limit,
+          offset,
+          group_by: 'action',
+          ...(action_prefix && { action_prefix }),
+          ...(event_type && { event_type }),
+          ...(date_from && { date_from }),
+          ...(date_to && { date_to }),
+          ...(user_id && { user_id }),
+          ...(project_id && { project_id }),
+        },
+      }),
+      providesTags: ['AuditActionGroups'],
+    }),
+
     auditHeatmap: build.query({
       query: ({ date_from, date_to, search, event_type, is_error, user_id, project_id, trace_id } = {}) => ({
         url: `/elitea_core/audit_heatmap/administration`,
@@ -118,6 +145,7 @@ const auditTrailApi = adminApi.injectEndpoints({
 
 export const {
   useAuditTrailListQuery,
+  useAuditActionGroupListQuery,
   useAuditHeatmapQuery,
   useAuditTraceListQuery,
   useAuditTraceHeatmapQuery,

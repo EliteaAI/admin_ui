@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import BlockIcon from '@mui/icons-material/BlockOutlined';
 import GppMaybeIcon from '@mui/icons-material/GppMaybeOutlined';
+import PolicyIcon from '@mui/icons-material/PolicyOutlined';
 import { Box, Typography } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
@@ -27,6 +28,12 @@ const SECTION_CONFIG = [
     title: 'Enhance with AI',
     icon: AutoAwesomeIcon,
     pathPrefix: 'enhance_guardrail.',
+  },
+  {
+    id: 'input_guardrail',
+    title: 'Input Guardrail',
+    icon: PolicyIcon,
+    pathPrefix: 'input_guardrail.',
   },
 ];
 
