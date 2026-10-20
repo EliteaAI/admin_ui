@@ -51,13 +51,19 @@ const IdentitiesToolbar = memo(props => {
         sx={styles.filter}
         disabled={!project}
       >
-        <InputLabel id="identities-state-label">State</InputLabel>
+        <InputLabel
+          shrink
+          id="identities-state-label"
+        >
+          State
+        </InputLabel>
         <Select
           labelId="identities-state-label"
           label="State"
           value={state}
           onChange={onStateChange}
           displayEmpty
+          notched
           SelectDisplayProps={{ 'data-testid': 'identities-state-filter' }}
         >
           <MenuItem value="">Any state</MenuItem>
@@ -77,13 +83,19 @@ const IdentitiesToolbar = memo(props => {
         sx={styles.filter}
         disabled={!project}
       >
-        <InputLabel id="identities-mode-label">Identity mode</InputLabel>
+        <InputLabel
+          shrink
+          id="identities-mode-label"
+        >
+          Identity mode
+        </InputLabel>
         <Select
           labelId="identities-mode-label"
           label="Identity mode"
           value={mode}
           onChange={onModeChange}
           displayEmpty
+          notched
           SelectDisplayProps={{ 'data-testid': 'identities-mode-filter' }}
         >
           <MenuItem value="">Any mode</MenuItem>
