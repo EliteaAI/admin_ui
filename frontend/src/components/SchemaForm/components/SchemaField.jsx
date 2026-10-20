@@ -116,6 +116,8 @@ const SchemaField = memo(props => {
             onChange={onChange}
             suggestions={suggestions}
             labels={suggestionLabels}
+            literal={format === 'regex_list'}
+            placeholder={format === 'regex_list' ? 'Type a regular expression and press Enter to add' : undefined}
           />
         );
       }
