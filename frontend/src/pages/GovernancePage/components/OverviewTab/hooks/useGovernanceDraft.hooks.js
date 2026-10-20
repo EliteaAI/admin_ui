@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { draftFromSettings, isDraftDirty } from '../helpers/governanceSettings.helpers';
+import {
+  draftFromSettings,
+  isDraftDirty,
+} from '@/pages/GovernancePage/components/OverviewTab/helpers/governanceSettings.helpers';
 
 // The form's working copy of the stored settings. It follows the server only when the settings values change,
 // so a preflight re-check does not throw away what the operator typed.

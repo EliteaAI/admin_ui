@@ -4,8 +4,15 @@ import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import LockOutlined from '@mui/icons-material/LockOutlined';
 import { Box, FormControlLabel, Radio, RadioGroup, Tooltip, Typography } from '@mui/material';
 
-import { MODES, MODE_RANK } from '../constants/governanceSettings.constants';
-import { fillPlaceholders, firstSentence, modeLabel } from '../helpers/governanceSettings.helpers';
+import {
+  MODES,
+  MODE_RANK,
+} from '@/pages/GovernancePage/components/OverviewTab/constants/governanceSettings.constants';
+import {
+  fillPlaceholders,
+  firstSentence,
+  modeLabel,
+} from '@/pages/GovernancePage/components/OverviewTab/helpers/governanceSettings.helpers';
 
 /**
  * The three governance modes as radio cards, each with its description. A mode above the deployment's ceiling

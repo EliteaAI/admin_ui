@@ -1,6 +1,8 @@
-import { checkLabel } from '@/pages/GovernancePage/helpers/governance.helpers';
-
-import { FALLBACK_DESCRIPTIONS, MODE_RANK } from '../constants/governanceSettings.constants';
+import {
+  FALLBACK_DESCRIPTIONS,
+  MODE_RANK,
+} from '@/pages/GovernancePage/components/OverviewTab/constants/governanceSettings.constants';
+import { checkLabel } from '@/pages/GovernancePage/components/OverviewTab/helpers/governance.helpers';
 
 // The backend text wins; a section it leaves out falls back to the design copy
 export const mergeDescriptions = descriptions => {
@@ -71,7 +73,7 @@ export const buildUpdateBody = (draft, data) => {
   };
 };
 
-export const blockingFailedChecks = preflight =>
+const blockingFailedChecks = preflight =>
   (preflight?.checks ?? []).filter(check => check.status === 'fail' && check.blocking);
 
 export const checkSeverity = check => {

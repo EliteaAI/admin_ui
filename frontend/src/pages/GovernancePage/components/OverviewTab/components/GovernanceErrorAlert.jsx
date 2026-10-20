@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Alert, Box, Chip, Typography } from '@mui/material';
 
-import { checkLabel } from '@/pages/GovernancePage/helpers/governance.helpers';
+import { checkLabel } from '@/pages/GovernancePage/components/OverviewTab/helpers/governance.helpers';
 
 /** A backend refusal `{ error, code }` as a readable message with the code chip beside it. */
 const GovernanceErrorAlert = memo(props => {

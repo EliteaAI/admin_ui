@@ -499,9 +499,13 @@ Run `npm run format` and `npm run lint` before committing (see the `/prepare-com
 ## Testing and verification
 
 - **Build**: `npm run build` must pass for every change.
-- **Unit tests**: no test runner is installed. If you add tests, add Vitest + React Testing Library, put them
-  in a co-located `__tests__/` folder (never next to source files), wrap renders in `ThemeProvider`, select by
-  `data-testid`, and add the `test` script in the same change.
+- **Unit tests**: Vitest and React Testing Library are installed. `npm test` runs them once (`vitest run`,
+  jsdom). Tests live in a co-located `__tests__/` folder (never next to source files) and are named
+  `<name>.test.jsx`. Import the code under test through its barrel or `@/…` path, never `../`. Wrap renders in
+  `ThemeProvider` (with the real store when the component uses RTK Query), select by `data-testid`, and
+  replace only the network (`fetch`), not the hooks or the store. Import `describe`/`it`/`expect`/`vi` from
+  `vitest` (globals are off). `frontend/vitest.setup.js` registers the jest-dom matchers, cleans up after each
+  test and sets `admin_ui_config.vite_server_url` to an absolute URL so `fetch` works in Node.
 - **Manual check**: for UI changes, run `npm run dev` against a real backend and test in the browser. Admin
   actions often need specific permissions, so say which role you checked with.
 - Report checks you skipped or that failed, with the reason. Never report them as passing.

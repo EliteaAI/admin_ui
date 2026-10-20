@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { OverviewTab } from '@/pages/GovernancePage/components/OverviewTab';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { OverviewTab } from '../components/OverviewTab';
 import {
   AUDIT_PATH,
   HISTORY_PATH,

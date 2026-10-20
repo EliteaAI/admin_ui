@@ -21,12 +21,11 @@ import {
 } from '@/api/governance.api';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
-import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
-import SecurityEventsDrawer from '@/pages/GovernancePage/components/SecurityEventsDrawer';
-import { formatDateTime, toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
 
+import GovernanceErrorAlert from './components/GovernanceErrorAlert';
 import ModeSelector from './components/ModeSelector';
 import PreflightPanel from './components/PreflightPanel';
+import SecurityEventsDrawer from './components/SecurityEventsDrawer';
 import SettingRow from './components/SettingRow';
 import SettingsHistoryDrawer from './components/SettingsHistoryDrawer';
 import SwitchModeDialog from './components/SwitchModeDialog';
@@ -36,6 +35,7 @@ import {
   MAX_POLICY_REVISION,
   READ_ERROR_TEXT,
 } from './constants/governanceSettings.constants';
+import { formatDateTime, toGovernanceError } from './helpers/governance.helpers';
 import {
   buildUpdateBody,
   fillPlaceholders,
@@ -421,8 +421,8 @@ const OverviewTab = memo(() => {
             sx={styles.muted}
             data-testid="governance-readonly-note"
           >
-            These settings are read-only for you. Changing them needs the governance.settings.manage
-            permission.
+            These settings are read-only for you. Changing them needs the{' '}
+            {PERMISSIONS.governance.settings.manage} permission.
           </Typography>
         )}
       </Box>

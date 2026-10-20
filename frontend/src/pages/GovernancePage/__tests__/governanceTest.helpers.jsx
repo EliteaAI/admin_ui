@@ -5,14 +5,15 @@ import { vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 import { adminApi } from '@/api/admin.api';
+import { PERMISSIONS } from '@/constants/permissions.constants';
 import store, { setPermissions, setRoles } from '@/store';
 import getDesignTokens from '@/theme/main.theme';
 import { render } from '@testing-library/react';
 
 const theme = createTheme(getDesignTokens('dark'));
 
-export const VIEW = 'governance.settings.view';
-export const MANAGE = 'governance.settings.manage';
+export const VIEW = PERMISSIONS.governance.settings.view;
+export const MANAGE = PERMISSIONS.governance.settings.manage;
 
 // The real store and RTK Query run; only the network is replaced
 export const renderWithProviders = (ui, options = {}) => {

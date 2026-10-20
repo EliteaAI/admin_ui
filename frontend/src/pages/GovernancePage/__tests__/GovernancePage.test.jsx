@@ -2,10 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PERMISSIONS, ROUTE_PERMISSIONS, SIDEBAR_PERMISSIONS } from '@/constants/permissions.constants';
 import { RouteDefinitions } from '@/constants/routes.constants';
+import { GovernancePage } from '@/pages/GovernancePage';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import GovernancePage from '../GovernancePage';
 import {
   HISTORY_PATH,
   MANAGE,
