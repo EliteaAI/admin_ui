@@ -104,6 +104,9 @@ const TOP_MENU_ITEMS = [
   },
 ];
 
+const TOOL_SPEND_SEGMENT = 'tool-spend';
+const TOOL_SPEND_ID_PREFIX = `${TOOL_SPEND_SEGMENT}-`;
+
 const BOTTOM_MENU_ITEMS = [
   {
     id: 'configuration',
@@ -145,10 +148,11 @@ const Sidebar = memo(() => {
   const canViewBudgets = hasAnyPermission(SIDEBAR_PERMISSIONS.budgets);
   const { data: toolSpendFeatures } = useToolSpendFeaturesQuery(undefined, { skip: !canViewBudgets });
 
-  // One entry per Tool Spend feature right after Budgets; id is the route's last segment
+  // One entry per Tool Spend feature right after Budgets
   const filteredTopMenuItems = useMemo(() => {
     const featureItems = (canViewBudgets ? toolSpendFeatures || [] : []).map(item => ({
-      id: item.feature,
+      // Prefixed so a feature name can never collide with a fixed entry's id or React key
+      id: `${TOOL_SPEND_ID_PREFIX}${item.feature}`,
       label: item.label,
       icon: TravelExploreIcon,
       url: `${RouteDefinitions.ToolSpend}/${item.feature}`,
@@ -172,6 +176,9 @@ const Sidebar = memo(() => {
     tabId => {
       const pathSegments = location.pathname.split('/');
       const lastSegment = pathSegments[pathSegments.length - 1];
+      const onToolSpend = pathSegments[pathSegments.length - 2] === TOOL_SPEND_SEGMENT;
+      // A feature page is matched by its full id, so a feature named like a fixed entry never lights both
+      if (onToolSpend) return tabId === `${TOOL_SPEND_ID_PREFIX}${lastSegment}`;
       return lastSegment === tabId;
     },
     [location.pathname],
