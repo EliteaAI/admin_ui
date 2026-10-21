@@ -27,7 +27,13 @@ const ManualContextTokensSettings = memo(() => {
   const styles = manualContextTokensSettingsStyles();
 
   if (readError)
-    return <Alert severity="error">Administration admin access is required to manage this setting.</Alert>;
+    return (
+      <Alert severity="error">
+        {readError.status === 403
+          ? 'Administration admin access is required to manage this setting.'
+          : readError.data?.error || 'Unable to load the manual Max Context Tokens setting.'}
+      </Alert>
+    );
   return (
     <Box sx={styles.root}>
       <Box sx={styles.toggleCard}>
