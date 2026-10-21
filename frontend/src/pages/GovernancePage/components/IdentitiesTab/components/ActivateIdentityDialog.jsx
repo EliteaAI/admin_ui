@@ -14,14 +14,9 @@ import {
 
 import { useAgentIdentityActionMutation } from '@/api/governance.api';
 import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
-import { STALE_CODES } from '@/pages/GovernancePage/components/IdentitiesTab/constants/identities.constants';
-import {
-  isValidReference,
-  rowTitle,
-} from '@/pages/GovernancePage/components/IdentitiesTab/helpers/identities.helpers';
-import { toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
-
-const REFERENCE_HELP = 'Letters, digits and . _ : / @ - (at most 128 characters).';
+import { rowTitle } from '@/pages/GovernancePage/components/IdentitiesTab/helpers/identities.helpers';
+import { REFERENCE_HELP, STALE_CODES } from '@/pages/GovernancePage/constants/governance.constants';
+import { isValidReference, toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
 
 /**
  * Approves and activates an identity. Both the approval reference and the policy revision are required and are

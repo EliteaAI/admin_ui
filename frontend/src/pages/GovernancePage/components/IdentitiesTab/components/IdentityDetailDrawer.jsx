@@ -1,19 +1,20 @@
 import { memo, useMemo } from 'react';
 
 import { useAgentIdentityGetQuery } from '@/api/governance.api';
-import DrawerShell from '@/pages/GovernancePage/components/DrawerShell';
+import DetailDrawer from '@/pages/GovernancePage/components/DetailDrawer';
+import GovernanceStateChip from '@/pages/GovernancePage/components/GovernanceStateChip';
 import { DIGEST_STATUS } from '@/pages/GovernancePage/components/IdentitiesTab/constants/identities.constants';
 import {
   modeLabel,
   rowTitle,
 } from '@/pages/GovernancePage/components/IdentitiesTab/helpers/identities.helpers';
-import { formatDateTime, toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
+import {
+  formatDateTime,
+  personName,
+  toGovernanceError,
+} from '@/pages/GovernancePage/helpers/governance.helpers';
 
 import DigestStatusChip from './DigestStatusChip';
-import IdentityDetailSection from './IdentityDetailSection';
-import IdentityStateChip from './IdentityStateChip';
-
-const person = user => user?.email ?? (user?.id != null ? `User ${user.id}` : null);
 
 // Only hashes, lengths and counts are shown. The backend sends no instruction text, and none is read here.
 const toolLine = tool =>
@@ -47,7 +48,16 @@ const IdentityDetailDrawer = memo(props => {
     if (!binding) return [];
 
     const lifecycle = [
-      { key: 'state', label: 'State', value: <IdentityStateChip state={binding.state} /> },
+      {
+        key: 'state',
+        label: 'State',
+        value: (
+          <GovernanceStateChip
+            state={binding.state}
+            testId="identity-state-chip"
+          />
+        ),
+      },
       { key: 'mode', label: 'Identity mode', value: modeLabel(binding.identity_mode) },
       { key: 'policy', label: 'Policy revision', value: binding.policy_revision },
       { key: 'approval', label: 'Approval reference', value: binding.approval_ref },
@@ -55,12 +65,12 @@ const IdentityDetailDrawer = memo(props => {
       {
         key: 'created',
         label: 'Created',
-        value: `${person(binding.created_by) ?? '-'} · ${formatDateTime(binding.created_at)}`,
+        value: `${personName(binding.created_by) ?? '-'} · ${formatDateTime(binding.created_at)}`,
       },
       {
         key: 'changed',
         label: 'State last changed by',
-        value: `${person(binding.state_changed_by) ?? '-'} · ${formatDateTime(binding.updated_at)}`,
+        value: `${personName(binding.state_changed_by) ?? '-'} · ${formatDateTime(binding.updated_at)}`,
       },
       ...(typeof data?.grants_count === 'number'
         ? [{ key: 'grants', label: 'Grants', value: String(data.grants_count) }]
@@ -117,31 +127,16 @@ const IdentityDetailDrawer = memo(props => {
     ];
   }, [binding, data, inputs]);
 
-  const rows = useMemo(
-    () =>
-      sections.map(section => ({
-        key: section.key,
-        testId: `identity-section-${section.key}`,
-        content: (
-          <IdentityDetailSection
-            title={section.title}
-            fields={section.fields}
-          />
-        ),
-      })),
-    [sections],
-  );
-
   return (
-    <DrawerShell
+    <DetailDrawer
       open={open}
       onClose={onClose}
       title={row ? rowTitle(row) : 'Agent identity'}
       subtitle={row ? modeLabel(row.identity_mode) : undefined}
       testId="identity-detail-drawer"
-      isLoading={false}
+      testIdPrefix="identity"
+      sections={sections}
       errorText={error ? toGovernanceError(error, 'Failed to load the identity.').message : undefined}
-      rows={rows}
     />
   );
 });

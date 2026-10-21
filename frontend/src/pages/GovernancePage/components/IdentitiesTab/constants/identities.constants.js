@@ -1,30 +1,13 @@
-export const PAGE_SIZE_OPTIONS = [10, 20, 50];
-export const DEFAULT_PAGE_SIZE = 20;
-export const DEFAULT_SORT = { field: 'updated_at', direction: 'desc' };
-
-// The backend accepts exactly these letters, digits and . _ : / @ - (1 to 128 characters)
-export const REFERENCE_PATTERN = /^[A-Za-z0-9._:/@-]{1,128}$/;
-
-export const STATE_LABELS = {
-  draft: 'Draft',
-  provisioning: 'Provisioning',
-  pending_approval: 'Pending approval',
-  active: 'Active',
-  suspended: 'Suspended',
-  retiring: 'Retiring',
-  retired: 'Retired',
-};
-
-// Chip colour by state: in use is green, on its way in is blue, taken out of use is amber, finished is grey
-export const STATE_COLORS = {
-  draft: 'info',
-  provisioning: 'info',
-  pending_approval: 'info',
-  active: 'success',
-  suspended: 'warning',
-  retiring: 'warning',
-  retired: 'default',
-};
+// The states an identity goes through, in lifecycle order (the filter lists them)
+export const STATES = [
+  'draft',
+  'provisioning',
+  'pending_approval',
+  'active',
+  'suspended',
+  'retiring',
+  'retired',
+];
 
 export const MODE_LABELS = {
   elitea_native: 'Elitea native',
@@ -103,9 +86,6 @@ export const ACTIONS = {
     destructive: true,
   },
 };
-
-// A change that raced another operator, or a view that is out of date. The list is read again and the operator is told.
-export const STALE_CODES = ['CONCURRENT_CHANGE', 'INVALID_STATE'];
 
 export const SELF_APPROVAL_HINT =
   'You created or last changed this identity; another operator must approve it.';

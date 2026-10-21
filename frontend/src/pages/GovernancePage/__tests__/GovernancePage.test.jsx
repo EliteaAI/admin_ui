@@ -6,6 +6,7 @@ import { GovernancePage } from '@/pages/GovernancePage';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import { CRED_VIEW } from './credentialsTest.helpers';
 import {
   HISTORY_PATH,
   MANAGE,
@@ -40,11 +41,15 @@ describe('route and sidebar permissions', () => {
     expect(PERMISSIONS.governance.bindings.view).toBe('governance.bindings.view');
     expect(PERMISSIONS.governance.bindings.manage).toBe('governance.bindings.manage');
     expect(PERMISSIONS.governance.bindings.approve).toBe('governance.bindings.approve');
+    expect(PERMISSIONS.credentials.view).toBe('credentials.view');
+    expect(PERMISSIONS.credentials.manage).toBe('credentials.manage');
+    expect(PERMISSIONS.credentials.probe).toBe('credentials.probe');
+    expect(PERMISSIONS.credentials.approve).toBe('credentials.approve');
   });
 });
 
 describe('page shell', () => {
-  const setup = (route = '/governance', permissions = [VIEW, MANAGE, BINDINGS_VIEW]) => {
+  const setup = (route = '/governance', permissions = [VIEW, MANAGE, BINDINGS_VIEW, CRED_VIEW]) => {
     mockApi({
       [`GET ${SETTINGS_PATH}`]: ok(makeSettings()),
       [`GET ${HISTORY_PATH}`]: ok(emptyHistory),
@@ -62,15 +67,30 @@ describe('page shell', () => {
     expect(screen.getByTestId('governance-tab-overview')).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('shows a placeholder on the tabs that are not built yet', async () => {
-    setup();
+  it('opens the Credentials tab, and the Grants tab, for operators who can view credentials', async () => {
+    setup('/governance', [VIEW, CRED_VIEW]);
     const user = userEvent.setup();
 
     await user.click(screen.getByTestId('governance-tab-credentials'));
+    expect(await screen.findByTestId('governance-credentials')).toBeInTheDocument();
+    expect(screen.queryByTestId('governance-overview')).not.toBeInTheDocument();
 
-    expect(screen.getByTestId('governance-coming-soon')).toHaveTextContent(
-      'Credentials is coming in the next update.',
-    );
+    await user.click(screen.getByTestId('governance-tab-grants'));
+    expect(await screen.findByTestId('governance-grants')).toBeInTheDocument();
+  });
+
+  it('hides the Credentials and Grants tabs without the credentials view permission', async () => {
+    setup('/governance?tab=credentials', [VIEW]);
+
+    expect(await screen.findByTestId('governance-overview')).toBeInTheDocument();
+    expect(screen.queryByTestId('governance-tab-credentials')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('governance-tab-grants')).not.toBeInTheDocument();
+  });
+
+  it('explains on the Mandates tab that mandates are managed through the admin task for now', async () => {
+    setup('/governance?tab=mandates');
+
+    expect(await screen.findByTestId('governance-mandates')).toHaveTextContent('manage_autonomous_mandate');
     expect(screen.queryByTestId('governance-overview')).not.toBeInTheDocument();
   });
 
@@ -96,9 +116,9 @@ describe('page shell', () => {
     expect(screen.queryByTestId('governance-tab-identities')).not.toBeInTheDocument();
   });
 
-  it('follows ?tab= for a tab that is not built yet', async () => {
-    setup('/governance?tab=grants');
-    expect(screen.getByTestId('governance-coming-soon')).toHaveTextContent('Grants');
+  it('follows ?tab= for the Grants tab', async () => {
+    setup('/governance?tab=grants', [VIEW, CRED_VIEW]);
+    expect(await screen.findByTestId('governance-grants')).toBeInTheDocument();
   });
 
   it('falls back to Overview for an unknown tab', async () => {

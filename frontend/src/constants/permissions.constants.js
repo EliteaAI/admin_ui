@@ -131,6 +131,9 @@ export const PERMISSIONS = {
   },
   credentials: {
     view: 'credentials.view',
+    manage: 'credentials.manage',
+    probe: 'credentials.probe',
+    approve: 'credentials.approve',
   },
 };
 
