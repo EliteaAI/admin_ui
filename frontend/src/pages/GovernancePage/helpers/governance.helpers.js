@@ -45,4 +45,6 @@ export const classLabel = value => OWNERSHIP_CLASS_LABELS[value] ?? value;
 
 export const isPersonal = row => row.ownership_class === 'personal';
 
-export const referenceTitle = row => row.configuration?.title ?? row.provider ?? 'Credential';
+// The configuration title; when the backend sends none, the first 8 characters of its uuid tell two rows of one provider apart
+export const referenceTitle = row =>
+  row.configuration?.title ?? row.configuration?.uuid?.slice(0, 8) ?? row.provider ?? 'Credential';

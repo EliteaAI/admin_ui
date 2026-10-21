@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getRowActions,
+  groupSecretFields,
   secretFields,
+  typeMetadata,
   typeProperties,
 } from '@/pages/GovernancePage/components/CredentialsTab/helpers/credentials.helpers';
 import { parseValidUntil } from '@/pages/GovernancePage/components/GrantsTab/helpers/grants.helpers';
@@ -42,6 +44,29 @@ describe('secretFields', () => {
     expect(secretFields(typeProperties(makeTypes(), 'nope'))).toEqual([]);
     expect(secretFields(undefined)).toEqual([]);
     expect(typeProperties(undefined, 'github')).toBeUndefined();
+  });
+});
+
+describe('groupSecretFields', () => {
+  const fields = secretFields(typeProperties(makeTypes(), 'github'));
+
+  it('groups the fields by the subsections of the schema, in their order', () => {
+    expect(groupSecretFields(fields, typeMetadata(makeTypes(), 'github'))).toEqual([
+      { name: 'Token', fields: [fields[0]] },
+      { name: 'App private key', fields: [fields[1]] },
+    ]);
+  });
+
+  it('puts a field no subsection names last, as Other', () => {
+    const metadata = { sections: { auth: { subsections: [{ name: 'Token', fields: ['access_token'] }] } } };
+
+    expect(groupSecretFields(fields, metadata).map(group => group.name)).toEqual(['Token', 'Other']);
+  });
+
+  it('gives one group without a name when the schema has no subsections', () => {
+    expect(groupSecretFields(fields, undefined)).toEqual([{ name: null, fields }]);
+    expect(groupSecretFields(fields, { sections: {} })).toEqual([{ name: null, fields }]);
+    expect(groupSecretFields([], undefined)).toEqual([]);
   });
 });
 

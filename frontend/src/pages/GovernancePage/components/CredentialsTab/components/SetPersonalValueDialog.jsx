@@ -14,7 +14,9 @@ import {
 
 import { useConfigurationTypeListQuery, useCredentialMaterialPutMutation } from '@/api/governance.api';
 import {
+  groupSecretFields,
   secretFields,
+  typeMetadata,
   typeProperties,
 } from '@/pages/GovernancePage/components/CredentialsTab/helpers/credentials.helpers';
 import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
@@ -36,6 +38,8 @@ const isWildcard = field => field.path.endsWith(WILDCARD);
  * Sets the value of a personal credential. Write-only: the fields are password inputs, the value is sent once and
  * never shown again, and everything typed is cleared when the dialog closes or the value is sent. The names of the
  * fields come from the schema of the configuration type (a map of passwords asks for the names of its entries too).
+ * The fields are alternatives (a token, or a password, or a key): none is required, the filled ones are sent, and the
+ * schema's subsections, when it has them, group the fields by authentication method.
  * The write is sent with the generation the operator saw (`expected_generation`).
  * `onDone({ outcome: 'done' | 'stale', row, generation })`.
  */
@@ -58,22 +62,25 @@ const SetPersonalValueDialog = memo(props => {
   const [putMaterial, { isLoading, reset: resetMutation }] = useCredentialMaterialPutMutation();
 
   const fields = useMemo(() => (row ? secretFields(typeProperties(types, row.provider)) : []), [types, row]);
+  const groups = useMemo(
+    () => groupSecretFields(fields, typeMetadata(types, row?.provider)),
+    [fields, types, row?.provider],
+  );
   const plainFields = useMemo(() => fields.filter(field => !isWildcard(field)), [fields]);
   const wildcardFields = useMemo(() => fields.filter(isWildcard), [fields]);
 
-  const entryCount = wildcardFields.reduce((sum, field) => sum + (entries[field.path]?.length ?? 0), 0);
-  const entriesComplete = wildcardFields.every(field => {
+  // An entry of a map is sent when it has a name and a value; one with only half of that, or a repeated name, blocks
+  const entriesState = wildcardFields.map(field => {
     const list = entries[field.path] ?? [];
-    const keys = list.map(entry => entry.key.trim());
-    return list.every(entry => entry.key.trim() && entry.value) && new Set(keys).size === keys.length;
+    const complete = list.filter(entry => entry.key.trim() && entry.value);
+    const half = list.some(entry => Boolean(entry.key.trim()) !== Boolean(entry.value));
+    const keys = complete.map(entry => entry.key.trim());
+    return { field, complete, valid: !half && new Set(keys).size === keys.length };
   });
-  const plainComplete = plainFields.every(field => values[field.path]);
+  const filledPlain = plainFields.filter(field => values[field.path]);
+  const filledCount = filledPlain.length + entriesState.reduce((sum, item) => sum + item.complete.length, 0);
   const canSubmit =
-    fields.length > 0 &&
-    plainFields.length + entryCount > 0 &&
-    plainComplete &&
-    entriesComplete &&
-    !isLoading;
+    fields.length > 0 && filledCount > 0 && entriesState.every(item => item.valid) && !isLoading;
 
   // Nothing typed outlives the dialog
   const clear = useCallback(() => {
@@ -123,12 +130,13 @@ const SetPersonalValueDialog = memo(props => {
   const handleSubmit = useCallback(async () => {
     setError(null);
     const body = {};
-    plainFields.forEach(field => {
+    // Only what the operator filled in: the other fields belong to other authentication methods
+    filledPlain.forEach(field => {
       body[field.path] = values[field.path];
     });
-    wildcardFields.forEach(field => {
+    entriesState.forEach(({ field, complete }) => {
       const prefix = field.path.slice(0, -WILDCARD.length);
-      (entries[field.path] ?? []).forEach(entry => {
+      complete.forEach(entry => {
         body[`${prefix}.${entry.key.trim()}`] = entry.value;
       });
     });
@@ -153,18 +161,7 @@ const SetPersonalValueDialog = memo(props => {
       // The mutation state keeps the arguments of the call; drop them with the value
       resetMutation();
     }
-  }, [
-    plainFields,
-    wildcardFields,
-    values,
-    entries,
-    putMaterial,
-    projectId,
-    row,
-    clear,
-    onDone,
-    resetMutation,
-  ]);
+  }, [filledPlain, entriesState, values, putMaterial, projectId, row, clear, onDone, resetMutation]);
 
   if (!row) return null;
 
@@ -208,30 +205,56 @@ const SetPersonalValueDialog = memo(props => {
               The secret fields of this credential type could not be read, so no value can be set.
             </Typography>
           )}
-          {plainFields.map(field => (
-            <TextField
-              key={field.path}
-              type="password"
-              autoComplete="new-password"
-              size="small"
-              label={field.label}
-              required
-              value={values[field.path] ?? ''}
-              onChange={handleValueChange(field.path)}
-              helperText={field.label === field.path ? undefined : field.path}
-              inputProps={{ 'data-testid': `credential-value-${field.path}` }}
-            />
-          ))}
-          {wildcardFields.map(field => (
-            <MaterialEntriesField
-              key={field.path}
-              label={field.label}
-              entries={entries[field.path] ?? []}
-              onAdd={handleAddEntry(field.path)}
-              onChange={handleEntryChange(field.path)}
-              onRemove={handleEntryRemove(field.path)}
-              testId={`credential-value-${field.path}`}
-            />
+          {fields.length > 0 && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.muted}
+              data-testid="credential-value-hint"
+            >
+              Fill in the field(s) your authentication method uses; the others stay empty.
+            </Typography>
+          )}
+          {groups.map(group => (
+            <Box
+              key={group.name ?? 'fields'}
+              sx={styles.group}
+              data-testid="credential-value-group"
+            >
+              {group.name && (
+                <Typography
+                  variant="labelSmall"
+                  sx={styles.muted}
+                  data-testid="credential-value-caption"
+                >
+                  {group.name}
+                </Typography>
+              )}
+              {group.fields.map(field =>
+                isWildcard(field) ? (
+                  <MaterialEntriesField
+                    key={field.path}
+                    label={field.label}
+                    entries={entries[field.path] ?? []}
+                    onAdd={handleAddEntry(field.path)}
+                    onChange={handleEntryChange(field.path)}
+                    onRemove={handleEntryRemove(field.path)}
+                    testId={`credential-value-${field.path}`}
+                  />
+                ) : (
+                  <TextField
+                    key={field.path}
+                    type="password"
+                    autoComplete="new-password"
+                    size="small"
+                    label={field.label}
+                    value={values[field.path] ?? ''}
+                    onChange={handleValueChange(field.path)}
+                    helperText={field.label === field.path ? undefined : field.path}
+                    inputProps={{ 'data-testid': `credential-value-${field.path}` }}
+                  />
+                ),
+              )}
+            </Box>
           ))}
         </Box>
       </DialogContent>
@@ -265,6 +288,14 @@ const setPersonalValueDialogStyles = () => ({
     gap: '1rem',
     paddingTop: '0.25rem',
   },
+  group: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+  },
+  muted: ({ palette }) => ({
+    color: palette.text.metrics,
+  }),
 });
 
 export default SetPersonalValueDialog;

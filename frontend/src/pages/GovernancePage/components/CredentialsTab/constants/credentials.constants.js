@@ -18,7 +18,7 @@ export const VALUE_STATES = ['pending', 'validated', 'suspended'];
 export const CHECK_STATES = ['pending', 'validated', 'active'];
 
 export const PERSONAL_NOTICE =
-  'Recorded and checked for every run. The agent starts using this personal credential when runtime release ships; until then it uses the configuration’s own credential.';
+  'Recorded and checked for every run. While this personal credential is not active, runs of its owner on agents that use this configuration are refused; once active, those runs use it instead of the shared credential.';
 
 export const SELF_APPROVAL_HINT =
   'You created this reference or wrote its value; another operator must approve it.';

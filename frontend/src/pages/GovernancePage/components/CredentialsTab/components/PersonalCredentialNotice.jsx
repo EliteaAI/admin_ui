@@ -4,7 +4,7 @@ import { Alert } from '@mui/material';
 
 import { PERSONAL_NOTICE } from '@/pages/GovernancePage/components/CredentialsTab/constants/credentials.constants';
 
-/** What a personal credential does until runtime release ships: it is checked for every run, but not used yet. */
+/** What a personal credential means for its owner's runs: refused while it is not active, used instead of the shared credential once it is. */
 const PersonalCredentialNotice = memo(props => {
   const { sx } = props;
 

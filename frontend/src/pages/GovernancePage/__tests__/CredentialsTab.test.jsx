@@ -118,6 +118,34 @@ describe('list', () => {
     );
   });
 
+  it('words the personal notice for the released runtime', async () => {
+    setup([makePersonal()], {}, [CRED_VIEW]);
+    const notice = await screen.findByTestId('credential-personal-notice');
+    expect(notice).toHaveTextContent('While this personal credential is not active, runs of its owner');
+    expect(notice).toHaveTextContent('those runs use it instead of the shared credential.');
+    expect(notice).not.toHaveTextContent('runtime release ships');
+  });
+
+  it('shows the start of the configuration uuid when the title is missing, not the provider again', async () => {
+    setup(
+      [
+        makeReference({
+          id: 'r1',
+          configuration: { uuid: 'becf88bf-0000-4000-8000-000000000001', title: null },
+        }),
+        makeReference({
+          id: 'r2',
+          configuration: { uuid: '1a2b3c4d-0000-4000-8000-000000000002', title: null },
+        }),
+      ],
+      {},
+      [CRED_VIEW],
+    );
+
+    expect(await screen.findByTestId('credential-open-r1')).toHaveTextContent('becf88bf');
+    expect(screen.getByTestId('credential-open-r2')).toHaveTextContent('1a2b3c4d');
+  });
+
   it('shows no personal notice for shared credentials', async () => {
     setup([makeReference()], {}, [CRED_VIEW]);
     await screen.findByTestId('credential-open-r1');
@@ -755,13 +783,60 @@ describe('personal value dialog', () => {
     ).toBeInTheDocument();
   });
 
-  it('keeps Store value disabled until every field has a value', async () => {
+  it('marks no field as required and says the fields are alternatives', async () => {
+    await openValue();
+
+    const token = await screen.findByTestId('credential-value-access_token');
+    expect(token).not.toBeRequired();
+    expect(screen.getByTestId('credential-value-app.private_key')).not.toBeRequired();
+    expect(screen.getByTestId('credential-value-dialog').textContent).not.toContain('*');
+    expect(screen.getByTestId('credential-value-hint')).toHaveTextContent(
+      'Fill in the field(s) your authentication method uses; the others stay empty.',
+    );
+  });
+
+  it('groups the fields by authentication method when the schema names them', async () => {
+    await openValue();
+
+    await screen.findByTestId('credential-value-access_token');
+    expect(screen.getAllByTestId('credential-value-caption').map(caption => caption.textContent)).toEqual([
+      'Token',
+      'App private key',
+    ]);
+    const [tokenGroup, keyGroup] = screen.getAllByTestId('credential-value-group');
+    expect(within(tokenGroup).getByTestId('credential-value-access_token')).toBeInTheDocument();
+    expect(within(keyGroup).getByTestId('credential-value-app.private_key')).toBeInTheDocument();
+  });
+
+  it('shows a flat list, without captions, when the schema has no subsections', async () => {
+    await openValue(makePersonal({ provider: 'openapi' }));
+
+    await screen.findByTestId('credential-value-headers.*-add');
+    expect(screen.queryByTestId('credential-value-caption')).not.toBeInTheDocument();
+  });
+
+  it('keeps Store value disabled while nothing is filled in and enables it with one field', async () => {
     const { user } = await openValue();
 
-    await user.type(await screen.findByTestId('credential-value-access_token'), SECRET);
+    const token = await screen.findByTestId('credential-value-access_token');
     expect(screen.getByTestId('credential-value-submit')).toBeDisabled();
-    await user.type(screen.getByTestId('credential-value-app.private_key'), SECOND_SECRET);
+    await user.type(token, SECRET);
     expect(screen.getByTestId('credential-value-submit')).toBeEnabled();
+    await user.clear(token);
+    expect(screen.getByTestId('credential-value-submit')).toBeDisabled();
+  });
+
+  it('sends only the fields that were filled in', async () => {
+    const { calls, user } = await openValue();
+
+    await user.type(await screen.findByTestId('credential-value-app.private_key'), SECOND_SECRET);
+    await user.click(screen.getByTestId('credential-value-submit'));
+
+    await waitFor(() => expect(putCalls(calls)).toHaveLength(1));
+    expect(putCalls(calls)[0].body).toEqual({
+      fields: { 'app.private_key': SECOND_SECRET },
+      expected_generation: 3,
+    });
   });
 
   it('writes the fields with the generation the operator saw and shows no value afterwards', async () => {

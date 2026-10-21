@@ -90,6 +90,18 @@ export const makeTypes = () => [
     type: 'github',
     section: 'credentials',
     config_schema: {
+      // The authentication methods: the secret fields are alternatives
+      metadata: {
+        sections: {
+          auth: {
+            required: false,
+            subsections: [
+              { name: 'Token', fields: ['access_token'] },
+              { name: 'App private key', fields: ['app'] },
+            ],
+          },
+        },
+      },
       properties: {
         data: {
           properties: {

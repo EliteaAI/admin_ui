@@ -44,6 +44,42 @@ export const secretFields = (properties, prefix = '', depth = 0) =>
     return [];
   });
 
+const firstSegment = path => path.split('.')[0];
+
+/**
+ * The secret fields grouped by the authentication method they belong to: `[{ name, fields }]`. The groups come from
+ * `metadata.sections.*.subsections` of the type's schema (`[{ name, fields }]`), in their order, and list only the
+ * secret fields. Fields no subsection names come last, as "Other" when there are groups, and a type without
+ * subsections gives one group without a name.
+ */
+export const groupSecretFields = (fields, metadata) => {
+  const sections = isObject(metadata?.sections) ? Object.values(metadata.sections) : [];
+  const subsections = sections
+    .flatMap(section => (Array.isArray(section?.subsections) ? section.subsections : []))
+    .filter(subsection => isObject(subsection) && Array.isArray(subsection.fields));
+
+  const placed = new Set();
+  const groups = subsections
+    .map(subsection => {
+      const members = fields.filter(
+        field =>
+          !placed.has(field.path) &&
+          (subsection.fields.includes(field.path) || subsection.fields.includes(firstSegment(field.path))),
+      );
+      members.forEach(field => placed.add(field.path));
+      return { name: String(subsection.name ?? ''), fields: members };
+    })
+    .filter(group => group.fields.length > 0);
+
+  const rest = fields.filter(field => !placed.has(field.path));
+  if (groups.length === 0) return rest.length > 0 ? [{ name: null, fields: rest }] : [];
+  return rest.length > 0 ? [...groups, { name: 'Other', fields: rest }] : groups;
+};
+
+// The metadata of a type (label, sections and their subsections), from the list of registered types
+export const typeMetadata = (types, provider) =>
+  (Array.isArray(types) ? types : []).find(entry => entry.type === provider)?.config_schema?.metadata;
+
 // The schema of a type's data, from the list of registered types
 export const typeProperties = (types, provider) =>
   (Array.isArray(types) ? types : []).find(entry => entry.type === provider)?.config_schema?.properties?.data
