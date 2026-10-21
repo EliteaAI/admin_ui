@@ -37,6 +37,7 @@ export const adminApi = createApi({
     'AuditHeatmap',
     'AuditTraceList',
     'AuditTraceHeatmap',
+    'AuditActionGroups',
     'PublicPermissions',
     'SupportPermissions',
     'GovernanceSettings',

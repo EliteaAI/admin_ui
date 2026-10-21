@@ -26,6 +26,7 @@ const ALL_EVENT_TYPES = [
   { value: 'agent', label: 'Agent' },
   { value: 'tool', label: 'Tool' },
   { value: 'llm', label: 'LLM' },
+  { value: 'guardrail', label: 'Guardrail' },
   { value: 'schedule', label: 'Schedule' },
   { value: 'admin_task', label: 'Admin Task' },
 ];

@@ -6,7 +6,9 @@ const defaultFilter = createFilterOptions();
 const MAX_DROPDOWN_OPTIONS = 50;
 
 const ArrayChipsInput = memo(props => {
-  const { value, onChange, suggestions, labels, placeholder } = props;
+  // `literal`: entries are taken verbatim and committed on Enter only (e.g. regex lists, where
+  // commas are part of the pattern such as `\d{3,}`); default mode treats comma as a separator.
+  const { value, onChange, suggestions, labels, placeholder, literal = false } = props;
 
   const styles = arrayChipsInputStyles();
 
@@ -78,25 +80,25 @@ const ArrayChipsInput = memo(props => {
     );
   }
 
-  // Fallback: plain text input with Enter/comma to add
-  const handleKeyDown = e => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const trimmed = inputValue.trim().replace(/,+$/, '');
-      if (trimmed && !value.includes(trimmed)) {
-        onChange([...value, trimmed]);
-      }
-      setInputValue('');
-    }
-  };
+  // Fallback: plain text input with Enter (and, unless `literal`, comma) to add
+  const normalize = text => (literal ? text.trim() : text.trim().replace(/,+$/, ''));
 
-  const handleBlur = () => {
-    const trimmed = inputValue.trim().replace(/,+$/, '');
+  const commitInput = () => {
+    const trimmed = normalize(inputValue);
     if (trimmed && !value.includes(trimmed)) {
       onChange([...value, trimmed]);
     }
     setInputValue('');
   };
+
+  const handleKeyDown = e => {
+    if (e.key === 'Enter' || (!literal && e.key === ',')) {
+      e.preventDefault();
+      commitInput();
+    }
+  };
+
+  const handleBlur = commitInput;
 
   return (
     <Box>

@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmailOutlined';
+import DataUsageOutlinedIcon from '@mui/icons-material/DataUsageOutlined';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import RecordVoiceOverOutlinedIcon from '@mui/icons-material/RecordVoiceOverOutlined';
@@ -13,6 +14,7 @@ import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.
 
 import AutoRoutingSettings from './components/AutoRoutingSettings';
 import ChatMentions from './components/ChatMentions';
+import ManualContextTokensSettings from './components/ManualContextTokensSettings';
 import VoiceFeatures from './components/VoiceFeatures';
 import { TRIGGER_FIELDS } from './constants/chatConfiguration.constants';
 
@@ -21,6 +23,7 @@ import { TRIGGER_FIELDS } from './constants/chatConfiguration.constants';
 const AUTO_ROUTING_SETTINGS_COUNT = 3;
 // Fixed toggle cards, not schema-driven: "Voice Features Enabled" and "Temporarily Disable Voice Features"
 const VOICE_FEATURES_SETTINGS_COUNT = 2;
+const MANUAL_CONTEXT_TOKENS_SETTINGS_COUNT = 1;
 
 const ChatConfigurationSection = memo(props => {
   const { voiceDraft, mentionsDraft, guardrailsDraft, guardrailsFields, initialBlock } = props;
@@ -70,6 +73,13 @@ const ChatConfigurationSection = memo(props => {
             onChange={mentionsDraft.onChange}
           />
         ),
+      },
+      {
+        id: 'manual_context_tokens',
+        title: 'Summarization Testing',
+        icon: DataUsageOutlinedIcon,
+        count: MANUAL_CONTEXT_TOKENS_SETTINGS_COUNT,
+        content: <ManualContextTokensSettings />,
       },
       {
         id: 'midturn_injection',

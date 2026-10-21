@@ -4,6 +4,7 @@ import BuildOutlined from '@mui/icons-material/BuildOutlined';
 import CableOutlined from '@mui/icons-material/CableOutlined';
 import HelpOutlineOutlined from '@mui/icons-material/HelpOutlineOutlined';
 import HttpOutlined from '@mui/icons-material/HttpOutlined';
+import PolicyOutlined from '@mui/icons-material/PolicyOutlined';
 import PowerSettingsNewOutlined from '@mui/icons-material/PowerSettingsNewOutlined';
 import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import SmartToyOutlined from '@mui/icons-material/SmartToyOutlined';
@@ -19,6 +20,7 @@ export const EVENT_TYPE_CONFIG = {
   agent: { icon: SmartToyOutlined, colorKey: 'agent', label: 'Agent' },
   tool: { icon: BuildOutlined, colorKey: 'tool', label: 'Tool' },
   llm: { icon: AutoAwesomeOutlined, colorKey: 'llm', label: 'LLM' },
+  guardrail: { icon: PolicyOutlined, colorKey: 'guardrail', label: 'Guardrail' },
   schedule: { icon: ScheduleOutlined, colorKey: 'schedule', label: 'Schedule' },
   admin_task: { icon: AssignmentOutlined, colorKey: 'admin_task', label: 'Admin Task' },
   lifecycle: { icon: PowerSettingsNewOutlined, colorKey: 'lifecycle', label: 'Lifecycle' },
