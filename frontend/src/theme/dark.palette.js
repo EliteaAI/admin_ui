@@ -465,6 +465,7 @@ const darkPalette = {
     agent: '#f59e0b',
     tool: '#10b981',
     llm: '#ec4899',
+    guardrail: '#ef4444',
     schedule: '#f59e0b',
     admin_task: '#06b6d4',
     lifecycle: '#22c55e',

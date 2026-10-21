@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Chip, Tab, Tabs } from '@mui/material';
 
 import {
+  useAuditActionGroupListQuery,
   useAuditHeatmapQuery,
   useAuditTraceHeatmapQuery,
   useAuditTraceListQuery,
@@ -15,8 +16,9 @@ import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import AuditTrailFilters from './components/AuditTrailFilters';
+import GuardrailDetectionsTable from './components/GuardrailDetectionsTable';
 
-const USER_EVENT_TYPES = ['api', 'socketio', 'rpc', 'agent', 'tool', 'llm'];
+const USER_EVENT_TYPES = ['api', 'socketio', 'rpc', 'agent', 'tool', 'llm', 'guardrail'];
 const SYSTEM_EVENT_TYPES = ['schedule', 'admin_task', 'lifecycle'];
 
 const USER_EVENT_TYPE_OPTIONS = [
@@ -27,6 +29,7 @@ const USER_EVENT_TYPE_OPTIONS = [
   { value: 'agent', label: 'Agent' },
   { value: 'tool', label: 'Tool' },
   { value: 'llm', label: 'LLM' },
+  { value: 'guardrail', label: 'Guardrail' },
 ];
 
 const SYSTEM_EVENT_TYPE_OPTIONS = [
@@ -35,6 +38,9 @@ const SYSTEM_EVENT_TYPE_OPTIONS = [
   { value: 'admin_task', label: 'Admin Task' },
   { value: 'lifecycle', label: 'Lifecycle' },
 ];
+
+// Audit actions written by the input guardrail (#6886)
+const INPUT_GUARDRAIL_ACTION_PREFIX = 'input:';
 
 const getTodayRange = () => {
   const from = new Date();
@@ -74,7 +80,7 @@ const AuditTrailPage = memo(() => {
   const [activePreset, setActivePreset] = useState(DEFAULT_PRESET);
   // Heatmap cell drill-down filter
   const [cellFilter, setCellFilter] = useState(null);
-  // View mode: 'traces' (grouped) or 'spans' (individual)
+  // View mode: 'traces' (grouped), 'spans' (individual) or 'detections' (input guardrail counts)
   const [viewMode, setViewMode] = useState('traces');
 
   // Draft filters (changed in UI but not yet applied)
@@ -180,6 +186,22 @@ const AuditTrailPage = memo(() => {
     [dateFromISO, dateToISO, debouncedSearch, appliedFilters, traceFilter, refreshKey, effectiveEventType],
   );
 
+  // --- Query params for input guardrail detections (counts per action) ---
+  const detectionQueryParams = useMemo(
+    () => ({
+      limit: pageSize,
+      offset: page * pageSize,
+      event_type: 'guardrail',
+      action_prefix: INPUT_GUARDRAIL_ACTION_PREFIX,
+      date_from: dateFromISO,
+      date_to: dateToISO,
+      project_id: appliedFilters.project_id || undefined,
+      user_id: appliedFilters.user_id || undefined,
+      _refresh: refreshKey,
+    }),
+    [pageSize, page, dateFromISO, dateToISO, appliedFilters, refreshKey],
+  );
+
   // --- Conditional data fetching (inactive view is skipped) ---
   const {
     data: spanData,
@@ -197,6 +219,15 @@ const AuditTrailPage = memo(() => {
   } = useAuditTraceListQuery(traceQueryParams, {
     refetchOnMountOrArgChange: true,
     skip: viewMode !== 'traces',
+  });
+
+  const {
+    data: detectionData,
+    isFetching: detectionFetching,
+    isError: detectionError,
+  } = useAuditActionGroupListQuery(detectionQueryParams, {
+    refetchOnMountOrArgChange: true,
+    skip: viewMode !== 'detections',
   });
 
   const { data: spanHeatmapData, isFetching: spanHeatmapFetching } = useAuditHeatmapQuery(heatmapParams, {
@@ -225,6 +256,8 @@ const AuditTrailPage = memo(() => {
   // --- Handlers ---
   const handleAuditTabChange = useCallback((_, newValue) => {
     setAuditTab(newValue);
+    // Detections exist on the User tab only
+    setViewMode(prev => (newValue !== 'user' && prev === 'detections' ? 'traces' : prev));
     setPage(0);
     setCellFilter(null);
     setTraceFilter(null);
@@ -236,6 +269,14 @@ const AuditTrailPage = memo(() => {
   const handleSearchChange = useCallback(value => {
     setSearch(value);
     setPage(0);
+  }, []);
+
+  const handleDetectionClick = useCallback(action => {
+    setSearch(action);
+    setViewMode('spans');
+    setPage(0);
+    setSortBy('timestamp');
+    setSortOrder('desc');
   }, []);
 
   const handleViewModeChange = useCallback((_, newValue) => {
@@ -365,13 +406,15 @@ const AuditTrailPage = memo(() => {
         eventTypes={eventTypeOptions}
       />
 
-      <AuditHeatmap
-        data={activeHeatmapData?.data}
-        metadata={activeHeatmapData?.metadata}
-        isFetching={activeHeatmapFetching}
-        onCellClick={handleCellClick}
-        viewMode={viewMode}
-      />
+      {viewMode !== 'detections' && (
+        <AuditHeatmap
+          data={activeHeatmapData?.data}
+          metadata={activeHeatmapData?.metadata}
+          isFetching={activeHeatmapFetching}
+          onCellClick={handleCellClick}
+          viewMode={viewMode}
+        />
+      )}
 
       <Box sx={styles.tabsContainer}>
         <Tabs
@@ -389,11 +432,33 @@ const AuditTrailPage = memo(() => {
             value="spans"
             sx={styles.tab}
           />
+          {auditTab === 'user' && (
+            <Tab
+              label="Detections"
+              value="detections"
+              sx={styles.tab}
+            />
+          )}
         </Tabs>
       </Box>
 
       <Box sx={styles.tableContainer}>
-        {activeError ? (
+        {viewMode === 'detections' ? (
+          detectionError ? (
+            <Box sx={styles.errorContainer}>Failed to load input guardrail detections.</Box>
+          ) : (
+            <GuardrailDetectionsTable
+              groups={detectionData?.groups}
+              total={detectionData?.total ?? 0}
+              page={page}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              isFetching={detectionFetching}
+              onActionClick={handleDetectionClick}
+            />
+          )
+        ) : activeError ? (
           <Box sx={styles.errorContainer}>
             Failed to load audit {viewMode === 'traces' ? 'traces' : 'events'}.
           </Box>
