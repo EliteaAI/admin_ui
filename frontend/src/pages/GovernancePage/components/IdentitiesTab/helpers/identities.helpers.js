@@ -2,15 +2,10 @@ import {
   ACTIONS,
   ACTIONS_BY_STATE,
   MODE_LABELS,
-  REFERENCE_PATTERN,
-  STATE_LABELS,
+  SELF_APPROVAL_HINT,
 } from '@/pages/GovernancePage/components/IdentitiesTab/constants/identities.constants';
 
-export const stateLabel = state => STATE_LABELS[state] ?? state;
-
 export const modeLabel = mode => MODE_LABELS[mode] ?? mode;
-
-export const isValidReference = value => REFERENCE_PATTERN.test(value);
 
 export const rowTitle = row => `${row.application?.name ?? 'Agent'} ${row.version?.name ?? ''}`.trim();
 
@@ -20,16 +15,21 @@ const isOwnApproval = (row, userId) =>
 
 /**
  * The actions the menu offers for a row: those valid from its state that the operator may run.
- * `activate` needs the approve permission, the others the manage permission. Each entry is `{ action, label, disabled }`.
+ * `activate` needs the approve permission, the others the manage permission. Each entry is
+ * `{ action, label, disabled, hint }`; `hint` says why an entry is disabled.
  */
 export const getRowActions = (row, { canManage, canApprove, userId }) =>
   (ACTIONS_BY_STATE[row.state] ?? [])
     .filter(action => (action === 'activate' ? canApprove : canManage))
-    .map(action => ({
-      action,
-      label: ACTIONS[action].label,
-      disabled: action === 'activate' && isOwnApproval(row, userId),
-    }));
+    .map(action => {
+      const disabled = action === 'activate' && isOwnApproval(row, userId);
+      return {
+        action,
+        label: ACTIONS[action].label,
+        disabled,
+        hint: disabled ? SELF_APPROVAL_HINT : undefined,
+      };
+    });
 
 export const buildListParams = ({ projectId, state, mode, search, page, pageSize, sort }) => ({
   projectId,

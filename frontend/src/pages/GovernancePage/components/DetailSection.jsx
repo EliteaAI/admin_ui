@@ -2,11 +2,14 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-/** A titled list of label / value pairs. `fields` is `[{ key, label, value, mono }]`; a value can be text or a node. */
-const IdentityDetailSection = memo(props => {
-  const { title, fields } = props;
+/**
+ * A titled list of label / value pairs. `fields` is `[{ key, label, value, mono }]`; a value can be text or a node.
+ * Each field has the test id `<testIdPrefix>-field-<key>`.
+ */
+const DetailSection = memo(props => {
+  const { title, fields, testIdPrefix = 'governance' } = props;
 
-  const styles = identityDetailSectionStyles();
+  const styles = detailSectionStyles();
 
   return (
     <>
@@ -15,7 +18,7 @@ const IdentityDetailSection = memo(props => {
         <Box
           key={field.key}
           sx={styles.field}
-          data-testid={`identity-field-${field.key}`}
+          data-testid={`${testIdPrefix}-field-${field.key}`}
         >
           <Typography
             variant="bodySmall"
@@ -39,10 +42,10 @@ const IdentityDetailSection = memo(props => {
   );
 });
 
-IdentityDetailSection.displayName = 'IdentityDetailSection';
+DetailSection.displayName = 'DetailSection';
 
 /** @type {MuiSx} */
-const identityDetailSectionStyles = () => ({
+const detailSectionStyles = () => ({
   field: {
     display: 'flex',
     flexDirection: 'column',
@@ -62,4 +65,4 @@ const identityDetailSectionStyles = () => ({
   },
 });
 
-export default IdentityDetailSection;
+export default DetailSection;

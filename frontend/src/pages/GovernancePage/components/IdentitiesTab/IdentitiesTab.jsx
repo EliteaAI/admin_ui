@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Alert, Box, Snackbar } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useAgentIdentityListQuery, useGovernanceSettingsGetQuery } from '@/api/governance.api';
 import { GridTableContainer } from '@/components/GridTable';
@@ -10,8 +10,11 @@ import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
 import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
+import GovernanceSnackbar from '@/pages/GovernancePage/components/GovernanceSnackbar';
 import { toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
 import { useGovernanceProject } from '@/pages/GovernancePage/hooks/useGovernanceProject.hooks';
+import { useGovernanceSnackbar } from '@/pages/GovernancePage/hooks/useGovernanceSnackbar.hooks';
+import { useGovernanceTable } from '@/pages/GovernancePage/hooks/useGovernanceTable.hooks';
 
 import ActivateIdentityDialog from './components/ActivateIdentityDialog';
 import ConfirmIdentityActionDialog from './components/ConfirmIdentityActionDialog';
@@ -19,11 +22,9 @@ import CreateIdentityDialog from './components/CreateIdentityDialog';
 import IdentitiesTable from './components/IdentitiesTable';
 import IdentitiesToolbar from './components/IdentitiesToolbar';
 import IdentityDetailDrawer from './components/IdentityDetailDrawer';
-import { DEFAULT_PAGE_SIZE, DEFAULT_SORT } from './constants/identities.constants';
 import { buildListParams, rowTitle, successMessage } from './helpers/identities.helpers';
 
 const NO_PROJECT_TEXT = 'Choose a project to see its agent identities.';
-const CLOSED_SNACKBAR = { open: false, message: '', severity: 'success' };
 
 /**
  * The Agent identities tab: the agent identities of one project, their state and whether the agent still matches
@@ -47,15 +48,13 @@ const IdentitiesTab = memo(() => {
   const debouncedSearch = useDebounceValue(search, 300);
   const [stateFilter, setStateFilter] = useState('');
   const [modeFilter, setModeFilter] = useState('');
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [sort, setSort] = useState(DEFAULT_SORT);
+  const { page, setPage, resetPage, pageSize, handlePageSizeChange, sort, handleSort } = useGovernanceTable();
 
   const [detailRow, setDetailRow] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [activateRow, setActivateRow] = useState(null);
-  const [snackbar, setSnackbar] = useState(CLOSED_SNACKBAR);
+  const { snackbar, showSuccess, showWarning, close: handleSnackbarClose } = useGovernanceSnackbar();
 
   const projectId = project?.id;
 
@@ -83,39 +82,34 @@ const IdentitiesTab = memo(() => {
   const handleProjectChange = useCallback(
     next => {
       selectProject(next);
-      setPage(0);
+      resetPage();
     },
-    [selectProject],
+    [selectProject, resetPage],
   );
 
-  const handleSearchChange = useCallback(event => {
-    setSearch(event.target.value);
-    setPage(0);
-  }, []);
+  const handleSearchChange = useCallback(
+    event => {
+      setSearch(event.target.value);
+      resetPage();
+    },
+    [resetPage],
+  );
 
-  const handleStateChange = useCallback(event => {
-    setStateFilter(event.target.value);
-    setPage(0);
-  }, []);
+  const handleStateChange = useCallback(
+    event => {
+      setStateFilter(event.target.value);
+      resetPage();
+    },
+    [resetPage],
+  );
 
-  const handleModeChange = useCallback(event => {
-    setModeFilter(event.target.value);
-    setPage(0);
-  }, []);
-
-  const handleSort = useCallback(field => {
-    setSort(prev =>
-      prev.field === field
-        ? { field, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
-        : { field, direction: 'asc' },
-    );
-    setPage(0);
-  }, []);
-
-  const handlePageSizeChange = useCallback(value => {
-    setPageSize(value);
-    setPage(0);
-  }, []);
+  const handleModeChange = useCallback(
+    event => {
+      setModeFilter(event.target.value);
+      resetPage();
+    },
+    [resetPage],
+  );
 
   const handleDetails = useCallback(row => setDetailRow(row), []);
   const handleDetailsClose = useCallback(() => setDetailRow(null), []);
@@ -123,15 +117,14 @@ const IdentitiesTab = memo(() => {
   const handleCreateOpen = useCallback(() => setCreateOpen(true), []);
   const handleCreateClose = useCallback(() => setCreateOpen(false), []);
 
-  const handleCreated = useCallback(({ agentName, versionName }) => {
-    setCreateOpen(false);
-    setPage(0);
-    setSnackbar({
-      open: true,
-      message: `Identity for ${agentName} ${versionName} created as a draft.`,
-      severity: 'success',
-    });
-  }, []);
+  const handleCreated = useCallback(
+    ({ agentName, versionName }) => {
+      setCreateOpen(false);
+      resetPage();
+      showSuccess(`Identity for ${agentName} ${versionName} created as a draft.`);
+    },
+    [resetPage, showSuccess],
+  );
 
   const handleAction = useCallback((row, action) => {
     if (action === 'activate') setActivateRow(row);
@@ -142,21 +135,20 @@ const IdentitiesTab = memo(() => {
   const handleActivateClose = useCallback(() => setActivateRow(null), []);
 
   // A stale view means another operator changed the identity first. The list was read again by the refused call.
-  const handleActionDone = useCallback(({ outcome, row, action }) => {
-    setConfirmTarget(null);
-    setActivateRow(null);
-    setSnackbar(
-      outcome === 'stale'
-        ? {
-            open: true,
-            message: `${rowTitle(row)} was changed by someone else. The list is up to date now; check its state and try again.`,
-            severity: 'warning',
-          }
-        : { open: true, message: successMessage(row, action), severity: 'success' },
-    );
-  }, []);
-
-  const handleSnackbarClose = useCallback(() => setSnackbar(prev => ({ ...prev, open: false })), []);
+  const handleActionDone = useCallback(
+    ({ outcome, row, action }) => {
+      setConfirmTarget(null);
+      setActivateRow(null);
+      if (outcome === 'stale') {
+        showWarning(
+          `${rowTitle(row)} was changed by someone else. The list is up to date now; check its state and try again.`,
+        );
+      } else {
+        showSuccess(successMessage(row, action));
+      }
+    },
+    [showSuccess, showWarning],
+  );
 
   let emptyMessage = null;
   if (!project) emptyMessage = NO_PROJECT_TEXT;
@@ -245,22 +237,11 @@ const IdentitiesTab = memo(() => {
         onDone={handleActionDone}
       />
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
+      <GovernanceSnackbar
+        snackbar={snackbar}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={styles.snackbarAlert}
-          data-testid="identities-snackbar"
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+        testId="identities-snackbar"
+      />
     </Box>
   );
 });
@@ -279,9 +260,6 @@ const identitiesTabStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     padding: '3rem 1.5rem',
-  },
-  snackbarAlert: {
-    width: '100%',
   },
 });
 

@@ -4,16 +4,15 @@ import { Link } from '@mui/material';
 
 import { GridTableBody, GridTableHeader, GridTablePagination, GridTableRow } from '@/components/GridTable';
 import { useResponsiveColumns } from '@/hooks/useResponsiveColumns.hooks';
-import { PAGE_SIZE_OPTIONS } from '@/pages/GovernancePage/components/IdentitiesTab/constants/identities.constants';
+import GovernanceStateChip from '@/pages/GovernancePage/components/GovernanceStateChip';
 import {
   getRowActions,
   modeLabel,
 } from '@/pages/GovernancePage/components/IdentitiesTab/helpers/identities.helpers';
-import { formatDateTime } from '@/pages/GovernancePage/helpers/governance.helpers';
+import RowActionsMenu from '@/pages/GovernancePage/components/RowActionsMenu';
+import { buildPaginationProps, formatDateTime } from '@/pages/GovernancePage/helpers/governance.helpers';
 
 import DigestStatusChip from './DigestStatusChip';
-import IdentityRowActions from './IdentityRowActions';
-import IdentityStateChip from './IdentityStateChip';
 
 const COLUMNS = [
   { field: 'application_name', label: 'Agent', width: '1.4fr', sortable: true },
@@ -55,18 +54,7 @@ const IdentitiesTable = memo(props => {
   });
 
   const paginationProps = useMemo(
-    () => ({
-      totalRows: total,
-      pageSize,
-      isFirstPage: page === 0,
-      isLastPage: (page + 1) * pageSize >= total,
-      startRow: total > 0 ? page * pageSize + 1 : 0,
-      endRow: Math.min((page + 1) * pageSize, total),
-      handlePrevPage: () => onPageChange(Math.max(0, page - 1)),
-      handleNextPage: () => onPageChange(page + 1),
-      handlePageSizeChange: onPageSizeChange,
-      pageSizeOptions: PAGE_SIZE_OPTIONS,
-    }),
+    () => buildPaginationProps({ total, page, pageSize, onPageChange, onPageSizeChange }),
     [total, page, pageSize, onPageChange, onPageSizeChange],
   );
 
@@ -93,7 +81,12 @@ const IdentitiesTable = memo(props => {
         case 'digest_status':
           return <DigestStatusChip status={row.digest_status} />;
         case 'state':
-          return <IdentityStateChip state={row.state} />;
+          return (
+            <GovernanceStateChip
+              state={row.state}
+              testId="identity-state-chip"
+            />
+          );
         case 'created_by':
           return row.created_by?.email ?? '-';
         case 'updated_at':
@@ -107,11 +100,13 @@ const IdentitiesTable = memo(props => {
 
   const renderActions = useCallback(
     row => (
-      <IdentityRowActions
+      <RowActionsMenu
         row={row}
         actions={getRowActions(row, { canManage, canApprove, userId })}
         onDetails={onDetails}
         onAction={onAction}
+        testIdPrefix="identity"
+        ariaLabel="Identity actions"
       />
     ),
     [canManage, canApprove, userId, onDetails, onAction],

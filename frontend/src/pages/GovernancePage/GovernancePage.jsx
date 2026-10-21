@@ -10,11 +10,13 @@ import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
-import ComingSoonTab from './components/ComingSoonTab';
+import { CredentialsTab } from './components/CredentialsTab';
+import { GrantsTab } from './components/GrantsTab';
 import { IdentitiesTab } from './components/IdentitiesTab';
+import { MandatesTab } from './components/MandatesTab';
 import { OverviewTab } from './components/OverviewTab';
 
-// `permission` hides a tab from operators who could not read it; the tabs not built yet have none
+// `permission` hides a tab from operators who could not read it; the Mandates placeholder has none
 const TABS = [
   {
     id: 'overview',
@@ -28,9 +30,19 @@ const TABS = [
     permission: PERMISSIONS.governance.bindings.view,
     Content: IdentitiesTab,
   },
-  { id: 'credentials', label: 'Credentials' },
-  { id: 'grants', label: 'Grants' },
-  { id: 'mandates', label: 'Mandates' },
+  {
+    id: 'credentials',
+    label: 'Credentials',
+    permission: PERMISSIONS.credentials.view,
+    Content: CredentialsTab,
+  },
+  {
+    id: 'grants',
+    label: 'Grants',
+    permission: PERMISSIONS.credentials.view,
+    Content: GrantsTab,
+  },
+  { id: 'mandates', label: 'Mandates', Content: MandatesTab },
 ];
 
 const GovernancePage = memo(() => {
@@ -86,7 +98,7 @@ const GovernancePage = memo(() => {
         tabs={tabsElement}
         showBorder
       />
-      {currentTab.Content ? <currentTab.Content /> : <ComingSoonTab label={currentTab.label} />}
+      <currentTab.Content />
     </DrawerPage>
   );
 });

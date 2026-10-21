@@ -1,14 +1,19 @@
 import { memo } from 'react';
 
 import AddOutlined from '@mui/icons-material/AddOutlined';
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Tooltip } from '@mui/material';
+import { Box, Button, TextField, Tooltip } from '@mui/material';
 
+import FilterSelect from '@/pages/GovernancePage/components/FilterSelect';
 import {
   MODE_OPTIONS,
-  STATE_LABELS,
+  STATES,
 } from '@/pages/GovernancePage/components/IdentitiesTab/constants/identities.constants';
 import { modeLabel } from '@/pages/GovernancePage/components/IdentitiesTab/helpers/identities.helpers';
 import ProjectPicker from '@/pages/GovernancePage/components/ProjectPicker';
+import { stateLabel } from '@/pages/GovernancePage/helpers/governance.helpers';
+
+const STATE_OPTIONS = STATES.map(value => ({ value, label: stateLabel(value) }));
+const MODE_FILTER_OPTIONS = MODE_OPTIONS.map(value => ({ value, label: modeLabel(value) }));
 
 /** Project, filters and the create button of the Agent identities tab. */
 const IdentitiesToolbar = memo(props => {
@@ -46,70 +51,26 @@ const IdentitiesToolbar = memo(props => {
         sx={styles.search}
         inputProps={{ 'data-testid': 'identities-search' }}
       />
-      <FormControl
-        size="small"
-        sx={styles.filter}
+      <FilterSelect
+        label="State"
+        value={state}
+        onChange={onStateChange}
+        options={STATE_OPTIONS}
+        anyLabel="Any state"
         disabled={!project}
-      >
-        <InputLabel
-          shrink
-          id="identities-state-label"
-        >
-          State
-        </InputLabel>
-        <Select
-          labelId="identities-state-label"
-          label="State"
-          value={state}
-          onChange={onStateChange}
-          displayEmpty
-          notched
-          SelectDisplayProps={{ 'data-testid': 'identities-state-filter' }}
-        >
-          <MenuItem value="">Any state</MenuItem>
-          {Object.entries(STATE_LABELS).map(([value, label]) => (
-            <MenuItem
-              key={value}
-              value={value}
-              data-testid={`identities-state-${value}`}
-            >
-              {label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <FormControl
-        size="small"
-        sx={styles.filter}
+        testId="identities-state-filter"
+        itemTestIdPrefix="identities-state"
+      />
+      <FilterSelect
+        label="Identity mode"
+        value={mode}
+        onChange={onModeChange}
+        options={MODE_FILTER_OPTIONS}
+        anyLabel="Any mode"
         disabled={!project}
-      >
-        <InputLabel
-          shrink
-          id="identities-mode-label"
-        >
-          Identity mode
-        </InputLabel>
-        <Select
-          labelId="identities-mode-label"
-          label="Identity mode"
-          value={mode}
-          onChange={onModeChange}
-          displayEmpty
-          notched
-          SelectDisplayProps={{ 'data-testid': 'identities-mode-filter' }}
-        >
-          <MenuItem value="">Any mode</MenuItem>
-          {MODE_OPTIONS.map(value => (
-            <MenuItem
-              key={value}
-              value={value}
-              data-testid={`identities-mode-${value}`}
-            >
-              {modeLabel(value)}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+        testId="identities-mode-filter"
+        itemTestIdPrefix="identities-mode"
+      />
       {canCreate && (
         <Tooltip title={project ? '' : 'Choose a project first'}>
           <Box component="span">
@@ -143,9 +104,6 @@ const identitiesToolbarStyles = () => ({
   },
   search: {
     width: '14rem',
-  },
-  filter: {
-    minWidth: '10rem',
   },
 });
 
