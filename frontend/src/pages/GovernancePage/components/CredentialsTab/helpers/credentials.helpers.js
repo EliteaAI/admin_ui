@@ -2,6 +2,7 @@ import {
   ACTIONS,
   ACTION_ORDER,
   CHECK_STATES,
+  OWNER_ONLY_HINT,
   SELF_APPROVAL_HINT,
   STORE_LABELS,
   VALUE_STATES,
@@ -85,6 +86,9 @@ export const typeProperties = (types, provider) =>
   (Array.isArray(types) ? types : []).find(entry => entry.type === provider)?.config_schema?.properties?.data
     ?.properties;
 
+// Only the owner sets a personal value; the backend refuses anyone else (OWNER_ONLY)
+const isNotOwner = (row, userId) => userId == null || row.owner?.id !== userId;
+
 const isOwnApproval = (row, userId) =>
   userId != null && [row.created_by?.id, row.written_by?.id].some(id => id != null && id === userId);
 
@@ -122,16 +126,18 @@ const permissionOf = (action, { canManage, canProbe, canApprove }) => {
 
 /**
  * The actions the menu offers for a row: those valid from its state that the operator may run. Each entry is
- * `{ action, label, disabled, hint }`; `hint` says why an entry is disabled.
+ * `{ action, label, disabled, hint }`; `hint` says why an entry is disabled. Setting a personal value is offered
+ * disabled to everyone but the owner of the reference.
  */
 export const getRowActions = (row, permissions) =>
   ACTION_ORDER.filter(action => isAvailable(action, row) && permissionOf(action, permissions)).map(action => {
-    const disabled = action === 'approve' && isOwnApproval(row, permissions.userId);
+    const ownApproval = action === 'approve' && isOwnApproval(row, permissions.userId);
+    const notOwner = action === 'setValue' && isNotOwner(row, permissions.userId);
     return {
       action,
       label: action === 'import' && row.generation >= 1 ? 'Import again' : ACTIONS[action].label,
-      disabled,
-      hint: disabled ? SELF_APPROVAL_HINT : undefined,
+      disabled: ownApproval || notOwner,
+      hint: (ownApproval && SELF_APPROVAL_HINT) || (notOwner && OWNER_ONLY_HINT) || undefined,
     };
   });
 

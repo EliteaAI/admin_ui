@@ -23,9 +23,11 @@ const RowActionsMenu = memo(props => {
   }, [onDetails, row]);
 
   const handleAction = useCallback(
-    action => () => {
+    item => () => {
+      // A disabled item can still be reached by the keyboard or a script; it does nothing
+      if (item.disabled) return;
       setAnchorEl(null);
-      onAction(row, action);
+      onAction(row, item.action);
     },
     [onAction, row],
   );
@@ -60,7 +62,7 @@ const RowActionsMenu = memo(props => {
             <Box component="span">
               <MenuItem
                 disabled={item.disabled}
-                onClick={handleAction(item.action)}
+                onClick={handleAction(item)}
                 data-testid={`${testIdPrefix}-action-${item.action}`}
               >
                 {item.label}

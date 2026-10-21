@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CredentialsTab } from '@/pages/GovernancePage/components/CredentialsTab';
 import store, { setUser } from '@/store';
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import {
@@ -745,10 +745,13 @@ describe('probe dialog', () => {
 });
 
 describe('personal value dialog', () => {
+  const ownPersonal = (overrides = {}) =>
+    makePersonal({ owner: { id: OPERATOR_ID, email: 'me@epam.com' }, ...overrides });
+
   const SECRET = 'test-value-one-123';
   const SECOND_SECRET = 'test-value-two-456';
 
-  const openValue = async (row = makePersonal({ generation: 3 }), handlers = {}) => {
+  const openValue = async (row = ownPersonal({ generation: 3 }), handlers = {}) => {
     const calls = setup([row], {
       [`GET ${TYPES_PATH}`]: ok(makeTypes()),
       [`PUT ${materialPath(row.id)}`]: ok({ ok: true, generation: row.generation + 1, state: 'pending' }),
@@ -775,7 +778,7 @@ describe('personal value dialog', () => {
     expect(token).toHaveAttribute('type', 'password');
     expect(key).toHaveAttribute('type', 'password');
     expect(screen.queryByTestId('credential-value-base_url')).not.toBeInTheDocument();
-    expect(screen.getByTestId('credential-value-dialog')).toHaveTextContent('u1@epam.com');
+    expect(screen.getByTestId('credential-value-dialog')).toHaveTextContent('me@epam.com');
     expect(screen.getByTestId('credential-value-dialog')).toHaveTextContent('generation 3 → 4');
     expect(screen.getByTestId('credential-value-dialog')).toHaveTextContent('never shown again');
     expect(
@@ -809,7 +812,7 @@ describe('personal value dialog', () => {
   });
 
   it('shows a flat list, without captions, when the schema has no subsections', async () => {
-    await openValue(makePersonal({ provider: 'openapi' }));
+    await openValue(ownPersonal({ provider: 'openapi' }));
 
     await screen.findByTestId('credential-value-headers.*-add');
     expect(screen.queryByTestId('credential-value-caption')).not.toBeInTheDocument();
@@ -882,7 +885,7 @@ describe('personal value dialog', () => {
   });
 
   it('keeps the typed value out of the store after a refusal too', async () => {
-    const { user } = await openValue(makePersonal({ generation: 3 }), {
+    const { user } = await openValue(ownPersonal({ generation: 3 }), {
       [`PUT ${materialPath('p1')}`]: refusal(400, 'INVALID_REQUEST', 'The request is not valid.'),
     });
 
@@ -896,7 +899,7 @@ describe('personal value dialog', () => {
   });
 
   it('warns and closes, with the typed value cleared, when the reference changed meanwhile', async () => {
-    const { user } = await openValue(makePersonal({ generation: 3 }), {
+    const { user } = await openValue(ownPersonal({ generation: 3 }), {
       [`PUT ${materialPath('p1')}`]: refusal(409, 'CONCURRENT_CHANGE', 'The record changed while this ran.'),
     });
 
@@ -912,7 +915,7 @@ describe('personal value dialog', () => {
   });
 
   it('names the entries of a map of passwords and sends them as <field>.<name>', async () => {
-    const row = makePersonal({ generation: 0, provider: 'openapi' });
+    const row = ownPersonal({ generation: 0, provider: 'openapi' });
     const { calls, user } = await openValue(row);
 
     await user.click(await screen.findByTestId('credential-value-headers.*-add'));
@@ -932,7 +935,7 @@ describe('personal value dialog', () => {
   });
 
   it('says so, and sends nothing, when the secret fields of the type cannot be read', async () => {
-    const { calls } = await openValue(makePersonal({ provider: 'unknown_type' }));
+    const { calls } = await openValue(ownPersonal({ provider: 'unknown_type' }));
 
     expect(await screen.findByTestId('credential-value-no-fields')).toBeInTheDocument();
     expect(screen.getByTestId('credential-value-submit')).toBeDisabled();
@@ -940,12 +943,75 @@ describe('personal value dialog', () => {
   });
 
   it('is offered to an operator with the manage permission only', async () => {
-    setup([makePersonal()], {}, [CRED_VIEW, CRED_PROBE, CRED_APPROVE]);
+    setup([ownPersonal()], {}, [CRED_VIEW, CRED_PROBE, CRED_APPROVE]);
     const user = userEvent.setup();
 
     await openMenu(user, 'p1');
 
     expect(screen.queryByTestId('credential-action-setValue')).not.toBeInTheDocument();
+  });
+});
+
+describe('personal value is set by its owner only', () => {
+  const item = () => screen.getByTestId('credential-action-setValue');
+
+  it('offers the action to the owner of the reference', async () => {
+    setup([makePersonal({ owner: { id: OPERATOR_ID, email: 'me@epam.com' } })]);
+    const user = userEvent.setup();
+
+    await openMenu(user, 'p1');
+
+    expect(item()).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('shows it disabled, with the reason, to another admin', async () => {
+    setup([makePersonal()]);
+    const user = userEvent.setup();
+
+    await openMenu(user, 'p1');
+
+    expect(item()).toHaveAttribute('aria-disabled', 'true');
+    await user.hover(item().parentElement);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Only the owner sets a personal value, from their own Credentials page.',
+    );
+  });
+
+  it('does not open the dialog from the disabled item', async () => {
+    setup([makePersonal()], { [`GET ${TYPES_PATH}`]: ok(makeTypes()) });
+    const user = userEvent.setup();
+
+    await openMenu(user, 'p1');
+    fireEvent.click(item());
+
+    expect(screen.queryByTestId('credential-value-dialog')).not.toBeInTheDocument();
+  });
+
+  it('shows it disabled when the signed-in user is unknown', async () => {
+    store.dispatch(setUser(null));
+    setup([makePersonal({ owner: { id: OPERATOR_ID, email: 'me@epam.com' } })]);
+    const user = userEvent.setup();
+
+    await openMenu(user, 'p1');
+
+    expect(item()).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('renders the OWNER_ONLY refusal with its message and code', async () => {
+    setup([makePersonal({ generation: 3, owner: { id: OPERATOR_ID, email: 'me@epam.com' } })], {
+      [`GET ${TYPES_PATH}`]: ok(makeTypes()),
+      [`PUT ${materialPath('p1')}`]: refusal(403, 'OWNER_ONLY', 'Only the owner can set a personal value.'),
+    });
+    const user = userEvent.setup();
+
+    await openMenu(user, 'p1');
+    await user.click(item());
+    await user.type(await screen.findByTestId('credential-value-access_token'), 'test-value-one-123');
+    await user.click(screen.getByTestId('credential-value-submit'));
+
+    expect(await screen.findByTestId('governance-error')).toHaveTextContent('Only the owner');
+    expect(screen.getByTestId('governance-error-code')).toHaveTextContent('OWNER_ONLY');
+    expect(screen.getByTestId('credential-value-dialog')).toBeInTheDocument();
   });
 });
 

@@ -23,6 +23,8 @@ export const PERSONAL_NOTICE =
 export const SELF_APPROVAL_HINT =
   'You created this reference or wrote its value; another operator must approve it.';
 
+export const OWNER_ONLY_HINT = 'Only the owner sets a personal value, from their own Credentials page.';
+
 const MIGRATION_TASK = 'create_credential_governance_tables';
 export const MIGRATION_HINT = `Personal credentials need a database update first. Run the admin task ${MIGRATION_TASK} under System → Tasks, then try again.`;
 
