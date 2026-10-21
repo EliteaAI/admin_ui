@@ -17,6 +17,7 @@ import {
   ok,
   renderWithProviders,
 } from './governanceTest.helpers';
+import { BINDINGS_VIEW } from './identitiesTest.helpers';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -36,16 +37,19 @@ describe('route and sidebar permissions', () => {
   it('uses the permission keys the backend checks', () => {
     expect(PERMISSIONS.governance.settings.view).toBe('governance.settings.view');
     expect(PERMISSIONS.governance.settings.manage).toBe('governance.settings.manage');
+    expect(PERMISSIONS.governance.bindings.view).toBe('governance.bindings.view');
+    expect(PERMISSIONS.governance.bindings.manage).toBe('governance.bindings.manage');
+    expect(PERMISSIONS.governance.bindings.approve).toBe('governance.bindings.approve');
   });
 });
 
 describe('page shell', () => {
-  const setup = (route = '/governance') => {
+  const setup = (route = '/governance', permissions = [VIEW, MANAGE, BINDINGS_VIEW]) => {
     mockApi({
       [`GET ${SETTINGS_PATH}`]: ok(makeSettings()),
       [`GET ${HISTORY_PATH}`]: ok(emptyHistory),
     });
-    return renderWithProviders(<GovernancePage />, { permissions: [VIEW, MANAGE], route });
+    return renderWithProviders(<GovernancePage />, { permissions, route });
   };
 
   it('registers all five tabs and opens on Overview', async () => {
@@ -70,7 +74,29 @@ describe('page shell', () => {
     expect(screen.queryByTestId('governance-overview')).not.toBeInTheDocument();
   });
 
-  it('follows ?tab= and falls back to Overview for an unknown tab', async () => {
+  it('opens the Agent identities tab for operators who can view bindings', async () => {
+    setup('/governance?tab=identities');
+
+    expect(await screen.findByTestId('governance-identities')).toBeInTheDocument();
+    expect(screen.queryByTestId('governance-overview')).not.toBeInTheDocument();
+  });
+
+  it('hides the tabs the operator cannot read and opens on the first one left', async () => {
+    setup('/governance?tab=overview', [BINDINGS_VIEW]);
+
+    expect(await screen.findByTestId('governance-identities')).toBeInTheDocument();
+    expect(screen.queryByTestId('governance-tab-overview')).not.toBeInTheDocument();
+    expect(screen.getByTestId('governance-tab-identities')).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('hides the Agent identities tab without the bindings view permission', async () => {
+    setup('/governance?tab=identities', [VIEW]);
+
+    expect(await screen.findByTestId('governance-overview')).toBeInTheDocument();
+    expect(screen.queryByTestId('governance-tab-identities')).not.toBeInTheDocument();
+  });
+
+  it('follows ?tab= for a tab that is not built yet', async () => {
     setup('/governance?tab=grants');
     expect(screen.getByTestId('governance-coming-soon')).toHaveTextContent('Grants');
   });

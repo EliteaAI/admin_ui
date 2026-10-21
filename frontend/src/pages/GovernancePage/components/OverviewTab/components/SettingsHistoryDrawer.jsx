@@ -3,10 +3,10 @@ import { memo, useMemo } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 
 import { useGovernanceSettingsHistoryListQuery } from '@/api/governance.api';
-import DrawerShell from '@/pages/GovernancePage/components/OverviewTab/components/DrawerShell';
-import { formatDateTime } from '@/pages/GovernancePage/components/OverviewTab/helpers/governance.helpers';
+import DrawerShell from '@/pages/GovernancePage/components/DrawerShell';
 import { modeLabel } from '@/pages/GovernancePage/components/OverviewTab/helpers/governanceSettings.helpers';
 import { useDrawerPagination } from '@/pages/GovernancePage/components/OverviewTab/hooks/useDrawerPagination.hooks';
+import { formatDateTime } from '@/pages/GovernancePage/helpers/governance.helpers';
 
 const flagText = (label, on) => `${label}: ${on ? 'on' : 'off'}`;
 

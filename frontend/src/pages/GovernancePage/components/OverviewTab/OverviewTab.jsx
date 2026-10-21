@@ -21,8 +21,9 @@ import {
 } from '@/api/governance.api';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
+import { formatDateTime, toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
 
-import GovernanceErrorAlert from './components/GovernanceErrorAlert';
 import ModeSelector from './components/ModeSelector';
 import PreflightPanel from './components/PreflightPanel';
 import SecurityEventsDrawer from './components/SecurityEventsDrawer';
@@ -35,7 +36,6 @@ import {
   MAX_POLICY_REVISION,
   READ_ERROR_TEXT,
 } from './constants/governanceSettings.constants';
-import { formatDateTime, toGovernanceError } from './helpers/governance.helpers';
 import {
   buildUpdateBody,
   fillPlaceholders,

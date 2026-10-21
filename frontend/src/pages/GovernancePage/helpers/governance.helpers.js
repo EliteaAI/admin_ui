@@ -1,4 +1,4 @@
-import { CHECK_LABELS } from '@/pages/GovernancePage/components/OverviewTab/constants/governance.constants';
+import { CHECK_LABELS } from '@/pages/GovernancePage/constants/governance.constants';
 
 // The backend answers with { error, code } (plus extras such as failed_checks); a network failure has only `error`
 export const toGovernanceError = (err, fallback = 'Request failed.') => ({

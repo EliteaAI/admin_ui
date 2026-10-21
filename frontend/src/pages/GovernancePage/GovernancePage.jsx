@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -6,29 +6,46 @@ import { Tab, Tabs } from '@mui/material';
 
 import { DrawerPage } from '@/components/DrawerPage';
 import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import ComingSoonTab from './components/ComingSoonTab';
+import { IdentitiesTab } from './components/IdentitiesTab';
 import { OverviewTab } from './components/OverviewTab';
 
+// `permission` hides a tab from operators who could not read it; the tabs not built yet have none
 const TABS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'identities', label: 'Agent identities' },
+  {
+    id: 'overview',
+    label: 'Overview',
+    permission: PERMISSIONS.governance.settings.view,
+    Content: OverviewTab,
+  },
+  {
+    id: 'identities',
+    label: 'Agent identities',
+    permission: PERMISSIONS.governance.bindings.view,
+    Content: IdentitiesTab,
+  },
   { id: 'credentials', label: 'Credentials' },
   { id: 'grants', label: 'Grants' },
   { id: 'mandates', label: 'Mandates' },
 ];
-const DEFAULT_TAB = 'overview';
 
 const GovernancePage = memo(() => {
   const styles = governancePageStyles();
 
   usePageTitle('Governance');
 
-  // The tab lives in ?tab= so it can be linked to
+  const { hasPermission } = useCheckPermission();
+  const visibleTabs = useMemo(() => TABS.filter(tab => hasPermission(tab.permission)), [hasPermission]);
+
+  // The tab lives in ?tab= so it can be linked to. An unknown or hidden tab falls back to the first visible one.
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
-  const activeTab = TABS.some(tab => tab.id === requestedTab) ? requestedTab : DEFAULT_TAB;
+  const currentTab = visibleTabs.find(tab => tab.id === requestedTab) ?? visibleTabs[0];
+  const activeTab = currentTab.id;
 
   const handleTabChange = useCallback(
     (_, value) => {
@@ -50,7 +67,7 @@ const GovernancePage = memo(() => {
       onChange={handleTabChange}
       sx={styles.tabs}
     >
-      {TABS.map(tab => (
+      {visibleTabs.map(tab => (
         <Tab
           key={tab.id}
           label={tab.label}
@@ -69,11 +86,7 @@ const GovernancePage = memo(() => {
         tabs={tabsElement}
         showBorder
       />
-      {activeTab === 'overview' ? (
-        <OverviewTab />
-      ) : (
-        <ComingSoonTab label={TABS.find(tab => tab.id === activeTab).label} />
-      )}
+      {currentTab.Content ? <currentTab.Content /> : <ComingSoonTab label={currentTab.label} />}
     </DrawerPage>
   );
 });
