@@ -40,6 +40,11 @@ export const adminApi = createApi({
     'AuditActionGroups',
     'PublicPermissions',
     'SupportPermissions',
+    'GovernanceSettings',
+    'AgentIdentities',
+    'CredentialReferences',
+    'CredentialGrants',
+    'SecurityEvents',
   ],
   endpoints: () => ({}),
 });

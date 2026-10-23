@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import BudgetsIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import AssignmentIcon from '@mui/icons-material/AssignmentOutlined';
 import FolderIcon from '@mui/icons-material/FolderOutlined';
+import GovernanceIcon from '@mui/icons-material/GppGoodOutlined';
 import HistoryIcon from '@mui/icons-material/HistoryOutlined';
 import ModelTrainingIcon from '@mui/icons-material/ModelTrainingOutlined';
 import PeopleIcon from '@mui/icons-material/PeopleOutline';
@@ -125,6 +126,12 @@ const BOTTOM_MENU_ITEMS = [
     label: 'Audit Trail',
     icon: HistoryIcon,
     url: RouteDefinitions.AuditTrail,
+  },
+  {
+    id: 'governance',
+    label: 'Governance',
+    icon: GovernanceIcon,
+    url: RouteDefinitions.Governance,
   },
   {
     id: 'schedules-tasks',

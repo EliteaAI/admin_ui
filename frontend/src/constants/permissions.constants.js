@@ -116,6 +116,25 @@ export const PERMISSIONS = {
   banners: {
     manage: 'models.admin.banners.manage',
   },
+
+  // Credential governance: the global switch, agent identities and credential references
+  governance: {
+    settings: {
+      view: 'governance.settings.view',
+      manage: 'governance.settings.manage',
+    },
+    bindings: {
+      view: 'governance.bindings.view',
+      manage: 'governance.bindings.manage',
+      approve: 'governance.bindings.approve',
+    },
+  },
+  credentials: {
+    view: 'credentials.view',
+    manage: 'credentials.manage',
+    probe: 'credentials.probe',
+    approve: 'credentials.approve',
+  },
 };
 
 /**
@@ -144,6 +163,11 @@ export const SIDEBAR_PERMISSIONS = {
   'audit-trail': [PERMISSIONS.auditTrail.view],
   'schedules-tasks': [PERMISSIONS.scheduling.view, PERMISSIONS.runtime.plugins],
   reports: [PERMISSIONS.surveys.reports],
+  governance: [
+    PERMISSIONS.governance.settings.view,
+    PERMISSIONS.governance.bindings.view,
+    PERMISSIONS.credentials.view,
+  ],
 };
 
 /**
@@ -178,4 +202,5 @@ export const ROUTE_PERMISSIONS = {
   '/audit-trail': SIDEBAR_PERMISSIONS['audit-trail'],
   '/schedules-tasks': SIDEBAR_PERMISSIONS['schedules-tasks'],
   '/reports': SIDEBAR_PERMISSIONS.reports,
+  '/governance': SIDEBAR_PERMISSIONS.governance,
 };

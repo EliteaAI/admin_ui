@@ -42,6 +42,12 @@ export default ({ mode }) => {
       emptyOutDir: true,
       sourcemap: true,
     },
+    test: {
+      environment: 'jsdom',
+      setupFiles: ['./vitest.setup.js'],
+      include: ['src/**/__tests__/**/*.test.{js,jsx}'],
+      css: false,
+    },
     optimizeDeps: {
       include: ['@emotion/react', '@emotion/styled', '@mui/material/Tooltip'],
     },
