@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+import AppRegistrationIcon from '@mui/icons-material/AppRegistrationOutlined';
 import CampaignIcon from '@mui/icons-material/CampaignOutlined';
 import CodeIcon from '@mui/icons-material/CodeOutlined';
 import ConstructionIcon from '@mui/icons-material/ConstructionOutlined';
@@ -29,11 +30,13 @@ import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 import { AdvancedSection } from './components/AdvancedSection';
 import { BannersSection } from './components/BannersSection';
 import { MaintenanceSection } from './components/MaintenanceSection';
+import { OAuthAppsSection } from './components/OAuthAppsSection';
 import { ServiceDescriptorsSection } from './components/ServiceDescriptorsSection';
 
 const SECTION_ICONS = {
   guardrails: SecurityIcon,
   mcp_servers: DnsIcon,
+  oauth_apps: AppRegistrationIcon,
   observability: MonitorHeartIcon,
   runtime: SettingsIcon,
   admin_panel: AdminPanelSettingsIcon,
@@ -66,13 +69,20 @@ const FEATURES_GUARDRAILS_PREFIXES = [
 ];
 
 // Sections with their own save flow: no shared Save/Discard bar
-const SELF_MANAGED_SECTIONS = ['advanced', 'maintenance', 'service_descriptors', 'dedicated_banner'];
+const SELF_MANAGED_SECTIONS = [
+  'advanced',
+  'maintenance',
+  'service_descriptors',
+  'dedicated_banner',
+  'oauth_apps',
+];
 
 const SECTION_ORDER = [
   'advanced',
   'maintenance',
   'dedicated_banner',
   'mcp_servers',
+  'oauth_apps',
   'guardrails',
   'observability',
   'runtime',
@@ -102,7 +112,11 @@ const ConfigurationPage = memo(() => {
       s => s.id !== 'litellm' && !MOVED_TO_FEATURES.includes(s.id),
     );
 
-    const allSections = [...serverSections, { id: 'service_descriptors', title: 'Service Descriptors' }];
+    const allSections = [
+      ...serverSections,
+      { id: 'oauth_apps', title: 'OAuth Apps' },
+      { id: 'service_descriptors', title: 'Service Descriptors' },
+    ];
 
     const filtered = allSections.filter(s => {
       const requiredPerms = CONFIG_SECTION_PERMISSIONS[s.id];
@@ -140,8 +154,11 @@ const ConfigurationPage = memo(() => {
     isLoading: valuesLoading,
   } = useConfigValuesQuery(
     { sectionId: activeSection },
-    // Banners live in the social plugin's own table, so this section has no plugin-config values to load
-    { skip: !activeSection || activeSection === 'dedicated_banner', refetchOnMountOrArgChange: true },
+    // Banners and OAuth apps have their own storage, so these sections have no plugin-config values to load
+    {
+      skip: !activeSection || ['dedicated_banner', 'oauth_apps'].includes(activeSection),
+      refetchOnMountOrArgChange: true,
+    },
   );
 
   // Sync server values to local state
@@ -369,6 +386,12 @@ const ConfigurationPage = memo(() => {
                 );
               case 'dedicated_banner':
                 return <BannersSection onDirtyChange={setBannersDirty} />;
+              case 'oauth_apps':
+                return (
+                  <Box sx={styles.formScroll}>
+                    <OAuthAppsSection />
+                  </Box>
+                );
               case 'guardrails': {
                 const guardrailsFields = activeFields.filter(
                   f => !FEATURES_GUARDRAILS_PREFIXES.some(p => f.path?.startsWith(p)),

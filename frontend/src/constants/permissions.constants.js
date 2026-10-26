@@ -66,6 +66,12 @@ export const PERMISSIONS = {
     delete: 'configuration.secrets.secret.delete',
   },
 
+  // Microsoft Entra ID apps for the Teams, Outlook and SharePoint credentials
+  oauthApps: {
+    view: 'configuration.oauth_apps.view',
+    edit: 'configuration.oauth_apps.edit',
+  },
+
   // LiteLLM section
   litellm: {
     section: 'configuration.litellm',
@@ -179,6 +185,7 @@ export const CONFIG_SECTION_PERMISSIONS = {
   advanced: [PERMISSIONS.configuration.advanced],
   service_descriptors: [PERMISSIONS.configuration.serviceDescriptors],
   dedicated_banner: [PERMISSIONS.banners.manage],
+  oauth_apps: [PERMISSIONS.oauthApps.view],
 };
 
 /**
