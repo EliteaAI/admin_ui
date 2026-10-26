@@ -44,7 +44,18 @@ describe('history drawer', () => {
           rows:
             params.limit === '1'
               ? [historyRow(2)]
-              : [historyRow(2), historyRow(1, { mode: 'off', changed_by: { id: 9, email: null } })],
+              : [
+                  historyRow(2),
+                  historyRow(1, {
+                    mode: 'off',
+                    changed_by: { id: 9, email: null },
+                    flags: {
+                      admit_legacy_pat: false,
+                      allow_runtime_domain_binding: false,
+                      allow_development_runs: true,
+                    },
+                  }),
+                ],
         }),
     });
     const user = userEvent.setup();
@@ -61,11 +72,13 @@ describe('history drawer', () => {
     expect(second).toHaveTextContent('Environment prod-eu');
     expect(second).toHaveTextContent('Legacy tokens: on');
     expect(second).toHaveTextContent('Runtime bindings: off');
+    expect(second).toHaveTextContent('Development runs: default'); // not chosen in that revision (#7213)
     expect(second).toHaveTextContent('admin@example.com');
 
     const first = screen.getByTestId('governance-history-row-1');
     expect(first).toHaveTextContent('Off');
     expect(first).toHaveTextContent('User 9');
+    expect(first).toHaveTextContent('Development runs: on');
 
     const request = calls.filter(call => call.path === HISTORY_PATH).find(call => call.params.limit === '20');
     expect(request.params).toEqual({ limit: '20', offset: '0' });

@@ -46,6 +46,11 @@ export const FALLBACK_DESCRIPTIONS = {
       tooltip:
         'When on, agents may use a binding whose identity is resolved by the identity provider at run time. Leave it off unless your identity team has set up runtime agent identities.',
     },
+    allow_development_runs: {
+      label: 'Allow development runs',
+      tooltip:
+        "When on, the agent and pipeline editor's test chat may run a version that has no identity binding yet. Such a run acts as the signed-in author only and may use only the author's own credentials: personal ones, and project credentials already granted to that person. Nothing it produces can be shared, published or scheduled. Default: on under audit only, off under enforce; choose explicitly when you enforce.",
+    },
     change_note: {
       label: 'Change note',
       placeholder: 'Why are you changing this? (recorded in the history)',
@@ -69,6 +74,8 @@ export const FALLBACK_DESCRIPTIONS = {
       'Governance is on but a required service is unavailable. Governed runs are being refused. Fix the failed check or switch to Off.',
     table_missing:
       'Settings storage is not set up. Run the task create_governance_settings_tables under System → Tasks.',
+    column_missing:
+      'Settings storage needs an update. Run the task create_governance_settings_tables under System → Tasks.',
   },
   checks: {
     identity_verifier: 'The user identity verifier is not configured.',

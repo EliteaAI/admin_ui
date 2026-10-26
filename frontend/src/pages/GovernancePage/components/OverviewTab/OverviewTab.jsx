@@ -38,8 +38,10 @@ import {
 } from './constants/governanceSettings.constants';
 import {
   buildUpdateBody,
+  developmentRunsShown,
   fillPlaceholders,
   getSaveBlock,
+  isColumnMissing,
   isEnvironmentLocked,
   isMigrationRequired,
   mergeDescriptions,
@@ -82,14 +84,18 @@ const OverviewTab = memo(() => {
   const descriptions = useMemo(() => mergeDescriptions(data?.descriptions), [data?.descriptions]);
 
   const migrationRequired = isMigrationRequired(data) || saveError?.code === 'MIGRATION_REQUIRED';
+  const columnMissing = !migrationRequired && isColumnMissing(data);
   const environmentLocked = isEnvironmentLocked(data);
   const storedMode = data?.stored?.mode ?? 'off';
   const ceilingMode = data?.ceiling?.max_mode ?? 'enforce';
   const readOnly = !canManage;
 
   const saveBlock = useMemo(
-    () => (data && draft ? getSaveBlock({ draft, isDirty, data, descriptions, migrationRequired }) : null),
-    [data, draft, isDirty, descriptions, migrationRequired],
+    () =>
+      data && draft
+        ? getSaveBlock({ draft, isDirty, data, descriptions, migrationRequired, columnMissing })
+        : null,
+    [data, draft, isDirty, descriptions, migrationRequired, columnMissing],
   );
 
   const handleModeChange = useCallback(value => setField('mode', value), [setField]);
@@ -108,6 +114,10 @@ const OverviewTab = memo(() => {
   );
   const handleRuntimeChange = useCallback(
     event => setField('allow_runtime_domain_binding', event.target.checked),
+    [setField],
+  );
+  const handleDevelopmentChange = useCallback(
+    event => setField('allow_development_runs', event.target.checked),
     [setField],
   );
 
@@ -219,6 +229,14 @@ const OverviewTab = memo(() => {
           data-testid="governance-table-missing"
         >
           {descriptions.preflight.table_missing}
+        </Alert>
+      )}
+      {columnMissing && (
+        <Alert
+          severity="warning"
+          data-testid="governance-column-missing"
+        >
+          {descriptions.preflight.column_missing}
         </Alert>
       )}
       {data.read === 'error' && (
@@ -338,6 +356,32 @@ const OverviewTab = memo(() => {
               },
             }}
           />
+        </SettingRow>
+
+        <SettingRow
+          label={descriptions.fields.allow_development_runs.label}
+          tooltip={descriptions.fields.allow_development_runs.tooltip}
+        >
+          <Switch
+            checked={developmentRunsShown(draft)}
+            onChange={handleDevelopmentChange}
+            disabled={readOnly}
+            slotProps={{
+              input: {
+                'aria-label': descriptions.fields.allow_development_runs.label,
+                'data-testid': 'governance-flag-allow_development_runs',
+              },
+            }}
+          />
+          {draft.allow_development_runs === null && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.muted}
+              data-testid="governance-flag-allow_development_runs-default"
+            >
+              Default for {modeLabel(descriptions, draft.mode)}
+            </Typography>
+          )}
         </SettingRow>
 
         {canManage && (
