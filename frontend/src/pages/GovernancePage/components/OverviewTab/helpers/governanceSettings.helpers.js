@@ -31,6 +31,16 @@ export const isEnvironmentLocked = data => Boolean(data?.locks?.environment);
 
 export const isMigrationRequired = data => data?.table_present === false || data?.read === 'missing_table';
 
+// The settings table predates a column this build writes (#7213): read-only until the task adds it
+export const isColumnMissing = data => data?.columns_present === false;
+
+// What the development-runs switch shows: the stored choice, else the default of the mode the form holds
+// (on under audit only, off otherwise). `null` in the draft means "not chosen" and is sent as such.
+export const developmentRunsDefault = mode => mode === 'audit_only';
+
+export const developmentRunsShown = draft =>
+  draft?.allow_development_runs ?? developmentRunsDefault(draft?.mode);
+
 // What the form edits: the stored row, or the defaults while there is none. A locked environment shows the deployment's.
 export const draftFromSettings = data => {
   const stored = data?.stored ?? null;
@@ -39,6 +49,7 @@ export const draftFromSettings = data => {
     policy_revision: stored?.policy_revision ?? '',
     admit_legacy_pat: Boolean(stored?.admit_legacy_pat),
     allow_runtime_domain_binding: Boolean(stored?.allow_runtime_domain_binding),
+    allow_development_runs: stored?.allow_development_runs ?? null,
     environment: isEnvironmentLocked(data)
       ? (data?.effective?.environment ?? '')
       : (stored?.environment ?? ''),
@@ -54,6 +65,7 @@ export const isDraftDirty = (draft, base) => {
     draft.policy_revision.trim() !== base.policy_revision.trim() ||
     draft.admit_legacy_pat !== base.admit_legacy_pat ||
     draft.allow_runtime_domain_binding !== base.allow_runtime_domain_binding ||
+    draft.allow_development_runs !== base.allow_development_runs ||
     draft.environment.trim() !== base.environment.trim()
   );
 };
@@ -66,6 +78,8 @@ export const buildUpdateBody = (draft, data) => {
     ...(policyRevision && { policy_revision: policyRevision }),
     admit_legacy_pat: draft.admit_legacy_pat,
     allow_runtime_domain_binding: draft.allow_runtime_domain_binding,
+    // Sent only once the operator chose: absent means the default of the mode (on under audit only, off under enforce)
+    ...(draft.allow_development_runs !== null && { allow_development_runs: draft.allow_development_runs }),
     // Omitted while the deployment fixes it: the backend refuses a different value
     ...(!isEnvironmentLocked(data) && { environment: draft.environment.trim() }),
     change_note: draft.change_note.trim(),
@@ -83,8 +97,9 @@ export const checkSeverity = check => {
 
 // Why Save is disabled, or null when it is not. `unchanged` and the two notices need no extra line.
 export const getSaveBlock = params => {
-  const { draft, isDirty, data, descriptions, migrationRequired } = params;
+  const { draft, isDirty, data, descriptions, migrationRequired, columnMissing } = params;
   if (migrationRequired) return { code: 'migration', message: null };
+  if (columnMissing) return { code: 'column_missing', message: null };
   if (data?.read === 'error') return { code: 'read_error', message: null };
 
   const ceiling = data?.ceiling?.max_mode ?? 'enforce';

@@ -9,6 +9,9 @@ import { useDrawerPagination } from '@/pages/GovernancePage/components/OverviewT
 import { formatDateTime } from '@/pages/GovernancePage/helpers/governance.helpers';
 
 const flagText = (label, on) => `${label}: ${on ? 'on' : 'off'}`;
+// A flag the operator has not chosen (null) took the default of the mode of that revision
+const chosenFlagText = (label, value) =>
+  value === null || value === undefined ? `${label}: default` : flagText(label, value);
 
 const SettingsHistoryDrawer = memo(props => {
   const { open, onClose, descriptions } = props;
@@ -54,6 +57,7 @@ const SettingsHistoryDrawer = memo(props => {
                 row.environment && `Environment ${row.environment}`,
                 flagText('Legacy tokens', row.flags?.admit_legacy_pat),
                 flagText('Runtime bindings', row.flags?.allow_runtime_domain_binding),
+                chosenFlagText('Development runs', row.flags?.allow_development_runs),
               ]
                 .filter(Boolean)
                 .join(' · ')}
