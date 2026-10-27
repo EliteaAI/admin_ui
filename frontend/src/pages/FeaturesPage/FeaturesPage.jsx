@@ -18,6 +18,7 @@ import { CustomThemeSection } from './components/CustomThemeSection';
 import { HelpCenterSection } from './components/HelpCenterSection';
 import McpConfigurationSection from './components/McpConfigurationSection';
 import PublishingSection from './components/PublishingSection';
+import SkillsSection from './components/SkillsSection';
 import SupportAssistant from './components/SupportAssistant';
 import { SurveysSection } from './components/SurveysSection';
 import { FEATURES_SECTIONS, LEGACY_SECTION_REDIRECTS } from './constants/features.constants';
@@ -65,6 +66,7 @@ const FeaturesPage = memo(() => {
     skip: !usesSection('support_assistant'),
   });
   const resourcesDraft = useConfigSectionDraft('resources', { skip: !usesSection('resources') });
+  const skillsDraft = useConfigSectionDraft('skills', { skip: !usesSection('skills') });
 
   const allDrafts = useMemo(
     () => [
@@ -76,6 +78,7 @@ const FeaturesPage = memo(() => {
       toolPricingDraft,
       supportDraft,
       resourcesDraft,
+      skillsDraft,
     ],
     [
       guardrailsDraft,
@@ -86,6 +89,7 @@ const FeaturesPage = memo(() => {
       toolPricingDraft,
       supportDraft,
       resourcesDraft,
+      skillsDraft,
     ],
   );
   const activeDrafts = useMemo(
@@ -290,6 +294,15 @@ const FeaturesPage = memo(() => {
             <HelpCenterSection
               values={resourcesDraft.values}
               onChange={resourcesDraft.onChange}
+            />
+          </Box>
+        );
+      case 'skills':
+        return (
+          <Box sx={styles.formScroll}>
+            <SkillsSection
+              values={skillsDraft.values}
+              onChange={skillsDraft.onChange}
             />
           </Box>
         );
