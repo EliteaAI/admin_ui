@@ -76,6 +76,8 @@ const OAuthAppDialog = memo(props => {
   const styles = useMemo(() => oauthAppDialogStyles(), []);
   const isEdit = Boolean(app);
   const [form, setForm] = useState(emptyForm);
+  // The form as loaded: on edit, Save is enabled only once something differs from it
+  const [initialForm, setInitialForm] = useState(emptyForm);
   const provider = providerOf(form);
   const [replaceSecret, setReplaceSecret] = useState(false);
   const [error, setError] = useState('');
@@ -92,7 +94,9 @@ const OAuthAppDialog = memo(props => {
 
   useEffect(() => {
     if (open) {
-      setForm(toForm(app));
+      const loaded = toForm(app);
+      setForm(loaded);
+      setInitialForm(loaded);
       setReplaceSecret(!app);
       setError('');
       setCheckResult(null);
@@ -189,12 +193,18 @@ const OAuthAppDialog = memo(props => {
     }
   }, [app, buildPayload, createApp, isEdit, onClose, onSaved, updateApp]);
 
-  const canSave =
+  const isValid =
     form.name.trim() &&
     form.client_id.trim() &&
     form.oauth_discovery_endpoint.trim() &&
     form.credential_types.length > 0 &&
+    form.allowed_project_ids.length > 0 &&
     (!replaceSecret || form.client_secret.trim());
+  const isDirty = useMemo(
+    () => !isEdit || replaceSecret || JSON.stringify(form) !== JSON.stringify(initialForm),
+    [form, initialForm, isEdit, replaceSecret],
+  );
+  const canSave = isValid && isDirty;
 
   return (
     <Dialog
@@ -272,7 +282,9 @@ const OAuthAppDialog = memo(props => {
               <TextField
                 {...params}
                 label="Projects"
-                helperText="Leave empty to offer the app in every project"
+                required
+                error={form.allowed_project_ids.length === 0}
+                helperText="Required. The app applies only in the selected projects."
               />
             )}
           />
@@ -407,7 +419,7 @@ const OAuthAppDialog = memo(props => {
       <DialogActions>
         <Button
           onClick={handleCheck}
-          disabled={isSaving || isChecking || !canSave}
+          disabled={isSaving || isChecking || !isValid}
           sx={styles.checkButton}
         >
           {isChecking ? 'Testing...' : 'Test connection'}

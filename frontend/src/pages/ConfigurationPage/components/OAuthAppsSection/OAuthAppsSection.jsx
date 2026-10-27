@@ -106,7 +106,7 @@ const OAuthAppsSection = memo(() => {
             variant="bodyMedium"
             sx={styles.cellText}
           >
-            {value?.length ? `${value.length} selected` : 'All'}
+            {value?.length ? `${value.length} selected` : 'None'}
           </Typography>
         );
       }
