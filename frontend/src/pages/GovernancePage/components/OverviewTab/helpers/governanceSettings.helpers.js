@@ -35,8 +35,17 @@ export const isMigrationRequired = data => data?.table_present === false || data
 export const isColumnMissing = data => data?.columns_present === false;
 
 // What the development-runs switch shows: the stored choice, else the default of the mode the form holds
-// (on under audit only and enforce, off under off; #7227). `null` in the draft means "not chosen" and is sent as such.
-export const developmentRunsDefault = mode => mode === 'audit_only' || mode === 'enforce';
+// (on under audit only, off otherwise). `null` in the draft means "not chosen" and is sent as such.
+export const developmentRunsDefault = mode => mode === 'audit_only';
+
+// What the switch shows when the form is changed to `mode` (#7227): a switch into enforce turns development runs on,
+// unless the operator has explicitly switched them off; any other mode shows the stored choice again. The form sends
+// what it shows, so the operator's own toggle always wins.
+export const developmentRunsForMode = (mode, storedMode, storedChoice) => {
+  if (storedMode === 'enforce') return undefined; // already enforcing: the form keeps what it holds
+  if (mode !== 'enforce') return storedChoice ?? null;
+  return storedChoice === false ? false : true;
+};
 
 export const developmentRunsShown = draft =>
   draft?.allow_development_runs ?? developmentRunsDefault(draft?.mode);
