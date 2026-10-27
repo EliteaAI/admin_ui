@@ -519,11 +519,11 @@ describe('development runs (#7213)', () => {
     );
 
     await pickMode(user, 'enforce');
-    expect(toggle).not.toBeChecked(); // off under enforce until chosen
+    expect(toggle).toBeChecked(); // switched on with enforce, right away (#7227)
+    await pickMode(user, 'audit_only'); // back: the stored choice (none) again
     expect(screen.getByTestId('governance-flag-allow_development_runs-default')).toHaveTextContent(
-      'Default for Enforce',
+      'Default for Audit only',
     );
-    await pickMode(user, 'audit_only');
 
     await user.click(screen.getByTestId('governance-flag-admit_legacy_pat'));
     await user.type(screen.getByTestId('governance-change-note'), 'Tokens');
@@ -538,25 +538,55 @@ describe('development runs (#7213)', () => {
     const { calls, user } = await setup(makeSettings({ stored }), {
       extra: {
         [`PUT ${SETTINGS_PATH}`]: ok(
-          makeSettings({ stored: storedRow({ revision: 4, mode: 'enforce', allow_development_runs: true }) }),
+          makeSettings({
+            stored: storedRow({ revision: 4, mode: 'enforce', allow_development_runs: false }),
+          }),
         ),
       },
     });
 
-    await user.click(screen.getByTestId('governance-flag-allow_development_runs'));
+    const toggle = screen.getByTestId('governance-flag-allow_development_runs');
+    expect(toggle).toBeChecked(); // not chosen under enforce: on (#7227)
+    await user.click(toggle);
     expect(screen.queryByTestId('governance-flag-allow_development_runs-default')).not.toBeInTheDocument();
-    await user.type(screen.getByTestId('governance-change-note'), 'Let developers test');
+    await user.type(screen.getByTestId('governance-change-note'), 'No drafts here');
     await user.click(screen.getByTestId('governance-save'));
 
     await waitFor(() => expect(putCalls(calls)).toHaveLength(1));
     expect(screen.queryByTestId('governance-switch-dialog')).not.toBeInTheDocument();
     expect(putCalls(calls)[0].body).toMatchObject({
       mode: 'enforce',
-      allow_development_runs: true,
+      allow_development_runs: false,
       expected_revision: 3,
     });
-    await waitFor(() => expect(screen.getByTestId('governance-flag-allow_development_runs')).toBeChecked());
+    await waitFor(() =>
+      expect(screen.getByTestId('governance-flag-allow_development_runs')).not.toBeChecked(),
+    );
     expect(screen.queryByTestId('governance-flag-allow_development_runs-default')).not.toBeInTheDocument();
+  });
+
+  it('switches development runs on with a switch to enforce, and sends it in the same write (#7227)', async () => {
+    const stored = storedRow({ revision: 3, allow_development_runs: false }); // audit only, switched off
+    const { calls, user } = await setup(makeSettings({ stored }), {
+      extra: {
+        [`PUT ${SETTINGS_PATH}`]: ok(
+          makeSettings({ stored: storedRow({ revision: 4, mode: 'enforce', allow_development_runs: true }) }),
+        ),
+      },
+    });
+
+    const toggle = screen.getByTestId('governance-flag-allow_development_runs');
+    expect(toggle).not.toBeChecked();
+    await pickMode(user, 'enforce');
+    expect(toggle).toBeChecked();
+    await user.type(screen.getByTestId('governance-policy-revision'), '-2');
+    await user.type(screen.getByTestId('governance-change-note'), 'Enforce');
+    await user.click(screen.getByTestId('governance-save'));
+    await user.click(await screen.findByTestId('governance-switch-confirm'));
+
+    await waitFor(() => expect(putCalls(calls)).toHaveLength(1));
+    expect(putCalls(calls)[0].body).toMatchObject({ mode: 'enforce', allow_development_runs: true });
+    await waitFor(() => expect(screen.getByTestId('governance-flag-allow_development_runs')).toBeChecked());
   });
 
   it('is read-only and Save stays blocked while the settings table lacks the column', async () => {

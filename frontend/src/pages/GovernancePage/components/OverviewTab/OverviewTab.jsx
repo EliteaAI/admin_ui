@@ -98,7 +98,17 @@ const OverviewTab = memo(() => {
     [data, draft, isDirty, descriptions, migrationRequired, columnMissing],
   );
 
-  const handleModeChange = useCallback(value => setField('mode', value), [setField]);
+  const storedDevelopment = data?.stored?.allow_development_runs ?? null;
+  const handleModeChange = useCallback(
+    value => {
+      setField('mode', value);
+      // Switching to enforce switches development runs on in the same write, as the server does (#7227); the operator
+      // can switch them off before saving, or afterwards
+      if (storedMode !== 'enforce')
+        setField('allow_development_runs', value === 'enforce' ? true : storedDevelopment);
+    },
+    [setField, storedMode, storedDevelopment],
+  );
   const handlePolicyRevisionChange = useCallback(
     event => setField('policy_revision', event.target.value),
     [setField],
