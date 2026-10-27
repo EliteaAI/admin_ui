@@ -38,6 +38,7 @@ import {
 } from './constants/governanceSettings.constants';
 import {
   buildUpdateBody,
+  developmentRunsForMode,
   developmentRunsShown,
   fillPlaceholders,
   getSaveBlock,
@@ -98,7 +99,17 @@ const OverviewTab = memo(() => {
     [data, draft, isDirty, descriptions, migrationRequired, columnMissing],
   );
 
-  const handleModeChange = useCallback(value => setField('mode', value), [setField]);
+  const storedDevelopment = data?.stored?.allow_development_runs ?? null;
+  const handleModeChange = useCallback(
+    value => {
+      setField('mode', value);
+      // Switching to enforce shows development runs on (unless they were explicitly switched off) and saves what the
+      // switch shows: the operator can switch them off before saving (#7227)
+      const development = developmentRunsForMode(value, storedMode, storedDevelopment);
+      if (development !== undefined) setField('allow_development_runs', development);
+    },
+    [setField, storedMode, storedDevelopment],
+  );
   const handlePolicyRevisionChange = useCallback(
     event => setField('policy_revision', event.target.value),
     [setField],
