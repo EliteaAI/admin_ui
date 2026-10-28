@@ -5,6 +5,7 @@ import MenuBookIcon from '@mui/icons-material/MenuBookOutlined';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import PollOutlinedIcon from '@mui/icons-material/PollOutlined';
 import PublishIcon from '@mui/icons-material/PublishOutlined';
+import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgentOutlined';
 
 // Features sub-navigation, in display order. backendSectionIds lists every config section a page
@@ -22,6 +23,12 @@ export const FEATURES_SECTIONS = [
     title: 'Chat Configuration',
     icon: ChatBubbleOutlineOutlinedIcon,
     backendSectionIds: ['voice_features', 'chat_mentions', 'guardrails'],
+  },
+  {
+    id: 'skills',
+    title: 'Skills',
+    icon: AutoAwesomeOutlinedIcon,
+    backendSectionIds: ['skills'],
   },
   {
     id: 'support_assistant',
