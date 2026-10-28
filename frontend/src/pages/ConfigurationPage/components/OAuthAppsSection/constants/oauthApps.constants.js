@@ -1,7 +1,8 @@
 export const MICROSOFT_ENTRA = 'microsoft_entra';
 
 // Microsoft Graph delegated scopes the Teams and Outlook credentials offer (mirrors elitea-sdk).
-// SharePoint takes free-form scopes. An empty list means the credential's recommended set.
+// SharePoint and Microsoft Graph take free-form scopes. An empty list means the credential's recommended set.
+// optIn: not served by apps saved without credential types, and off for new apps (mirrors the configurations plugin).
 const ENTRA_SCOPE_GROUPS = [
   {
     type: 'teams',
@@ -30,7 +31,22 @@ const ENTRA_SCOPE_GROUPS = [
     ],
     recommended: ['Mail.Read'],
   },
-  { type: 'sharepoint', label: 'SharePoint', options: null, recommended: [] },
+  {
+    type: 'sharepoint',
+    label: 'SharePoint',
+    options: null,
+    recommended: [],
+    placeholder: 'e.g. Sites.Read.All Files.Read.All',
+  },
+  {
+    type: 'ms_graph',
+    label: 'Microsoft Graph',
+    options: null,
+    recommended: ['User.Read'],
+    placeholder: 'e.g. User.Read Mail.Read Files.Read.All',
+    hint: 'Low-level toolkit that calls any Graph endpoint: grant only the permissions its users need. Empty means User.Read',
+    optIn: true,
+  },
 ];
 
 // Identity providers an app can belong to (mirrors the configurations plugin). A provider sets the
@@ -38,7 +54,7 @@ const ENTRA_SCOPE_GROUPS = [
 export const OAUTH_PROVIDERS = {
   [MICROSOFT_ENTRA]: {
     label: 'Microsoft Entra ID',
-    credentialTypes: 'Teams, Outlook and SharePoint',
+    credentialTypes: 'Teams, Outlook, SharePoint and Microsoft Graph',
     defaultDiscoveryEndpoint: 'https://login.microsoftonline.com/organizations',
     discoveryEndpointHint:
       'https://login.microsoftonline.com/organizations for multi-tenant apps, or /<tenant_id> for one tenant',

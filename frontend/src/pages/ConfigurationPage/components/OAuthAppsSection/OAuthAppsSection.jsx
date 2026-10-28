@@ -84,7 +84,8 @@ const OAuthAppsSection = memo(() => {
       }
       if (column.field === 'credential_types') {
         const provider = providerOf(row);
-        const types = value ?? provider.scopeGroups.map(group => group.type);
+        // The server sends the effective list; a missing one means the non-opt-in types
+        const types = value ?? provider.scopeGroups.filter(group => !group.optIn).map(group => group.type);
         return (
           <Box sx={styles.chips}>
             {provider.scopeGroups
