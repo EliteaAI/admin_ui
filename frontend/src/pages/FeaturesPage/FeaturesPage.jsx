@@ -18,7 +18,7 @@ import { CustomThemeSection } from './components/CustomThemeSection';
 import { HelpCenterSection } from './components/HelpCenterSection';
 import McpConfigurationSection from './components/McpConfigurationSection';
 import PublishingSection from './components/PublishingSection';
-import SkillsSection from './components/SkillsSection';
+import { SkillsConfigurationSection } from './components/SkillsConfigurationSection';
 import SupportAssistant from './components/SupportAssistant';
 import { SurveysSection } from './components/SurveysSection';
 import { FEATURES_SECTIONS, LEGACY_SECTION_REDIRECTS } from './constants/features.constants';
@@ -120,6 +120,10 @@ const FeaturesPage = memo(() => {
   );
   const toolPricingFields = useMemo(
     () => schemasData?.sections?.find(s => s.id === 'tool_pricing')?.fields || [],
+    [schemasData],
+  );
+  const skillsFields = useMemo(
+    () => schemasData?.sections?.find(s => s.id === 'skills')?.fields || [],
     [schemasData],
   );
 
@@ -300,9 +304,10 @@ const FeaturesPage = memo(() => {
       case 'skills':
         return (
           <Box sx={styles.formScroll}>
-            <SkillsSection
-              values={skillsDraft.values}
-              onChange={skillsDraft.onChange}
+            <SkillsConfigurationSection
+              skillsDraft={skillsDraft}
+              skillsFields={skillsFields}
+              initialBlock={deepLinkBlock}
             />
           </Box>
         );

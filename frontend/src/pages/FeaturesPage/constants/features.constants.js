@@ -26,7 +26,7 @@ export const FEATURES_SECTIONS = [
   },
   {
     id: 'skills',
-    title: 'Skills',
+    title: 'Skills Configuration',
     icon: AutoAwesomeOutlinedIcon,
     backendSectionIds: ['skills'],
   },
