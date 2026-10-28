@@ -193,13 +193,21 @@ const OAuthAppDialog = memo(props => {
     }
   }, [app, buildPayload, createApp, isEdit, onClose, onSaved, updateApp]);
 
+  // The stored secret only ever goes to the authority it was saved with: a changed endpoint needs it again
+  const endpointChanged =
+    isEdit &&
+    form.oauth_discovery_endpoint.trim().replace(/\/+$/, '').toLowerCase() !==
+      initialForm.oauth_discovery_endpoint.trim().replace(/\/+$/, '').toLowerCase();
+  const needsSecret = endpointChanged && !replaceSecret;
+
   const isValid =
     form.name.trim() &&
     form.client_id.trim() &&
     form.oauth_discovery_endpoint.trim() &&
     form.credential_types.length > 0 &&
     form.allowed_project_ids.length > 0 &&
-    (!replaceSecret || form.client_secret.trim());
+    (!replaceSecret || form.client_secret.trim()) &&
+    !needsSecret;
   const isDirty = useMemo(
     () => !isEdit || replaceSecret || JSON.stringify(form) !== JSON.stringify(initialForm),
     [form, initialForm, isEdit, replaceSecret],
@@ -328,7 +336,12 @@ const OAuthAppDialog = memo(props => {
         )}
         <TextField
           label="OAuth discovery endpoint"
-          helperText={provider.discoveryEndpointHint}
+          error={needsSecret}
+          helperText={
+            needsSecret
+              ? 'Replace the client secret to use a new endpoint: the stored secret stays with the saved one.'
+              : provider.discoveryEndpointHint
+          }
           value={form.oauth_discovery_endpoint}
           onChange={event => setField('oauth_discovery_endpoint', event.target.value)}
           required
