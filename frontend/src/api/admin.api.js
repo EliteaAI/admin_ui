@@ -29,6 +29,7 @@ export const adminApi = createApi({
     'AppRequests',
     'Budgets',
     'PlatformDimensions',
+    'OAuthApps',
     'Surveys',
     'Banners',
     'ModelPrices',
