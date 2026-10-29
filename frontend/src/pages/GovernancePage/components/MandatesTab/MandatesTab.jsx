@@ -21,6 +21,7 @@ import { useGovernanceProject } from '@/pages/GovernancePage/hooks/useGovernance
 import { useGovernanceSnackbar } from '@/pages/GovernancePage/hooks/useGovernanceSnackbar.hooks';
 import { useGovernanceTable } from '@/pages/GovernancePage/hooks/useGovernanceTable.hooks';
 
+import ConsentScopeNotice from './components/ConsentScopeNotice';
 import CreateMandateDialog from './components/CreateMandateDialog';
 import MandateDetailDrawer from './components/MandateDetailDrawer';
 import MandatesTable from './components/MandatesTable';
@@ -197,6 +198,14 @@ const MandatesTab = memo(() => {
         open={Boolean(confirmTarget)}
         title={confirmTarget ? `${confirmText.label}: ${rowTitle(confirmTarget.row)}` : ''}
         description={confirmText?.description ?? ''}
+        extra={
+          confirmTarget?.action === 'consent' ? (
+            <ConsentScopeNotice
+              projectId={projectId}
+              mandateId={confirmTarget.row.id}
+            />
+          ) : null
+        }
         confirmLabel={confirmText?.label ?? 'Confirm'}
         destructive={Boolean(confirmText?.destructive)}
         errorFallback="The change failed."

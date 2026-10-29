@@ -59,6 +59,8 @@ const MandatesTable = memo(props => {
     [total, page, pageSize, onPageChange, onPageSizeChange],
   );
 
+  const handleOpen = useCallback(row => () => onDetails(row), [onDetails]);
+
   const renderCell = useCallback(
     (column, _, row) => {
       switch (column.field) {
@@ -68,7 +70,7 @@ const MandatesTable = memo(props => {
               component="button"
               type="button"
               underline="hover"
-              onClick={() => onDetails(row)}
+              onClick={handleOpen(row)}
               sx={styles.agentLink}
               data-testid={`mandate-open-${row.id}`}
             >
@@ -96,7 +98,7 @@ const MandatesTable = memo(props => {
           return '-';
       }
     },
-    [onDetails, styles],
+    [handleOpen, styles],
   );
 
   const renderActions = useCallback(

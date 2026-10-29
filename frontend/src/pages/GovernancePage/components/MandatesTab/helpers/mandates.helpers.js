@@ -43,7 +43,7 @@ export const getRowActions = (row, { canManage, canApprove, userId }) => {
     });
   if (row.identity_source === OWNER_DELEGATED && live && own)
     actions.push({ action: 'consent', label: row.consented ? 'Consent again' : ACTION_TEXT.consent.label });
-  if (row.identity_source === OWNER_DELEGATED && row.consented && canManage)
+  if (row.identity_source === OWNER_DELEGATED && row.consented && (canManage || own))
     actions.push({ action: 'withdraw_consent', label: ACTION_TEXT.withdraw_consent.label });
   if (canManage && live) actions.push({ action: 'revoke', label: ACTION_TEXT.revoke.label });
   return actions;

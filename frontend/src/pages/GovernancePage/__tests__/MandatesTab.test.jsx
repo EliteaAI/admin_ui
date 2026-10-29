@@ -94,7 +94,12 @@ describe('Mandates tab', () => {
 
   it('offers the owner, and only the owner, to give consent, and sends the consent action', async () => {
     const calls = setup([makeMandate()], {
-      extra: { [`POST ${actionPath('m1')}`]: ok({ ok: true, id: 'm1' }) },
+      extra: {
+        [`POST ${actionPath('m1')}`]: ({ body }) =>
+          body.action === 'consent_preview'
+            ? ok({ ok: true, id: 'm1', covered: [{ toolkits: ['obo-sharepoint'] }] })
+            : ok({ ok: true, id: 'm1' }),
+      },
     });
     const user = userEvent.setup();
 
@@ -102,10 +107,14 @@ describe('Mandates tab', () => {
     await user.click(screen.getByTestId('mandate-action-consent'));
     const dialog = await screen.findByTestId('mandate-confirm-dialog');
     expect(dialog).toHaveTextContent('Signing out does not end it');
+    expect(await within(dialog).findByTestId('mandate-consent-scope')).toHaveTextContent('obo-sharepoint');
     await user.click(within(dialog).getByTestId('mandate-confirm-submit'));
 
-    await waitFor(() => expect(calls.some(call => call.method === 'POST')).toBe(true));
-    expect(calls.find(call => call.method === 'POST').body).toEqual({ action: 'consent' });
+    await waitFor(() => expect(calls.some(call => call.body?.action === 'consent')).toBe(true));
+    expect(calls.filter(call => call.method === 'POST').map(call => call.body.action)).toEqual([
+      'consent_preview',
+      'consent',
+    ]);
     expect(await screen.findByTestId('mandates-snackbar')).toHaveTextContent('consented');
   });
 
@@ -137,6 +146,15 @@ describe('Mandates tab', () => {
 
     expect(await within(dialog).findByText('The mandate has no consent to withdraw.')).toBeInTheDocument();
     expect(calls.find(call => call.method === 'POST').body).toEqual({ action: 'withdraw_consent' });
+  });
+
+  it('lets the owner withdraw their own consent without the manage permission', async () => {
+    setup([makeMandate({ consented: true })], { permissions: [BINDINGS_VIEW] });
+    const user = userEvent.setup();
+
+    await openActions(user);
+    expect(screen.getByTestId('mandate-action-withdraw_consent')).toBeInTheDocument();
+    expect(screen.queryByTestId('mandate-action-revoke')).not.toBeInTheDocument();
   });
 
   it('disables approval for the owner and sends approval references for another approver', async () => {
