@@ -46,6 +46,7 @@ export const adminApi = createApi({
     'CredentialReferences',
     'CredentialGrants',
     'SecurityEvents',
+    'Mandates',
   ],
   endpoints: () => ({}),
 });

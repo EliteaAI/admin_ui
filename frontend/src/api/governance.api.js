@@ -238,6 +238,34 @@ const governanceApi = adminApi.injectEndpoints({
       invalidatesTags: ['CredentialGrants'],
     }),
 
+    // Autonomous mandates of a project (#7131): { total, rows, identity_sources }
+    mandateList: build.query({
+      query: ({ projectId, limit = 20, offset = 0, state }) => ({
+        url: `/elitea_core/autonomous_mandates/administration/${encodeURIComponent(projectId)}`,
+        params: { limit, offset, ...(state && { state }) },
+      }),
+      providesTags: ['Mandates'],
+    }),
+
+    mandateCreate: build.mutation({
+      query: ({ projectId, ...body }) => ({
+        url: `/elitea_core/autonomous_mandates/administration/${encodeURIComponent(projectId)}`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Mandates'],
+    }),
+
+    // The body is { action }; approve adds approval_ref and policy_revision (both). consent is the owner's own.
+    mandateAction: build.mutation({
+      query: ({ projectId, mandateId, ...body }) => ({
+        url: `/elitea_core/autonomous_mandate_action/administration/${encodeURIComponent(projectId)}/${encodeURIComponent(mandateId)}`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Mandates'],
+    }),
+
     // The body is { action }; approve adds approval_ref and policy_revision (both)
     credentialGrantAction: build.mutation({
       query: ({ projectId, grantId, ...body }) => ({
@@ -269,6 +297,9 @@ export const {
   useGovernanceSettingsGetQuery,
   useGovernanceSettingsUpdateMutation,
   useGovernanceSettingsHistoryListQuery,
+  useMandateActionMutation,
+  useMandateCreateMutation,
+  useMandateListQuery,
   useSecurityAuditListQuery,
   useSecurityAuditSummaryQuery,
 } = governanceApi;

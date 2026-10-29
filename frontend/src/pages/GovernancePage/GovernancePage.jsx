@@ -16,7 +16,7 @@ import { IdentitiesTab } from './components/IdentitiesTab';
 import { MandatesTab } from './components/MandatesTab';
 import { OverviewTab } from './components/OverviewTab';
 
-// `permission` hides a tab from operators who could not read it; the Mandates placeholder has none
+// `permission` hides a tab from operators who could not read it
 const TABS = [
   {
     id: 'overview',
@@ -42,7 +42,12 @@ const TABS = [
     permission: PERMISSIONS.credentials.view,
     Content: GrantsTab,
   },
-  { id: 'mandates', label: 'Mandates', Content: MandatesTab },
+  {
+    id: 'mandates',
+    label: 'Mandates',
+    permission: PERMISSIONS.governance.bindings.view,
+    Content: MandatesTab,
+  },
 ];
 
 const GovernancePage = memo(() => {

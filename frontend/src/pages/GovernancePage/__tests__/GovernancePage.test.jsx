@@ -87,11 +87,18 @@ describe('page shell', () => {
     expect(screen.queryByTestId('governance-tab-grants')).not.toBeInTheDocument();
   });
 
-  it('explains on the Mandates tab that mandates are managed through the admin task for now', async () => {
+  it('opens the Mandates tab for operators who can view bindings, and hides it from others', async () => {
     setup('/governance?tab=mandates');
 
-    expect(await screen.findByTestId('governance-mandates')).toHaveTextContent('manage_autonomous_mandate');
+    expect(await screen.findByTestId('governance-mandates')).toBeInTheDocument();
     expect(screen.queryByTestId('governance-overview')).not.toBeInTheDocument();
+  });
+
+  it('hides the Mandates tab without the bindings view permission', async () => {
+    setup('/governance?tab=mandates', [VIEW]);
+
+    expect(await screen.findByTestId('governance-overview')).toBeInTheDocument();
+    expect(screen.queryByTestId('governance-tab-mandates')).not.toBeInTheDocument();
   });
 
   it('opens the Agent identities tab for operators who can view bindings', async () => {

@@ -34,6 +34,7 @@ export const STATE_LABELS = {
   retiring: 'Retiring',
   retired: 'Retired',
   revoked: 'Revoked',
+  expired: 'Expired',
 };
 
 // Chip colour by state: in use is green, on its way in is blue, taken out of use is amber, finished is grey
@@ -48,10 +49,11 @@ export const STATE_COLORS = {
   retiring: 'warning',
   retired: 'default',
   revoked: 'default',
+  expired: 'default',
 };
 
 // Finished records are shown dimmed
-export const FINISHED_STATES = ['retired', 'revoked'];
+export const FINISHED_STATES = ['retired', 'revoked', 'expired'];
 
 // The classes of a credential reference (a personal one belongs to one member of the project)
 export const OWNERSHIP_CLASS_LABELS = {
