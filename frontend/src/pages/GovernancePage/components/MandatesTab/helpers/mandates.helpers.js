@@ -2,7 +2,9 @@ import {
   ACTION_TEXT,
   IDENTITY_LABELS,
   LIVE_STATES,
+  OPERATION_LABELS,
   OWNER_DELEGATED,
+  TOOLKIT_CONSENT_TEXT,
 } from '@/pages/GovernancePage/components/MandatesTab/constants/mandates.constants';
 
 export const identityLabel = source => (source ? (IDENTITY_LABELS[source] ?? source) : 'None');
@@ -12,7 +14,24 @@ export const consentLabel = row => {
   return row.consented ? 'Consented' : 'Consent needed';
 };
 
-export const rowTitle = row => `${row.application?.name ?? 'Agent'} ${row.version?.name ?? ''}`.trim();
+// A toolkit mandate (#7305) names its toolkit instead of an agent version
+export const isToolkitMandate = row => Boolean(row?.toolkit);
+
+export const toolkitLabel = row => `Toolkit: ${row.toolkit?.name ?? row.toolkit?.id ?? '-'}`;
+
+export const rowTitle = row =>
+  isToolkitMandate(row)
+    ? toolkitLabel(row)
+    : `${row.application?.name ?? 'Agent'} ${row.version?.name ?? ''}`.trim();
+
+export const operationsLabel = operations =>
+  (operations ?? []).map(operation => OPERATION_LABELS[operation] ?? operation).join(', ');
+
+// The text of a confirmed action; the consent of a toolkit mandate speaks of its index runs
+export const actionText = (row, action) =>
+  action === 'consent' && isToolkitMandate(row)
+    ? { ...ACTION_TEXT.consent, description: TOOLKIT_CONSENT_TEXT }
+    : ACTION_TEXT[action];
 
 const SELF_APPROVAL_HINT = 'The creator or the owner of a mandate cannot approve or resume it.';
 

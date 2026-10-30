@@ -5,6 +5,7 @@ import store, { setUser } from '@/store';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import { USERS_PATH, usersResponse } from './credentialsTest.helpers';
 import {
   SETTINGS_PATH,
   VIEW,
@@ -24,6 +25,7 @@ import {
 const OWNER_ID = 5;
 const OPERATOR_ID = 11;
 const LIST_PATH = `/elitea_core/autonomous_mandates/administration/${PROJECT.id}`;
+const TOOLKITS_PATH = `/elitea_core/governance_toolkits/administration/${PROJECT.id}`;
 const actionPath = id => `/elitea_core/autonomous_mandate_action/administration/${PROJECT.id}/${id}`;
 
 const makeMandate = (overrides = {}) => ({
@@ -179,6 +181,96 @@ describe('Mandates tab', () => {
       action: 'approve',
       approval_ref: 'CHG-7',
     });
+  });
+
+  it('shows a toolkit mandate by its toolkit, with the index schedules it covers', async () => {
+    const user = userEvent.setup();
+    setup([
+      makeMandate({
+        id: 't1',
+        application: { id: null, name: null },
+        version: { id: null, name: null },
+        toolkit: { id: 1, name: 'obo-sharepoint' },
+        operations: ['run:index_schedule'],
+      }),
+    ]);
+
+    const table = await screen.findByTestId('governance-mandates');
+    expect(await within(table).findByTestId('mandate-open-t1')).toHaveTextContent('Toolkit: obo-sharepoint');
+    await user.click(screen.getByTestId('mandate-open-t1'));
+    const drawer = await screen.findByTestId('mandate-detail');
+    expect(drawer).toHaveTextContent('Toolkit: obo-sharepoint');
+    expect(drawer).toHaveTextContent('Index schedules');
+  });
+
+  it('asks the owner to consent to the index runs of a toolkit mandate in its own words', async () => {
+    setup(
+      [
+        makeMandate({
+          id: 't1',
+          application: { id: null, name: null },
+          version: { id: null, name: null },
+          toolkit: { id: 1, name: 'obo-sharepoint' },
+          operations: ['run:index_schedule'],
+        }),
+      ],
+      {
+        extra: {
+          [`POST ${actionPath('t1')}`]: ok({
+            ok: true,
+            id: 't1',
+            covered: [{ toolkits: ['obo-sharepoint'] }],
+          }),
+        },
+      },
+    );
+    const user = userEvent.setup();
+
+    await openActions(user, 't1');
+    await user.click(screen.getByTestId('mandate-action-consent'));
+    const dialog = await screen.findByTestId('mandate-confirm-dialog');
+    expect(dialog).toHaveTextContent(
+      'Scheduled index runs of this toolkit will act with your Microsoft sign-in',
+    );
+    expect(await within(dialog).findByTestId('mandate-consent-scope')).toHaveTextContent('obo-sharepoint');
+  });
+
+  it('creates a toolkit mandate for the index schedules of the chosen toolkit', async () => {
+    const calls = setup([], {
+      userId: OPERATOR_ID,
+      extra: {
+        [`GET ${TOOLKITS_PATH}`]: ok({
+          total: 1,
+          rows: [{ id: 1, name: 'obo-sharepoint', type: 'sharepoint' }],
+        }),
+        [`GET ${USERS_PATH}`]: usersResponse(),
+        [`POST ${LIST_PATH}`]: ok({ ok: true, id: 'new-1', state: 'draft' }),
+      },
+    });
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByTestId('mandates-create'));
+    const dialog = await screen.findByTestId('mandate-create-dialog');
+    await user.click(within(dialog).getByTestId('mandate-create-covers'));
+    await user.click(await screen.findByTestId('mandate-create-covers-toolkit'));
+    expect(within(dialog).queryByTestId('mandate-create-agent')).not.toBeInTheDocument();
+    expect(within(dialog).getByTestId('mandate-create-op-run:index_schedule')).toBeChecked();
+    expect(within(dialog).getByTestId('mandate-create-op-run:index_schedule')).toBeDisabled();
+    expect(within(dialog).getByTestId('mandate-create-submit')).toBeDisabled();
+    await user.click(within(dialog).getByTestId('mandate-create-toolkit'));
+    await user.click(await screen.findByText('obo-sharepoint'));
+    await user.click(within(dialog).getByTestId('mandate-create-owner-input'));
+    await user.click(await screen.findByText('u2@epam.com'));
+    await user.click(within(dialog).getByTestId('mandate-create-submit'));
+
+    await waitFor(() => expect(calls.some(call => call.method === 'POST')).toBe(true));
+    const body = calls.find(call => call.method === 'POST').body;
+    expect(body).toMatchObject({ toolkit_id: 1, owner_user_id: 8, operations: ['run:index_schedule'] });
+    expect(body).not.toHaveProperty('version_id');
+    expect(await screen.findByTestId('mandates-snackbar')).toHaveTextContent(
+      'Mandate for Toolkit: obo-sharepoint created as a draft.',
+    );
+    expect(calls.some(call => call.path === TOOLKITS_PATH)).toBe(true);
   });
 
   it('hides the create button from operators who cannot manage', async () => {
