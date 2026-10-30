@@ -94,6 +94,11 @@ describe('deployment ceiling', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'Every run is checked as if governance were enforced',
     );
+    // #7254: what audit only evaluates after the schedule bridge and per-child admission
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      "Scheduled agent and pipeline runs are checked against their owner's mandate and leave 'would deny' records; sub-agent runs are evaluated with their parent run. Webhook runs and scheduled indexing are not evaluated in this mode.",
+    );
+    expect(screen.getByRole('tooltip')).not.toHaveTextContent('Sub-agent runs are not evaluated');
   });
 
   it('tells the operator the saved mode is not in effect when the deployment caps it', async () => {
