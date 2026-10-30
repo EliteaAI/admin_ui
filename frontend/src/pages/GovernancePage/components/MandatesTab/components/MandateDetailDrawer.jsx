@@ -4,6 +4,7 @@ import DetailDrawer from '@/pages/GovernancePage/components/DetailDrawer';
 import {
   consentLabel,
   identityLabel,
+  operationsLabel,
   rowTitle,
 } from '@/pages/GovernancePage/components/MandatesTab/helpers/mandates.helpers';
 import { formatDateTime, personName, stateLabel } from '@/pages/GovernancePage/helpers/governance.helpers';
@@ -19,8 +20,9 @@ const MandateDetailDrawer = memo(props => {
         key: 'scope',
         title: 'Scope',
         fields: [
+          { key: 'covers', label: 'Covers', value: rowTitle(row) },
           { key: 'owner', label: 'Owner', value: personName(row.owner) },
-          { key: 'operations', label: 'Runs', value: (row.operations ?? []).join(', ') },
+          { key: 'operations', label: 'Runs', value: operationsLabel(row.operations) },
           { key: 'runtime', label: 'Longest run', value: `${Math.round((row.max_runtime_s ?? 0) / 60)} min` },
           { key: 'valid_until', label: 'Valid until', value: formatDateTime(row.valid_until) },
           { key: 'revision', label: 'Revision', value: String(row.revision ?? '-') },

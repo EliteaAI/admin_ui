@@ -9,6 +9,8 @@ import {
   consentLabel,
   getRowActions,
   identityLabel,
+  isToolkitMandate,
+  toolkitLabel,
 } from '@/pages/GovernancePage/components/MandatesTab/helpers/mandates.helpers';
 import RowActionsMenu from '@/pages/GovernancePage/components/RowActionsMenu';
 import {
@@ -74,10 +76,11 @@ const MandatesTable = memo(props => {
               sx={styles.agentLink}
               data-testid={`mandate-open-${row.id}`}
             >
-              {row.application?.name ?? '-'}
+              {isToolkitMandate(row) ? toolkitLabel(row) : (row.application?.name ?? '-')}
             </Link>
           );
         case 'version':
+          if (isToolkitMandate(row)) return '-';
           return row.version?.name ?? String(row.version?.id ?? '-');
         case 'owner':
           return personName(row.owner) ?? '-';
