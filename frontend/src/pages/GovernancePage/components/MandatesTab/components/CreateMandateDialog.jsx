@@ -19,12 +19,19 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useGovernanceAgentListQuery, useMandateCreateMutation } from '@/api/governance.api';
+import {
+  useGovernanceAgentListQuery,
+  useGovernanceToolkitListQuery,
+  useMandateCreateMutation,
+} from '@/api/governance.api';
 import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
 import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
 import {
+  COVERS_AGENT,
+  COVERS_TOOLKIT,
   DEFAULT_RUNTIME_MINUTES,
   DEFAULT_VALID_DAYS,
+  INDEX_OPERATION,
   MAX_VALID_DAYS,
   OPERATION_OPTIONS,
 } from '@/pages/GovernancePage/components/MandatesTab/constants/mandates.constants';
@@ -45,15 +52,19 @@ const getName = option => option.name;
 const hasActiveIdentity = version => (version.bindings ?? []).some(binding => binding.state === 'active');
 
 /**
- * Creates a mandate in draft: the agent version (it needs an active identity), its owner, which runs it covers, how
- * long a run may take, until when, and — when the platform allows it — the identity its runs act with.
- * `identitySources` are the identities the deployment allows (from the list).
+ * Creates a mandate in draft: the agent version (it needs an active identity) or the toolkit whose index schedules it
+ * covers (#7305), its owner, which runs it covers, how long a run may take, until when, and — when the platform allows
+ * it — the identity its runs act with. `identitySources` are the identities the deployment allows (from the list).
  */
 const CreateMandateDialog = memo(props => {
   const { open, projectId, identitySources = [], onClose, onCreated } = props;
 
   const styles = createMandateDialogStyles();
 
+  const [covers, setCovers] = useState(COVERS_AGENT);
+  const [toolkit, setToolkit] = useState(null);
+  const [toolkitInput, setToolkitInput] = useState('');
+  const [toolkitSearch, setToolkitSearch] = useState('');
   const [agent, setAgent] = useState(null);
   const [agentInput, setAgentInput] = useState('');
   const [agentSearch, setAgentSearch] = useState('');
@@ -65,10 +76,16 @@ const CreateMandateDialog = memo(props => {
   const [identity, setIdentity] = useState(NO_IDENTITY);
   const [error, setError] = useState(null);
 
+  const forToolkit = covers === COVERS_TOOLKIT;
   const debouncedSearch = useDebounceValue(agentSearch, 300);
   const { data, isFetching } = useGovernanceAgentListQuery(
     { projectId, limit: AGENT_LIMIT, search: debouncedSearch },
-    { skip: !open || !projectId, refetchOnMountOrArgChange: true },
+    { skip: !open || !projectId || forToolkit, refetchOnMountOrArgChange: true },
+  );
+  const debouncedToolkitSearch = useDebounceValue(toolkitSearch, 300);
+  const { data: toolkitData, isFetching: toolkitsFetching } = useGovernanceToolkitListQuery(
+    { projectId, limit: AGENT_LIMIT, search: debouncedToolkitSearch },
+    { skip: !open || !projectId || !forToolkit, refetchOnMountOrArgChange: true },
   );
   const [createMandate, { isLoading }] = useMandateCreateMutation();
 
@@ -81,19 +98,26 @@ const CreateMandateDialog = memo(props => {
     () => options.find(option => option.id === agent?.id) ?? null,
     [options, agent?.id],
   );
+  const toolkitOptions = useMemo(() => {
+    const rows = toolkitData?.rows ?? [];
+    return toolkit && !rows.some(row => row.id === toolkit.id) ? [toolkit, ...rows] : rows;
+  }, [toolkitData?.rows, toolkit]);
   const versions = useMemo(() => selectedAgent?.versions ?? [], [selectedAgent]);
   const selectedVersion = versions.find(version => version.id === versionId) ?? null;
 
   const runtime = Number(minutes) * 60;
   const runtimeValid = Number.isInteger(runtime) && runtime >= 60 && runtime <= 86400;
+  const covered = forToolkit
+    ? Boolean(toolkit)
+    : Boolean(selectedVersion && hasActiveIdentity(selectedVersion));
   const canSubmit =
-    Boolean(
-      selectedVersion && hasActiveIdentity(selectedVersion) && owner && operations.length && validDay,
-    ) &&
-    runtimeValid &&
-    !isLoading;
+    Boolean(covered && owner && (forToolkit || operations.length) && validDay) && runtimeValid && !isLoading;
 
   const reset = useCallback(() => {
+    setCovers(COVERS_AGENT);
+    setToolkit(null);
+    setToolkitInput('');
+    setToolkitSearch('');
     setAgent(null);
     setAgentInput('');
     setAgentSearch('');
@@ -121,6 +145,12 @@ const CreateMandateDialog = memo(props => {
     setAgentSearch(reason === 'input' ? next : '');
   }, []);
   const handleVersionChange = useCallback(event => setVersionId(event.target.value), []);
+  const handleCoversChange = useCallback(event => setCovers(event.target.value), []);
+  const handleToolkitChange = useCallback((_, next) => setToolkit(next), []);
+  const handleToolkitInputChange = useCallback((_, next, reason) => {
+    setToolkitInput(next);
+    setToolkitSearch(reason === 'input' ? next : '');
+  }, []);
   const handleOperationToggle = useCallback(
     value => event =>
       setOperations(current =>
@@ -137,14 +167,18 @@ const CreateMandateDialog = memo(props => {
     try {
       const result = await createMandate({
         projectId,
-        version_id: selectedVersion.id,
+        ...(forToolkit
+          ? { toolkit_id: toolkit.id, operations: [INDEX_OPERATION.value] }
+          : { version_id: selectedVersion.id, operations }),
         owner_user_id: owner.id,
-        operations,
         max_runtime_s: runtime,
         valid_until: validUntilOf(validDay),
         ...(identity !== NO_IDENTITY && { identity }),
       }).unwrap();
-      const created = { agentName: selectedAgent.name, versionName: selectedVersion.name, id: result.id };
+      const title = forToolkit
+        ? `Toolkit: ${toolkit.name}`
+        : `${selectedAgent.name} ${selectedVersion.name}`.trim();
+      const created = { title, id: result.id };
       reset();
       onCreated(created);
     } catch (err) {
@@ -153,6 +187,8 @@ const CreateMandateDialog = memo(props => {
   }, [
     createMandate,
     projectId,
+    forToolkit,
+    toolkit,
     selectedAgent,
     selectedVersion,
     owner,
@@ -183,51 +219,101 @@ const CreateMandateDialog = memo(props => {
             The mandate starts as a draft. Submit it, then an operator who is neither you nor its owner
             approves it.
           </Typography>
-          <Autocomplete
-            size="small"
-            value={selectedAgent}
-            onChange={handleAgentChange}
-            inputValue={agentInput}
-            onInputChange={handleAgentInputChange}
-            options={options}
-            loading={isFetching}
-            filterOptions={showAllOptions}
-            getOptionLabel={getName}
-            isOptionEqualToValue={isSameOption}
-            noOptionsText="No agents found"
-            renderInput={params => (
-              <TextField
-                {...params}
-                label="Agent"
-                inputProps={{ ...params.inputProps, 'data-testid': 'mandate-create-agent' }}
-              />
-            )}
-          />
-          <FormControl
-            size="small"
-            disabled={!selectedAgent}
-          >
-            <InputLabel id="mandate-create-version-label">Version</InputLabel>
+          <FormControl size="small">
+            <InputLabel id="mandate-create-covers-label">Covers</InputLabel>
             <Select
-              labelId="mandate-create-version-label"
-              label="Version"
-              value={versionId}
-              onChange={handleVersionChange}
-              SelectDisplayProps={{ 'data-testid': 'mandate-create-version' }}
+              labelId="mandate-create-covers-label"
+              label="Covers"
+              value={covers}
+              onChange={handleCoversChange}
+              SelectDisplayProps={{ 'data-testid': 'mandate-create-covers' }}
             >
-              {versions.map(version => (
-                <MenuItem
-                  key={version.id}
-                  value={version.id}
-                  disabled={!hasActiveIdentity(version)}
-                  data-testid={`mandate-create-version-${version.id}`}
-                >
-                  {version.name}
-                  {hasActiveIdentity(version) ? '' : ' (no active identity)'}
-                </MenuItem>
-              ))}
+              <MenuItem
+                value={COVERS_AGENT}
+                data-testid="mandate-create-covers-agent"
+              >
+                Agent version
+              </MenuItem>
+              <MenuItem
+                value={COVERS_TOOLKIT}
+                data-testid="mandate-create-covers-toolkit"
+              >
+                Toolkit index schedules
+              </MenuItem>
             </Select>
           </FormControl>
+          {forToolkit && (
+            <Autocomplete
+              size="small"
+              value={toolkit}
+              onChange={handleToolkitChange}
+              inputValue={toolkitInput}
+              onInputChange={handleToolkitInputChange}
+              options={toolkitOptions}
+              loading={toolkitsFetching}
+              filterOptions={showAllOptions}
+              getOptionLabel={getName}
+              isOptionEqualToValue={isSameOption}
+              noOptionsText="No toolkits found"
+              renderInput={params => (
+                <TextField
+                  {...params}
+                  label="Toolkit"
+                  helperText="Covers the owner's index schedules of this toolkit."
+                  inputProps={{ ...params.inputProps, 'data-testid': 'mandate-create-toolkit' }}
+                />
+              )}
+            />
+          )}
+          {!forToolkit && (
+            <>
+              <Autocomplete
+                size="small"
+                value={selectedAgent}
+                onChange={handleAgentChange}
+                inputValue={agentInput}
+                onInputChange={handleAgentInputChange}
+                options={options}
+                loading={isFetching}
+                filterOptions={showAllOptions}
+                getOptionLabel={getName}
+                isOptionEqualToValue={isSameOption}
+                noOptionsText="No agents found"
+                renderInput={params => (
+                  <TextField
+                    {...params}
+                    label="Agent"
+                    inputProps={{ ...params.inputProps, 'data-testid': 'mandate-create-agent' }}
+                  />
+                )}
+              />
+              <FormControl
+                size="small"
+                disabled={!selectedAgent}
+              >
+                <InputLabel id="mandate-create-version-label">Version</InputLabel>
+                <Select
+                  labelId="mandate-create-version-label"
+                  label="Version"
+                  value={versionId}
+                  onChange={handleVersionChange}
+                  SelectDisplayProps={{ 'data-testid': 'mandate-create-version' }}
+                >
+                  {versions.map(version => (
+                    <MenuItem
+                      key={version.id}
+                      value={version.id}
+                      disabled={!hasActiveIdentity(version)}
+                      data-testid={`mandate-create-version-${version.id}`}
+                    >
+                      {version.name}
+                      {hasActiveIdentity(version) ? '' : ' (no active identity)'}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </>
+          )}
           <ProjectUserPicker
             projectId={projectId}
             value={owner}
@@ -239,19 +325,32 @@ const CreateMandateDialog = memo(props => {
             sx={styles.wide}
           />
           <FormGroup row>
-            {OPERATION_OPTIONS.map(option => (
+            {forToolkit ? (
               <FormControlLabel
-                key={option.value}
-                label={option.label}
+                label={INDEX_OPERATION.label}
                 control={
                   <Checkbox
-                    checked={operations.includes(option.value)}
-                    onChange={handleOperationToggle(option.value)}
-                    inputProps={{ 'data-testid': `mandate-create-op-${option.value}` }}
+                    checked
+                    disabled
+                    inputProps={{ 'data-testid': `mandate-create-op-${INDEX_OPERATION.value}` }}
                   />
                 }
               />
-            ))}
+            ) : (
+              OPERATION_OPTIONS.map(option => (
+                <FormControlLabel
+                  key={option.value}
+                  label={option.label}
+                  control={
+                    <Checkbox
+                      checked={operations.includes(option.value)}
+                      onChange={handleOperationToggle(option.value)}
+                      inputProps={{ 'data-testid': `mandate-create-op-${option.value}` }}
+                    />
+                  }
+                />
+              ))
+            )}
           </FormGroup>
           <Box sx={styles.row}>
             <TextField

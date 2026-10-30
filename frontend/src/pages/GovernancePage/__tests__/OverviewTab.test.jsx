@@ -96,7 +96,7 @@ describe('deployment ceiling', () => {
     );
     // #7254: what audit only evaluates after the schedule bridge and per-child admission
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      "Runs of schedules on the Schedules page are checked against their owner's mandate and leave 'would deny' records; sub-agent runs are evaluated with an interactive parent run. Webhook runs, legacy cron triggers and scheduled indexing are not evaluated in this mode.",
+      "Runs of schedules on the Schedules page are checked against their owner's mandate and leave 'would deny' records, and so are scheduled index runs, against the index-schedule mandate of the schedule's owner on the toolkit; sub-agent runs are evaluated with an interactive parent run. Webhook runs and legacy cron triggers are not evaluated in this mode.",
     );
     expect(screen.getByRole('tooltip')).not.toHaveTextContent('Sub-agent runs are not evaluated');
   });
