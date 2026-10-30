@@ -26,14 +26,14 @@ import CreateMandateDialog from './components/CreateMandateDialog';
 import MandateDetailDrawer from './components/MandateDetailDrawer';
 import MandatesTable from './components/MandatesTable';
 import MandatesToolbar from './components/MandatesToolbar';
-import { ACTION_TEXT } from './constants/mandates.constants';
-import { rowTitle, successMessage } from './helpers/mandates.helpers';
+import { actionText, rowTitle, successMessage } from './helpers/mandates.helpers';
 
 const NO_PROJECT_TEXT = 'Choose a project to see its mandates.';
 
 /**
  * The Mandates tab: the mandates that let one agent version run on schedules and webhooks without its owner present,
- * and, where the platform allows it, the identity those runs act with. Reading needs `governance.bindings.view`,
+ * or the owner's index schedules of one toolkit run (#7305), and, where the platform allows it, the identity those runs
+ * act with. Reading needs `governance.bindings.view`,
  * changing `governance.bindings.manage`, approving and resuming `governance.bindings.approve`; the owner's consent is
  * theirs alone. The backend enforces every rule; the UI only hides what would be refused.
  */
@@ -91,10 +91,10 @@ const MandatesTab = memo(() => {
   const handleCreateClose = useCallback(() => setCreateOpen(false), []);
 
   const handleCreated = useCallback(
-    ({ agentName, versionName }) => {
+    ({ title }) => {
       setCreateOpen(false);
       resetPage();
-      showSuccess(`Mandate for ${agentName} ${versionName} created as a draft.`);
+      showSuccess(`Mandate for ${title} created as a draft.`);
     },
     [resetPage, showSuccess],
   );
@@ -139,7 +139,7 @@ const MandatesTab = memo(() => {
       : `No mandates in ${project.name} yet.${canManage ? ' Use Create mandate to add one.' : ''}`;
   }
 
-  const confirmText = confirmTarget ? ACTION_TEXT[confirmTarget.action] : null;
+  const confirmText = confirmTarget ? actionText(confirmTarget.row, confirmTarget.action) : null;
 
   return (
     <Box

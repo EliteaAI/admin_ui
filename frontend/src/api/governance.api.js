@@ -93,6 +93,14 @@ const governanceApi = adminApi.injectEndpoints({
       providesTags: ['AgentIdentities'],
     }),
 
+    // The toolkits of a project, for a toolkit mandate that covers their index schedules (#7305)
+    governanceToolkitList: build.query({
+      query: ({ projectId, limit = 20, offset = 0, search }) => ({
+        url: `/elitea_core/governance_toolkits/administration/${encodeURIComponent(projectId)}`,
+        params: { limit, offset, ...(search && { search }) },
+      }),
+    }),
+
     agentIdentityCreate: build.mutation({
       query: ({ projectId, ...body }) => ({
         url: `/elitea_core/agent_identities/administration/${encodeURIComponent(projectId)}`,
@@ -297,6 +305,7 @@ export const {
   useGovernanceSettingsGetQuery,
   useGovernanceSettingsUpdateMutation,
   useGovernanceSettingsHistoryListQuery,
+  useGovernanceToolkitListQuery,
   useMandateActionMutation,
   useMandateCreateMutation,
   useMandateListQuery,

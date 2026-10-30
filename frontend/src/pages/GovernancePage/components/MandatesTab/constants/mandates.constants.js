@@ -14,6 +14,17 @@ export const OPERATION_OPTIONS = [
   { value: 'run:webhook', label: 'Webhooks' },
 ];
 
+// A toolkit mandate (#7305) covers the index schedules of one toolkit, and only those
+export const INDEX_OPERATION = { value: 'run:index_schedule', label: 'Index schedules' };
+
+export const OPERATION_LABELS = Object.fromEntries(
+  [...OPERATION_OPTIONS, INDEX_OPERATION].map(option => [option.value, option.label]),
+);
+
+// What a mandate covers: an agent version, or the owner's index schedules of one toolkit
+export const COVERS_AGENT = 'agent';
+export const COVERS_TOOLKIT = 'toolkit';
+
 export const DEFAULT_VALID_DAYS = 30;
 export const MAX_VALID_DAYS = 180;
 export const DEFAULT_RUNTIME_MINUTES = 60;
@@ -25,6 +36,10 @@ export const CONSENT_TEXT =
 export const WITHDRAW_TEXT =
   'Runs of this mandate stop acting with the owner’s Microsoft sign-in from the next run on; they are refused until ' +
   'the owner consents again.';
+
+export const TOOLKIT_CONSENT_TEXT =
+  'Scheduled index runs of this toolkit will act with your Microsoft sign-in, as you, until you withdraw the consent ' +
+  'or the mandate ends. Signing out does not end it. You may be asked to sign in again first.';
 
 // What each confirmed action does, as the operator reads it before confirming
 export const ACTION_TEXT = {
