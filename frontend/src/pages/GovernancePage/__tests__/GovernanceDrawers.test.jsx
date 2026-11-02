@@ -70,7 +70,7 @@ describe('history drawer', () => {
     expect(second).toHaveTextContent('Note 2');
     expect(second).toHaveTextContent('Policy revision CHG-2');
     expect(second).toHaveTextContent('Environment prod-eu');
-    expect(second).toHaveTextContent('Legacy tokens: on');
+    expect(second).toHaveTextContent('Legacy (unscoped) tokens: on');
     expect(second).toHaveTextContent('Runtime bindings: off');
     expect(second).toHaveTextContent('Development runs: default'); // not chosen in that revision (#7213)
     expect(second).toHaveTextContent('admin@example.com');

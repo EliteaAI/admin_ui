@@ -55,7 +55,7 @@ const SettingsHistoryDrawer = memo(props => {
               {[
                 row.policy_revision && `Policy revision ${row.policy_revision}`,
                 row.environment && `Environment ${row.environment}`,
-                flagText('Legacy tokens', row.flags?.admit_legacy_pat),
+                flagText('Legacy (unscoped) tokens', row.flags?.admit_legacy_pat),
                 flagText('Runtime bindings', row.flags?.allow_runtime_domain_binding),
                 chosenFlagText('Development runs', row.flags?.allow_development_runs),
               ]
