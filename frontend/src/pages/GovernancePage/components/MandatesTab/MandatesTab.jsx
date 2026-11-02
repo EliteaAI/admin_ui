@@ -191,6 +191,7 @@ const MandatesTab = memo(() => {
         open={createOpen}
         projectId={projectId}
         identitySources={data?.identity_sources ?? []}
+        tokenIdentity={Boolean(data?.token_identity)}
         onClose={handleCreateClose}
         onCreated={handleCreated}
       />

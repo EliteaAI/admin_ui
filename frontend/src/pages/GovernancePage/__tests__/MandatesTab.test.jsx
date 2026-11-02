@@ -279,4 +279,35 @@ describe('Mandates tab', () => {
     expect(await screen.findByTestId('governance-mandates')).toBeInTheDocument();
     expect(screen.queryByTestId('mandates-create')).not.toBeInTheDocument();
   });
+
+  it('says where restricted API tokens may act with their owner sign-in, only when the platform allows it', async () => {
+    setup([], {
+      userId: OPERATOR_ID,
+      extra: {
+        [`GET ${LIST_PATH}`]: ok({
+          total: 0,
+          rows: [],
+          identity_sources: ['owner_delegated'],
+          token_identity: true,
+        }),
+        [`GET ${USERS_PATH}`]: usersResponse(),
+      },
+    });
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByTestId('mandates-create'));
+    const dialog = await screen.findByTestId('mandate-create-dialog');
+    expect(within(dialog).getByTestId('mandate-create-token-identity')).toHaveTextContent(
+      'the owner consents in Elitea, Settings, Personal tokens',
+    );
+  });
+
+  it('says nothing about API tokens when the platform does not allow it', async () => {
+    setup([], { userId: OPERATOR_ID, extra: { [`GET ${USERS_PATH}`]: usersResponse() } });
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByTestId('mandates-create'));
+    const dialog = await screen.findByTestId('mandate-create-dialog');
+    expect(within(dialog).queryByTestId('mandate-create-token-identity')).not.toBeInTheDocument();
+  });
 });
