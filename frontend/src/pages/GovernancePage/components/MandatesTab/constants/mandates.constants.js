@@ -37,6 +37,11 @@ export const WITHDRAW_TEXT =
   'Runs of this mandate stop acting with the owner’s Microsoft sign-in from the next run on; they are refused until ' +
   'the owner consents again.';
 
+// The deployment also lists token_owner_delegated (#7337): said where the identities are chosen, nothing to set here
+export const TOKEN_IDENTITY_TEXT =
+  'Restricted API tokens may also act with their owner’s Microsoft sign-in on this platform; the owner consents in ' +
+  'Elitea, Settings, Personal tokens.';
+
 export const TOOLKIT_CONSENT_TEXT =
   'Scheduled index runs of this toolkit will act with your Microsoft sign-in, as you, until you withdraw the consent ' +
   'or the mandate ends. Signing out does not end it. You may be asked to sign in again first.';
