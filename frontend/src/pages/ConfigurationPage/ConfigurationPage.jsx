@@ -6,6 +6,7 @@ import CampaignIcon from '@mui/icons-material/CampaignOutlined';
 import CodeIcon from '@mui/icons-material/CodeOutlined';
 import ConstructionIcon from '@mui/icons-material/ConstructionOutlined';
 import DnsIcon from '@mui/icons-material/DnsOutlined';
+import GroupsIcon from '@mui/icons-material/GroupsOutlined';
 import LockIcon from '@mui/icons-material/LockOutlined';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeartOutlined';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -31,12 +32,14 @@ import { AdvancedSection } from './components/AdvancedSection';
 import { BannersSection } from './components/BannersSection';
 import { MaintenanceSection } from './components/MaintenanceSection';
 import { OAuthAppsSection } from './components/OAuthAppsSection';
+import { ScimSection } from './components/ScimSection';
 import { ServiceDescriptorsSection } from './components/ServiceDescriptorsSection';
 
 const SECTION_ICONS = {
   guardrails: SecurityIcon,
   mcp_servers: DnsIcon,
   oauth_apps: AppRegistrationIcon,
+  scim: GroupsIcon,
   observability: MonitorHeartIcon,
   runtime: SettingsIcon,
   admin_panel: AdminPanelSettingsIcon,
@@ -76,6 +79,7 @@ const SELF_MANAGED_SECTIONS = [
   'service_descriptors',
   'dedicated_banner',
   'oauth_apps',
+  'scim',
 ];
 
 const SECTION_ORDER = [
@@ -84,6 +88,7 @@ const SECTION_ORDER = [
   'dedicated_banner',
   'mcp_servers',
   'oauth_apps',
+  'scim',
   'guardrails',
   'observability',
   'runtime',
@@ -116,6 +121,7 @@ const ConfigurationPage = memo(() => {
     const allSections = [
       ...serverSections,
       { id: 'oauth_apps', title: 'OAuth Apps' },
+      { id: 'scim', title: 'SCIM Provisioning' },
       { id: 'service_descriptors', title: 'Service Descriptors' },
     ];
 
@@ -157,7 +163,7 @@ const ConfigurationPage = memo(() => {
     { sectionId: activeSection },
     // Banners and OAuth apps have their own storage, so these sections have no plugin-config values to load
     {
-      skip: !activeSection || ['dedicated_banner', 'oauth_apps'].includes(activeSection),
+      skip: !activeSection || ['dedicated_banner', 'oauth_apps', 'scim'].includes(activeSection),
       refetchOnMountOrArgChange: true,
     },
   );
@@ -391,6 +397,12 @@ const ConfigurationPage = memo(() => {
                 return (
                   <Box sx={styles.formScroll}>
                     <OAuthAppsSection />
+                  </Box>
+                );
+              case 'scim':
+                return (
+                  <Box sx={styles.formScroll}>
+                    <ScimSection />
                   </Box>
                 );
               case 'guardrails': {

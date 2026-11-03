@@ -72,6 +72,11 @@ export const PERMISSIONS = {
     edit: 'configuration.oauth_apps.edit',
   },
 
+  // SCIM provisioning of IdP groups into projects
+  scim: {
+    manage: 'admin.scim.manage',
+  },
+
   // LiteLLM section
   litellm: {
     section: 'configuration.litellm',
@@ -186,6 +191,7 @@ export const CONFIG_SECTION_PERMISSIONS = {
   service_descriptors: [PERMISSIONS.configuration.serviceDescriptors],
   dedicated_banner: [PERMISSIONS.banners.manage],
   oauth_apps: [PERMISSIONS.oauthApps.view],
+  scim: [PERMISSIONS.scim.manage],
 };
 
 /**
