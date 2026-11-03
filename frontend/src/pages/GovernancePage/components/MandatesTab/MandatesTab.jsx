@@ -14,6 +14,7 @@ import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import ApproveDialog from '@/pages/GovernancePage/components/ApproveDialog';
 import ConfirmActionDialog from '@/pages/GovernancePage/components/ConfirmActionDialog';
+import EscalatedToggle from '@/pages/GovernancePage/components/EscalatedToggle';
 import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
 import GovernanceSnackbar from '@/pages/GovernancePage/components/GovernanceSnackbar';
 import { toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
@@ -50,6 +51,8 @@ const MandatesTab = memo(() => {
 
   const { project, selectProject } = useGovernanceProject();
   const [stateFilter, setStateFilter] = useState('');
+  // (#7269) only the items no admin of the project can approve
+  const [escalated, setEscalated] = useState(false);
   const { page, setPage, resetPage, pageSize, handlePageSizeChange } = useGovernanceTable();
 
   const [detailRow, setDetailRow] = useState(null);
@@ -60,7 +63,7 @@ const MandatesTab = memo(() => {
 
   const projectId = project?.id;
   const { data, isLoading, isError, error } = useMandateListQuery(
-    { projectId, limit: pageSize, offset: page * pageSize, state: stateFilter },
+    { projectId, limit: pageSize, offset: page * pageSize, state: stateFilter, escalated },
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
   const { data: settings } = useGovernanceSettingsGetQuery(undefined, { skip: !canReadSettings });
@@ -68,6 +71,14 @@ const MandatesTab = memo(() => {
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
+
+  const handleEscalatedChange = useCallback(
+    next => {
+      setEscalated(next);
+      resetPage();
+    },
+    [resetPage],
+  );
 
   const handleProjectChange = useCallback(
     next => {
@@ -148,14 +159,22 @@ const MandatesTab = memo(() => {
     >
       <GridTableContainer
         toolbar={
-          <MandatesToolbar
-            project={project}
-            onProjectChange={handleProjectChange}
-            state={stateFilter}
-            onStateChange={handleStateChange}
-            canCreate={canManage}
-            onCreate={handleCreateOpen}
-          />
+          <Box sx={styles.toolbar}>
+            <MandatesToolbar
+              project={project}
+              onProjectChange={handleProjectChange}
+              state={stateFilter}
+              onStateChange={handleStateChange}
+              canCreate={canManage}
+              onCreate={handleCreateOpen}
+            />
+            <EscalatedToggle
+              checked={escalated}
+              onChange={handleEscalatedChange}
+              disabled={!project}
+              testId="mandates-escalated"
+            />
+          </Box>
         }
         isLoading={Boolean(project) && isLoading}
         isEmpty={emptyMessage != null}
@@ -191,6 +210,7 @@ const MandatesTab = memo(() => {
         open={createOpen}
         projectId={projectId}
         identitySources={data?.identity_sources ?? []}
+        tokenIdentity={Boolean(data?.token_identity)}
         onClose={handleCreateClose}
         onCreated={handleCreated}
       />
@@ -248,6 +268,13 @@ const mandatesTabStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     padding: '3rem 1.5rem',
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    width: '100%',
   },
 });
 

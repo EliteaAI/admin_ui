@@ -34,6 +34,7 @@ import {
   INDEX_OPERATION,
   MAX_VALID_DAYS,
   OPERATION_OPTIONS,
+  TOKEN_IDENTITY_TEXT,
 } from '@/pages/GovernancePage/components/MandatesTab/constants/mandates.constants';
 import {
   dayFromNow,
@@ -54,10 +55,11 @@ const hasActiveIdentity = version => (version.bindings ?? []).some(binding => bi
 /**
  * Creates a mandate in draft: the agent version (it needs an active identity) or the toolkit whose index schedules it
  * covers (#7305), its owner, which runs it covers, how long a run may take, until when, and — when the platform allows
- * it — the identity its runs act with. `identitySources` are the identities the deployment allows (from the list).
+ * it — the identity its runs act with. `identitySources` are the identities the deployment allows (from the list);
+ * `tokenIdentity`: the deployment also lets restricted API tokens act with their owner's sign-in (#7337, said only).
  */
 const CreateMandateDialog = memo(props => {
-  const { open, projectId, identitySources = [], onClose, onCreated } = props;
+  const { open, projectId, identitySources = [], tokenIdentity = false, onClose, onCreated } = props;
 
   const styles = createMandateDialogStyles();
 
@@ -406,7 +408,17 @@ const CreateMandateDialog = memo(props => {
               variant="bodySmall"
               sx={styles.muted}
             >
-              After approval, the owner gives their consent here, signed in as themselves (Give consent).
+              After approval, the owner gives their consent in Elitea, on the schedule, signed in as
+              themselves.
+            </Typography>
+          )}
+          {tokenIdentity && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.muted}
+              data-testid="mandate-create-token-identity"
+            >
+              {TOKEN_IDENTITY_TEXT}
             </Typography>
           )}
         </Box>

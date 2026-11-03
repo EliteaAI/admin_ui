@@ -9,7 +9,8 @@ const getUserLabel = option => option.email;
 
 /**
  * Picks one member of a project. The value is `{ id, email }` or null. The members are read once for the project and
- * filtered as the operator types. `testId` is on the field; the input has `<testId>-input`.
+ * filtered as the operator types; `excludeUserIds` are never offered. `testId` is on the field; the input has
+ * `<testId>-input`.
  */
 const ProjectUserPicker = memo(props => {
   const {
@@ -20,6 +21,7 @@ const ProjectUserPicker = memo(props => {
     helperText,
     disabled = false,
     required = false,
+    excludeUserIds,
     testId,
     sx,
   } = props;
@@ -29,10 +31,12 @@ const ProjectUserPicker = memo(props => {
   const { data, isFetching } = useProjectUserListQuery({ projectId }, { skip: !projectId });
 
   const options = useMemo(() => {
-    const rows = (data?.rows ?? []).map(row => ({ id: row.id, email: row.email ?? `User ${row.id}` }));
+    const rows = (data?.rows ?? [])
+      .filter(row => !(excludeUserIds || []).includes(row.id))
+      .map(row => ({ id: row.id, email: row.email ?? `User ${row.id}` }));
     // The chosen user stays selectable while the members are loading
     return value && !rows.some(row => row.id === value.id) ? [value, ...rows] : rows;
-  }, [data?.rows, value]);
+  }, [data?.rows, value, excludeUserIds]);
 
   const handleChange = useCallback(
     (_, next) => {
