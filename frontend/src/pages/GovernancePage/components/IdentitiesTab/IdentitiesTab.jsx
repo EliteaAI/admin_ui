@@ -9,6 +9,7 @@ import { GridTableContainer } from '@/components/GridTable';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import EscalatedToggle from '@/pages/GovernancePage/components/EscalatedToggle';
 import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
 import GovernanceSnackbar from '@/pages/GovernancePage/components/GovernanceSnackbar';
 import { toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
@@ -47,6 +48,8 @@ const IdentitiesTab = memo(() => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounceValue(search, 300);
   const [stateFilter, setStateFilter] = useState('');
+  // (#7269) only the items no admin of the project can approve
+  const [escalated, setEscalated] = useState(false);
   const [modeFilter, setModeFilter] = useState('');
   const { page, setPage, resetPage, pageSize, handlePageSizeChange, sort, handleSort } = useGovernanceTable();
 
@@ -59,15 +62,18 @@ const IdentitiesTab = memo(() => {
   const projectId = project?.id;
 
   const { data, isLoading, isError, error } = useAgentIdentityListQuery(
-    buildListParams({
-      projectId,
-      state: stateFilter,
-      mode: modeFilter,
-      search: debouncedSearch,
-      page,
-      pageSize,
-      sort,
-    }),
+    {
+      ...buildListParams({
+        projectId,
+        state: stateFilter,
+        mode: modeFilter,
+        search: debouncedSearch,
+        page,
+        pageSize,
+        sort,
+      }),
+      escalated,
+    },
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
 
@@ -77,7 +83,15 @@ const IdentitiesTab = memo(() => {
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
-  const hasFilters = Boolean(stateFilter || modeFilter || debouncedSearch);
+  const hasFilters = Boolean(stateFilter || modeFilter || debouncedSearch || escalated);
+
+  const handleEscalatedChange = useCallback(
+    next => {
+      setEscalated(next);
+      resetPage();
+    },
+    [resetPage],
+  );
 
   const handleProjectChange = useCallback(
     next => {
@@ -159,18 +173,26 @@ const IdentitiesTab = memo(() => {
   }
 
   const toolbar = (
-    <IdentitiesToolbar
-      project={project}
-      onProjectChange={handleProjectChange}
-      search={search}
-      onSearchChange={handleSearchChange}
-      state={stateFilter}
-      onStateChange={handleStateChange}
-      mode={modeFilter}
-      onModeChange={handleModeChange}
-      canCreate={canManage}
-      onCreate={handleCreateOpen}
-    />
+    <Box sx={styles.toolbar}>
+      <IdentitiesToolbar
+        project={project}
+        onProjectChange={handleProjectChange}
+        search={search}
+        onSearchChange={handleSearchChange}
+        state={stateFilter}
+        onStateChange={handleStateChange}
+        mode={modeFilter}
+        onModeChange={handleModeChange}
+        canCreate={canManage}
+        onCreate={handleCreateOpen}
+      />
+      <EscalatedToggle
+        checked={escalated}
+        onChange={handleEscalatedChange}
+        disabled={!project}
+        testId="identities-escalated"
+      />
+    </Box>
   );
 
   return (
@@ -260,6 +282,13 @@ const identitiesTabStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     padding: '3rem 1.5rem',
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    width: '100%',
   },
 });
 

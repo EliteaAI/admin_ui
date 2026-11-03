@@ -49,6 +49,7 @@ const governanceApi = adminApi.injectEndpoints({
       providesTags: ['SecurityEvents'],
     }),
 
+    // escalated (#7269): only the items waiting for an approval nobody in the project can give
     agentIdentityList: build.query({
       query: ({
         projectId,
@@ -60,9 +61,11 @@ const governanceApi = adminApi.injectEndpoints({
         search,
         sort_by,
         sort_order,
+        escalated,
       }) => ({
         url: `/elitea_core/agent_identities/administration/${encodeURIComponent(projectId)}`,
         params: {
+          ...(escalated && { escalated: 'true' }),
           limit,
           offset,
           ...(state && { state }),
@@ -151,9 +154,11 @@ const governanceApi = adminApi.injectEndpoints({
         search,
         sort_by,
         sort_order,
+        escalated,
       }) => ({
         url: `/secrets/credential_references/administration/${encodeURIComponent(projectId)}`,
         params: {
+          ...(escalated && { escalated: 'true' }),
           limit,
           offset,
           ...(state && { state }),
@@ -219,9 +224,11 @@ const governanceApi = adminApi.injectEndpoints({
         toolkit_id,
         sort_by,
         sort_order,
+        escalated,
       }) => ({
         url: `/secrets/credential_grants/administration/${encodeURIComponent(projectId)}`,
         params: {
+          ...(escalated && { escalated: 'true' }),
           limit,
           offset,
           ...(state && { state }),
@@ -248,9 +255,9 @@ const governanceApi = adminApi.injectEndpoints({
 
     // Autonomous mandates of a project (#7131): { total, rows, identity_sources }
     mandateList: build.query({
-      query: ({ projectId, limit = 20, offset = 0, state }) => ({
+      query: ({ projectId, limit = 20, offset = 0, state, escalated }) => ({
         url: `/elitea_core/autonomous_mandates/administration/${encodeURIComponent(projectId)}`,
-        params: { limit, offset, ...(state && { state }) },
+        params: { limit, offset, ...(state && { state }), ...(escalated && { escalated: 'true' }) },
       }),
       providesTags: ['Mandates'],
     }),

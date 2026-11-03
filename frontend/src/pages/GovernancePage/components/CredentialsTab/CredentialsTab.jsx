@@ -9,6 +9,7 @@ import { GridTableContainer } from '@/components/GridTable';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
+import EscalatedToggle from '@/pages/GovernancePage/components/EscalatedToggle';
 import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
 import GovernanceSnackbar from '@/pages/GovernancePage/components/GovernanceSnackbar';
 import { referenceTitle, toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
@@ -52,6 +53,8 @@ const CredentialsTab = memo(() => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounceValue(search, 300);
   const [stateFilter, setStateFilter] = useState('');
+  // (#7269) only the items no admin of the project can approve
+  const [escalated, setEscalated] = useState(false);
   const [classFilter, setClassFilter] = useState('');
   const [storeFilter, setStoreFilter] = useState('');
   const [ownerFilter, setOwnerFilter] = useState(null);
@@ -68,17 +71,20 @@ const CredentialsTab = memo(() => {
   const projectId = project?.id;
 
   const { data, isLoading, isError, error } = useCredentialReferenceListQuery(
-    buildListParams({
-      projectId,
-      state: stateFilter,
-      ownershipClass: classFilter,
-      storeKind: storeFilter,
-      owner: ownerFilter,
-      search: debouncedSearch,
-      page,
-      pageSize,
-      sort,
-    }),
+    {
+      ...buildListParams({
+        projectId,
+        state: stateFilter,
+        ownershipClass: classFilter,
+        storeKind: storeFilter,
+        owner: ownerFilter,
+        search: debouncedSearch,
+        page,
+        pageSize,
+        sort,
+      }),
+      escalated,
+    },
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
 
@@ -89,10 +95,20 @@ const CredentialsTab = memo(() => {
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
-  const hasFilters = Boolean(stateFilter || classFilter || storeFilter || ownerFilter || debouncedSearch);
+  const hasFilters = Boolean(
+    stateFilter || classFilter || storeFilter || ownerFilter || debouncedSearch || escalated,
+  );
   const permissions = useMemo(
     () => ({ canManage, canProbe, canApprove, userId }),
     [canManage, canProbe, canApprove, userId],
+  );
+
+  const handleEscalatedChange = useCallback(
+    next => {
+      setEscalated(next);
+      resetPage();
+    },
+    [resetPage],
   );
 
   const handleProjectChange = useCallback(
@@ -206,22 +222,30 @@ const CredentialsTab = memo(() => {
   }
 
   const toolbar = (
-    <CredentialsToolbar
-      project={project}
-      onProjectChange={handleProjectChange}
-      search={search}
-      onSearchChange={handleSearchChange}
-      state={stateFilter}
-      onStateChange={handleStateChange}
-      ownershipClass={classFilter}
-      onClassChange={handleClassChange}
-      storeKind={storeFilter}
-      onStoreChange={handleStoreChange}
-      owner={ownerFilter}
-      onOwnerChange={handleOwnerChange}
-      canCreate={canManage}
-      onCreate={handleCreateOpen}
-    />
+    <Box sx={styles.toolbar}>
+      <CredentialsToolbar
+        project={project}
+        onProjectChange={handleProjectChange}
+        search={search}
+        onSearchChange={handleSearchChange}
+        state={stateFilter}
+        onStateChange={handleStateChange}
+        ownershipClass={classFilter}
+        onClassChange={handleClassChange}
+        storeKind={storeFilter}
+        onStoreChange={handleStoreChange}
+        owner={ownerFilter}
+        onOwnerChange={handleOwnerChange}
+        canCreate={canManage}
+        onCreate={handleCreateOpen}
+      />
+      <EscalatedToggle
+        checked={escalated}
+        onChange={handleEscalatedChange}
+        disabled={!project}
+        testId="credentials-escalated"
+      />
+    </Box>
   );
 
   const defaultPolicyRevision = settings?.effective?.policy_revision ?? '';
@@ -325,6 +349,13 @@ const credentialsTabStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     padding: '3rem 1.5rem',
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    width: '100%',
   },
 });
 

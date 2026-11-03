@@ -8,6 +8,7 @@ import { useCredentialGrantListQuery, useGovernanceSettingsGetQuery } from '@/ap
 import { GridTableContainer } from '@/components/GridTable';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import EscalatedToggle from '@/pages/GovernancePage/components/EscalatedToggle';
 import GovernanceErrorAlert from '@/pages/GovernancePage/components/GovernanceErrorAlert';
 import GovernanceSnackbar from '@/pages/GovernancePage/components/GovernanceSnackbar';
 import { toGovernanceError } from '@/pages/GovernancePage/helpers/governance.helpers';
@@ -44,6 +45,8 @@ const GrantsTab = memo(() => {
   const { project, selectProject } = useGovernanceProject();
 
   const [stateFilter, setStateFilter] = useState('');
+  // (#7269) only the items no admin of the project can approve
+  const [escalated, setEscalated] = useState(false);
   const [userFilter, setUserFilter] = useState(null);
   const { page, setPage, resetPage, pageSize, handlePageSizeChange, sort, handleSort } = useGovernanceTable();
 
@@ -56,7 +59,10 @@ const GrantsTab = memo(() => {
   const projectId = project?.id;
 
   const { data, isLoading, isError, error } = useCredentialGrantListQuery(
-    buildListParams({ projectId, state: stateFilter, user: userFilter, page, pageSize, sort }),
+    {
+      ...buildListParams({ projectId, state: stateFilter, user: userFilter, page, pageSize, sort }),
+      escalated,
+    },
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
 
@@ -65,8 +71,16 @@ const GrantsTab = memo(() => {
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
-  const hasFilters = Boolean(stateFilter || userFilter);
+  const hasFilters = Boolean(stateFilter || userFilter || escalated);
   const permissions = useMemo(() => ({ canManage, canApprove, userId }), [canManage, canApprove, userId]);
+
+  const handleEscalatedChange = useCallback(
+    next => {
+      setEscalated(next);
+      resetPage();
+    },
+    [resetPage],
+  );
 
   const handleProjectChange = useCallback(
     next => {
@@ -141,16 +155,24 @@ const GrantsTab = memo(() => {
   }
 
   const toolbar = (
-    <GrantsToolbar
-      project={project}
-      onProjectChange={handleProjectChange}
-      user={userFilter}
-      onUserChange={handleUserChange}
-      state={stateFilter}
-      onStateChange={handleStateChange}
-      canCreate={canManage}
-      onCreate={handleCreateOpen}
-    />
+    <Box sx={styles.toolbar}>
+      <GrantsToolbar
+        project={project}
+        onProjectChange={handleProjectChange}
+        user={userFilter}
+        onUserChange={handleUserChange}
+        state={stateFilter}
+        onStateChange={handleStateChange}
+        canCreate={canManage}
+        onCreate={handleCreateOpen}
+      />
+      <EscalatedToggle
+        checked={escalated}
+        onChange={handleEscalatedChange}
+        disabled={!project}
+        testId="grants-escalated"
+      />
+    </Box>
   );
 
   return (
@@ -236,6 +258,13 @@ const grantsTabStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     padding: '3rem 1.5rem',
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    width: '100%',
   },
 });
 
