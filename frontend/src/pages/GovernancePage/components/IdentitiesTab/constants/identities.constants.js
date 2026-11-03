@@ -82,7 +82,7 @@ export const ACTIONS = {
     label: 'Retire',
     confirmLabel: 'Retire',
     description:
-      'The identity can not be used again. Runs admitted earlier are stopped at their next check. Requesting the agent again starts it over as a draft that needs a new approval.',
+      'The identity can not be used again. Runs admitted earlier are stopped at their next check, and its credential grants and schedule mandates are revoked with it. Requesting the agent again starts it over as a draft that needs a new approval, with its grants and mandates requested again.',
     success: 'retired',
     destructive: true,
   },

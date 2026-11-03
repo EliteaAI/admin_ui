@@ -83,15 +83,21 @@ const ActivateIdentityDialog = memo(props => {
         expected_state: row.state,
         approval_ref: approvalRef,
         policy_revision: policyRevisionValue,
+        // (#7228) the definition this dialog shows: one brought up to date since is refused (BINDING_DIGEST_MISMATCH)
+        definition_digest: row.definition_digest_full,
         ...(proposed.length && { platform_operations: keptValue }),
       }).unwrap();
       reset();
       onDone({ outcome: 'done', row, action: 'activate' });
     } catch (err) {
       const refusal = toGovernanceError(err, 'Failed to activate the identity.');
-      if (STALE_CODES.includes(refusal.code)) {
+      if (STALE_CODES.includes(refusal.code) || refusal.code === 'BINDING_DIGEST_MISMATCH') {
         reset();
-        onDone({ outcome: 'stale', row, action: 'activate' });
+        onDone({
+          outcome: refusal.code === 'BINDING_DIGEST_MISMATCH' ? 'changed' : 'stale',
+          row,
+          action: 'activate',
+        });
         return;
       }
       setError(refusal);

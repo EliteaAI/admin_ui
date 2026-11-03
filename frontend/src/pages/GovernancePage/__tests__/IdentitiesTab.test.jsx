@@ -641,6 +641,29 @@ describe('actions', () => {
     await waitFor(() => expect(screen.queryByTestId('identity-confirm-dialog')).not.toBeInTheDocument());
     await waitFor(() => expect(listCalls(calls).length).toBeGreaterThan(1));
   });
+
+  it('EL-7228 activates the definition the dialog showed, and one brought up to date since reads the list again', async () => {
+    const shown = 'adv1:' + 'c'.repeat(64);
+    const calls = setup([makeIdentity({ state: 'pending_approval', definition_digest_full: shown })], {
+      [`POST ${actionPath('b1')}`]: refusal(
+        409,
+        'BINDING_DIGEST_MISMATCH',
+        'the agent changed since this approval was opened; review it again',
+      ),
+    });
+    const user = userEvent.setup();
+    await openMenu(user, 'b1');
+    await user.click(screen.getByTestId('identity-action-activate'));
+    await user.type(screen.getByTestId('identity-approval-ref'), 'CHG-42');
+    await user.type(screen.getByTestId('identity-policy-revision'), '2026-10-20.1');
+    await user.click(screen.getByTestId('identity-activate-submit'));
+    await waitFor(() => expect(calls.some(call => call.method === 'POST')).toBe(true));
+    expect(calls.find(call => call.method === 'POST').body.definition_digest).toBe(shown);
+    const snackbar = await screen.findByTestId('identities-snackbar');
+    expect(snackbar).toHaveTextContent('The agent of Jira helper v47 changed since you opened it.');
+    await waitFor(() => expect(screen.queryByTestId('identity-activate-dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(listCalls(calls).length).toBeGreaterThan(1));
+  });
 });
 
 describe('detail drawer', () => {
