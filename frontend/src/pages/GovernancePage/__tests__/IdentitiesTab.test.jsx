@@ -515,6 +515,42 @@ describe('actions', () => {
     expect(await screen.findByTestId('identities-snackbar')).toHaveTextContent('Jira helper v47 activated.');
   });
 
+  it('EL-7228 shows the proposed operations preset and activates with the ones the operator keeps', async () => {
+    const calls = setup(
+      [
+        makeIdentity({
+          state: 'pending_approval',
+          platform_operations: ['read', 'build', 'credentials', 'run'],
+        }),
+      ],
+      { [`POST ${actionPath('b1')}`]: ok({ ok: true, id: 'b1', state: 'active' }) },
+    );
+    const user = userEvent.setup();
+    await openMenu(user, 'b1');
+    await user.click(screen.getByTestId('identity-action-activate'));
+    expect(screen.getByTestId('identity-activate-operation-credentials')).toBeChecked();
+    await user.click(screen.getByTestId('identity-activate-operation-credentials'));
+    await user.type(screen.getByTestId('identity-approval-ref'), 'CHG-42');
+    await user.type(screen.getByTestId('identity-policy-revision'), '2026-10-20.1');
+    await user.click(screen.getByTestId('identity-activate-submit'));
+    await waitFor(() => expect(calls.some(call => call.method === 'POST')).toBe(true));
+    expect(calls.find(call => call.method === 'POST').body).toEqual({
+      action: 'activate',
+      expected_state: 'pending_approval',
+      approval_ref: 'CHG-42',
+      policy_revision: '2026-10-20.1',
+      platform_operations: ['read', 'build', 'run'],
+    });
+  });
+
+  it('EL-7228 offers no operations for a read-only identity', async () => {
+    setup([makeIdentity({ state: 'pending_approval' })]);
+    const user = userEvent.setup();
+    await openMenu(user, 'b1');
+    await user.click(screen.getByTestId('identity-action-activate'));
+    expect(screen.queryByTestId('identity-activate-operations')).toBeNull();
+  });
+
   it('refuses characters the backend would refuse and prefills the effective policy revision', async () => {
     setup(
       [makeIdentity({ state: 'pending_approval' })],
