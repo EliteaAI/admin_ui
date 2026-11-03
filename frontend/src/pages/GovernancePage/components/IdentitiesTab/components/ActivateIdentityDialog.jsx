@@ -131,7 +131,8 @@ const ActivateIdentityDialog = memo(props => {
               severity="warning"
               data-testid="identity-activate-changed"
             >
-              The agent was edited after this identity was created, so the activation will be refused.
+              The agent was edited after this identity was requested, so the activation will be refused. Rebind
+              it first: it keeps waiting for approval, for the agent as it is now.
             </Alert>
           )}
           {proposed.length > 0 && (

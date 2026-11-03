@@ -238,7 +238,7 @@ describe('row actions and permissions', () => {
   it.each([
     ['draft', ['details', 'submit', 'retire']],
     ['provisioning', ['details', 'retire']],
-    ['pending', ['details', 'activate', 'retire']],
+    ['pending', ['details', 'activate', 'rebind', 'retire']],
     ['active', ['details', 'suspend', 'rebind', 'retire']],
     ['suspended', ['details', 'resume', 'rebind', 'retire']],
     ['retiring', ['details', 'retire']],
@@ -272,7 +272,7 @@ describe('row actions and permissions', () => {
     });
 
     await openMenu(user, 'pending');
-    expect(menuActions()).toEqual(['details', 'retire']);
+    expect(menuActions()).toEqual(['details', 'rebind', 'retire']);
     await user.keyboard('{Escape}');
     manageOnly.unmount();
 
