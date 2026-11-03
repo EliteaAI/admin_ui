@@ -364,6 +364,25 @@ describe('approve dialog', () => {
     expect(await screen.findByTestId('grants-snackbar')).toHaveTextContent('approved');
   });
 
+  it('grants the same use to every member of a role with the approval (#7269)', async () => {
+    const user = userEvent.setup();
+    const calls = await open(user);
+
+    await user.type(screen.getByTestId('grant-approve-ref'), 'TICKET-9');
+    await user.type(screen.getByTestId('grant-approve-policy'), 'CHG-2');
+    await user.click(screen.getByTestId('grant-approve-also-role'));
+    await user.click(await screen.findByTestId('grant-approve-also-role-editor'));
+    await user.click(screen.getByTestId('grant-approve-submit'));
+
+    await waitFor(() => expect(postCalls(calls)).toHaveLength(1));
+    expect(postCalls(calls)[0].body).toEqual({
+      action: 'approve',
+      approval_ref: 'TICKET-9',
+      policy_revision: 'CHG-2',
+      also_grant_role: 'editor',
+    });
+  });
+
   it('prefills the effective policy revision when the operator can read the setting', async () => {
     const user = userEvent.setup();
     const settings = makeSettings();
