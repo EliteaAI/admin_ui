@@ -321,10 +321,12 @@ describe('actions', () => {
   });
 });
 
+const SHARED = { id: 'r1', provider: 'jira', configuration_title: 'jira_epam', ownership_class: 'service' };
+
 describe('approve dialog', () => {
-  const open = async (user, handlers = {}, permissions = ALL) => {
+  const open = async (user, handlers = {}, permissions = ALL, grant = makeGrant({ credential: SHARED })) => {
     const calls = setup(
-      [makeGrant()],
+      [grant],
       { [`POST ${grantActionPath('g1')}`]: ok({ ok: true }), ...handlers },
       permissions,
     );
@@ -362,6 +364,55 @@ describe('approve dialog', () => {
       policy_revision: 'CHG-2',
     });
     expect(await screen.findByTestId('grants-snackbar')).toHaveTextContent('approved');
+  });
+
+  it('grants the same use to every member of a role with the approval (#7269)', async () => {
+    const user = userEvent.setup();
+    const calls = await open(user);
+
+    await user.type(screen.getByTestId('grant-approve-ref'), 'TICKET-9');
+    await user.type(screen.getByTestId('grant-approve-policy'), 'CHG-2');
+    await user.click(screen.getByTestId('grant-approve-also-role'));
+    await user.click(await screen.findByTestId('grant-approve-also-role-editor'));
+    await user.click(screen.getByTestId('grant-approve-submit'));
+
+    await waitFor(() => expect(postCalls(calls)).toHaveLength(1));
+    expect(postCalls(calls)[0].body).toEqual({
+      action: 'approve',
+      approval_ref: 'TICKET-9',
+      policy_revision: 'CHG-2',
+      also_grant_role: 'editor',
+    });
+  });
+
+  it('never offers the approver or the subject as another member to grant to (#7269)', async () => {
+    const user = userEvent.setup();
+    await open(user, {
+      [`GET ${USERS_PATH}`]: ok({
+        total: 3,
+        rows: [
+          { id: 7, email: 'u1@epam.com', roles: ['viewer'] },
+          { id: 8, email: 'u2@epam.com', roles: ['editor'] },
+          { id: OPERATOR_ID, email: 'operator@example.com', roles: ['admin'] },
+        ],
+      }),
+    });
+
+    await user.click(screen.getByTestId('grant-approve-also-user-input'));
+    const offered = (await screen.findAllByRole('option')).map(option => option.textContent);
+    expect(offered).toEqual(['u2@epam.com']);
+  });
+
+  it('offers no other members for a personal credential (#7269)', async () => {
+    const user = userEvent.setup();
+    await open(user, {}, ALL, makeGrant());
+    expect(screen.queryByTestId('grant-approve-also')).toBeNull();
+  });
+
+  it("offers no other members for a mandate's grant (#7269)", async () => {
+    const user = userEvent.setup();
+    await open(user, {}, ALL, makeGrant({ credential: SHARED, subject: { ref: 'mandate:m1', user: null } }));
+    expect(screen.queryByTestId('grant-approve-also')).toBeNull();
   });
 
   it('prefills the effective policy revision when the operator can read the setting', async () => {
