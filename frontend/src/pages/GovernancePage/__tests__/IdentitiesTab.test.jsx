@@ -293,6 +293,26 @@ describe('row actions and permissions', () => {
     expect(screen.getByTestId('identity-action-activate')).toHaveAttribute('aria-disabled', 'true');
   });
 
+  it('EL-7228 lets a creator approve a request someone else made, and never the one who made it', async () => {
+    const row = makeIdentity({
+      id: 'pending',
+      state: 'pending_approval',
+      state_changed_by: { id: 2, email: 'b@x' },
+    });
+    store.dispatch(setUser({ id: 1, name: 'Creator', email: 'creator@example.com' }));
+    mockApi({ [`GET ${LIST_PATH}`]: listResponse([row]) });
+    const user = userEvent.setup();
+    const view = renderWithProviders(<IdentitiesTab />, { permissions: ALL });
+    await openMenu(user, 'pending');
+    expect(screen.getByTestId('identity-action-activate')).not.toHaveAttribute('aria-disabled', 'true');
+    await user.keyboard('{Escape}');
+    view.unmount();
+    store.dispatch(setUser({ id: 2, name: 'Requester', email: 'b@x' }));
+    renderWithProviders(<IdentitiesTab />, { permissions: ALL });
+    await openMenu(user, 'pending');
+    expect(screen.getByTestId('identity-action-activate')).toHaveAttribute('aria-disabled', 'true');
+  });
+
   it('shows the create button only with the manage permission', async () => {
     mockApi({ [`GET ${LIST_PATH}`]: listResponse([]) });
     renderWithProviders(<IdentitiesTab />, { permissions: [BINDINGS_VIEW, BINDINGS_MANAGE] });

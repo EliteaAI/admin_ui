@@ -89,4 +89,4 @@ export const ACTIONS = {
 };
 
 export const SELF_APPROVAL_HINT =
-  'You created or last changed this identity; another operator must approve it.';
+  'You made the current request for this identity; another operator must approve it.';
