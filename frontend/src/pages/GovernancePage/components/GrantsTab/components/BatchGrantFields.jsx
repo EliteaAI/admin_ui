@@ -14,10 +14,11 @@ const ROLE_OPTIONS = [
 /**
  * "Also grant to" of a grant's approval (#7269): the same use for another member and/or every member of a project
  * role, approved with this one in one change. Each is filed under the request being approved, so the approver is
- * never its creator. A personal credential has no siblings (the server says so).
+ * never its creator. Nobody grants a use to themselves: the approver (and the grant's own subject) are not offered, and
+ * a role leaves the approver out (the server refuses it as well). A personal credential has no siblings.
  */
 const BatchGrantFields = memo(props => {
-  const { projectId, user, onUserChange, role, onRoleChange } = props;
+  const { projectId, user, onUserChange, role, onRoleChange, excludeUserIds } = props;
 
   const styles = batchGrantFieldsStyles();
 
@@ -37,6 +38,7 @@ const BatchGrantFields = memo(props => {
         value={user}
         onChange={onUserChange}
         label="Member"
+        excludeUserIds={excludeUserIds}
         testId="grant-approve-also-user"
       />
       <FilterSelect

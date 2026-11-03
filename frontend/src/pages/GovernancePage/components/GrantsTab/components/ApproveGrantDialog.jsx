@@ -7,12 +7,16 @@ import { grantTitle } from '@/pages/GovernancePage/components/GrantsTab/helpers/
 
 import BatchGrantFields from './BatchGrantFields';
 
+// A personal credential and a mandate's grant have no siblings (the server answers NO_SIBLINGS)
+const takesSiblings = row =>
+  row.credential?.ownership_class !== 'personal' && !String(row.subject?.ref ?? '').startsWith('mandate:');
+
 /**
  * Approves a pending grant, and (#7269) optionally the same use for another member or a project role in the same
  * change. `onDone({ outcome: 'done' | 'stale', row, action: 'approve' })`.
  */
 const ApproveGrantDialog = memo(props => {
-  const { open, row, projectId, defaultPolicyRevision, onClose, onDone } = props;
+  const { open, row, projectId, userId, defaultPolicyRevision, onClose, onDone } = props;
 
   const [runAction] = useCredentialGrantActionMutation();
   const [alsoUser, setAlsoUser] = useState(null);
@@ -52,13 +56,16 @@ const ApproveGrantDialog = memo(props => {
       onClose={onClose}
       onDone={handleDone}
       notice={
-        <BatchGrantFields
-          projectId={projectId}
-          user={alsoUser}
-          onUserChange={setAlsoUser}
-          role={alsoRole}
-          onRoleChange={setAlsoRole}
-        />
+        takesSiblings(row) && (
+          <BatchGrantFields
+            projectId={projectId}
+            user={alsoUser}
+            onUserChange={setAlsoUser}
+            role={alsoRole}
+            onRoleChange={setAlsoRole}
+            excludeUserIds={[row.subject?.user?.id, userId]}
+          />
+        )
       }
       testIdPrefix="grant-approve"
     />

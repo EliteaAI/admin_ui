@@ -229,6 +229,7 @@ const GrantsTab = memo(() => {
       <ApproveGrantDialog
         open={Boolean(approveRow)}
         row={approveRow}
+        userId={userId}
         projectId={projectId}
         defaultPolicyRevision={settings?.effective?.policy_revision ?? ''}
         onClose={handleApproveClose}
