@@ -100,12 +100,13 @@ const ProjectsTable = memo(props => {
     if (isAllSelected) {
       onSelectionChange([]);
     } else {
-      onSelectionChange(projects.map(p => p.id));
+      onSelectionChange(projects.filter(p => !p.scim_managed).map(p => p.id));
     }
   }, [isAllSelected, projects, onSelectionChange]);
 
   const handleSelectRow = useCallback(
     projectId => {
+      if (projects.find(p => p.id === projectId)?.scim_managed) return;
       const isCurrentlySelected = selectedIds.includes(projectId);
       if (isCurrentlySelected) {
         onSelectionChange(selectedIds.filter(id => id !== projectId));
@@ -113,7 +114,7 @@ const ProjectsTable = memo(props => {
         onSelectionChange([...selectedIds, projectId]);
       }
     },
-    [selectedIds, onSelectionChange],
+    [projects, selectedIds, onSelectionChange],
   );
 
   const paginationProps = useMemo(
@@ -133,7 +134,27 @@ const ProjectsTable = memo(props => {
   );
 
   const renderCell = useCallback(
-    (column, value) => {
+    (column, value, row) => {
+      if (column.field === 'name' && row?.scim_managed) {
+        return (
+          <Box sx={styles.nameCell}>
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+              sx={styles.cellText}
+            >
+              {value || '-'}
+            </Typography>
+            <Tooltip title="Managed by SCIM: changed only in the identity provider; member roles can be edited">
+              <Chip
+                label="SCIM"
+                size="small"
+                variant="outlined"
+              />
+            </Tooltip>
+          </Box>
+        );
+      }
       if (column.field === 'status') {
         const cfg = STATUS_CONFIG[value] || STATUS_CONFIG.pending;
         return (
@@ -198,6 +219,7 @@ const ProjectsTable = memo(props => {
   const renderActions = useCallback(
     row => {
       const isSuspended = row.status === 'suspended';
+      const isScim = Boolean(row.scim_managed);
       return (
         <Box sx={styles.actionsRow}>
           {onAddAdmin && (
@@ -210,7 +232,7 @@ const ProjectsTable = memo(props => {
               </IconButton>
             </Tooltip>
           )}
-          {onSuspend && (
+          {onSuspend && !isScim && (
             <Tooltip title={isSuspended ? 'Unsuspend project' : 'Suspend project'}>
               <IconButton
                 size="small"
@@ -237,7 +259,7 @@ const ProjectsTable = memo(props => {
               </IconButton>
             </Tooltip>
           )}
-          {onRestore && (
+          {onRestore && !isScim && (
             <Tooltip title="Restore project">
               <IconButton
                 size="small"
@@ -255,7 +277,7 @@ const ProjectsTable = memo(props => {
               <TimelineOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          {onDelete && (
+          {onDelete && !isScim && (
             <Tooltip title="Delete project">
               <IconButton
                 size="small"
@@ -349,6 +371,12 @@ const projectsTableStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  nameCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: 0,
   },
   actionsRow: {
     display: 'flex',
