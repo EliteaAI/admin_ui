@@ -420,6 +420,14 @@ const OAuthAppDialog = memo(props => {
           }
           label="Auto refresh token (offline_access): keep users signed in"
         />
+        <Typography
+          variant="bodySmall"
+          sx={styles.hint}
+        >
+          {form.auto_refresh_token
+            ? 'Sign-in asks for offline_access, so users stay signed in and scheduled runs can use a saved login.'
+            : 'Sign-in does not ask for offline_access: users sign in again about every hour, and scheduled runs cannot use a saved login.'}
+        </Typography>
       </DialogContent>
       {checkResult && (
         <Alert
