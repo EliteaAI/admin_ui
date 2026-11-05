@@ -238,7 +238,7 @@ describe('row actions and permissions', () => {
   it.each([
     ['draft', ['details', 'submit', 'retire']],
     ['provisioning', ['details', 'retire']],
-    ['pending', ['details', 'activate', 'retire']],
+    ['pending', ['details', 'activate', 'rebind', 'retire']],
     ['active', ['details', 'suspend', 'rebind', 'retire']],
     ['suspended', ['details', 'resume', 'rebind', 'retire']],
     ['retiring', ['details', 'retire']],
@@ -272,7 +272,7 @@ describe('row actions and permissions', () => {
     });
 
     await openMenu(user, 'pending');
-    expect(menuActions()).toEqual(['details', 'retire']);
+    expect(menuActions()).toEqual(['details', 'rebind', 'retire']);
     await user.keyboard('{Escape}');
     manageOnly.unmount();
 
@@ -290,6 +290,26 @@ describe('row actions and permissions', () => {
 
     await openMenu(user, 'pending');
 
+    expect(screen.getByTestId('identity-action-activate')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('EL-7228 lets a creator approve a request someone else made, and never the one who made it', async () => {
+    const row = makeIdentity({
+      id: 'pending',
+      state: 'pending_approval',
+      state_changed_by: { id: 2, email: 'b@x' },
+    });
+    store.dispatch(setUser({ id: 1, name: 'Creator', email: 'creator@example.com' }));
+    mockApi({ [`GET ${LIST_PATH}`]: listResponse([row]) });
+    const user = userEvent.setup();
+    const view = renderWithProviders(<IdentitiesTab />, { permissions: ALL });
+    await openMenu(user, 'pending');
+    expect(screen.getByTestId('identity-action-activate')).not.toHaveAttribute('aria-disabled', 'true');
+    await user.keyboard('{Escape}');
+    view.unmount();
+    store.dispatch(setUser({ id: 2, name: 'Requester', email: 'b@x' }));
+    renderWithProviders(<IdentitiesTab />, { permissions: ALL });
+    await openMenu(user, 'pending');
     expect(screen.getByTestId('identity-action-activate')).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -515,6 +535,42 @@ describe('actions', () => {
     expect(await screen.findByTestId('identities-snackbar')).toHaveTextContent('Jira helper v47 activated.');
   });
 
+  it('EL-7228 shows the proposed operations preset and activates with the ones the operator keeps', async () => {
+    const calls = setup(
+      [
+        makeIdentity({
+          state: 'pending_approval',
+          platform_operations: ['read', 'build', 'credentials', 'run'],
+        }),
+      ],
+      { [`POST ${actionPath('b1')}`]: ok({ ok: true, id: 'b1', state: 'active' }) },
+    );
+    const user = userEvent.setup();
+    await openMenu(user, 'b1');
+    await user.click(screen.getByTestId('identity-action-activate'));
+    expect(screen.getByTestId('identity-activate-operation-credentials')).toBeChecked();
+    await user.click(screen.getByTestId('identity-activate-operation-credentials'));
+    await user.type(screen.getByTestId('identity-approval-ref'), 'CHG-42');
+    await user.type(screen.getByTestId('identity-policy-revision'), '2026-10-20.1');
+    await user.click(screen.getByTestId('identity-activate-submit'));
+    await waitFor(() => expect(calls.some(call => call.method === 'POST')).toBe(true));
+    expect(calls.find(call => call.method === 'POST').body).toEqual({
+      action: 'activate',
+      expected_state: 'pending_approval',
+      approval_ref: 'CHG-42',
+      policy_revision: '2026-10-20.1',
+      platform_operations: ['read', 'build', 'run'],
+    });
+  });
+
+  it('EL-7228 offers no operations for a read-only identity', async () => {
+    setup([makeIdentity({ state: 'pending_approval' })]);
+    const user = userEvent.setup();
+    await openMenu(user, 'b1');
+    await user.click(screen.getByTestId('identity-action-activate'));
+    expect(screen.queryByTestId('identity-activate-operations')).toBeNull();
+  });
+
   it('refuses characters the backend would refuse and prefills the effective policy revision', async () => {
     setup(
       [makeIdentity({ state: 'pending_approval' })],
@@ -603,6 +659,29 @@ describe('actions', () => {
     expect(snackbar).toHaveTextContent('Jira helper v47 was changed by someone else.');
     expect(snackbar).toHaveClass('MuiAlert-filledWarning');
     await waitFor(() => expect(screen.queryByTestId('identity-confirm-dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(listCalls(calls).length).toBeGreaterThan(1));
+  });
+
+  it('EL-7228 activates the definition the dialog showed, and one brought up to date since reads the list again', async () => {
+    const shown = 'adv1:' + 'c'.repeat(64);
+    const calls = setup([makeIdentity({ state: 'pending_approval', definition_digest_full: shown })], {
+      [`POST ${actionPath('b1')}`]: refusal(
+        409,
+        'BINDING_DIGEST_MISMATCH',
+        'the agent changed since this approval was opened; review it again',
+      ),
+    });
+    const user = userEvent.setup();
+    await openMenu(user, 'b1');
+    await user.click(screen.getByTestId('identity-action-activate'));
+    await user.type(screen.getByTestId('identity-approval-ref'), 'CHG-42');
+    await user.type(screen.getByTestId('identity-policy-revision'), '2026-10-20.1');
+    await user.click(screen.getByTestId('identity-activate-submit'));
+    await waitFor(() => expect(calls.some(call => call.method === 'POST')).toBe(true));
+    expect(calls.find(call => call.method === 'POST').body.definition_digest).toBe(shown);
+    const snackbar = await screen.findByTestId('identities-snackbar');
+    expect(snackbar).toHaveTextContent('The agent of Jira helper v47 changed since you opened it.');
+    await waitFor(() => expect(screen.queryByTestId('identity-activate-dialog')).not.toBeInTheDocument());
     await waitFor(() => expect(listCalls(calls).length).toBeGreaterThan(1));
   });
 });
