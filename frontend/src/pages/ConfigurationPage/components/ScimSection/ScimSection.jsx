@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import AutorenewOutlined from '@mui/icons-material/AutorenewOutlined';
 import BlockOutlined from '@mui/icons-material/BlockOutlined';
+import LinkOffOutlined from '@mui/icons-material/LinkOffOutlined';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import {
   Alert,
@@ -19,6 +20,7 @@ import {
 import {
   useScimGroupListQuery,
   useScimGroupSyncMutation,
+  useScimGroupUnlinkMutation,
   useScimTokenCreateMutation,
   useScimTokenListQuery,
   useScimTokenRevokeMutation,
@@ -29,6 +31,7 @@ import { useResponsiveColumns } from '@/hooks/useResponsiveColumns.hooks';
 
 import GraphNestingCard from './components/GraphNestingCard';
 import TokenIssuedDialog from './components/TokenIssuedDialog';
+import UnlinkGroupDialog from './components/UnlinkGroupDialog';
 
 const TOKEN_COLUMNS = [
   { field: 'name', label: 'Name', width: '1.2fr', sortable: false },
@@ -64,6 +67,7 @@ const ScimSection = memo(() => {
 
   const [tokenName, setTokenName] = useState('');
   const [issued, setIssued] = useState(null);
+  const [unlinkTarget, setUnlinkTarget] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const tokens = useScimTokenListQuery();
@@ -72,6 +76,7 @@ const ScimSection = memo(() => {
   const [rotateToken] = useScimTokenRotateMutation();
   const [revokeToken] = useScimTokenRevokeMutation();
   const [syncGroup] = useScimGroupSyncMutation();
+  const [unlinkGroup, { isLoading: isUnlinking }] = useScimGroupUnlinkMutation();
 
   const tokenRows = useMemo(() => tokens.data?.rows ?? [], [tokens.data]);
   const groupRows = useMemo(() => groups.data?.rows ?? [], [groups.data]);
@@ -146,6 +151,18 @@ const ScimSection = memo(() => {
       ),
     [runAction, syncGroup],
   );
+
+  const closeUnlink = useCallback(() => setUnlinkTarget(null), []);
+
+  const handleUnlink = useCallback(async () => {
+    const group = unlinkTarget;
+    await runAction(
+      () => unlinkGroup({ groupId: group.id }),
+      `"${group.display_name}" unlinked; it is mapped again on the next sync.`,
+      'Failed to unlink the group.',
+    );
+    setUnlinkTarget(null);
+  }, [runAction, unlinkGroup, unlinkTarget]);
 
   const renderTokenCell = useCallback(
     (column, value) => {
@@ -272,7 +289,17 @@ const ScimSection = memo(() => {
     row =>
       row.status === 'removed' ? null : (
         <Box sx={styles.actionsRow}>
-          <Tooltip title="Sync now: create the project and update its members">
+          {row.project_id && (
+            <Tooltip title="Unlink: remove synced members and map the group again by name">
+              <IconButton
+                size="small"
+                onClick={() => setUnlinkTarget(row)}
+              >
+                <LinkOffOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          <Tooltip title="Sync now: link or create the project and update its members">
             <IconButton
               size="small"
               onClick={() => handleSync(row)}
@@ -404,6 +431,12 @@ const ScimSection = memo(() => {
         </GridTableContainer>
       )}
 
+      <UnlinkGroupDialog
+        group={unlinkTarget}
+        isLoading={isUnlinking}
+        onConfirm={handleUnlink}
+        onClose={closeUnlink}
+      />
       <TokenIssuedDialog
         token={issued}
         baseUrl={baseUrl}
