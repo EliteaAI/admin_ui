@@ -36,6 +36,11 @@ const scimApi = adminApi.injectEndpoints({
       invalidatesTags: ['ScimGroups'],
     }),
 
+    scimGroupUnlink: build.mutation({
+      query: ({ groupId }) => ({ url: `${GROUPS}/${encodeURIComponent(groupId)}/unlink`, method: 'POST' }),
+      invalidatesTags: ['ScimGroups', 'Projects'],
+    }),
+
     scimSettings: build.query({
       query: () => ({ url: SETTINGS }),
       providesTags: ['ScimSettings'],
@@ -64,6 +69,7 @@ export const {
   useScimTokenRevokeMutation,
   useScimGroupListQuery,
   useScimGroupSyncMutation,
+  useScimGroupUnlinkMutation,
   useScimSettingsQuery,
   useScimSettingsUpdateMutation,
   useScimGraphCheckMutation,

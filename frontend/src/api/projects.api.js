@@ -28,6 +28,15 @@ const projectsApi = adminApi.injectEndpoints({
       invalidatesTags: ['Projects'],
     }),
 
+    projectRename: build.mutation({
+      query: ({ projectId, name }) => ({
+        url: `/projects/project/administration/${projectId}`,
+        method: 'PUT',
+        body: { name, owner: null, plugins: null },
+      }),
+      invalidatesTags: ['Projects'],
+    }),
+
     projectDelete: build.mutation({
       query: ({ projectId }) => ({
         url: `/projects/project/administration/${projectId}`,
@@ -86,6 +95,7 @@ export const {
   useProjectListQuery,
   useLazyProjectListQuery,
   useProjectCreateMutation,
+  useProjectRenameMutation,
   useProjectDeleteMutation,
   useProjectAddAdminMutation,
   useProjectUpdateUserRoleMutation,

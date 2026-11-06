@@ -4,6 +4,7 @@ import BlockOutlined from '@mui/icons-material/BlockOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import CloudDownloadOutlined from '@mui/icons-material/CloudDownloadOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DriveFileRenameOutlineOutlined from '@mui/icons-material/DriveFileRenameOutlineOutlined';
 import PersonAddAlt1Outlined from '@mui/icons-material/PersonAddAlt1Outlined';
 import SettingsBackupRestoreOutlined from '@mui/icons-material/SettingsBackupRestoreOutlined';
 import TimelineOutlined from '@mui/icons-material/TimelineOutlined';
@@ -69,6 +70,7 @@ const ProjectsTable = memo(props => {
     onSelectionChange,
     onDelete,
     onAddAdmin,
+    onRename,
     onSuspend,
     onActivity,
     onBackup,
@@ -100,13 +102,12 @@ const ProjectsTable = memo(props => {
     if (isAllSelected) {
       onSelectionChange([]);
     } else {
-      onSelectionChange(projects.filter(p => !p.scim_managed).map(p => p.id));
+      onSelectionChange(projects.map(p => p.id));
     }
   }, [isAllSelected, projects, onSelectionChange]);
 
   const handleSelectRow = useCallback(
     projectId => {
-      if (projects.find(p => p.id === projectId)?.scim_managed) return;
       const isCurrentlySelected = selectedIds.includes(projectId);
       if (isCurrentlySelected) {
         onSelectionChange(selectedIds.filter(id => id !== projectId));
@@ -114,7 +115,7 @@ const ProjectsTable = memo(props => {
         onSelectionChange([...selectedIds, projectId]);
       }
     },
-    [projects, selectedIds, onSelectionChange],
+    [selectedIds, onSelectionChange],
   );
 
   const paginationProps = useMemo(
@@ -145,9 +146,9 @@ const ProjectsTable = memo(props => {
             >
               {value || '-'}
             </Typography>
-            <Tooltip title="Managed by SCIM: changed only in the identity provider; member roles can be edited">
+            <Tooltip title="Linked to an Entra ID group: members synced from the group are managed in Entra ID">
               <Chip
-                label="SCIM"
+                label="Entra"
                 size="small"
                 variant="outlined"
               />
@@ -219,9 +220,18 @@ const ProjectsTable = memo(props => {
   const renderActions = useCallback(
     row => {
       const isSuspended = row.status === 'suspended';
-      const isScim = Boolean(row.scim_managed);
       return (
         <Box sx={styles.actionsRow}>
+          {onRename && (
+            <Tooltip title="Rename project">
+              <IconButton
+                size="small"
+                onClick={() => onRename(row)}
+              >
+                <DriveFileRenameOutlineOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           {onAddAdmin && (
             <Tooltip title="Add admin">
               <IconButton
@@ -232,7 +242,7 @@ const ProjectsTable = memo(props => {
               </IconButton>
             </Tooltip>
           )}
-          {onSuspend && !isScim && (
+          {onSuspend && (
             <Tooltip title={isSuspended ? 'Unsuspend project' : 'Suspend project'}>
               <IconButton
                 size="small"
@@ -259,7 +269,7 @@ const ProjectsTable = memo(props => {
               </IconButton>
             </Tooltip>
           )}
-          {onRestore && !isScim && (
+          {onRestore && (
             <Tooltip title="Restore project">
               <IconButton
                 size="small"
@@ -277,7 +287,7 @@ const ProjectsTable = memo(props => {
               <TimelineOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          {onDelete && !isScim && (
+          {onDelete && (
             <Tooltip title="Delete project">
               <IconButton
                 size="small"
@@ -290,7 +300,7 @@ const ProjectsTable = memo(props => {
         </Box>
       );
     },
-    [styles, onDelete, onAddAdmin, onSuspend, onActivity, onBackup, onRestore],
+    [styles, onDelete, onAddAdmin, onRename, onSuspend, onActivity, onBackup, onRestore],
   );
 
   if (isFetching) {

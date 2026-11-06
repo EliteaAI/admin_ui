@@ -56,9 +56,6 @@ const AddProjectAdminDialog = memo(props => {
   }, [email, projectUsers]);
 
   const isExistingUser = Boolean(existingUser);
-  // SCIM projects: members come from the IdP; a new user can only be added as admin, members' roles can change
-  const isScimNewUser = Boolean(project?.scim_managed) && !isExistingUser;
-  const effectiveRole = isScimNewUser ? 'admin' : selectedRole;
 
   const handleSubmit = useCallback(async () => {
     setError('');
@@ -72,21 +69,21 @@ const AddProjectAdminDialog = memo(props => {
         await updateRole({
           projectId: project?.id,
           userId: existingUser.id,
-          roles: [effectiveRole],
+          roles: [selectedRole],
         }).unwrap();
-        setSuccess(`Role updated to "${effectiveRole}" successfully.`);
+        setSuccess(`Role updated to "${selectedRole}" successfully.`);
       } else {
         const result = await addAdmin({
           projectId: project?.id,
           email: email.trim(),
-          roles: [effectiveRole],
+          roles: [selectedRole],
         }).unwrap();
         const entry = Array.isArray(result) ? result[0] : result;
         if (entry?.status === 'error') {
           setError(entry.msg || 'Failed to add user.');
           return;
         }
-        setSuccess(`User added with "${effectiveRole}" role successfully.`);
+        setSuccess(`User added with "${selectedRole}" role successfully.`);
       }
       setEmail('');
       setSelectedRole('admin');
@@ -95,7 +92,7 @@ const AddProjectAdminDialog = memo(props => {
         err?.data?.error ?? err?.error ?? (isExistingUser ? 'Failed to update role.' : 'Failed to add user.'),
       );
     }
-  }, [email, effectiveRole, isExistingUser, existingUser, addAdmin, updateRole, project]);
+  }, [email, selectedRole, isExistingUser, existingUser, addAdmin, updateRole, project]);
 
   const handleClose = useCallback(() => {
     setEmail('');
@@ -147,22 +144,16 @@ const AddProjectAdminDialog = memo(props => {
           onChange={e => setEmail(e.target.value)}
           disabled={isLoading}
           placeholder="user@example.com"
-          helperText={
-            isExistingUser
-              ? 'User already exists in this project — role will be updated.'
-              : isScimNewUser
-                ? 'SCIM project: members come from the identity provider; new users can be added as admin only.'
-                : ''
-          }
+          helperText={isExistingUser ? 'User already exists in this project — role will be updated.' : ''}
         />
         <FormControl
           fullWidth
           margin="dense"
-          disabled={isLoading || isScimNewUser}
+          disabled={isLoading}
         >
           <InputLabel>Role</InputLabel>
           <Select
-            value={effectiveRole}
+            value={selectedRole}
             label="Role"
             onChange={e => setSelectedRole(e.target.value)}
           >

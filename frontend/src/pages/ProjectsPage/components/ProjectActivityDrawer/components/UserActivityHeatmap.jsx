@@ -50,6 +50,7 @@ const UserActivityHeatmap = memo(props => {
       id: user.id,
       name: user.name || user.email,
       email: user.email,
+      isSynced: Boolean(user.scim_synced),
       eventCount: activityMap.get(user.id) || 0,
       isActive: activityMap.has(user.id),
     }));
@@ -109,6 +110,14 @@ const UserActivityHeatmap = memo(props => {
                         {member.name}
                       </Typography>
                       <Typography variant="caption">{member.email}</Typography>
+                      {member.isSynced && (
+                        <Typography
+                          variant="caption"
+                          sx={styles.tooltipLine}
+                        >
+                          Synced from Entra ID
+                        </Typography>
+                      )}
                       <Typography
                         variant="caption"
                         sx={{ display: 'block' }}
@@ -194,6 +203,9 @@ const userActivityHeatmapStyles = () => ({
     color: palette.text.secondary,
     fontSize: '1.25rem',
   }),
+  tooltipLine: {
+    display: 'block',
+  },
   tooltipTitle: {
     fontWeight: 600,
     display: 'block',
