@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import BlockOutlined from '@mui/icons-material/BlockOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import TimelineOutlined from '@mui/icons-material/TimelineOutlined';
 import { Box, Chip, IconButton, MenuItem, Select, Skeleton, Tooltip, Typography } from '@mui/material';
 
@@ -159,6 +160,24 @@ const UsersTable = memo(props => {
 
   const renderCell = useCallback(
     (column, value, row) => {
+      if (column.field === 'name' && row?.scim_provisioned) {
+        return (
+          <Box sx={styles.nameCell}>
+            <Typography
+              variant="bodyMedium"
+              sx={styles.cellText}
+            >
+              {value || '-'}
+            </Typography>
+            <Tooltip title="Provisioned from Entra ID">
+              <SyncOutlined
+                fontSize="small"
+                sx={styles.syncIcon}
+              />
+            </Tooltip>
+          </Box>
+        );
+      }
       if (column.field === 'status') {
         const cfg = STATUS_CONFIG[value] || STATUS_CONFIG.active;
         return (
@@ -362,6 +381,16 @@ const usersTableStyles = () => ({
     display: 'flex',
     gap: '0.125rem',
   },
+  nameCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+    minWidth: 0,
+  },
+  syncIcon: ({ palette }) => ({
+    color: palette.icon.fill.default,
+    flexShrink: 0,
+  }),
   suspendedRow: ({ palette }) => ({
     opacity: 0.5,
     backgroundColor: palette.background.subtle.default,
