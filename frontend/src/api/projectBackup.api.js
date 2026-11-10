@@ -90,9 +90,16 @@ const projectBackupApi = adminApi.injectEndpoints({
           body,
         };
       },
-      invalidatesTags: ['Projects'],
+    }),
+    // A restore runs on the server after the upload; this reports its job
+    projectRestoreJob: build.query({
+      query: ({ projectId, jobId }) => ({
+        url: `${V2_BASE}/admin/project_restore_job/administration/${projectId}/${jobId}`,
+      }),
+      keepUnusedDataFor: 0,
+      providesTags: [],
     }),
   }),
 });
 
-export const { useProjectRestoreMutation } = projectBackupApi;
+export const { useProjectRestoreMutation, useProjectRestoreJobQuery } = projectBackupApi;
