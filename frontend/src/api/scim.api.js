@@ -3,6 +3,7 @@ import { adminApi } from './admin.api';
 const TOKENS = '/admin/scim_tokens/administration';
 const GROUPS = '/admin/scim_groups/administration';
 const SETTINGS = '/admin/scim_settings/administration';
+const USERS = '/admin/scim_users/administration';
 
 const scimApi = adminApi.injectEndpoints({
   endpoints: build => ({
@@ -33,12 +34,17 @@ const scimApi = adminApi.injectEndpoints({
 
     scimGroupSync: build.mutation({
       query: ({ groupId }) => ({ url: `${GROUPS}/${encodeURIComponent(groupId)}/sync`, method: 'POST' }),
-      invalidatesTags: ['ScimGroups'],
+      invalidatesTags: ['ScimGroups', 'ScimUsers'],
     }),
 
     scimGroupUnlink: build.mutation({
       query: ({ groupId }) => ({ url: `${GROUPS}/${encodeURIComponent(groupId)}/unlink`, method: 'POST' }),
       invalidatesTags: ['ScimGroups', 'Projects'],
+    }),
+
+    scimUserList: build.query({
+      query: () => ({ url: USERS }),
+      providesTags: ['ScimUsers'],
     }),
 
     scimSettings: build.query({
@@ -70,6 +76,7 @@ export const {
   useScimGroupListQuery,
   useScimGroupSyncMutation,
   useScimGroupUnlinkMutation,
+  useScimUserListQuery,
   useScimSettingsQuery,
   useScimSettingsUpdateMutation,
   useScimGraphCheckMutation,

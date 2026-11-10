@@ -1,9 +1,13 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
+import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import AutorenewOutlined from '@mui/icons-material/AutorenewOutlined';
 import BlockOutlined from '@mui/icons-material/BlockOutlined';
+import GroupsOutlined from '@mui/icons-material/GroupsOutlined';
+import KeyOutlined from '@mui/icons-material/KeyOutlined';
 import LinkOffOutlined from '@mui/icons-material/LinkOffOutlined';
+import ManageAccountsOutlined from '@mui/icons-material/ManageAccountsOutlined';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import {
   Alert,
@@ -26,10 +30,12 @@ import {
   useScimTokenRevokeMutation,
   useScimTokenRotateMutation,
 } from '@/api/scim.api';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { GridTableBody, GridTableContainer, GridTableHeader, GridTableRow } from '@/components/GridTable';
 import { useResponsiveColumns } from '@/hooks/useResponsiveColumns.hooks';
 
 import GraphNestingCard from './components/GraphNestingCard';
+import ScimUsersAudit from './components/ScimUsersAudit';
 import TokenIssuedDialog from './components/TokenIssuedDialog';
 import UnlinkGroupDialog from './components/UnlinkGroupDialog';
 
@@ -69,6 +75,7 @@ const ScimSection = memo(() => {
   const [issued, setIssued] = useState(null);
   const [unlinkTarget, setUnlinkTarget] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [expanded, setExpanded] = useState({ tokens: false, nesting: false, users: false, groups: false });
 
   const tokens = useScimTokenListQuery();
   const groups = useScimGroupListQuery();
@@ -100,6 +107,7 @@ const ScimSection = memo(() => {
   }, []);
   const closeSnackbar = useCallback(() => setSnackbar(prev => ({ ...prev, open: false })), []);
   const closeIssued = useCallback(() => setIssued(null), []);
+  const toggleSection = useCallback(id => setExpanded(prev => ({ ...prev, [id]: !prev[id] })), []);
 
   const handleTokenNameChange = useCallback(event => setTokenName(event.target.value), []);
 
@@ -345,91 +353,129 @@ const ScimSection = memo(() => {
         />
       </Box>
 
-      <Typography variant="headingSmall">Tokens</Typography>
-      <Box sx={styles.urlRow}>
-        <TextField
-          size="small"
-          label="Token name"
-          placeholder="e.g. Entra production"
-          value={tokenName}
-          onChange={handleTokenNameChange}
-        />
-        <Button
-          size="small"
-          variant="contained"
-          startIcon={<AddOutlined />}
-          disabled={!tokenName.trim() || isCreating}
-          onClick={handleCreateToken}
-          sx={styles.button}
-        >
-          Issue token
-        </Button>
-      </Box>
-      <GridTableContainer
-        isLoading={tokens.isFetching}
-        isEmpty={tokenRows.length === 0}
-        emptyMessage="No tokens yet. Issue one and paste it into the IdP as the Secret Token."
+      <CollapsibleSection
+        icon={KeyOutlined}
+        title="Tokens"
+        count={
+          tokenRows.length ? `${tokenRows.length} ${tokenRows.length === 1 ? 'token' : 'tokens'}` : undefined
+        }
+        sectionId="tokens"
+        expanded={expanded.tokens}
+        onToggle={toggleSection}
       >
-        <GridTableHeader
-          columns={tokenColumns.visibleColumns}
-          gridTemplateColumns={tokenColumns.gridTemplateColumns}
-          showCheckbox={false}
-        />
-        <GridTableBody>
-          {tokenRows.map(row => (
-            <GridTableRow
-              key={row.id}
-              row={row}
-              columns={tokenColumns.dataColumns}
-              gridTemplateColumns={tokenColumns.gridTemplateColumns}
-              showCheckbox={false}
-              idField="id"
-              rowSx={row.revoked_at ? styles.inactiveRow : undefined}
-              renderCell={renderTokenCell}
-              renderActions={renderTokenActions}
-            />
-          ))}
-        </GridTableBody>
-      </GridTableContainer>
-
-      <GraphNestingCard onNotify={notify} />
-
-      <Typography variant="headingSmall">Groups</Typography>
-      {groups.isError ? (
-        <Typography
-          variant="bodyMedium"
-          color="error"
-        >
-          Failed to load groups.
-        </Typography>
-      ) : (
+        <Box sx={styles.urlRow}>
+          <TextField
+            size="small"
+            label="Token name"
+            placeholder="e.g. Entra production"
+            value={tokenName}
+            onChange={handleTokenNameChange}
+          />
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<AddOutlined />}
+            disabled={!tokenName.trim() || isCreating}
+            onClick={handleCreateToken}
+            sx={styles.button}
+          >
+            Issue token
+          </Button>
+        </Box>
         <GridTableContainer
-          isLoading={groups.isFetching}
-          isEmpty={groupRows.length === 0}
-          emptyMessage="No groups provisioned yet. Assign groups to the enterprise app in the IdP."
+          isLoading={tokens.isFetching}
+          isEmpty={tokenRows.length === 0}
+          emptyMessage="No tokens yet. Issue one and paste it into the IdP as the Secret Token."
         >
           <GridTableHeader
-            columns={groupColumns.visibleColumns}
-            gridTemplateColumns={groupColumns.gridTemplateColumns}
+            columns={tokenColumns.visibleColumns}
+            gridTemplateColumns={tokenColumns.gridTemplateColumns}
             showCheckbox={false}
           />
           <GridTableBody>
-            {groupRows.map(row => (
+            {tokenRows.map(row => (
               <GridTableRow
                 key={row.id}
                 row={row}
-                columns={groupColumns.dataColumns}
-                gridTemplateColumns={groupColumns.gridTemplateColumns}
+                columns={tokenColumns.dataColumns}
+                gridTemplateColumns={tokenColumns.gridTemplateColumns}
                 showCheckbox={false}
                 idField="id"
-                rowSx={row.status === 'removed' ? styles.inactiveRow : undefined}
-                renderCell={(column, value) => renderGroupCell(column, value, row)}
-                renderActions={renderGroupActions}
+                rowSx={row.revoked_at ? styles.inactiveRow : undefined}
+                renderCell={renderTokenCell}
+                renderActions={renderTokenActions}
               />
             ))}
           </GridTableBody>
         </GridTableContainer>
-      )}
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        icon={AccountTreeOutlined}
+        title="Nested groups"
+        sectionId="nesting"
+        expanded={expanded.nesting}
+        onToggle={toggleSection}
+      >
+        <GraphNestingCard onNotify={notify} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        icon={ManageAccountsOutlined}
+        title="Users audit"
+        sectionId="users"
+        expanded={expanded.users}
+        onToggle={toggleSection}
+      >
+        <ScimUsersAudit />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        icon={GroupsOutlined}
+        title="Groups"
+        count={
+          groupRows.length ? `${groupRows.length} ${groupRows.length === 1 ? 'group' : 'groups'}` : undefined
+        }
+        sectionId="groups"
+        expanded={expanded.groups}
+        onToggle={toggleSection}
+      >
+        {groups.isError ? (
+          <Typography
+            variant="bodyMedium"
+            color="error"
+          >
+            Failed to load groups.
+          </Typography>
+        ) : (
+          <GridTableContainer
+            isLoading={groups.isFetching}
+            isEmpty={groupRows.length === 0}
+            emptyMessage="No groups provisioned yet. Assign groups to the enterprise app in the IdP."
+          >
+            <GridTableHeader
+              columns={groupColumns.visibleColumns}
+              gridTemplateColumns={groupColumns.gridTemplateColumns}
+              showCheckbox={false}
+            />
+            <GridTableBody>
+              {groupRows.map(row => (
+                <GridTableRow
+                  key={row.id}
+                  row={row}
+                  columns={groupColumns.dataColumns}
+                  gridTemplateColumns={groupColumns.gridTemplateColumns}
+                  showCheckbox={false}
+                  idField="id"
+                  rowSx={row.status === 'removed' ? styles.inactiveRow : undefined}
+                  renderCell={(column, value) => renderGroupCell(column, value, row)}
+                  renderActions={renderGroupActions}
+                />
+              ))}
+            </GridTableBody>
+          </GridTableContainer>
+        )}
+      </CollapsibleSection>
 
       <UnlinkGroupDialog
         group={unlinkTarget}

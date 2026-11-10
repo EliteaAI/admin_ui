@@ -32,6 +32,7 @@ export const adminApi = createApi({
     'OAuthApps',
     'ScimTokens',
     'ScimGroups',
+    'ScimUsers',
     'ScimSettings',
     'Surveys',
     'Banners',

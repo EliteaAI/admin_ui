@@ -54,7 +54,6 @@ const GraphNestingCard = memo(props => {
 
   return (
     <Box sx={styles.root}>
-      <Typography variant="headingSmall">Nested groups</Typography>
       <Typography
         variant="body2"
         sx={styles.description}
