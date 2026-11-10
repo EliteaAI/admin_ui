@@ -70,6 +70,7 @@ const FEATURES_GUARDRAILS_PREFIXES = [
   'skill_publishing_guardrail.',
   'midturn_injection_guardrail.',
   'next_input_suggestion_guardrail.',
+  'conversation_starters_guardrail.',
 ];
 
 // Sections with their own save flow: no shared Save/Discard bar
