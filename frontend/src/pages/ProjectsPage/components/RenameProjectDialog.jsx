@@ -60,11 +60,7 @@ const RenameProjectDialog = memo(props => {
           value={name}
           onChange={e => setName(e.target.value)}
           disabled={isLoading}
-          helperText={
-            project?.scim_managed
-              ? ''
-              : 'An Entra ID group with this name is linked to the project on its next sync.'
-          }
+          helperText="It renames project"
         />
       </DialogContent>
       <DialogActions sx={styles.dialogActions}>

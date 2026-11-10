@@ -160,24 +160,6 @@ const UsersTable = memo(props => {
 
   const renderCell = useCallback(
     (column, value, row) => {
-      if (column.field === 'name' && row?.scim_provisioned) {
-        return (
-          <Box sx={styles.nameCell}>
-            <Typography
-              variant="bodyMedium"
-              sx={styles.cellText}
-            >
-              {value || '-'}
-            </Typography>
-            <Tooltip title="Provisioned from Entra ID">
-              <SyncOutlined
-                fontSize="small"
-                sx={styles.syncIcon}
-              />
-            </Tooltip>
-          </Box>
-        );
-      }
       if (column.field === 'status') {
         const cfg = STATUS_CONFIG[value] || STATUS_CONFIG.active;
         return (
@@ -282,15 +264,29 @@ const UsersTable = memo(props => {
               </IconButton>
             </Tooltip>
           )}
-          {onDelete && (
-            <Tooltip title="Delete user">
-              <IconButton
-                size="small"
-                onClick={() => onDelete([row.id])}
+          {row.scim_provisioned ? (
+            <Tooltip title="Provisioned from Entra ID: remove the user from the enterprise app there">
+              <Box
+                component="span"
+                sx={styles.syncIconWrapper}
               >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+                <SyncOutlined
+                  fontSize="small"
+                  sx={styles.syncIcon}
+                />
+              </Box>
             </Tooltip>
+          ) : (
+            onDelete && (
+              <Tooltip title="Delete user">
+                <IconButton
+                  size="small"
+                  onClick={() => onDelete([row.id])}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )
           )}
         </Box>
       );
@@ -381,11 +377,12 @@ const usersTableStyles = () => ({
     display: 'flex',
     gap: '0.125rem',
   },
-  nameCell: {
-    display: 'flex',
+  syncIconWrapper: {
+    display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.375rem',
-    minWidth: 0,
+    justifyContent: 'center',
+    width: '1.875rem',
+    height: '1.875rem',
   },
   syncIcon: ({ palette }) => ({
     color: palette.icon.fill.default,
