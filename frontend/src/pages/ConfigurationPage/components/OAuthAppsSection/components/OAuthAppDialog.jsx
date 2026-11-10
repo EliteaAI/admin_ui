@@ -31,7 +31,8 @@ import {
   providerOf,
 } from '@/pages/ConfigurationPage/components/OAuthAppsSection/constants/oauthApps.constants';
 
-const allTypes = provider => provider.scopeGroups.map(group => group.type);
+// Types an app serves when it has no saved list, and the ones a new app starts with: opt-in types are off
+const defaultTypes = provider => provider.scopeGroups.filter(group => !group.optIn).map(group => group.type);
 
 const recommendedScopes = provider =>
   Object.fromEntries(provider.scopeGroups.map(group => [group.type, group.recommended]));
@@ -43,7 +44,7 @@ const emptyForm = (providerId = MICROSOFT_ENTRA) => ({
   client_secret: '',
   oauth_discovery_endpoint: OAUTH_PROVIDERS[providerId].defaultDiscoveryEndpoint,
   scopes: recommendedScopes(OAUTH_PROVIDERS[providerId]),
-  credential_types: allTypes(OAUTH_PROVIDERS[providerId]),
+  credential_types: defaultTypes(OAUTH_PROVIDERS[providerId]),
   auto_refresh_token: true,
   is_default: false,
   enabled: true,
@@ -62,8 +63,8 @@ const toForm = app => {
     scopes: Object.fromEntries(
       provider.scopeGroups.map(group => [group.type, app.scopes?.[group.type] ?? group.recommended]),
     ),
-    // Unset on saved apps means every credential type of the provider
-    credential_types: app.credential_types ?? allTypes(provider),
+    // Unset on saved apps means the provider's default types (opt-in types off)
+    credential_types: app.credential_types ?? defaultTypes(provider),
   };
 };
 
@@ -113,7 +114,7 @@ const OAuthAppDialog = memo(props => {
         provider: providerId,
         oauth_discovery_endpoint: OAUTH_PROVIDERS[providerId].defaultDiscoveryEndpoint,
         scopes: recommendedScopes(OAUTH_PROVIDERS[providerId]),
-        credential_types: allTypes(OAUTH_PROVIDERS[providerId]),
+        credential_types: defaultTypes(OAUTH_PROVIDERS[providerId]),
       })),
     [],
   );
@@ -403,8 +404,11 @@ const OAuthAppDialog = memo(props => {
               <TextField
                 size="small"
                 fullWidth
-                placeholder="e.g. Sites.Read.All Files.Read.All"
-                helperText={provider.freeScopesHint}
+                placeholder={group.placeholder}
+                helperText={
+                  group.hint ? `${provider.freeScopesHint}. ${group.hint}` : provider.freeScopesHint
+                }
+                inputProps={{ 'data-testid': `oauth-app-scopes-${group.type}` }}
                 value={(form.scopes[group.type] || []).join(' ')}
                 onChange={event => handleScopesText(group.type, event.target.value)}
               />
