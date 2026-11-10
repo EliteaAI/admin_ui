@@ -4,6 +4,7 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmailOutlined';
 import DataUsageOutlinedIcon from '@mui/icons-material/DataUsageOutlined';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import QuickreplyOutlinedIcon from '@mui/icons-material/QuickreplyOutlined';
 import RecordVoiceOverOutlinedIcon from '@mui/icons-material/RecordVoiceOverOutlined';
 import { Box } from '@mui/material';
 
@@ -38,6 +39,10 @@ const ChatConfigurationSection = memo(props => {
   );
   const nextInputFields = useMemo(
     () => guardrailsFields.filter(f => f.path?.startsWith('next_input_suggestion_guardrail.')),
+    [guardrailsFields],
+  );
+  const conversationStartersFields = useMemo(
+    () => guardrailsFields.filter(f => f.path?.startsWith('conversation_starters_guardrail.')),
     [guardrailsFields],
   );
 
@@ -107,8 +112,21 @@ const ChatConfigurationSection = memo(props => {
           />
         ),
       },
+      {
+        id: 'conversation_starters',
+        title: 'Chat Starters',
+        icon: QuickreplyOutlinedIcon,
+        count: conversationStartersFields.length,
+        content: (
+          <GuardrailsSection
+            fields={conversationStartersFields}
+            values={guardrailsDraft.values}
+            onChange={guardrailsDraft.onChange}
+          />
+        ),
+      },
     ],
-    [voiceDraft, mentionsDraft, guardrailsDraft, midturnFields, nextInputFields],
+    [voiceDraft, mentionsDraft, guardrailsDraft, midturnFields, nextInputFields, conversationStartersFields],
   );
 
   return (
