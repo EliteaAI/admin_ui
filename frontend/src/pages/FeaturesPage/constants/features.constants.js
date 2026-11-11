@@ -8,6 +8,7 @@ import PublishIcon from '@mui/icons-material/PublishOutlined';
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgentOutlined';
+import WebhookOutlinedIcon from '@mui/icons-material/WebhookOutlined';
 
 // Features sub-navigation, in display order. backendSectionIds lists every config section a page
 // edits: the page-level Save sends one request per section with unsaved changes. selfSaving pages
@@ -36,6 +37,12 @@ export const FEATURES_SECTIONS = [
     title: 'Schedules',
     icon: ScheduleOutlinedIcon,
     backendSectionIds: ['schedules'],
+  },
+  {
+    id: 'webhooks',
+    title: 'Webhooks',
+    icon: WebhookOutlinedIcon,
+    backendSectionIds: ['webhooks'],
   },
   {
     id: 'support_assistant',

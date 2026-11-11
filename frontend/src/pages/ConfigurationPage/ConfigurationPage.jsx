@@ -60,6 +60,7 @@ const MOVED_TO_FEATURES = [
   'tool_pricing',
   'skills',
   'schedules',
+  'webhooks',
 ];
 // Guardrails-section fields whose config path starts with one of these prefixes have
 // been relocated to the Features page (see FeaturesPage features.constants), so they are

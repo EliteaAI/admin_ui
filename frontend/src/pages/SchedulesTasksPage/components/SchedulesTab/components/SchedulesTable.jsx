@@ -27,6 +27,7 @@ const SCHEDULE_COLUMNS = [
 const MANAGED_LOCATIONS = {
   runtime: { area: 'Configuration', title: 'Runtime', route: RouteDefinitions.Configuration },
   schedules: { area: 'Features', title: 'Schedules', route: RouteDefinitions.Features },
+  webhooks: { area: 'Features', title: 'Webhooks', route: RouteDefinitions.Features },
 };
 
 const describeConfigLocation = managedBy => {

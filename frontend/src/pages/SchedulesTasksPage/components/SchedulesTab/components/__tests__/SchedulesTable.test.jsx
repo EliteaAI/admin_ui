@@ -50,6 +50,15 @@ describe('SchedulesTable managed schedule lock', () => {
     expect(link).toHaveAttribute('href', '/features#schedules');
   });
 
+  it('links a schedule managed in the webhooks section to Features > Webhooks', () => {
+    mocks.canOpen = true;
+    renderTable([schedule(1, { section: 'webhooks', fields: ['schedules_webhook_max_waiting_runs'] })]);
+
+    const link = screen.getByRole('link', { name: 'Managed in Features → Webhooks' });
+
+    expect(link).toHaveAttribute('href', '/features#webhooks');
+  });
+
   it('keeps the Configuration > Runtime link for a backend that still manages the schedule there', () => {
     mocks.canOpen = true;
     renderTable([schedule(1, { section: 'runtime', fields: ['pipeline_scheduling_cron'] })]);
