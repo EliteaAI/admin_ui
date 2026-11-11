@@ -83,6 +83,8 @@ const projectBackupApi = adminApi.injectEndpoints({
         body.append('include_parents', includeParents ? 'true' : 'false');
         body.append('truncate', truncate ? 'true' : 'false');
         body.append('dry_run', dryRun ? 'true' : 'false');
+        // Answer with the job right away; the dialog follows it with projectRestoreJob
+        body.append('background', 'true');
         body.append('allow_project_mismatch', allowProjectMismatch ? 'true' : 'false');
         return {
           url: `${V2_BASE}/admin/project_restore/administration/${projectId}`,
