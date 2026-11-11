@@ -18,6 +18,7 @@ import { CustomThemeSection } from './components/CustomThemeSection';
 import { HelpCenterSection } from './components/HelpCenterSection';
 import McpConfigurationSection from './components/McpConfigurationSection';
 import PublishingSection from './components/PublishingSection';
+import { SchedulesSection } from './components/SchedulesSection';
 import { SkillsConfigurationSection } from './components/SkillsConfigurationSection';
 import SupportAssistant from './components/SupportAssistant';
 import { SurveysSection } from './components/SurveysSection';
@@ -67,6 +68,7 @@ const FeaturesPage = memo(() => {
   });
   const resourcesDraft = useConfigSectionDraft('resources', { skip: !usesSection('resources') });
   const skillsDraft = useConfigSectionDraft('skills', { skip: !usesSection('skills') });
+  const schedulesDraft = useConfigSectionDraft('schedules', { skip: !usesSection('schedules') });
 
   const allDrafts = useMemo(
     () => [
@@ -79,6 +81,7 @@ const FeaturesPage = memo(() => {
       supportDraft,
       resourcesDraft,
       skillsDraft,
+      schedulesDraft,
     ],
     [
       guardrailsDraft,
@@ -90,6 +93,7 @@ const FeaturesPage = memo(() => {
       supportDraft,
       resourcesDraft,
       skillsDraft,
+      schedulesDraft,
     ],
   );
   const activeDrafts = useMemo(
@@ -124,6 +128,10 @@ const FeaturesPage = memo(() => {
   );
   const skillsFields = useMemo(
     () => schemasData?.sections?.find(s => s.id === 'skills')?.fields || [],
+    [schemasData],
+  );
+  const schedulesFields = useMemo(
+    () => schemasData?.sections?.find(s => s.id === 'schedules')?.fields || [],
     [schemasData],
   );
 
@@ -307,6 +315,16 @@ const FeaturesPage = memo(() => {
             <SkillsConfigurationSection
               skillsDraft={skillsDraft}
               skillsFields={skillsFields}
+              initialBlock={deepLinkBlock}
+            />
+          </Box>
+        );
+      case 'schedules':
+        return (
+          <Box sx={styles.formScroll}>
+            <SchedulesSection
+              schedulesDraft={schedulesDraft}
+              schedulesFields={schedulesFields}
               initialBlock={deepLinkBlock}
             />
           </Box>

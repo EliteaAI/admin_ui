@@ -5,6 +5,7 @@ import MenuBookIcon from '@mui/icons-material/MenuBookOutlined';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import PollOutlinedIcon from '@mui/icons-material/PollOutlined';
 import PublishIcon from '@mui/icons-material/PublishOutlined';
+import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgentOutlined';
 
@@ -29,6 +30,12 @@ export const FEATURES_SECTIONS = [
     title: 'Skills Configuration',
     icon: AutoAwesomeOutlinedIcon,
     backendSectionIds: ['skills'],
+  },
+  {
+    id: 'schedules',
+    title: 'Schedules',
+    icon: ScheduleOutlinedIcon,
+    backendSectionIds: ['schedules'],
   },
   {
     id: 'support_assistant',

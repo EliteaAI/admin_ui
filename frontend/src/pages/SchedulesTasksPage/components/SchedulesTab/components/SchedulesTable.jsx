@@ -22,13 +22,18 @@ const SCHEDULE_COLUMNS = [
   { field: 'run', label: '', width: '3rem', sortable: false },
 ];
 
-const CONFIG_SECTION_TITLES = {
-  runtime: 'Runtime',
+// Where each config section that locks a schedule is edited. The Runtime entry serves a backend
+// that still keeps these settings there.
+const MANAGED_LOCATIONS = {
+  runtime: { area: 'Configuration', title: 'Runtime', route: RouteDefinitions.Configuration },
+  schedules: { area: 'Features', title: 'Schedules', route: RouteDefinitions.Features },
 };
 
 const describeConfigLocation = managedBy => {
-  const title = CONFIG_SECTION_TITLES[managedBy?.section];
-  return title ? `Managed in Configuration \u2192 ${title}` : 'Managed by the platform configuration';
+  const location = MANAGED_LOCATIONS[managedBy?.section];
+  return location
+    ? `Managed in ${location.area} \u2192 ${location.title}`
+    : 'Managed by the platform configuration';
 };
 
 const describeCron = expr => {
@@ -107,10 +112,10 @@ const SchedulesTable = memo(props => {
             </Typography>
             {row.managed_by && (
               <Tooltip title={describeConfigLocation(row.managed_by)}>
-                {canOpenConfiguration && CONFIG_SECTION_TITLES[row.managed_by.section] ? (
+                {canOpenConfiguration && MANAGED_LOCATIONS[row.managed_by.section] ? (
                   <Box
                     component={Link}
-                    to={`${RouteDefinitions.Configuration}#${row.managed_by.section}`}
+                    to={`${MANAGED_LOCATIONS[row.managed_by.section].route}#${row.managed_by.section}`}
                     aria-label={describeConfigLocation(row.managed_by)}
                     sx={styles.managedLink}
                   >
