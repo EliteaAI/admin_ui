@@ -145,6 +145,12 @@ const RestoreProjectDialog = memo(props => {
         allowProjectMismatch: allowMismatch,
       }).unwrap();
       if (response?.artifact) setArtifact(response.artifact);
+      // A backend without restore jobs answers with the synchronous result
+      if (!response?.job_id) {
+        setResult(response);
+        dispatch(adminApi.util.invalidateTags(['Projects']));
+        return;
+      }
       setJobId(response.job_id);
     } catch (err) {
       setError(err?.data ? errorMessage(err.data) : (err?.error ?? 'Restore failed.'));
@@ -154,6 +160,7 @@ const RestoreProjectDialog = memo(props => {
       if (err?.data?.result) setResult(err.data);
     }
   }, [
+    dispatch,
     restoreProject,
     project,
     file,
