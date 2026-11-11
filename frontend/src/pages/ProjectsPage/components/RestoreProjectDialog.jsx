@@ -33,6 +33,14 @@ const formatSize = bytes => {
   return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
 };
 
+const skillFilesSummaryText = summary => {
+  const files = summary?.skill_files;
+  if (!files?.total) return '';
+  if (files.unchecked) return `Skill files: ${files.total} not checked (storage unavailable)`;
+  const text = `Skill files: ${files.total} total, ${files.present} present, ${files.uploaded} uploaded, ${files.missing} missing`;
+  return files.missing_paths?.length ? `${text} (${files.missing_paths.join(', ')})` : text;
+};
+
 const RestoreProjectDialog = memo(props => {
   const { open, onClose, project } = props;
 
@@ -128,6 +136,7 @@ const RestoreProjectDialog = memo(props => {
   ]);
 
   const summary = result?.result;
+  const skillFilesSummary = skillFilesSummaryText(summary);
   const blockedByMismatch = isMismatch && !allowMismatch;
 
   // A backup taken before a migration carries columns this project no longer
@@ -196,7 +205,7 @@ const RestoreProjectDialog = memo(props => {
           <input
             ref={inputRef}
             type="file"
-            accept=".enc,.sql,text/plain,application/sql,application/octet-stream"
+            accept=".enc,.sql,.zip,text/plain,application/sql,application/zip,application/octet-stream"
             hidden
             onChange={handleFileChange}
           />
@@ -318,6 +327,17 @@ const RestoreProjectDialog = memo(props => {
           />
         </Box>
 
+        {isMismatch && !truncate && !fullMode && (
+          <Alert
+            severity="warning"
+            sx={styles.gapBelowSmall}
+            data-testid="project-restore-merge-warning"
+          >
+            Merging a backup of another project can attach its agent and skill versions to this project&apos;s
+            own. Restore it into a new project, or check &quot;Empty target tables first&quot;.
+          </Alert>
+        )}
+
         {truncate && !fullMode && (
           <Alert
             severity="warning"
@@ -359,6 +379,15 @@ const RestoreProjectDialog = memo(props => {
                   >
                     Columns missing in this project were dropped: {droppedColumns.join(', ')}
                     {summary.dropped_values ? ` (${summary.dropped_values} values not restored)` : ''}
+                  </Box>
+                )}
+                {!!skillFilesSummary && (
+                  <Box
+                    component="div"
+                    sx={styles.summaryBody}
+                    data-testid="project-restore-skill-files-summary"
+                  >
+                    {skillFilesSummary}
                   </Box>
                 )}
                 {filledColumns.length > 0 && (
