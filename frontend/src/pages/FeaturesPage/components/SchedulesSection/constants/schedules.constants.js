@@ -36,7 +36,13 @@ export const SCHEDULES_CARDS = [
     id: 'index_schedules',
     title: 'Index Schedules',
     icon: ManageSearchOutlinedIcon,
-    fieldKeys: ['index_scheduling_enabled', 'index_scheduling_cron'],
+    fieldKeys: [
+      'toolkit_index_scheduling_enabled',
+      'toolkit_index_min_interval_minutes',
+      'legacy_index_step_enabled',
+      'index_scheduling_enabled',
+      'index_scheduling_cron',
+    ],
   },
   {
     id: 'webhooks',
