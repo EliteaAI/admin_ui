@@ -11,8 +11,9 @@ import getDesignTokens from '@/theme/main.theme';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { SchedulesSection } from '..';
 import { SCHEDULES_CARDS } from '../constants/schedules.constants';
+
+import { SchedulesSection } from '..';
 
 const theme = createTheme(getDesignTokens('dark'));
 
@@ -48,6 +49,9 @@ const cronField = (key, title, switchKey) => ({
 const SCHEDULES_FIELDS = [
   cronField('index_scheduling_cron', 'Index cron', 'index_scheduling_enabled'),
   booleanField('index_scheduling_enabled', 'Index schedules enabled'),
+  booleanField('toolkit_index_scheduling_enabled', 'Toolkit index schedules enabled'),
+  integerField('toolkit_index_min_interval_minutes', 'Toolkit index minimum interval'),
+  booleanField('legacy_index_step_enabled', 'Legacy index step'),
   cronField('pipeline_scheduling_cron', 'Pipeline cron', 'pipeline_scheduling_enabled'),
   booleanField('pipeline_scheduling_enabled', 'Pipeline schedules enabled'),
   booleanField('agent_scheduling_enabled', 'Agent schedules enabled'),
@@ -130,7 +134,7 @@ describe('Schedules page', () => {
       ['Schedule Settings', '6 settings'],
       ['Agent Schedules', '1 setting'],
       ['Pipeline Schedules', '3 settings'],
-      ['Index Schedules', '2 settings'],
+      ['Index Schedules', '5 settings'],
       ['Webhooks', '4 settings'],
     ];
     const headers = screen.getAllByRole('button');
