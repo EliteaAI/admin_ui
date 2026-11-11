@@ -1,11 +1,12 @@
 name: Auto-Increment Version
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Build"]
+    types: [completed]
     branches:
       - main
       - 'release/**'
-  workflow_dispatch:
 
 permissions:
   contents: write
