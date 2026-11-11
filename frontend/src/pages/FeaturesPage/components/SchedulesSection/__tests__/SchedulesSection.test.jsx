@@ -62,10 +62,6 @@ const SCHEDULES_FIELDS = [
   integerField('schedules_stale_run_minutes', 'Stale run minutes'),
   integerField('schedules_max_parallel_runs', 'Max parallel runs'),
   integerField('schedules_approval_wait_hours', 'Approval wait hours'),
-  integerField('schedules_webhook_max_concurrent_runs', 'Webhook concurrent runs'),
-  integerField('schedules_webhook_max_concurrent_runs_limit', 'Webhook concurrent runs limit'),
-  integerField('schedules_webhook_project_max_concurrent_runs', 'Webhook project concurrent runs'),
-  integerField('schedules_webhook_max_waiting_runs', 'Webhook waiting runs'),
 ];
 
 const SAVED_VALUES = {
@@ -127,7 +123,7 @@ describe('Schedules page', () => {
     expect(schedules.backendSectionIds).toEqual(['schedules']);
   });
 
-  it('shows five collapsed cards in order with their setting counts', () => {
+  it('shows four collapsed cards in order with their setting counts', () => {
     setup();
 
     const cards = [
@@ -135,7 +131,6 @@ describe('Schedules page', () => {
       ['Agent Schedules', '1 setting'],
       ['Pipeline Schedules', '3 settings'],
       ['Index Schedules', '5 settings'],
-      ['Webhooks', '4 settings'],
     ];
     const headers = screen.getAllByRole('button');
 
@@ -181,6 +176,15 @@ describe('Schedules page', () => {
     expect(screen.getByDisplayValue('0 * * * *')).toBeInTheDocument();
   });
 
+  it('keeps the webhook settings out of the schedules cards', () => {
+    setup();
+
+    expect(screen.queryByText('Webhooks')).not.toBeInTheDocument();
+    SCHEDULES_CARDS.forEach(card =>
+      card.fieldKeys.forEach(key => expect(key.startsWith('schedules_webhook_')).toBe(false)),
+    );
+  });
+
   it('shows empty cards while the backend has not delivered the section yet', () => {
     render(
       <Provider store={store}>
@@ -193,6 +197,6 @@ describe('Schedules page', () => {
       </Provider>,
     );
 
-    expect(within(blockHeader('Webhooks')).getByText('0 settings')).toBeInTheDocument();
+    expect(within(blockHeader('Index Schedules')).getByText('0 settings')).toBeInTheDocument();
   });
 });

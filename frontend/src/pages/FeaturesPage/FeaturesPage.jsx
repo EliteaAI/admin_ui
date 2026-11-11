@@ -22,6 +22,7 @@ import { SchedulesSection } from './components/SchedulesSection';
 import { SkillsConfigurationSection } from './components/SkillsConfigurationSection';
 import SupportAssistant from './components/SupportAssistant';
 import { SurveysSection } from './components/SurveysSection';
+import { WebhooksSection } from './components/WebhooksSection';
 import { FEATURES_SECTIONS, LEGACY_SECTION_REDIRECTS } from './constants/features.constants';
 import {
   cleanValuesForSave,
@@ -69,6 +70,7 @@ const FeaturesPage = memo(() => {
   const resourcesDraft = useConfigSectionDraft('resources', { skip: !usesSection('resources') });
   const skillsDraft = useConfigSectionDraft('skills', { skip: !usesSection('skills') });
   const schedulesDraft = useConfigSectionDraft('schedules', { skip: !usesSection('schedules') });
+  const webhooksDraft = useConfigSectionDraft('webhooks', { skip: !usesSection('webhooks') });
 
   const allDrafts = useMemo(
     () => [
@@ -82,6 +84,7 @@ const FeaturesPage = memo(() => {
       resourcesDraft,
       skillsDraft,
       schedulesDraft,
+      webhooksDraft,
     ],
     [
       guardrailsDraft,
@@ -94,6 +97,7 @@ const FeaturesPage = memo(() => {
       resourcesDraft,
       skillsDraft,
       schedulesDraft,
+      webhooksDraft,
     ],
   );
   const activeDrafts = useMemo(
@@ -132,6 +136,10 @@ const FeaturesPage = memo(() => {
   );
   const schedulesFields = useMemo(
     () => schemasData?.sections?.find(s => s.id === 'schedules')?.fields || [],
+    [schemasData],
+  );
+  const webhooksFields = useMemo(
+    () => schemasData?.sections?.find(s => s.id === 'webhooks')?.fields || [],
     [schemasData],
   );
 
@@ -325,6 +333,16 @@ const FeaturesPage = memo(() => {
             <SchedulesSection
               schedulesDraft={schedulesDraft}
               schedulesFields={schedulesFields}
+              initialBlock={deepLinkBlock}
+            />
+          </Box>
+        );
+      case 'webhooks':
+        return (
+          <Box sx={styles.formScroll}>
+            <WebhooksSection
+              webhooksDraft={webhooksDraft}
+              webhooksFields={webhooksFields}
               initialBlock={deepLinkBlock}
             />
           </Box>
