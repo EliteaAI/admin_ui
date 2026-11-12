@@ -8,6 +8,7 @@ import { NotFound } from '@/components/NotFound';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { RouteDefinitions } from '@/constants/routes.constants';
 import { getEnvVar } from '@/helpers/env.helpers';
+import { AgentEvaluationPage } from '@/pages/AgentEvaluationPage';
 import { AppRequestsPage } from '@/pages/AppRequestsPage';
 import { AuditTrailPage } from '@/pages/AuditTrailPage';
 import { BudgetsPage } from '@/pages/BudgetsPage';
@@ -61,6 +62,10 @@ const router = createBrowserRouter(
       <Route
         path={RouteDefinitions.PlatformDimensions}
         element={guard(RouteDefinitions.PlatformDimensions, <PlatformDimensionsPage />)}
+      />
+      <Route
+        path={RouteDefinitions.AgentEvaluation}
+        element={guard(RouteDefinitions.AgentEvaluation, <AgentEvaluationPage />)}
       />
       <Route
         path={RouteDefinitions.Secrets}

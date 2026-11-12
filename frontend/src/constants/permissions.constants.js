@@ -117,6 +117,13 @@ export const PERMISSIONS = {
     delete: 'configuration.evaluation.platform_dimensions.delete',
   },
 
+  // Environment-wide scheduled agent evaluation
+  evalAuto: {
+    view: 'configuration.evaluation.auto.view',
+    edit: 'configuration.evaluation.auto.edit',
+    run: 'configuration.evaluation.auto.run',
+  },
+
   // Surveys
   surveys: {
     manage: 'models.admin.surveys.manage',
@@ -165,6 +172,7 @@ export const SIDEBAR_PERMISSIONS = {
   projects: [PERMISSIONS.projects.list],
   budgets: [PERMISSIONS.budgets.view],
   'platform-dimensions': [PERMISSIONS.platformDimensions.view],
+  'agent-evaluation': [PERMISSIONS.evalAuto.view],
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
   'model-prices': [PERMISSIONS.modelPrices.view],
@@ -206,6 +214,7 @@ export const ROUTE_PERMISSIONS = {
   '/budgets': SIDEBAR_PERMISSIONS.budgets,
   '/tool-spend': SIDEBAR_PERMISSIONS.budgets,
   '/platform-dimensions': SIDEBAR_PERMISSIONS['platform-dimensions'],
+  '/agent-evaluation': SIDEBAR_PERMISSIONS['agent-evaluation'],
   '/secrets': SIDEBAR_PERMISSIONS.secrets,
   '/litellm': SIDEBAR_PERMISSIONS.litellm,
   '/model-prices': SIDEBAR_PERMISSIONS['model-prices'],
