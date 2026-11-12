@@ -159,7 +159,8 @@ describe('month selector', () => {
       [CURRENT]: [makeRow({ name: 'current-project' })],
       [LAST]: [makeRow({ name: 'last-month-project' })],
     });
-    mockApi({
+    // The month's request stays open until released: mockApi waits for a handler that returns a promise
+    const calls = mockApi({
       [`GET ${LIST_PATH}`]: args =>
         args.params.period === LAST ? gate.then(() => handler(args)) : handler(args),
     });
@@ -168,9 +169,17 @@ describe('month selector', () => {
 
     await pickMonth(user, LAST);
 
+    // The request for the new month is out and unanswered, and none of its data is on screen yet
+    await waitFor(() => expect(lists(calls).at(-1).params.period).toBe(LAST));
     await waitFor(() => expect(screen.queryByText('current-project')).not.toBeInTheDocument());
+    expect(screen.queryByText('last-month-project')).not.toBeInTheDocument();
     expect(screen.getByTestId('budgets-export')).toBeDisabled();
+
     release();
+
+    // Only the answer brings the new month's rows, and export comes back with them
+    expect(await screen.findByText('last-month-project')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('budgets-export')).toBeEnabled());
   });
 });
 
