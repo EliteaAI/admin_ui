@@ -5,6 +5,7 @@ export const RouteDefinitions = {
   Budgets: '/budgets',
   ToolSpend: '/tool-spend',
   PlatformDimensions: '/platform-dimensions',
+  AgentEvaluation: '/agent-evaluation',
   Secrets: '/secrets',
   LiteLLM: '/litellm',
   ModelPrices: '/model-prices',
