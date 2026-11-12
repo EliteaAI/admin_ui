@@ -12,11 +12,7 @@ import {
   GridTableRow,
 } from '@/components/GridTable';
 import { useResponsiveColumns } from '@/hooks/useResponsiveColumns.hooks';
-import {
-  formatPeriodLimit,
-  formatPeriodSpend,
-  usageColor,
-} from '@/pages/BudgetsPage/helpers/budgetFormat.helpers';
+import { formatLimit, formatPeriodSpend, usageColor } from '@/pages/BudgetsPage/helpers/budgetFormat.helpers';
 import { NOT_AVAILABLE, READ_ONLY_MESSAGE } from '@/pages/BudgetsPage/helpers/budgetPeriod.helpers';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -56,6 +52,9 @@ const BUDGET_COLUMNS = [
   },
   { field: 'actions', label: 'Actions', width: '8rem', sortable: false },
 ];
+
+// Limits are not kept per month, so a finished month shows spend only
+const LIMIT_FIELDS = ['effective_limit', 'percent_used', 'limit_source'];
 
 // Tool Spend pages only: the project's own on/off override for the feature
 const ENABLED_COLUMN = { field: 'feature_enabled', label: 'Enabled', width: '6rem', sortable: false };
@@ -112,10 +111,11 @@ const BudgetsTable = memo(props => {
 
   const columns = useMemo(() => {
     const base = isPersonal ? PERSONAL_COLUMNS : TEAM_COLUMNS;
+    if (isReadOnly) return base.filter(column => !LIMIT_FIELDS.includes(column.field));
     if (!isFeature) return base;
     const at = base.findIndex(column => column.field === 'effective_limit');
     return [...base.slice(0, at), ENABLED_COLUMN, ...base.slice(at)];
-  }, [isPersonal, isFeature]);
+  }, [isPersonal, isFeature, isReadOnly]);
 
   const styles = useMemo(() => budgetsTableStyles(), []);
 
@@ -183,19 +183,6 @@ const BudgetsTable = memo(props => {
         );
       }
 
-      // A closed month with no record has no source to show; it must not fall back to Unlimited
-      if (column.field === 'limit_source' && row?.limit_available === false) {
-        return (
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            sx={styles.cellText}
-          >
-            {NOT_AVAILABLE}
-          </Typography>
-        );
-      }
-
       if (column.field === 'limit_source') {
         const cfg = SOURCE_CONFIG[value] || SOURCE_CONFIG.unlimited;
         return (
@@ -237,7 +224,7 @@ const BudgetsTable = memo(props => {
             variant="bodyMedium"
             sx={styles.cellText}
           >
-            {formatPeriodLimit(row, NOT_AVAILABLE)}
+            {formatLimit(value, row?.currency)}
           </Typography>
         );
       }
@@ -254,18 +241,6 @@ const BudgetsTable = memo(props => {
       }
 
       if (column.field === 'percent_used') {
-        if (row?.limit_available === false || row?.spend_available === false) {
-          return (
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              sx={styles.cellText}
-            >
-              {NOT_AVAILABLE}
-            </Typography>
-          );
-        }
-
         if (value === null || value === undefined) {
           return (
             <Typography

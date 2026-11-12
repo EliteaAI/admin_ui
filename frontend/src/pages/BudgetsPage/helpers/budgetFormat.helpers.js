@@ -31,18 +31,6 @@ export const usageColor = percent => {
   return 'success';
 };
 
-/**
- * A month's budget limit as the table and the export both show it. Not recorded is not unlimited:
- * only a month with a record and no limit reads as Unlimited.
- */
-export const formatPeriodLimit = (row, notAvailable) => {
-  if (row?.limit_available === false) {
-    return notAvailable;
-  }
-
-  return formatLimit(row?.effective_limit, row?.currency);
-};
-
 /** Spend that could not be read is not $0.00. */
 export const formatPeriodSpend = (row, notAvailable) => {
   if (row?.spend_available === false || row?.spend === null) {

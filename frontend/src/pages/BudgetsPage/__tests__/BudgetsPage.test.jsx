@@ -26,12 +26,23 @@ const makeRow = (overrides = {}) => ({
   monthly_limit: 50,
   effective_limit: 50,
   limit_source: 'explicit',
-  limit_available: true,
   currency: 'USD',
   enabled: true,
   spend: 12.5,
   spend_available: true,
   percent_used: 25,
+  ...overrides,
+});
+
+// What the endpoint returns for a finished month: spend only, none of the limit fields
+const makePastRow = (overrides = {}) => ({
+  project_id: 1,
+  name: 'alpha',
+  display_name: 'alpha',
+  is_personal: false,
+  currency: 'USD',
+  spend: 7,
+  spend_available: true,
   ...overrides,
 });
 
@@ -113,7 +124,7 @@ describe('month selector', () => {
     const calls = mockApi({
       [`GET ${LIST_PATH}`]: listFor({
         [CURRENT]: [makeRow({ name: 'current-project' })],
-        [LAST]: [makeRow({ name: 'last-month-project', effective_limit: 25, limit_source: 'default' })],
+        [LAST]: [makePastRow({ name: 'last-month-project' })],
       }),
     });
     renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
@@ -167,7 +178,7 @@ describe('historical months', () => {
   it('are read-only, with the explanation, while the current month stays editable', async () => {
     const user = userEvent.setup();
     mockApi({
-      [`GET ${LIST_PATH}`]: listFor({ [CURRENT]: [makeRow()], [LAST]: [makeRow()] }),
+      [`GET ${LIST_PATH}`]: listFor({ [CURRENT]: [makeRow()], [LAST]: [makePastRow()] }),
     });
     renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
     await screen.findByText('alpha');
@@ -188,36 +199,42 @@ describe('historical months', () => {
     ).toBeInTheDocument();
   });
 
-  it('say Not available where nothing was recorded, and keep real spend and real zero distinct', async () => {
+  it('show spend only: no Limit, Used or Source column, while the current month keeps them', async () => {
+    const user = userEvent.setup();
+    mockApi({
+      [`GET ${LIST_PATH}`]: listFor({ [CURRENT]: [makeRow()], [LAST]: [makePastRow()] }),
+    });
+    renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
+    await screen.findByText('alpha');
+    // Source is hidden below 1100px wide, which is narrower than the test window
+    for (const label of ['Limit', 'Spent', 'Used']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+
+    await pickMonth(user, LAST);
+
+    // The table is a skeleton while the month loads, so wait for the new rows before reading headers
+    expect(await screen.findByText('$7.00')).toBeInTheDocument();
+    expect(screen.getByText('Spent')).toBeInTheDocument();
+    expect(screen.queryByText('Limit')).not.toBeInTheDocument();
+    expect(screen.queryByText('Used')).not.toBeInTheDocument();
+    expect(screen.queryByText('Source')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unlimited')).not.toBeInTheDocument();
+
+    await pickMonth(user, CURRENT);
+    expect(await screen.findByText('Limit')).toBeInTheDocument();
+    expect(screen.getByText('Used')).toBeInTheDocument();
+  });
+
+  it('keep real spend and a real zero distinct from a month that could not be read', async () => {
     const user = userEvent.setup();
     mockApi({
       [`GET ${LIST_PATH}`]: listFor({
         [CURRENT]: [makeRow()],
         [LAST]: [
-          makeRow({
-            name: 'unrecorded',
-            effective_limit: null,
-            limit_source: null,
-            limit_available: false,
-            percent_used: null,
-            spend: 7,
-          }),
-          makeRow({
-            project_id: 2,
-            name: 'unlimited-month',
-            effective_limit: null,
-            limit_source: 'unlimited',
-            limit_available: true,
-            percent_used: null,
-            spend: 0,
-          }),
-          makeRow({
-            project_id: 3,
-            name: 'unreadable',
-            spend: null,
-            spend_available: false,
-            percent_used: null,
-          }),
+          makePastRow({ name: 'spent-some', spend: 7 }),
+          makePastRow({ project_id: 2, name: 'spent-nothing', spend: 0 }),
+          makePastRow({ project_id: 3, name: 'unreadable', spend: null, spend_available: false }),
         ],
       }),
     });
@@ -225,17 +242,12 @@ describe('historical months', () => {
     await screen.findByText('alpha');
 
     await pickMonth(user, LAST);
-    await screen.findByText('unrecorded');
-    const unrecorded = rowOf('unrecorded');
-    const unlimited = rowOf('unlimited-month');
-    const unreadable = rowOf('unreadable');
+    await screen.findByText('spent-some');
 
-    expect(within(unrecorded).getAllByText('Not available').length).toBeGreaterThanOrEqual(2);
-    expect(within(unrecorded).getByText('$7.00')).toBeInTheDocument();
-    expect(within(unlimited).getByText('Unlimited')).toBeInTheDocument();
-    expect(within(unlimited).getByText('$0.00')).toBeInTheDocument();
-    expect(within(unreadable).getAllByText('Not available').length).toBeGreaterThanOrEqual(1);
-    expect(within(unreadable).queryByText('$0.00')).not.toBeInTheDocument();
+    expect(within(rowOf('spent-some')).getByText('$7.00')).toBeInTheDocument();
+    expect(within(rowOf('spent-nothing')).getByText('$0.00')).toBeInTheDocument();
+    expect(within(rowOf('unreadable')).getByText('Not available')).toBeInTheDocument();
+    expect(within(rowOf('unreadable')).queryByText('$0.00')).not.toBeInTheDocument();
   });
 });
 
@@ -250,7 +262,7 @@ describe('export to Excel', () => {
   };
 
   it('exports the selected month for both project types, with the month in the file name', async () => {
-    const { user, calls } = await setup({ [CURRENT]: [makeRow()], [LAST]: [makeRow()] });
+    const { user, calls } = await setup({ [CURRENT]: [makeRow()], [LAST]: [makePastRow()] });
     await pickMonth(user, LAST);
     await screen.findByText('alpha');
     await waitFor(() => expect(screen.getByTestId('budgets-export')).toBeEnabled());
@@ -301,12 +313,30 @@ describe('export to Excel', () => {
     expect(team.rows[0].reporting_range).toContain(' – ');
   });
 
-  it('writes the same Not available the table shows', async () => {
+  it('exports spend only for a finished month, with the month and range after it', async () => {
+    const { user } = await setup({ [CURRENT]: [makeRow()], [LAST]: [makePastRow()] });
+    await pickMonth(user, LAST);
+    await screen.findByText('$7.00');
+    await waitFor(() => expect(screen.getByTestId('budgets-export')).toBeEnabled());
+
+    await user.click(screen.getByTestId('budgets-export'));
+
+    await waitFor(() => expect(exportToExcel).toHaveBeenCalled());
+    const [, sheets] = exportToExcel.mock.calls[0];
+    for (const sheet of sheets) {
+      const headers = sheet.columns.map(column => column.header);
+      expect(headers).not.toContain('Limit (USD)');
+      expect(headers).not.toContain('Used (%)');
+      expect(headers).not.toContain('Source');
+      expect(headers).toContain('Spent (USD)');
+      expect(headers.slice(-2)).toEqual(['Reporting month', 'Date range']);
+    }
+  });
+
+  it('writes a month whose spend could not be read as Not available, not as 0', async () => {
     const { user } = await setup({
       [CURRENT]: [makeRow()],
-      [LAST]: [
-        makeRow({ effective_limit: null, limit_source: null, limit_available: false, percent_used: null }),
-      ],
+      [LAST]: [makePastRow({ spend: null, spend_available: false })],
     });
     await pickMonth(user, LAST);
     await screen.findAllByText('Not available');
@@ -317,13 +347,7 @@ describe('export to Excel', () => {
     await waitFor(() => expect(exportToExcel).toHaveBeenCalled());
     const [, sheets] = exportToExcel.mock.calls[0];
     const row = sheets[0].rows[0];
-    const cell = key => {
-      const column = sheets[0].columns.find(item => item.key === key);
-      return column.transform ? column.transform(row[key], row) : row[key];
-    };
-    expect(cell('effective_limit')).toBe('Not available');
-    expect(cell('percent_used')).toBe('Not available');
-    expect(cell('limit_source')).toBe('Not available');
-    expect(cell('spend')).toBe(12.5);
+    const spent = sheets[0].columns.find(column => column.key === 'spend');
+    expect(spent.transform(row.spend, row)).toBe('Not available');
   });
 });

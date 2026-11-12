@@ -40,7 +40,7 @@ const CURRENT_PERIOD_NOTE =
   'Month to date, updated within a minute of each call. Export to Excel to rank projects by limit, spend or usage.';
 
 const PAST_PERIOD_NOTE =
-  'A finished month. Limit and source are the values recorded for that month, and are not available where none was recorded.';
+  'A finished month: spend only. Limits are not kept per month, so Limit, Used and Source are shown for the current month.';
 
 // How often the month list is re-evaluated, so a page left open over midnight UTC on the 1st rolls over
 const PERIOD_REFRESH_MS = 60_000;
@@ -61,47 +61,46 @@ const SOURCE_LABELS = {
 
 // Numeric cells stay numeric so the sheet can be summed and sorted; readability
 // comes from the Excel format, not from pre-formatted strings.
+const LIMIT_EXPORT_COLUMN = {
+  header: 'Limit (USD)',
+  key: 'effective_limit',
+  numFmt: CURRENCY_FMT,
+  transform: value => (value === null || value === undefined ? 'Unlimited' : value),
+};
+
+const SPENT_EXPORT_COLUMN = {
+  header: 'Spent (USD)',
+  key: 'spend',
+  numFmt: CURRENCY_FMT,
+  // null means the month's spend could not be read, which is not the same as $0.00
+  transform: (value, row) =>
+    row?.spend_available === false || value === null ? NOT_AVAILABLE : (value ?? ''),
+};
+
+const USED_EXPORT_COLUMN = {
+  header: 'Used (%)',
+  key: 'percent_used',
+  numFmt: PERCENT_FMT,
+  // Blank rather than 0: an unlimited budget has nothing to measure against, and 0
+  // would read as "nothing used"
+  transform: value => (value === null || value === undefined ? '' : value),
+};
+
+const SOURCE_EXPORT_COLUMN = {
+  header: 'Source',
+  key: 'limit_source',
+  transform: value => SOURCE_LABELS[value] || value || '',
+};
+
+// Limits are not kept per month: a finished month exports spend only, like the table shows it
 const EXPORT_BUDGET_COLUMNS = [
-  {
-    header: 'Limit (USD)',
-    key: 'effective_limit',
-    numFmt: CURRENCY_FMT,
-    // The same wording as the table: a month nothing was recorded for is not Unlimited
-    transform: (value, row) =>
-      row?.limit_available === false
-        ? NOT_AVAILABLE
-        : value === null || value === undefined
-          ? 'Unlimited'
-          : value,
-  },
-  {
-    header: 'Spent (USD)',
-    key: 'spend',
-    numFmt: CURRENCY_FMT,
-    // null means the month's spend could not be read, which is not the same as $0.00
-    transform: (value, row) =>
-      row?.spend_available === false || value === null ? NOT_AVAILABLE : (value ?? ''),
-  },
-  {
-    header: 'Used (%)',
-    key: 'percent_used',
-    numFmt: PERCENT_FMT,
-    // Blank rather than 0: an unlimited budget has nothing to measure against, and 0
-    // would read as "nothing used"
-    transform: (value, row) =>
-      row?.limit_available === false || row?.spend_available === false
-        ? NOT_AVAILABLE
-        : value === null || value === undefined
-          ? ''
-          : value,
-  },
-  {
-    header: 'Source',
-    key: 'limit_source',
-    transform: (value, row) =>
-      row?.limit_available === false ? NOT_AVAILABLE : SOURCE_LABELS[value] || value || '',
-  },
+  LIMIT_EXPORT_COLUMN,
+  SPENT_EXPORT_COLUMN,
+  USED_EXPORT_COLUMN,
+  SOURCE_EXPORT_COLUMN,
 ];
+
+const PAST_MONTH_BUDGET_COLUMNS = [SPENT_EXPORT_COLUMN];
 
 // Appended after the existing columns so a workbook keeps its layout; tells a reader which month a row is
 const REPORTING_COLUMNS = [
@@ -115,18 +114,16 @@ const FEATURE_EXPORT_COLUMN = {
   transform: value => (value === null || value === undefined ? 'Default' : value ? 'On' : 'Off'),
 };
 
-const TEAM_EXPORT_COLUMNS = [
+const TEAM_IDENTITY_COLUMNS = [
   { header: 'Name', key: 'name' },
   { header: 'ID', key: 'project_id' },
-  ...EXPORT_BUDGET_COLUMNS,
 ];
 
-const PERSONAL_EXPORT_COLUMNS = [
+const PERSONAL_IDENTITY_COLUMNS = [
   { header: 'Name', key: 'name' },
   { header: 'ID', key: 'project_id' },
   { header: 'Owner', key: 'owner_name' },
   { header: 'Email', key: 'owner_email' },
-  ...EXPORT_BUDGET_COLUMNS,
 ];
 
 // Feature limits have their own field names; mapping here keeps the dialog shared
@@ -329,6 +326,7 @@ const BudgetsPage = memo(props => {
     // Read once: both sheets of a workbook must describe the same month, even if the admin
     // picks another while the export is still fetching
     const exportPeriod = period;
+    const exportsPastMonth = isReadOnly;
 
     setExporting(true);
 
@@ -368,20 +366,22 @@ const BudgetsPage = memo(props => {
       // The month is a property of the workbook, so it is stamped on every row of both sheets
       const withReporting = sheetRows => sheetRows.map(row => ({ ...row, ...reporting }));
       const reportingColumns = exportPeriod ? REPORTING_COLUMNS : [];
+      // The current month and the Tool Spend pages keep every column; a finished month is spend only
+      const budgetColumns = exportsPastMonth ? PAST_MONTH_BUDGET_COLUMNS : EXPORT_BUDGET_COLUMNS;
 
       await exportToExcel(exportPeriod ? getExportFileName(exportPeriod) : `${feature}_limits.xlsx`, [
         {
           sheetName: 'Team Projects',
           columns: feature
-            ? [...TEAM_EXPORT_COLUMNS, FEATURE_EXPORT_COLUMN]
-            : [...TEAM_EXPORT_COLUMNS, ...reportingColumns],
+            ? [...TEAM_IDENTITY_COLUMNS, ...EXPORT_BUDGET_COLUMNS, FEATURE_EXPORT_COLUMN]
+            : [...TEAM_IDENTITY_COLUMNS, ...budgetColumns, ...reportingColumns],
           rows: withReporting(teamRows),
         },
         {
           sheetName: 'Personal Projects',
           columns: feature
-            ? [...PERSONAL_EXPORT_COLUMNS, FEATURE_EXPORT_COLUMN]
-            : [...PERSONAL_EXPORT_COLUMNS, ...reportingColumns],
+            ? [...PERSONAL_IDENTITY_COLUMNS, ...EXPORT_BUDGET_COLUMNS, FEATURE_EXPORT_COLUMN]
+            : [...PERSONAL_IDENTITY_COLUMNS, ...budgetColumns, ...reportingColumns],
           rows: withReporting(personalRows),
         },
       ]);
@@ -400,7 +400,7 @@ const BudgetsPage = memo(props => {
     } finally {
       setExporting(false);
     }
-  }, [fetchBudgets, featureParams, feature, pageTitle, period]);
+  }, [fetchBudgets, featureParams, feature, pageTitle, period, isReadOnly]);
 
   const counts = data?.counts || {};
 
