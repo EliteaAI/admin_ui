@@ -1,6 +1,8 @@
 export { default as AgentIcon } from './AgentIcon';
+export { default as ArrowDownIcon } from './ArrowDownIcon';
 export { default as ArrowLeftIcon } from './ArrowLeftIcon';
 export { default as ArrowRightIcon } from './ArrowRightIcon';
+export { default as CheckedIcon } from './CheckedIcon';
 export { default as EliteAIcon } from './EliteAIcon';
 export { default as LogoutIcon } from './LogoutIcon';
 export { default as ModelIcon } from './ModelIcon';

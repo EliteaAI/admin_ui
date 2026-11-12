@@ -36,7 +36,8 @@ export const fail = (status, body) => ({ status, body });
 
 /**
  * Replaces fetch. `handlers` maps "METHOD /path" (relative to /api/v2) to a response, or to a function
- * ({ body, params }) => response. Returns every request that was made.
+ * ({ body, params }) => response. A function may return a promise to hold the request open; the stub waits
+ * for it before answering. Returns every request that was made.
  */
 export const mockApi = handlers => {
   const calls = [];
@@ -52,7 +53,7 @@ export const mockApi = handlers => {
       calls.push({ method: request.method, path, params, body });
 
       const handler = handlers[`${request.method} ${path}`];
-      const result = typeof handler === 'function' ? handler({ body, params }) : handler;
+      const result = await (typeof handler === 'function' ? handler({ body, params }) : handler);
       const response =
         result ?? fail(404, { error: `Not mocked: ${request.method} ${path}`, code: 'NOT_FOUND' });
 

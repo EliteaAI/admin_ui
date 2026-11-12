@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
@@ -20,16 +20,30 @@ import { exportToExcel } from '@/helpers/exportToExcel.helpers';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
+import {
+  NOT_AVAILABLE,
+  formatPeriodIso,
+  getCurrentPeriod,
+  getExportFileName,
+  getPeriodOptions,
+} from '@/pages/BudgetsPage/helpers/budgetPeriod.helpers';
 
 import BudgetEditDialog from './components/BudgetEditDialog';
+import BudgetPeriodSelect from './components/BudgetPeriodSelect';
 import BudgetsTable from './components/BudgetsTable';
 import UserBudgetsDrawer from './components/UserBudgetsDrawer';
 
 // Tab index -> project_type filter
 const TAB_TYPES = ['team', 'personal'];
 
-const PERIOD_NOTE =
-  'Current month, updated within a minute of each call. Export to Excel to rank projects by limit, spend or usage.';
+const CURRENT_PERIOD_NOTE =
+  'Month to date, updated within a minute of each call. Export to Excel to rank projects by limit, spend or usage.';
+
+const PAST_PERIOD_NOTE =
+  'A finished month: spend only. Limits are not kept per month, so Limit, Used and Source are shown for the current month.';
+
+// How often the month list is re-evaluated, so a page left open over midnight UTC on the 1st rolls over
+const PERIOD_REFRESH_MS = 60_000;
 
 const SEARCH_PLACEHOLDERS = {
   team: 'Search by Name or ID',
@@ -47,27 +61,51 @@ const SOURCE_LABELS = {
 
 // Numeric cells stay numeric so the sheet can be summed and sorted; readability
 // comes from the Excel format, not from pre-formatted strings.
+const LIMIT_EXPORT_COLUMN = {
+  header: 'Limit (USD)',
+  key: 'effective_limit',
+  numFmt: CURRENCY_FMT,
+  transform: value => (value === null || value === undefined ? 'Unlimited' : value),
+};
+
+const SPENT_EXPORT_COLUMN = {
+  header: 'Spent (USD)',
+  key: 'spend',
+  numFmt: CURRENCY_FMT,
+  // null means the month's spend could not be read, which is not the same as $0.00
+  transform: (value, row) =>
+    row?.spend_available === false || value === null ? NOT_AVAILABLE : (value ?? ''),
+};
+
+const USED_EXPORT_COLUMN = {
+  header: 'Used (%)',
+  key: 'percent_used',
+  numFmt: PERCENT_FMT,
+  // Blank rather than 0: an unlimited budget has nothing to measure against, and 0
+  // would read as "nothing used"
+  transform: value => (value === null || value === undefined ? '' : value),
+};
+
+const SOURCE_EXPORT_COLUMN = {
+  header: 'Source',
+  key: 'limit_source',
+  transform: value => SOURCE_LABELS[value] || value || '',
+};
+
+// Limits are not kept per month: a finished month exports spend only, like the table shows it
 const EXPORT_BUDGET_COLUMNS = [
-  {
-    header: 'Limit (USD)',
-    key: 'effective_limit',
-    numFmt: CURRENCY_FMT,
-    transform: value => (value === null || value === undefined ? 'Unlimited' : value),
-  },
-  { header: 'Spent (USD)', key: 'spend', numFmt: CURRENCY_FMT },
-  {
-    header: 'Used (%)',
-    key: 'percent_used',
-    numFmt: PERCENT_FMT,
-    // Blank rather than 0: an unlimited budget has nothing to measure against, and 0
-    // would read as "nothing used"
-    transform: value => (value === null || value === undefined ? '' : value),
-  },
-  {
-    header: 'Source',
-    key: 'limit_source',
-    transform: value => SOURCE_LABELS[value] || value || '',
-  },
+  LIMIT_EXPORT_COLUMN,
+  SPENT_EXPORT_COLUMN,
+  USED_EXPORT_COLUMN,
+  SOURCE_EXPORT_COLUMN,
+];
+
+const PAST_MONTH_BUDGET_COLUMNS = [SPENT_EXPORT_COLUMN];
+
+// Appended after the existing columns so a workbook keeps its layout; tells a reader which month a row is
+const REPORTING_COLUMNS = [
+  { header: 'Reporting month', key: 'reporting_month' },
+  { header: 'Date range', key: 'reporting_range' },
 ];
 
 const FEATURE_EXPORT_COLUMN = {
@@ -76,18 +114,16 @@ const FEATURE_EXPORT_COLUMN = {
   transform: value => (value === null || value === undefined ? 'Default' : value ? 'On' : 'Off'),
 };
 
-const TEAM_EXPORT_COLUMNS = [
+const TEAM_IDENTITY_COLUMNS = [
   { header: 'Name', key: 'name' },
   { header: 'ID', key: 'project_id' },
-  ...EXPORT_BUDGET_COLUMNS,
 ];
 
-const PERSONAL_EXPORT_COLUMNS = [
+const PERSONAL_IDENTITY_COLUMNS = [
   { header: 'Name', key: 'name' },
   { header: 'ID', key: 'project_id' },
   { header: 'Owner', key: 'owner_name' },
   { header: 'Email', key: 'owner_email' },
-  ...EXPORT_BUDGET_COLUMNS,
 ];
 
 // Feature limits have their own field names; mapping here keeps the dialog shared
@@ -117,6 +153,9 @@ const BudgetsPage = memo(props => {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [activeTab, setActiveTab] = useState(0);
+  // Kept above the tab so switching Team and Personal Projects shows the same month
+  const [selectedPeriod, setSelectedPeriod] = useState(() => getCurrentPeriod());
+  const [periodOptions, setPeriodOptions] = useState(() => getPeriodOptions());
 
   const [exporting, setExporting] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
@@ -129,6 +168,38 @@ const BudgetsPage = memo(props => {
 
   const projectType = TAB_TYPES[activeTab];
 
+  // Tool Spend pages have no monthly history, so only the LLM Budgets page uses a month
+  const hasPeriods = !feature;
+  const currentPeriod = periodOptions[0].value;
+  const period = hasPeriods ? selectedPeriod : undefined;
+  const isReadOnly = hasPeriods && selectedPeriod !== currentPeriod;
+
+  // A page left open across midnight UTC on the 1st gets a new current month. Follow it only if the
+  // admin was looking at the current month, and fall back to it when the selection leaves the window
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const next = getPeriodOptions();
+
+      setPeriodOptions(previous => {
+        if (previous[0].value === next[0].value) {
+          return previous[0].range === next[0].range ? previous : next;
+        }
+
+        // Someone viewing the old current month moves with it; a past month stays unless it left the window
+        setSelectedPeriod(selected =>
+          selected === previous[0].value || !next.some(option => option.value === selected)
+            ? next[0].value
+            : selected,
+        );
+        setPage(0);
+
+        return next;
+      });
+    }, PERIOD_REFRESH_MS);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const { data, isFetching, isError, refetch } = useProjectBudgetListQuery(
     {
       limit: pageSize,
@@ -137,6 +208,7 @@ const BudgetsPage = memo(props => {
       sort_by: sortBy,
       sort_order: sortOrder,
       project_type: projectType,
+      period,
       ...featureParams,
     },
     { refetchOnMountOrArgChange: true },
@@ -146,7 +218,8 @@ const BudgetsPage = memo(props => {
 
   const [updateProjectBudget, { isLoading: isSavingProject }] = useProjectBudgetUpdateMutation();
   const [updateUserBudget, { isLoading: isSavingUser }] = useUserBudgetUpdateMutation();
-  const [updateProjectFeature, { isLoading: isSavingProjectFeature }] = useProjectFeatureBudgetUpdateMutation();
+  const [updateProjectFeature, { isLoading: isSavingProjectFeature }] =
+    useProjectFeatureBudgetUpdateMutation();
   const [updateUserFeature, { isLoading: isSavingUserFeature }] = useUserFeatureBudgetUpdateMutation();
   const isSaving = isSavingProject || isSavingUser || isSavingProjectFeature || isSavingUserFeature;
 
@@ -179,6 +252,14 @@ const BudgetsPage = memo(props => {
     setPage(0);
   }, []);
 
+  const handlePeriodChange = useCallback(value => {
+    setSelectedPeriod(value);
+    setPage(0);
+    // Member budgets are current-month only, so a drawer left open must not outlive the switch
+    setDrawerProject(null);
+    setEditTarget(null);
+  }, []);
+
   const handleTabChange = useCallback((_event, value) => {
     setActiveTab(value);
     setPage(0);
@@ -192,7 +273,12 @@ const BudgetsPage = memo(props => {
     body => {
       const target = editTarget;
       return target?.user_id
-        ? updateUserFeature({ projectId: target.project_id, userId: target.user_id, feature, ...body }).unwrap()
+        ? updateUserFeature({
+            projectId: target.project_id,
+            userId: target.user_id,
+            feature,
+            ...body,
+          }).unwrap()
         : updateProjectFeature({ projectId: target.project_id, feature, ...body }).unwrap();
     },
     [editTarget, feature, updateProjectFeature, updateUserFeature],
@@ -239,11 +325,24 @@ const BudgetsPage = memo(props => {
   }, []);
 
   const handleExport = useCallback(async () => {
+    // Read once: both sheets of a workbook must describe the same month, even if the admin
+    // picks another while the export is still fetching
+    const exportPeriod = period;
+    const exportsPastMonth = isReadOnly;
+
     setExporting(true);
 
     try {
+      let reporting = {};
+
       const fetchAll = async type => {
-        const probe = await fetchBudgets({ limit: 1, offset: 0, project_type: type, ...featureParams }).unwrap();
+        const probe = await fetchBudgets({
+          limit: 1,
+          offset: 0,
+          project_type: type,
+          period: exportPeriod,
+          ...featureParams,
+        }).unwrap();
         const totalCount = probe?.total ?? 0;
 
         if (!totalCount) return [];
@@ -252,24 +351,40 @@ const BudgetsPage = memo(props => {
           limit: totalCount,
           offset: 0,
           project_type: type,
+          period: exportPeriod,
           ...featureParams,
         }).unwrap();
+
+        reporting = {
+          reporting_month: formatPeriodIso(result.period),
+          reporting_range: `${result.period_start} – ${result.period_end}`,
+        };
 
         return result?.rows ?? [];
       };
 
       const [teamRows, personalRows] = await Promise.all([fetchAll('team'), fetchAll('personal')]);
 
-      await exportToExcel(`${feature ? `${feature}_limits` : 'Budgets'}.xlsx`, [
+      // The month is a property of the workbook, so it is stamped on every row of both sheets
+      const withReporting = sheetRows => sheetRows.map(row => ({ ...row, ...reporting }));
+      const reportingColumns = exportPeriod ? REPORTING_COLUMNS : [];
+      // The current month and the Tool Spend pages keep every column; a finished month is spend only
+      const budgetColumns = exportsPastMonth ? PAST_MONTH_BUDGET_COLUMNS : EXPORT_BUDGET_COLUMNS;
+
+      await exportToExcel(exportPeriod ? getExportFileName(exportPeriod) : `${feature}_limits.xlsx`, [
         {
           sheetName: 'Team Projects',
-          columns: feature ? [...TEAM_EXPORT_COLUMNS, FEATURE_EXPORT_COLUMN] : TEAM_EXPORT_COLUMNS,
-          rows: teamRows,
+          columns: feature
+            ? [...TEAM_IDENTITY_COLUMNS, ...EXPORT_BUDGET_COLUMNS, FEATURE_EXPORT_COLUMN]
+            : [...TEAM_IDENTITY_COLUMNS, ...budgetColumns, ...reportingColumns],
+          rows: withReporting(teamRows),
         },
         {
           sheetName: 'Personal Projects',
-          columns: feature ? [...PERSONAL_EXPORT_COLUMNS, FEATURE_EXPORT_COLUMN] : PERSONAL_EXPORT_COLUMNS,
-          rows: personalRows,
+          columns: feature
+            ? [...PERSONAL_IDENTITY_COLUMNS, ...EXPORT_BUDGET_COLUMNS, FEATURE_EXPORT_COLUMN]
+            : [...PERSONAL_IDENTITY_COLUMNS, ...budgetColumns, ...reportingColumns],
+          rows: withReporting(personalRows),
         },
       ]);
 
@@ -287,7 +402,7 @@ const BudgetsPage = memo(props => {
     } finally {
       setExporting(false);
     }
-  }, [fetchBudgets, featureParams, feature, pageTitle]);
+  }, [fetchBudgets, featureParams, feature, pageTitle, period, isReadOnly]);
 
   const counts = data?.counts || {};
 
@@ -310,7 +425,14 @@ const BudgetsPage = memo(props => {
 
   const headerControls = (
     <Box sx={styles.headerControls}>
-      <Tooltip title={PERIOD_NOTE}>
+      {hasPeriods && (
+        <BudgetPeriodSelect
+          value={selectedPeriod}
+          options={periodOptions}
+          onChange={handlePeriodChange}
+        />
+      )}
+      <Tooltip title={isReadOnly ? PAST_PERIOD_NOTE : CURRENT_PERIOD_NOTE}>
         <InfoOutlined sx={styles.infoIcon} />
       </Tooltip>
       <Tooltip title="Reload budget data">
@@ -329,7 +451,8 @@ const BudgetsPage = memo(props => {
           <IconButton
             size="small"
             onClick={handleExport}
-            disabled={exporting}
+            disabled={exporting || isFetching}
+            data-testid="budgets-export"
           >
             {exporting ? <CircularProgress size={16} /> : <FileDownloadOutlined fontSize="small" />}
           </IconButton>
@@ -372,6 +495,7 @@ const BudgetsPage = memo(props => {
               isPersonal={projectType === 'personal'}
               isFeature={!!feature}
               canEdit={canEdit}
+              isReadOnly={isReadOnly}
               onEdit={setEditTarget}
               onUsers={setDrawerProject}
             />
