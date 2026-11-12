@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import BudgetsIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import AssignmentIcon from '@mui/icons-material/AssignmentOutlined';
+import FactCheckIcon from '@mui/icons-material/FactCheckOutlined';
 import FolderIcon from '@mui/icons-material/FolderOutlined';
 import GovernanceIcon from '@mui/icons-material/GppGoodOutlined';
 import HistoryIcon from '@mui/icons-material/HistoryOutlined';
@@ -72,6 +73,12 @@ const TOP_MENU_ITEMS = [
     label: 'Eval Dimensions',
     icon: RuleOutlinedIcon,
     url: RouteDefinitions.PlatformDimensions,
+  },
+  {
+    id: 'agent-evaluation',
+    label: 'Agent Evaluation',
+    icon: FactCheckIcon,
+    url: RouteDefinitions.AgentEvaluation,
   },
   {
     id: 'secrets',

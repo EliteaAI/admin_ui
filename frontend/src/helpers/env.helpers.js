@@ -13,5 +13,7 @@ const toBoolean = value => {
 
 export const VITE_SERVER_URL = getEnvVar('vite_server_url') ?? '';
 export const V2_BASE = VITE_SERVER_URL.replace('/api/v1', '/api/v2');
+// The admin app is served at <prefix>/admin/app and EliteaUI at <prefix>/app, so links into EliteaUI keep the prefix.
+export const ELITEA_UI_BASE = `${(getEnvVar('vite_base_uri') ?? '').replace(/\/admin\/app$/, '')}/app`;
 export const VITE_DEV_TOKEN = import.meta.env.VITE_DEV_TOKEN ?? '';
 export const ALWAYS_SHOW_PLUGIN_UPDATE = toBoolean(getEnvVar('always_show_plugin_update'));
