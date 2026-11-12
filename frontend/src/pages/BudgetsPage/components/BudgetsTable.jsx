@@ -12,7 +12,12 @@ import {
   GridTableRow,
 } from '@/components/GridTable';
 import { useResponsiveColumns } from '@/hooks/useResponsiveColumns.hooks';
-import { formatLimit, formatMoney, usageColor } from '@/pages/BudgetsPage/helpers/budgetFormat.helpers';
+import {
+  formatPeriodLimit,
+  formatPeriodSpend,
+  usageColor,
+} from '@/pages/BudgetsPage/helpers/budgetFormat.helpers';
+import { NOT_AVAILABLE, READ_ONLY_MESSAGE } from '@/pages/BudgetsPage/helpers/budgetPeriod.helpers';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
@@ -100,6 +105,7 @@ const BudgetsTable = memo(props => {
     isPersonal,
     isFeature,
     canEdit,
+    isReadOnly = false,
     onEdit,
     onUsers,
   } = props;
@@ -177,6 +183,19 @@ const BudgetsTable = memo(props => {
         );
       }
 
+      // A closed month with no record has no source to show; it must not fall back to Unlimited
+      if (column.field === 'limit_source' && row?.limit_available === false) {
+        return (
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.cellText}
+          >
+            {NOT_AVAILABLE}
+          </Typography>
+        );
+      }
+
       if (column.field === 'limit_source') {
         const cfg = SOURCE_CONFIG[value] || SOURCE_CONFIG.unlimited;
         return (
@@ -197,7 +216,9 @@ const BudgetsTable = memo(props => {
       if (column.field === 'feature_enabled') {
         return (
           <Tooltip
-            title={value === null || value === undefined ? 'Follows the platform default' : 'Set for this project'}
+            title={
+              value === null || value === undefined ? 'Follows the platform default' : 'Set for this project'
+            }
             placement="top"
           >
             <Chip
@@ -216,7 +237,7 @@ const BudgetsTable = memo(props => {
             variant="bodyMedium"
             sx={styles.cellText}
           >
-            {formatLimit(value, row?.currency)}
+            {formatPeriodLimit(row, NOT_AVAILABLE)}
           </Typography>
         );
       }
@@ -227,12 +248,24 @@ const BudgetsTable = memo(props => {
             variant="bodyMedium"
             sx={styles.cellText}
           >
-            {formatMoney(value, row?.currency)}
+            {formatPeriodSpend(row, NOT_AVAILABLE)}
           </Typography>
         );
       }
 
       if (column.field === 'percent_used') {
+        if (row?.limit_available === false || row?.spend_available === false) {
+          return (
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+              sx={styles.cellText}
+            >
+              {NOT_AVAILABLE}
+            </Typography>
+          );
+        }
+
         if (value === null || value === undefined) {
           return (
             <Typography
@@ -282,20 +315,23 @@ const BudgetsTable = memo(props => {
             is that person's budget — offering a separate member budget would be two ways
             to set one limit. */}
         {!isPersonal && (
-          <Tooltip title="Manage member budgets">
-            <IconButton
-              size="small"
-              onClick={() => onUsers(row)}
-            >
-              <PeopleOutlined fontSize="small" />
-            </IconButton>
+          <Tooltip title={isReadOnly ? READ_ONLY_MESSAGE : 'Manage member budgets'}>
+            <Box component="span">
+              <IconButton
+                size="small"
+                disabled={isReadOnly}
+                onClick={() => onUsers(row)}
+              >
+                <PeopleOutlined fontSize="small" />
+              </IconButton>
+            </Box>
           </Tooltip>
         )}
-        <Tooltip title={canEdit ? 'Edit budget' : 'No permission to edit'}>
+        <Tooltip title={isReadOnly ? READ_ONLY_MESSAGE : canEdit ? 'Edit budget' : 'No permission to edit'}>
           <Box component="span">
             <IconButton
               size="small"
-              disabled={!canEdit}
+              disabled={!canEdit || isReadOnly}
               onClick={() => onEdit(row)}
             >
               <EditOutlined fontSize="small" />
@@ -304,7 +340,7 @@ const BudgetsTable = memo(props => {
         </Tooltip>
       </Box>
     ),
-    [styles, canEdit, isPersonal, onEdit, onUsers],
+    [styles, canEdit, isReadOnly, isPersonal, onEdit, onUsers],
   );
 
   if (isFetching) {

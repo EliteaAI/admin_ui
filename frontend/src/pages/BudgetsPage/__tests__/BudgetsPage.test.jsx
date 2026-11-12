@@ -1,0 +1,329 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { PERMISSIONS } from '@/constants/permissions.constants';
+import { BudgetsPage } from '@/pages/BudgetsPage';
+import { getCurrentPeriod, getPeriodOptions } from '@/pages/BudgetsPage/helpers/budgetPeriod.helpers';
+import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+import { mockApi, ok, renderWithProviders } from '../../GovernancePage/__tests__/governanceTest.helpers';
+
+// The workbook writer needs a browser download; what matters here is what it is handed
+const exportToExcel = vi.hoisted(() => vi.fn());
+vi.mock('@/helpers/exportToExcel.helpers', () => ({ exportToExcel }));
+
+const LIST_PATH = '/elitea_core/project_budgets/administration';
+
+const [CURRENT, LAST] = getPeriodOptions().map(option => option.value);
+
+const EDIT = [PERMISSIONS.budgets.view, PERMISSIONS.budgets.edit];
+
+const makeRow = (overrides = {}) => ({
+  project_id: 1,
+  name: 'alpha',
+  display_name: 'alpha',
+  is_personal: false,
+  monthly_limit: 50,
+  effective_limit: 50,
+  limit_source: 'explicit',
+  limit_available: true,
+  currency: 'USD',
+  enabled: true,
+  spend: 12.5,
+  spend_available: true,
+  percent_used: 25,
+  ...overrides,
+});
+
+// Answers the list for whichever month was asked for, like the real endpoint
+const listFor =
+  rowsByPeriod =>
+  ({ params }) => {
+    const period = params.period || CURRENT;
+    const rows = rowsByPeriod[period] ?? [];
+
+    return ok({
+      rows,
+      total: rows.length,
+      counts: { team: rows.length, personal: 0 },
+      period,
+      period_start: `${period.slice(0, 4)}-${period.slice(4)}-01`,
+      period_end: `${period.slice(0, 4)}-${period.slice(4)}-28`,
+      is_current: period === getCurrentPeriod(),
+    });
+  };
+
+const lists = calls => calls.filter(call => call.method === 'GET' && call.path === LIST_PATH);
+
+// The table is a CSS grid of divs, so a row is the nearest ancestor holding all of its cells
+const rowOf = name => {
+  let node = screen.getByText(name);
+
+  while (node && !within(node).queryAllByText(/\$\d|Unlimited|Not available/).length) {
+    node = node.parentElement;
+  }
+
+  return node;
+};
+
+const pickMonth = async (user, period) => {
+  await user.click(screen.getByTestId('budgets-period-select'));
+  await user.click(await screen.findByTestId(`budgets-period-${period}`));
+};
+
+beforeEach(() => {
+  exportToExcel.mockReset();
+  exportToExcel.mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('month selector', () => {
+  it('opens on the current month and asks the API for it', async () => {
+    const calls = mockApi({ [`GET ${LIST_PATH}`]: listFor({ [CURRENT]: [makeRow()] }) });
+    renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
+
+    await screen.findByText('alpha');
+
+    expect(lists(calls)[0].params.period).toBe(CURRENT);
+  });
+
+  it('offers the current month plus three previous, newest first, with the current one tagged', async () => {
+    const user = userEvent.setup();
+    mockApi({ [`GET ${LIST_PATH}`]: listFor({ [CURRENT]: [makeRow()] }) });
+    renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
+    await screen.findByText('alpha');
+
+    await user.click(screen.getByTestId('budgets-period-select'));
+
+    const options = getPeriodOptions();
+    const items = await screen.findAllByTestId(/^budgets-period-\d{6}$/);
+    expect(items).toHaveLength(4);
+    expect(items.map(item => item.dataset.testid)).toEqual(
+      options.map(option => `budgets-period-${option.value}`),
+    );
+    expect(within(items[0]).getByText(/· current/)).toBeInTheDocument();
+    expect(within(items[1]).queryByText(/· current/)).not.toBeInTheDocument();
+  });
+
+  it('reloads the table for the chosen month and keeps it across a tab switch and a refresh', async () => {
+    const user = userEvent.setup();
+    const calls = mockApi({
+      [`GET ${LIST_PATH}`]: listFor({
+        [CURRENT]: [makeRow({ name: 'current-project' })],
+        [LAST]: [makeRow({ name: 'last-month-project', effective_limit: 25, limit_source: 'default' })],
+      }),
+    });
+    renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
+    await screen.findByText('current-project');
+
+    await pickMonth(user, LAST);
+    await screen.findByText('last-month-project');
+    expect(lists(calls).at(-1).params.period).toBe(LAST);
+    expect(lists(calls).at(-1).params.offset).toBe('0');
+
+    await user.click(screen.getByRole('tab', { name: /Personal Projects/ }));
+    await waitFor(() => expect(lists(calls).at(-1).params.project_type).toBe('personal'));
+    expect(lists(calls).at(-1).params.period).toBe(LAST);
+
+    await user.click(screen.getByRole('tab', { name: /Team Projects/ }));
+    // Refresh is disabled while a load is in flight, so wait for the tab switch to settle
+    const refresh = () => screen.getByTestId('RefreshOutlinedIcon').closest('button');
+    await waitFor(() => expect(refresh()).toBeEnabled());
+    const before = lists(calls).length;
+    await user.click(refresh());
+    await waitFor(() => expect(lists(calls).length).toBeGreaterThan(before));
+    expect(lists(calls).at(-1).params.period).toBe(LAST);
+  });
+
+  it("does not show the previous month's rows as the new month's while loading", async () => {
+    const user = userEvent.setup();
+    let release;
+    const gate = new Promise(resolve => {
+      release = resolve;
+    });
+    const handler = listFor({
+      [CURRENT]: [makeRow({ name: 'current-project' })],
+      [LAST]: [makeRow({ name: 'last-month-project' })],
+    });
+    mockApi({
+      [`GET ${LIST_PATH}`]: args =>
+        args.params.period === LAST ? gate.then(() => handler(args)) : handler(args),
+    });
+    renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
+    await screen.findByText('current-project');
+
+    await pickMonth(user, LAST);
+
+    await waitFor(() => expect(screen.queryByText('current-project')).not.toBeInTheDocument());
+    expect(screen.getByTestId('budgets-export')).toBeDisabled();
+    release();
+  });
+});
+
+describe('historical months', () => {
+  it('are read-only, with the explanation, while the current month stays editable', async () => {
+    const user = userEvent.setup();
+    mockApi({
+      [`GET ${LIST_PATH}`]: listFor({ [CURRENT]: [makeRow()], [LAST]: [makeRow()] }),
+    });
+    renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
+    await screen.findByText('alpha');
+
+    const editButton = () => screen.getByTestId('EditOutlinedIcon').closest('button');
+    expect(editButton()).toBeEnabled();
+
+    await pickMonth(user, LAST);
+    await screen.findByText('alpha');
+
+    await waitFor(() => expect(editButton()).toBeDisabled());
+    expect(screen.getByTestId('PeopleOutlineIcon').closest('button')).toBeDisabled();
+    await user.hover(editButton().parentElement);
+    expect(
+      await screen.findByText(
+        'Historical budgets are read-only. Select the current month to update budget limits.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('say Not available where nothing was recorded, and keep real spend and real zero distinct', async () => {
+    const user = userEvent.setup();
+    mockApi({
+      [`GET ${LIST_PATH}`]: listFor({
+        [CURRENT]: [makeRow()],
+        [LAST]: [
+          makeRow({
+            name: 'unrecorded',
+            effective_limit: null,
+            limit_source: null,
+            limit_available: false,
+            percent_used: null,
+            spend: 7,
+          }),
+          makeRow({
+            project_id: 2,
+            name: 'unlimited-month',
+            effective_limit: null,
+            limit_source: 'unlimited',
+            limit_available: true,
+            percent_used: null,
+            spend: 0,
+          }),
+          makeRow({
+            project_id: 3,
+            name: 'unreadable',
+            spend: null,
+            spend_available: false,
+            percent_used: null,
+          }),
+        ],
+      }),
+    });
+    renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
+    await screen.findByText('alpha');
+
+    await pickMonth(user, LAST);
+    await screen.findByText('unrecorded');
+    const unrecorded = rowOf('unrecorded');
+    const unlimited = rowOf('unlimited-month');
+    const unreadable = rowOf('unreadable');
+
+    expect(within(unrecorded).getAllByText('Not available').length).toBeGreaterThanOrEqual(2);
+    expect(within(unrecorded).getByText('$7.00')).toBeInTheDocument();
+    expect(within(unlimited).getByText('Unlimited')).toBeInTheDocument();
+    expect(within(unlimited).getByText('$0.00')).toBeInTheDocument();
+    expect(within(unreadable).getAllByText('Not available').length).toBeGreaterThanOrEqual(1);
+    expect(within(unreadable).queryByText('$0.00')).not.toBeInTheDocument();
+  });
+});
+
+describe('export to Excel', () => {
+  const setup = async rowsByPeriod => {
+    const user = userEvent.setup();
+    const calls = mockApi({ [`GET ${LIST_PATH}`]: listFor(rowsByPeriod) });
+    renderWithProviders(<BudgetsPage />, { permissions: EDIT, route: '/budgets' });
+    await screen.findByText('alpha');
+
+    return { user, calls };
+  };
+
+  it('exports the selected month for both project types, with the month in the file name', async () => {
+    const { user, calls } = await setup({ [CURRENT]: [makeRow()], [LAST]: [makeRow()] });
+    await pickMonth(user, LAST);
+    await screen.findByText('alpha');
+    await waitFor(() => expect(screen.getByTestId('budgets-export')).toBeEnabled());
+    const before = lists(calls).length;
+
+    await user.click(screen.getByTestId('budgets-export'));
+
+    await waitFor(() => expect(exportToExcel).toHaveBeenCalledTimes(1));
+    const exportCalls = lists(calls).slice(before);
+    expect(exportCalls.length).toBeGreaterThanOrEqual(2);
+    expect(exportCalls.every(call => call.params.period === LAST)).toBe(true);
+    expect(new Set(exportCalls.map(call => call.params.project_type))).toEqual(new Set(['team', 'personal']));
+
+    const [fileName, sheets] = exportToExcel.mock.calls[0];
+    expect(fileName).toBe(`elitea-budgets-${LAST.slice(0, 4)}-${LAST.slice(4)}.xlsx`);
+    expect(sheets.map(sheet => sheet.sheetName)).toEqual(['Team Projects', 'Personal Projects']);
+  });
+
+  it('exports every record, not the visible page', async () => {
+    const rows = [1, 2, 3].map(id => makeRow({ project_id: id, name: id === 1 ? 'alpha' : `project-${id}` }));
+    const { user, calls } = await setup({ [CURRENT]: rows });
+    const before = lists(calls).length;
+
+    await user.click(screen.getByTestId('budgets-export'));
+
+    await waitFor(() => expect(exportToExcel).toHaveBeenCalled());
+    // A probe for the total (limit 1), then one request for all of it from the start
+    const full = lists(calls)
+      .slice(before)
+      .filter(call => call.params.limit === '3');
+    expect(full.length).toBeGreaterThan(0);
+    expect(full.every(call => call.params.offset === '0')).toBe(true);
+    expect(exportToExcel.mock.calls[0][1][0].rows).toHaveLength(3);
+  });
+
+  it('stamps the reporting month and range on every row, and keeps the existing columns first', async () => {
+    const { user } = await setup({ [CURRENT]: [makeRow()] });
+
+    await user.click(screen.getByTestId('budgets-export'));
+
+    await waitFor(() => expect(exportToExcel).toHaveBeenCalled());
+    const [, sheets] = exportToExcel.mock.calls[0];
+    const team = sheets[0];
+    const headers = team.columns.map(column => column.header);
+    expect(headers.slice(0, 6)).toEqual(['Name', 'ID', 'Limit (USD)', 'Spent (USD)', 'Used (%)', 'Source']);
+    expect(headers.slice(-2)).toEqual(['Reporting month', 'Date range']);
+    expect(team.rows[0].reporting_month).toBe(`${CURRENT.slice(0, 4)}-${CURRENT.slice(4)}`);
+    expect(team.rows[0].reporting_range).toContain(' – ');
+  });
+
+  it('writes the same Not available the table shows', async () => {
+    const { user } = await setup({
+      [CURRENT]: [makeRow()],
+      [LAST]: [
+        makeRow({ effective_limit: null, limit_source: null, limit_available: false, percent_used: null }),
+      ],
+    });
+    await pickMonth(user, LAST);
+    await screen.findAllByText('Not available');
+    await waitFor(() => expect(screen.getByTestId('budgets-export')).toBeEnabled());
+
+    await user.click(screen.getByTestId('budgets-export'));
+
+    await waitFor(() => expect(exportToExcel).toHaveBeenCalled());
+    const [, sheets] = exportToExcel.mock.calls[0];
+    const row = sheets[0].rows[0];
+    const cell = key => {
+      const column = sheets[0].columns.find(item => item.key === key);
+      return column.transform ? column.transform(row[key], row) : row[key];
+    };
+    expect(cell('effective_limit')).toBe('Not available');
+    expect(cell('percent_used')).toBe('Not available');
+    expect(cell('limit_source')).toBe('Not available');
+    expect(cell('spend')).toBe(12.5);
+  });
+});
