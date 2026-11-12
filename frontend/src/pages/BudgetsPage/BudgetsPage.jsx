@@ -181,7 +181,9 @@ const BudgetsPage = memo(props => {
       const next = getPeriodOptions();
 
       setPeriodOptions(previous => {
-        if (previous[0].value === next[0].value) return previous;
+        if (previous[0].value === next[0].value) {
+          return previous[0].range === next[0].range ? previous : next;
+        }
 
         // Someone viewing the old current month moves with it; a past month stays unless it left the window
         setSelectedPeriod(selected =>

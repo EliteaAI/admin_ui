@@ -12,8 +12,7 @@ import { ArrowDownIcon, CheckedIcon } from '@/components/Icons';
 const BudgetPeriodSelect = memo(props => {
   const { value, options, onChange, disabled = false } = props;
 
-  const styles = budgetPeriodSelectStyles();
-
+  const styles = useMemo(() => budgetPeriodSelectStyles(), []);
   const menuProps = useMemo(
     () => ({
       sx: { '& .MuiPaper-root': { marginTop: '0.5rem' } },
