@@ -105,6 +105,7 @@ const BudgetsTable = memo(props => {
     isFeature,
     canEdit,
     isReadOnly = false,
+    readOnlyMessage = READ_ONLY_MESSAGE,
     onEdit,
     onUsers,
   } = props;
@@ -290,7 +291,7 @@ const BudgetsTable = memo(props => {
             is that person's budget — offering a separate member budget would be two ways
             to set one limit. */}
         {!isPersonal && (
-          <Tooltip title={isReadOnly ? READ_ONLY_MESSAGE : 'Manage member budgets'}>
+          <Tooltip title={isReadOnly ? readOnlyMessage : 'Manage member budgets'}>
             <Box component="span">
               <IconButton
                 size="small"
@@ -302,7 +303,7 @@ const BudgetsTable = memo(props => {
             </Box>
           </Tooltip>
         )}
-        <Tooltip title={isReadOnly ? READ_ONLY_MESSAGE : canEdit ? 'Edit budget' : 'No permission to edit'}>
+        <Tooltip title={isReadOnly ? readOnlyMessage : canEdit ? 'Edit budget' : 'No permission to edit'}>
           <Box component="span">
             <IconButton
               size="small"
@@ -315,7 +316,7 @@ const BudgetsTable = memo(props => {
         </Tooltip>
       </Box>
     ),
-    [styles, canEdit, isReadOnly, isPersonal, onEdit, onUsers],
+    [styles, canEdit, isReadOnly, readOnlyMessage, isPersonal, onEdit, onUsers],
   );
 
   if (isFetching) {

@@ -28,6 +28,10 @@ const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 export const READ_ONLY_MESSAGE =
   'Historical budgets are read-only. Select the current month to update budget limits.';
 
+// The Web Search page (a Tool Spend feature) words it for its own settings
+export const FEATURE_READ_ONLY_MESSAGE = featureLabel =>
+  `Historical data is read-only. Select the current month to update ${featureLabel} settings.`;
+
 export const NOT_AVAILABLE = 'Not available';
 
 const toPeriod = (year, month) => `${String(year).padStart(4, '0')}${String(month).padStart(2, '0')}`;
@@ -69,4 +73,6 @@ export const getPeriodOptions = (now = new Date()) => {
 /** "2026-10": the form used in file names and the workbook's reporting-month column. */
 export const formatPeriodIso = period => `${period.slice(0, 4)}-${period.slice(4, 6)}`;
 
-export const getExportFileName = period => `elitea-budgets-${formatPeriodIso(period)}.xlsx`;
+/** "elitea-budgets-2026-10.xlsx", or "elitea-web-search-2026-10.xlsx" for a Tool Spend feature. */
+export const getExportFileName = (period, feature) =>
+  `elitea-${feature ? feature.replaceAll('_', '-') : 'budgets'}-${formatPeriodIso(period)}.xlsx`;

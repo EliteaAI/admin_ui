@@ -21,6 +21,7 @@ import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 import {
+  FEATURE_READ_ONLY_MESSAGE,
   NOT_AVAILABLE,
   formatPeriodIso,
   getCurrentPeriod,
@@ -41,6 +42,9 @@ const CURRENT_PERIOD_NOTE =
 
 const PAST_PERIOD_NOTE =
   'A finished month: spend only. Limits are not kept per month, so Limit, Used and Source are shown for the current month.';
+
+const FEATURE_PAST_PERIOD_NOTE =
+  'A finished month: spend only. Limits and settings are not kept per month, so Enabled, Limit, Used and Source are shown for the current month.';
 
 // How often the month list is re-evaluated, so a page left open over midnight UTC on the 1st rolls over
 const PERIOD_REFRESH_MS = 60_000;
@@ -168,11 +172,18 @@ const BudgetsPage = memo(props => {
 
   const projectType = TAB_TYPES[activeTab];
 
-  // Tool Spend pages have no monthly history, so only the LLM Budgets page uses a month
-  const hasPeriods = !feature;
+  // The LLM Budgets page and every Tool Spend page (Web Search, ...) pick a month the same way
   const currentPeriod = periodOptions[0].value;
-  const period = hasPeriods ? selectedPeriod : undefined;
-  const isReadOnly = hasPeriods && selectedPeriod !== currentPeriod;
+  const period = selectedPeriod;
+  const isReadOnly = selectedPeriod !== currentPeriod;
+  // Capitalised for the tooltip: toolkit metadata labels it "Web search", the ticket words it "Web Search"
+  const readOnlyMessage = useMemo(
+    () =>
+      feature
+        ? FEATURE_READ_ONLY_MESSAGE((featureLabel || feature).replace(/\b\w/g, char => char.toUpperCase()))
+        : undefined,
+    [feature, featureLabel],
+  );
 
   // A page left open across midnight UTC on the 1st gets a new current month. Follow it only if the
   // admin was looking at the current month, and fall back to it when the selection leaves the window
@@ -367,23 +378,22 @@ const BudgetsPage = memo(props => {
 
       // The month is a property of the workbook, so it is stamped on every row of both sheets
       const withReporting = sheetRows => sheetRows.map(row => ({ ...row, ...reporting }));
-      const reportingColumns = exportPeriod ? REPORTING_COLUMNS : [];
-      // The current month and the Tool Spend pages keep every column; a finished month is spend only
-      const budgetColumns = exportsPastMonth ? PAST_MONTH_BUDGET_COLUMNS : EXPORT_BUDGET_COLUMNS;
+      const reportingColumns = REPORTING_COLUMNS;
+      // A finished month is spend only. The current month keeps every column, and on a Tool Spend
+      // page that includes the project's Enabled switch
+      const budgetColumns = exportsPastMonth
+        ? PAST_MONTH_BUDGET_COLUMNS
+        : [...EXPORT_BUDGET_COLUMNS, ...(feature ? [FEATURE_EXPORT_COLUMN] : [])];
 
-      await exportToExcel(exportPeriod ? getExportFileName(exportPeriod) : `${feature}_limits.xlsx`, [
+      await exportToExcel(getExportFileName(exportPeriod, feature), [
         {
           sheetName: 'Team Projects',
-          columns: feature
-            ? [...TEAM_IDENTITY_COLUMNS, ...EXPORT_BUDGET_COLUMNS, FEATURE_EXPORT_COLUMN]
-            : [...TEAM_IDENTITY_COLUMNS, ...budgetColumns, ...reportingColumns],
+          columns: [...TEAM_IDENTITY_COLUMNS, ...budgetColumns, ...reportingColumns],
           rows: withReporting(teamRows),
         },
         {
           sheetName: 'Personal Projects',
-          columns: feature
-            ? [...PERSONAL_IDENTITY_COLUMNS, ...EXPORT_BUDGET_COLUMNS, FEATURE_EXPORT_COLUMN]
-            : [...PERSONAL_IDENTITY_COLUMNS, ...budgetColumns, ...reportingColumns],
+          columns: [...PERSONAL_IDENTITY_COLUMNS, ...budgetColumns, ...reportingColumns],
           rows: withReporting(personalRows),
         },
       ]);
@@ -425,14 +435,14 @@ const BudgetsPage = memo(props => {
 
   const headerControls = (
     <Box sx={styles.headerControls}>
-      {hasPeriods && (
-        <BudgetPeriodSelect
-          value={selectedPeriod}
-          options={periodOptions}
-          onChange={handlePeriodChange}
-        />
-      )}
-      <Tooltip title={isReadOnly ? PAST_PERIOD_NOTE : CURRENT_PERIOD_NOTE}>
+      <BudgetPeriodSelect
+        value={selectedPeriod}
+        options={periodOptions}
+        onChange={handlePeriodChange}
+      />
+      <Tooltip
+        title={isReadOnly ? (feature ? FEATURE_PAST_PERIOD_NOTE : PAST_PERIOD_NOTE) : CURRENT_PERIOD_NOTE}
+      >
         <InfoOutlined sx={styles.infoIcon} />
       </Tooltip>
       <Tooltip title="Reload budget data">
@@ -496,6 +506,7 @@ const BudgetsPage = memo(props => {
               isFeature={!!feature}
               canEdit={canEdit}
               isReadOnly={isReadOnly}
+              readOnlyMessage={readOnlyMessage}
               onEdit={setEditTarget}
               onUsers={setDrawerProject}
             />
