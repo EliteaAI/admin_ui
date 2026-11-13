@@ -1,13 +1,15 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   TextField,
   Typography,
 } from '@mui/material';
@@ -31,6 +33,13 @@ const ActivateIdentityDialog = memo(props => {
   const [approvalRef, setApprovalRef] = useState('');
   const [policyRevision, setPolicyRevision] = useState(null);
   const [error, setError] = useState(null);
+  // (#7228) the operations the approval keeps of the proposal (preset: all of it); never more than proposed
+  const proposed = useMemo(
+    () => (Array.isArray(row?.platform_operations) ? row.platform_operations : []),
+    [row?.platform_operations],
+  );
+  const [kept, setKept] = useState(null);
+  const keptValue = kept ?? proposed;
 
   const [runAction, { isLoading }] = useAgentIdentityActionMutation();
 
@@ -46,8 +55,17 @@ const ActivateIdentityDialog = memo(props => {
   const reset = useCallback(() => {
     setApprovalRef('');
     setPolicyRevision(null);
+    setKept(null);
     setError(null);
   }, []);
+
+  const handleToggle = useCallback(
+    operation => event =>
+      setKept(
+        proposed.filter(item => (item === operation ? event.target.checked : keptValue.includes(item))),
+      ),
+    [keptValue, proposed],
+  );
 
   const handleClose = useCallback(() => {
     if (isLoading) return;
@@ -65,19 +83,36 @@ const ActivateIdentityDialog = memo(props => {
         expected_state: row.state,
         approval_ref: approvalRef,
         policy_revision: policyRevisionValue,
+        // (#7228) the definition this dialog shows: one brought up to date since is refused (BINDING_DIGEST_MISMATCH)
+        definition_digest: row.definition_digest_full,
+        ...(proposed.length && { platform_operations: keptValue }),
       }).unwrap();
       reset();
       onDone({ outcome: 'done', row, action: 'activate' });
     } catch (err) {
       const refusal = toGovernanceError(err, 'Failed to activate the identity.');
-      if (STALE_CODES.includes(refusal.code)) {
+      if (STALE_CODES.includes(refusal.code) || refusal.code === 'BINDING_DIGEST_MISMATCH') {
         reset();
-        onDone({ outcome: 'stale', row, action: 'activate' });
+        onDone({
+          outcome: refusal.code === 'BINDING_DIGEST_MISMATCH' ? 'changed' : 'stale',
+          row,
+          action: 'activate',
+        });
         return;
       }
       setError(refusal);
     }
-  }, [runAction, projectId, row, approvalRef, policyRevisionValue, reset, onDone]);
+  }, [
+    runAction,
+    projectId,
+    row,
+    approvalRef,
+    policyRevisionValue,
+    proposed.length,
+    keptValue,
+    reset,
+    onDone,
+  ]);
 
   if (!row) return null;
 
@@ -102,8 +137,34 @@ const ActivateIdentityDialog = memo(props => {
               severity="warning"
               data-testid="identity-activate-changed"
             >
-              The agent was edited after this identity was created, so the activation will be refused.
+              The agent was edited after this identity was requested, so the activation will be refused.
+              Rebind it first: it keeps waiting for approval, for the agent as it is now.
             </Alert>
+          )}
+          {proposed.length > 0 && (
+            <Box data-testid="identity-activate-operations">
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+              >
+                What the agent may do on the platform for its users (uncheck what you do not approve)
+              </Typography>
+              <Box sx={styles.operations}>
+                {proposed.map(operation => (
+                  <FormControlLabel
+                    key={operation}
+                    label={operation}
+                    control={
+                      <Checkbox
+                        checked={keptValue.includes(operation)}
+                        onChange={handleToggle(operation)}
+                        inputProps={{ 'data-testid': `identity-activate-operation-${operation}` }}
+                      />
+                    }
+                  />
+                ))}
+              </Box>
+            </Box>
           )}
           <TextField
             label="Approval reference"
@@ -157,6 +218,11 @@ const activateIdentityDialogStyles = () => ({
     flexDirection: 'column',
     gap: '1rem',
     paddingTop: '0.25rem',
+  },
+  operations: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
   },
 });
 

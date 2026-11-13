@@ -36,7 +36,8 @@ export const DIGEST_STATUS = {
 export const ACTIONS_BY_STATE = {
   draft: ['submit', 'retire'],
   provisioning: ['retire'],
-  pending_approval: ['activate', 'retire'],
+  // (#7228) a waiting identity for an edited agent is brought up to date (rebind) before it is approved
+  pending_approval: ['activate', 'rebind', 'retire'],
   active: ['suspend', 'rebind', 'retire'],
   suspended: ['resume', 'rebind', 'retire'],
   retiring: ['retire'],
@@ -74,18 +75,18 @@ export const ACTIONS = {
     label: 'Rebind',
     confirmLabel: 'Rebind',
     description:
-      'Approves the agent again as it is now. The identity goes back to pending approval, the earlier approval is cleared and runs admitted earlier are stopped at their next check. Another operator then activates it.',
+      'Approves the agent again as it is now. The identity goes back to pending approval, the earlier approval is cleared and runs admitted earlier are stopped at their next check. Another operator then activates it. An identity still waiting for approval only takes the agent as it is now.',
     success: 'sent back for approval',
   },
   retire: {
     label: 'Retire',
     confirmLabel: 'Retire',
     description:
-      'Retiring is permanent: the identity can not be used again. Runs admitted earlier are stopped at their next check.',
+      'The identity can not be used again. Runs admitted earlier are stopped at their next check, and its credential grants and schedule mandates are revoked with it. Requesting the agent again starts it over as a draft that needs a new approval, with its grants and mandates requested again.',
     success: 'retired',
     destructive: true,
   },
 };
 
 export const SELF_APPROVAL_HINT =
-  'You created or last changed this identity; another operator must approve it.';
+  'You made the current request for this identity; another operator must approve it.';
