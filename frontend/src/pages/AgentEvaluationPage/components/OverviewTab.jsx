@@ -44,7 +44,8 @@ const OverviewTab = memo(props => {
   const { hasPermission } = useCheckPermission();
   const canRun = hasPermission(PERMISSIONS.evalAuto.run);
   const canSeeSchedules = hasPermission(PERMISSIONS.scheduling.view);
-  const canOpenRuntime = hasPermission(PERMISSIONS.runtime.plugins);
+  // The Features page is gated by the runtime plugins permission
+  const canOpenSchedules = hasPermission(PERMISSIONS.runtime.plugins);
 
   // One page per status gives the counters without fetching every agent.
   const passed = useEvalAutoItemsQuery({ status: 'passed', limit: 1, offset: 0 });
@@ -116,22 +117,22 @@ const OverviewTab = memo(props => {
               />
             )}
           </Box>
-          {/* On/off and the cadence are the Runtime config's; this page only shows them. */}
-          {canOpenRuntime ? (
+          {/* On/off and the cadence are set in Features → Schedules; this page only shows them. */}
+          {canOpenSchedules ? (
             <Link
               component={RouterLink}
-              to={`${RouteDefinitions.Configuration}#runtime`}
+              to={`${RouteDefinitions.Features}#schedules`}
               variant="bodySmall"
-              data-testid="eval-auto-runtime-link"
+              data-testid="eval-auto-schedules-link"
             >
-              Turn on or off, and set the schedule, in Configuration → Runtime
+              Turn on or off, and set the schedule, in Features → Schedules
             </Link>
           ) : (
             <Typography
               variant="bodySmall"
               color="text.secondary"
             >
-              Turned on or off, and scheduled, in Configuration → Runtime
+              Turned on or off, and scheduled, in Features → Schedules
             </Typography>
           )}
           {schedule && (

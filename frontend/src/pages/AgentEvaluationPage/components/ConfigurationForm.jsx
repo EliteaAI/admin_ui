@@ -83,7 +83,7 @@ const ConfigurationForm = memo(props => {
   return (
     <Box sx={styles.root}>
       <Alert severity="info">
-        Turning the scheduled evaluation on or off, and its schedule, are set in Configuration → Runtime.
+        Turning the scheduled evaluation on or off, and its schedule, are set in Features → Schedules.
       </Alert>
 
       {!canEdit && (

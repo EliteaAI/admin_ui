@@ -75,17 +75,17 @@ describe('the schedule', () => {
     expect(screen.getByTestId('eval-auto-cron')).toHaveTextContent('The schedule is off');
   });
 
-  it('links to the Runtime config only with the runtime permission', async () => {
+  it('links to Features → Schedules only with the runtime permission', async () => {
     await setup({ permissions: [VIEW, PERMISSIONS.runtime.plugins] });
 
-    expect(screen.getByTestId('eval-auto-runtime-link')).toHaveAttribute('href', '/configuration#runtime');
+    expect(screen.getByTestId('eval-auto-schedules-link')).toHaveAttribute('href', '/features#schedules');
   });
 
   it('asks for no schedules without the scheduling permission', async () => {
     const { calls } = await setup({ permissions: [VIEW] });
 
     expect(calls.some(call => call.path === SCHEDULES_PATH)).toBe(false);
-    expect(screen.queryByTestId('eval-auto-runtime-link')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('eval-auto-schedules-link')).not.toBeInTheDocument();
   });
 });
 
