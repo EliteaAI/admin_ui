@@ -40,5 +40,50 @@ export const WARNING_DISMISSIBLE_FIELD = {
   hint: 'Show a close button on the budget warning banner. A dismissed warning returns when spend reaches the next level (90% and 95%).',
 };
 
-// Mode select, the apply-defaults and dismissible toggles, plus every limit and threshold field
-export const COST_BUDGETS_SETTINGS_COUNT = 3 + DEFAULT_LIMIT_FIELDS.length + WARNING_THRESHOLD_FIELDS.length;
+export const COMPLEXITY_ENABLED_FIELD = {
+  key: 'usage_complexity_enabled',
+  title: 'Agent & Pipeline Complexity',
+  hint: 'Calculated from usage metering data. Requires Cost Budgets Mode observe or enforce.',
+};
+
+export const COMPLEXITY_LEVELS = ['medium', 'high', 'extreme'];
+
+export const COMPLEXITY_DEFAULT_THRESHOLDS = { medium: 10, high: 30, extreme: 100 };
+
+export const COMPLEXITY_THRESHOLD_MIN = 0.1;
+export const COMPLEXITY_THRESHOLD_MAX = 100000;
+
+const levelTitle = level => level.charAt(0).toUpperCase() + level.slice(1);
+
+export const COMPLEXITY_THRESHOLDS_INTRO =
+  'Runs are labelled Low / Medium / High / Extreme by Complexity Units. Thresholds are calibrated automatically each night from real runs, once there are at least 200 runs across 10 agents. Until then the starting thresholds are used. A fixed threshold overrides both.';
+
+export const COMPLEXITY_DEFAULT_GROUP = {
+  title: 'Starting Thresholds (until calibrated)',
+  hint: 'Used until enough runs exist to calibrate automatically.',
+};
+
+export const COMPLEXITY_PINNED_GROUP = {
+  title: 'Fixed Thresholds (override calibration)',
+  hint: 'Always used instead of the calibrated value. Leave empty to keep automatic calibration.',
+};
+
+export const COMPLEXITY_DEFAULT_FIELDS = COMPLEXITY_LEVELS.map(level => ({
+  key: `usage_complexity_default_${level}`,
+  level,
+  title: levelTitle(level),
+}));
+
+export const COMPLEXITY_PINNED_FIELDS = COMPLEXITY_LEVELS.map(level => ({
+  key: `usage_complexity_pinned_${level}`,
+  level,
+  title: levelTitle(level),
+}));
+
+// Mode select, the apply-defaults, dismissible and complexity toggles, plus every limit and threshold field
+export const COST_BUDGETS_SETTINGS_COUNT =
+  4 +
+  DEFAULT_LIMIT_FIELDS.length +
+  WARNING_THRESHOLD_FIELDS.length +
+  COMPLEXITY_DEFAULT_FIELDS.length +
+  COMPLEXITY_PINNED_FIELDS.length;
