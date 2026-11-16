@@ -51,6 +51,9 @@ export const adminApi = createApi({
     'CredentialGrants',
     'SecurityEvents',
     'Mandates',
+    'EvalAutoSettings',
+    'EvalAutoItems',
+    'EvalAutoDataset',
   ],
   endpoints: () => ({}),
 });

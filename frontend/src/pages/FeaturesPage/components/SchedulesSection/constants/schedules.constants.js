@@ -1,4 +1,5 @@
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import ManageSearchOutlinedIcon from '@mui/icons-material/ManageSearchOutlined';
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
@@ -42,5 +43,11 @@ export const SCHEDULES_CARDS = [
       'index_scheduling_enabled',
       'index_scheduling_cron',
     ],
+  },
+  {
+    id: 'agent_evaluation',
+    title: 'Agent Evaluation',
+    icon: FactCheckOutlinedIcon,
+    fieldKeys: ['eval_auto_run_enabled', 'eval_auto_run_cron'],
   },
 ];

@@ -62,6 +62,8 @@ const SCHEDULES_FIELDS = [
   integerField('schedules_stale_run_minutes', 'Stale run minutes'),
   integerField('schedules_max_parallel_runs', 'Max parallel runs'),
   integerField('schedules_approval_wait_hours', 'Approval wait hours'),
+  cronField('eval_auto_run_cron', 'Evaluation cron', 'eval_auto_run_enabled'),
+  booleanField('eval_auto_run_enabled', 'Scheduled evaluation enabled'),
 ];
 
 const SAVED_VALUES = {
@@ -75,6 +77,8 @@ const SAVED_VALUES = {
   pipeline_scheduling_cron: '*/15 * * * *',
   index_scheduling_enabled: false,
   index_scheduling_cron: '0 * * * *',
+  eval_auto_run_enabled: false,
+  eval_auto_run_cron: '17 2 * * 0',
 };
 
 const Harness = ({ initialValues, onChange }) => {
@@ -123,7 +127,7 @@ describe('Schedules page', () => {
     expect(schedules.backendSectionIds).toEqual(['schedules']);
   });
 
-  it('shows four collapsed cards in order with their setting counts', () => {
+  it('shows five collapsed cards in order with their setting counts', () => {
     setup();
 
     const cards = [
@@ -131,6 +135,7 @@ describe('Schedules page', () => {
       ['Agent Schedules', '1 setting'],
       ['Pipeline Schedules', '3 settings'],
       ['Index Schedules', '5 settings'],
+      ['Agent Evaluation', '2 settings'],
     ];
     const headers = screen.getAllByRole('button');
 
@@ -174,6 +179,18 @@ describe('Schedules page', () => {
     await user.click(screen.getAllByRole('switch').at(-1));
 
     expect(screen.getByDisplayValue('0 * * * *')).toBeInTheDocument();
+  });
+
+  it('shows the evaluation cron only once scheduled evaluation is on', async () => {
+    const { onChange, user } = setup();
+    await user.click(blockHeader('Agent Evaluation'));
+
+    expect(screen.queryByDisplayValue('17 2 * * 0')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('switch'));
+
+    expect(onChange).toHaveBeenLastCalledWith('eval_auto_run_enabled', true);
+    expect(screen.getByDisplayValue('17 2 * * 0')).toBeInTheDocument();
   });
 
   it('keeps the webhook settings out of the schedules cards', () => {
