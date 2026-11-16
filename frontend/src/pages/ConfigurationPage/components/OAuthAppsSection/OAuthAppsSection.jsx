@@ -5,7 +5,7 @@ import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import { Alert, Box, Button, Chip, IconButton, Snackbar, Tooltip, Typography } from '@mui/material';
 
-import { useOAuthAppListQuery } from '@/api/oauthApps.api';
+import { useOAuthAppListQuery, useOAuthAppProviderListQuery } from '@/api/oauthApps.api';
 import { GridTableBody, GridTableContainer, GridTableHeader, GridTableRow } from '@/components/GridTable';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
@@ -13,7 +13,7 @@ import { useResponsiveColumns } from '@/hooks/useResponsiveColumns.hooks';
 
 import DeleteOAuthAppDialog from './components/DeleteOAuthAppDialog';
 import OAuthAppDialog from './components/OAuthAppDialog';
-import { providerOf } from './constants/oauthApps.constants';
+import { credentialTypeLabels, defaultCredentialTypes, providerOf } from './helpers/oauthApps.helpers';
 
 const COLUMNS = [
   { field: 'name', label: 'Name', width: '1.2fr', sortable: false },
@@ -38,6 +38,20 @@ const OAuthAppsSection = memo(() => {
 
   const { data, isFetching, isError } = useOAuthAppListQuery();
   const rows = useMemo(() => data?.rows ?? [], [data]);
+  const { data: providers = [] } = useOAuthAppProviderListQuery();
+  const providersText = useMemo(
+    () =>
+      providers
+        .map(
+          provider =>
+            `${provider.label}: ${credentialTypeLabels(
+              provider,
+              provider.credential_types.map(type => type.type),
+            ).join(', ')}`,
+        )
+        .join('; '),
+    [providers],
+  );
 
   const { visibleColumns, dataColumns, gridTemplateColumns } = useResponsiveColumns({
     columns: COLUMNS,
@@ -78,26 +92,24 @@ const OAuthAppsSection = memo(() => {
             variant="bodyMedium"
             sx={styles.cellText}
           >
-            {providerOf(row).label}
+            {providerOf(providers, row.provider)?.label ?? row.provider ?? '-'}
           </Typography>
         );
       }
       if (column.field === 'credential_types') {
-        const provider = providerOf(row);
+        const provider = providerOf(providers, row.provider);
         // The server sends the effective list; a missing one means the non-opt-in types
-        const types = value ?? provider.scopeGroups.filter(group => !group.optIn).map(group => group.type);
+        const types = value ?? defaultCredentialTypes(provider);
         return (
           <Box sx={styles.chips}>
-            {provider.scopeGroups
-              .filter(group => types.includes(group.type))
-              .map(group => (
-                <Chip
-                  key={group.type}
-                  label={group.label}
-                  size="small"
-                  variant="outlined"
-                />
-              ))}
+            {credentialTypeLabels(provider, types).map(label => (
+              <Chip
+                key={label}
+                label={label}
+                size="small"
+                variant="outlined"
+              />
+            ))}
           </Box>
         );
       }
@@ -144,7 +156,7 @@ const OAuthAppsSection = memo(() => {
         </Tooltip>
       );
     },
-    [styles],
+    [styles, providers],
   );
 
   const renderActions = useCallback(
@@ -184,10 +196,10 @@ const OAuthAppsSection = memo(() => {
           variant="body2"
           sx={styles.description}
         >
-          OAuth apps used by credentials of their provider (Microsoft Entra ID: Teams, Outlook and
-          SharePoint). With a Default app, users get it and enter nothing. With enabled apps but no default,
-          users choose an app or their own (Custom app). With no enabled app, users always enter their own
-          app. Each provider has at most one Default app.
+          OAuth apps used by credentials of their provider{providersText ? ` (${providersText})` : ''}. With a
+          Default app, users get it and enter nothing. With enabled apps but no default, users choose an app
+          or their own (Custom app). With no enabled app, users always enter their own app. Each provider has
+          at most one Default app.
         </Typography>
         <Button
           size="small"

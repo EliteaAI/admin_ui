@@ -9,6 +9,12 @@ const oauthAppsApi = adminApi.injectEndpoints({
       providesTags: ['OAuthApps'],
     }),
 
+    // Providers and, per credential type, the scopes its credential schema offers
+    oauthAppProviderList: build.query({
+      query: () => ({ url: '/admin/oauth_app_providers/administration' }),
+      transformResponse: response => response?.rows ?? [],
+    }),
+
     oauthAppCreate: build.mutation({
       query: body => ({ url: BASE, method: 'POST', body }),
       invalidatesTags: ['OAuthApps'],
@@ -37,6 +43,7 @@ const oauthAppsApi = adminApi.injectEndpoints({
 // RTK Query derives hook names from the endpoint names (oauthAppList -> useOauthAppListQuery)
 export const {
   useOauthAppListQuery: useOAuthAppListQuery,
+  useOauthAppProviderListQuery: useOAuthAppProviderListQuery,
   useOauthAppCreateMutation: useOAuthAppCreateMutation,
   useOauthAppUpdateMutation: useOAuthAppUpdateMutation,
   useOauthAppCheckMutation: useOAuthAppCheckMutation,
