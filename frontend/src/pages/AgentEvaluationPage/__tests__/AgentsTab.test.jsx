@@ -41,6 +41,13 @@ afterEach(() => {
 });
 
 describe('the table', () => {
+  it('shows who each run acts as', async () => {
+    await setup({ items: [makeItem(), makeItem({ id: 12, owner_id: null })] });
+
+    expect(await screen.findByTestId('eval-auto-owner-11')).toHaveTextContent('2');
+    expect(screen.getByTestId('eval-auto-owner-12')).toHaveTextContent('-');
+  });
+
   it('shows each agent with its status, score, coverage and reason', async () => {
     await setup({
       items: [

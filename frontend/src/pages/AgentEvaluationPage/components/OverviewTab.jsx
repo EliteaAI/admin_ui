@@ -32,6 +32,8 @@ const RUN_SCHEDULE = 'eval_auto_run';
 // Why a run-now was refused; any other reason is shown as the backend sent it.
 const REFUSAL_MESSAGES = {
   maintenance: 'The platform is in maintenance mode, so no evaluation can start.',
+  // Listing the agents outlasted the request; the job may already be running.
+  timeout: 'Still listing agents; the job may have started. Reload in a minute.',
 };
 
 const OverviewTab = memo(props => {
@@ -152,7 +154,7 @@ const OverviewTab = memo(props => {
                   job.finished_at ? `finished ${formatDate(job.finished_at)}` : 'still running'
                 } · queued ${job.counters?.queued ?? 0}, carried forward ${job.counters?.carried_forward ?? 0}, deferred ${
                   job.counters?.deferred ?? 0
-                }`
+                }, blocked ${job.counters?.blocked ?? 0}`
               : 'No job has run yet.'}
           </Typography>
         </Box>

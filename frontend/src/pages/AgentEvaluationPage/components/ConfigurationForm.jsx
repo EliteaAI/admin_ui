@@ -194,7 +194,8 @@ const ConfigurationForm = memo(props => {
         variant="bodySmall"
         color="text.secondary"
       >
-        New agents start only inside this window (server time). Leave both empty to allow any time.
+        Scheduled agents start only inside this window (UTC); Run now starts them at once. Leave both empty to
+        allow any time.
       </Typography>
       <Box sx={styles.row}>
         <TextField

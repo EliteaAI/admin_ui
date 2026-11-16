@@ -22,6 +22,8 @@ const COLUMNS = [
   { field: 'agent_name', label: 'Agent', width: '1.6fr' },
   { field: 'project_id', label: 'Project', width: '5rem', hideBelow: 700 },
   { field: 'application_version_id', label: 'Version', width: '5rem', hideBelow: 1200 },
+  // The default version's author: the run acts as this user and spends their budget.
+  { field: 'owner_id', label: 'Owner', width: '5rem', hideBelow: 900 },
   { field: 'status', label: 'Status', width: '8rem' },
   { field: 'headline_score', label: 'Score', width: '5rem' },
   { field: 'coverage', label: 'Coverage', width: '6rem', hideBelow: 800 },
@@ -70,6 +72,16 @@ const AgentsTable = memo(props => {
           return String(row.project_id);
         case 'application_version_id':
           return row.application_version_id ? String(row.application_version_id) : '-';
+        case 'owner_id':
+          return (
+            <Typography
+              variant="bodySmall"
+              title="User ID the run acts as and charges"
+              data-testid={`eval-auto-owner-${row.id}`}
+            >
+              {row.owner_id ? String(row.owner_id) : '-'}
+            </Typography>
+          );
         case 'trigger':
           return triggerLabel(row.trigger);
         case 'status':

@@ -119,7 +119,7 @@ export const makeJob = (overrides = {}) => ({
   trigger: 'scheduled',
   started_at: '2026-11-11T02:00:00+00:00',
   finished_at: '2026-11-11T02:30:00+00:00',
-  counters: { queued: 5, carried_forward: 2, deferred: 1 },
+  counters: { queued: 5, carried_forward: 2, deferred: 1, blocked: 3 },
   ...overrides,
 });
 

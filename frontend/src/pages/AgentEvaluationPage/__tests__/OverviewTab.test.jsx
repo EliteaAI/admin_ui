@@ -53,7 +53,7 @@ describe('counters', () => {
 
     await waitFor(() => expect(screen.getByTestId('eval-auto-last-job')).toHaveTextContent('Last job 3'));
     expect(screen.getByTestId('eval-auto-last-job')).toHaveTextContent(
-      'queued 5, carried forward 2, deferred 1',
+      'queued 5, carried forward 2, deferred 1, blocked 3',
     );
   });
 
@@ -116,6 +116,18 @@ describe('run now', () => {
     await user.click(screen.getByTestId('eval-auto-run-now'));
 
     expect(await screen.findByTestId('eval-auto-notice')).toHaveTextContent('Job 3 is still running.');
+  });
+
+  it('says the job may have started when the request times out', async () => {
+    const { user } = await setup({
+      extra: {
+        [`POST ${SETTINGS_PATH}`]: fail(504, { ok: false, reason: 'timeout', job_may_have_started: true }),
+      },
+    });
+
+    await user.click(screen.getByTestId('eval-auto-run-now'));
+
+    expect(await screen.findByTestId('eval-auto-notice')).toHaveTextContent('the job may have started');
   });
 
   it('explains a refusal during maintenance', async () => {
