@@ -17,6 +17,7 @@ const GridTablePagination = memo(props => {
     handleNextPage,
     handlePageSizeChange,
     rowsPerPageLabel = 'Rows per page:',
+    rightContent,
   } = props;
 
   const styles = gridTablePaginationStyles();
@@ -84,6 +85,7 @@ const GridTablePagination = memo(props => {
           </IconButton>
         </Box>
       </Box>
+      {rightContent && <Box sx={styles.rightContent}>{rightContent}</Box>}
     </Box>
   );
 });
@@ -97,6 +99,12 @@ const gridTablePaginationStyles = () => ({
     paddingTop: '1rem',
     borderTop: `0.0625rem solid ${palette.border.lines}`,
   }),
+  rightContent: {
+    display: 'flex',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    paddingRight: '1rem',
+  },
   paddingContent: {
     display: 'flex',
     alignItems: 'center',
