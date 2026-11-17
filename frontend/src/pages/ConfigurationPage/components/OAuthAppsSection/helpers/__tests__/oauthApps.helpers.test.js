@@ -26,7 +26,6 @@ const PROVIDER = {
           value: 'Channel.Read.All',
           label: 'Channel.Read.All',
           description: 'channels',
-          admin_consent: true,
         },
       ],
     },
