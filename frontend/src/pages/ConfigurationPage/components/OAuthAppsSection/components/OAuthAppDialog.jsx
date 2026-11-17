@@ -5,7 +5,7 @@ import {
   Autocomplete,
   Box,
   Button,
-  Checkbox,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -23,50 +23,19 @@ import { useConfigSuggestionsQuery } from '@/api/configuration.api';
 import {
   useOAuthAppCheckMutation,
   useOAuthAppCreateMutation,
+  useOAuthAppProviderListQuery,
   useOAuthAppUpdateMutation,
 } from '@/api/oauthApps.api';
 import {
-  MICROSOFT_ENTRA,
-  OAUTH_PROVIDERS,
+  credentialTypeLabels,
+  emptyForm,
+  formScopes,
   providerOf,
-} from '@/pages/ConfigurationPage/components/OAuthAppsSection/constants/oauthApps.constants';
+  toForm,
+  typesMissingScopes,
+} from '@/pages/ConfigurationPage/components/OAuthAppsSection/helpers/oauthApps.helpers';
 
-// Types an app serves when it has no saved list, and the ones a new app starts with: opt-in types are off
-const defaultTypes = provider => provider.scopeGroups.filter(group => !group.optIn).map(group => group.type);
-
-const recommendedScopes = provider =>
-  Object.fromEntries(provider.scopeGroups.map(group => [group.type, group.recommended]));
-
-const emptyForm = (providerId = MICROSOFT_ENTRA) => ({
-  provider: providerId,
-  name: '',
-  client_id: '',
-  client_secret: '',
-  oauth_discovery_endpoint: OAUTH_PROVIDERS[providerId].defaultDiscoveryEndpoint,
-  scopes: recommendedScopes(OAUTH_PROVIDERS[providerId]),
-  credential_types: defaultTypes(OAUTH_PROVIDERS[providerId]),
-  auto_refresh_token: true,
-  is_default: false,
-  enabled: true,
-  allowed_project_ids: [],
-});
-
-const toForm = app => {
-  if (!app) return emptyForm();
-  const provider = providerOf(app);
-  return {
-    ...emptyForm(app.provider),
-    ...app,
-    provider: app.provider ?? MICROSOFT_ENTRA,
-    // Write-only: the stored secret is never sent to the browser
-    client_secret: '',
-    scopes: Object.fromEntries(
-      provider.scopeGroups.map(group => [group.type, app.scopes?.[group.type] ?? group.recommended]),
-    ),
-    // Unset on saved apps means the provider's default types (opt-in types off)
-    credential_types: app.credential_types ?? defaultTypes(provider),
-  };
-};
+import ScopeOption from './ScopeOption';
 
 const toggle = (list, value, checked) =>
   checked ? [...new Set([...list, value])] : list.filter(item => item !== value);
@@ -76,10 +45,13 @@ const OAuthAppDialog = memo(props => {
 
   const styles = useMemo(() => oauthAppDialogStyles(), []);
   const isEdit = Boolean(app);
-  const [form, setForm] = useState(emptyForm);
+  const { data: providers = [], isLoading: isLoadingProviders } = useOAuthAppProviderListQuery(undefined, {
+    skip: !open,
+  });
+  const [form, setForm] = useState(() => emptyForm(null));
   // The form as loaded: on edit, Save is enabled only once something differs from it
-  const [initialForm, setInitialForm] = useState(emptyForm);
-  const provider = providerOf(form);
+  const [initialForm, setInitialForm] = useState(() => emptyForm(null));
+  const provider = providerOf(providers, form.provider);
   const [replaceSecret, setReplaceSecret] = useState(false);
   const [error, setError] = useState('');
   const [checkResult, setCheckResult] = useState(null);
@@ -94,15 +66,15 @@ const OAuthAppDialog = memo(props => {
   const projectLabels = useMemo(() => projectSuggestions?.labels ?? {}, [projectSuggestions]);
 
   useEffect(() => {
-    if (open) {
-      const loaded = toForm(app);
+    if (open && providers.length) {
+      const loaded = toForm(providers, app);
       setForm(loaded);
       setInitialForm(loaded);
       setReplaceSecret(!app);
       setError('');
       setCheckResult(null);
     }
-  }, [open, app]);
+  }, [open, app, providers]);
 
   const setField = useCallback((field, value) => setForm(prev => ({ ...prev, [field]: value })), []);
 
@@ -110,13 +82,15 @@ const OAuthAppDialog = memo(props => {
   const handleProviderChange = useCallback(
     providerId =>
       setForm(prev => ({
-        ...prev,
-        provider: providerId,
-        oauth_discovery_endpoint: OAUTH_PROVIDERS[providerId].defaultDiscoveryEndpoint,
-        scopes: recommendedScopes(OAUTH_PROVIDERS[providerId]),
-        credential_types: defaultTypes(OAUTH_PROVIDERS[providerId]),
+        ...emptyForm(providerOf(providers, providerId)),
+        name: prev.name,
+        client_id: prev.client_id,
+        client_secret: prev.client_secret,
+        is_default: prev.is_default,
+        enabled: prev.enabled,
+        allowed_project_ids: prev.allowed_project_ids,
       })),
-    [],
+    [providers],
   );
 
   const handleScopeToggle = useCallback(
@@ -130,8 +104,16 @@ const OAuthAppDialog = memo(props => {
 
   const handleTypeToggle = useCallback(
     (type, checked) =>
-      setForm(prev => ({ ...prev, credential_types: toggle(prev.credential_types, type, checked) })),
-    [],
+      setForm(prev => ({
+        ...prev,
+        credential_types: toggle(prev.credential_types, type, checked),
+        // Switching a type on with no scopes left starts it from the schema default
+        ...(checked &&
+          !(prev.scopes[type] ?? []).length && {
+            scopes: { ...prev.scopes, [type]: formScopes(provider)[type] ?? [] },
+          }),
+      })),
+    [provider],
   );
 
   const handleScopesText = useCallback(
@@ -201,7 +183,10 @@ const OAuthAppDialog = memo(props => {
       initialForm.oauth_discovery_endpoint.trim().replace(/\/+$/, '').toLowerCase();
   const needsSecret = endpointChanged && !replaceSecret;
 
+  const missingScopes = typesMissingScopes(provider, form);
   const isValid =
+    Boolean(provider) &&
+    missingScopes.length === 0 &&
     form.name.trim() &&
     form.client_id.trim() &&
     form.oauth_discovery_endpoint.trim() &&
@@ -222,216 +207,255 @@ const OAuthAppDialog = memo(props => {
       maxWidth="sm"
       fullWidth
     >
-      <DialogTitle>{isEdit ? `Edit ${provider.label} app` : 'New OAuth app'}</DialogTitle>
+      <DialogTitle>{isEdit && provider ? `Edit ${provider.label} app` : 'New OAuth app'}</DialogTitle>
       <DialogContent sx={styles.content}>
         {error && <Alert severity="error">{error}</Alert>}
-        <Box sx={styles.availability}>
-          <Typography variant="labelMedium">General</Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.availabilityHint}
-          >
-            What users see and how they get this app in their {provider.credentialTypes} credentials.
-          </Typography>
-          <TextField
-            select
-            label="Provider"
-            helperText="Identity provider of this app. Only Microsoft Entra ID is available."
-            value={form.provider}
-            onChange={event => handleProviderChange(event.target.value)}
-            disabled
-            required
-            fullWidth
-            size="small"
-          >
-            {Object.entries(OAUTH_PROVIDERS).map(([id, option]) => (
-              <MenuItem
-                key={id}
-                value={id}
+        {!provider && (
+          <Box sx={styles.loading}>
+            {isLoadingProviders ? (
+              <CircularProgress size="1.5rem" />
+            ) : (
+              <Typography
+                variant="bodyMedium"
+                color="error"
               >
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="Name"
-            helperText="Shown to users when they pick an app"
-            value={form.name}
-            onChange={event => setField('name', event.target.value)}
-            required
-            fullWidth
-            size="small"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.enabled}
-                onChange={(_, checked) => setField('enabled', checked)}
-              />
-            }
-            label="Enabled"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.is_default}
-                onChange={(_, checked) => setField('is_default', checked)}
-              />
-            }
-            label="Default app: users get this app and cannot choose a custom one"
-          />
-          <Autocomplete
-            multiple
-            size="small"
-            options={projectOptions}
-            value={form.allowed_project_ids}
-            getOptionLabel={option => projectLabels[option] ?? String(option)}
-            onChange={(_, value) => setField('allowed_project_ids', value)}
-            renderInput={params => (
-              <TextField
-                {...params}
-                label="Projects"
-                required
-                error={form.allowed_project_ids.length === 0}
-                helperText="Required. The app applies only in the selected projects."
-              />
+                Failed to load OAuth app providers.
+              </Typography>
             )}
-          />
-        </Box>
-        <TextField
-          label="Client ID"
-          value={form.client_id}
-          onChange={event => setField('client_id', event.target.value)}
-          required
-          fullWidth
-          size="small"
-        />
-        {replaceSecret ? (
-          <TextField
-            label="Client secret"
-            type="password"
-            autoComplete="new-password"
-            helperText={
-              isEdit
-                ? 'The new value replaces the stored secret for every credential that uses this app.'
-                : 'Stored encrypted. It is never shown again once saved.'
-            }
-            value={form.client_secret}
-            onChange={event => setField('client_secret', event.target.value)}
-            required
-            fullWidth
-            size="small"
-          />
-        ) : (
-          <Box sx={styles.secretRow}>
-            <Typography variant="bodyMedium">
-              Client secret: {app?.client_secret_set ? '••••••••  (set)' : 'not set'}
-            </Typography>
-            <Button
-              size="small"
-              onClick={() => setReplaceSecret(true)}
-            >
-              Replace
-            </Button>
           </Box>
         )}
-        <TextField
-          label="OAuth discovery endpoint"
-          error={needsSecret}
-          helperText={
-            needsSecret
-              ? 'Replace the client secret to use a new endpoint: the stored secret stays with the saved one.'
-              : provider.discoveryEndpointHint
-          }
-          value={form.oauth_discovery_endpoint}
-          onChange={event => setField('oauth_discovery_endpoint', event.target.value)}
-          required
-          fullWidth
-          size="small"
-        />
+        {provider && (
+          <>
+            <Box sx={styles.availability}>
+              <Typography variant="labelMedium">General</Typography>
+              <Typography
+                variant="bodySmall"
+                sx={styles.availabilityHint}
+              >
+                What users see and how they get this app in their{' '}
+                {credentialTypeLabels(
+                  provider,
+                  provider.credential_types.map(type => type.type),
+                ).join(', ')}{' '}
+                credentials.
+              </Typography>
+              <TextField
+                select
+                label="Provider"
+                helperText={
+                  providers.length > 1
+                    ? 'Identity provider of this app. It cannot be changed later.'
+                    : `Identity provider of this app. Only ${provider.label} is available.`
+                }
+                value={form.provider}
+                onChange={event => handleProviderChange(event.target.value)}
+                disabled={isEdit || providers.length < 2}
+                required
+                fullWidth
+                size="small"
+              >
+                {providers.map(option => (
+                  <MenuItem
+                    key={option.id}
+                    value={option.id}
+                  >
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Name"
+                helperText="Shown to users when they pick an app"
+                value={form.name}
+                onChange={event => setField('name', event.target.value)}
+                required
+                fullWidth
+                size="small"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.enabled}
+                    onChange={(_, checked) => setField('enabled', checked)}
+                  />
+                }
+                label="Enabled"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.is_default}
+                    onChange={(_, checked) => setField('is_default', checked)}
+                  />
+                }
+                label="Default app: users get this app and cannot choose a custom one"
+              />
+              <Autocomplete
+                multiple
+                size="small"
+                options={projectOptions}
+                value={form.allowed_project_ids}
+                getOptionLabel={option => projectLabels[option] ?? String(option)}
+                onChange={(_, value) => setField('allowed_project_ids', value)}
+                renderInput={params => (
+                  <TextField
+                    {...params}
+                    label="Projects"
+                    required
+                    error={form.allowed_project_ids.length === 0}
+                    helperText="Required. The app applies only in the selected projects."
+                  />
+                )}
+              />
+            </Box>
+            <TextField
+              label="Client ID"
+              value={form.client_id}
+              onChange={event => setField('client_id', event.target.value)}
+              required
+              fullWidth
+              size="small"
+            />
+            {replaceSecret ? (
+              <TextField
+                label="Client secret"
+                type="password"
+                autoComplete="new-password"
+                helperText={
+                  isEdit
+                    ? 'The new value replaces the stored secret for every credential that uses this app.'
+                    : 'Stored encrypted. It is never shown again once saved.'
+                }
+                value={form.client_secret}
+                onChange={event => setField('client_secret', event.target.value)}
+                required
+                fullWidth
+                size="small"
+              />
+            ) : (
+              <Box sx={styles.secretRow}>
+                <Typography variant="bodyMedium">
+                  Client secret: {app?.client_secret_set ? '••••••••  (set)' : 'not set'}
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={() => setReplaceSecret(true)}
+                >
+                  Replace
+                </Button>
+              </Box>
+            )}
+            <TextField
+              label="OAuth discovery endpoint"
+              error={needsSecret}
+              helperText={
+                needsSecret
+                  ? 'Replace the client secret to use a new endpoint: the stored secret stays with the saved one.'
+                  : provider.discovery_endpoint_hint
+              }
+              value={form.oauth_discovery_endpoint}
+              onChange={event => setField('oauth_discovery_endpoint', event.target.value)}
+              required
+              fullWidth
+              size="small"
+            />
 
-        <FormLabel>Credential types and scopes</FormLabel>
-        <Typography
-          variant="bodySmall"
-          sx={styles.hint}
-        >
-          Switch off a type to stop offering this app for those credentials. Scopes are requested when users
-          sign in; the app registration must grant them.
-        </Typography>
-        {provider.scopeGroups.map(group => (
-          <Box
-            key={group.type}
-            sx={styles.scopeGroup}
-          >
+            <FormLabel>Credential types and scopes</FormLabel>
+            <Typography
+              variant="bodySmall"
+              sx={styles.hint}
+            >
+              Switch off a type to stop offering this app for those credentials. Scopes are requested when
+              users sign in; the app registration must grant them.
+            </Typography>
+            {provider.credential_types.map(type => {
+              const isOn = form.credential_types.includes(type.type);
+              const scopes = form.scopes[type.type] ?? [];
+              return (
+                <Box
+                  key={type.type}
+                  sx={styles.scopeGroup}
+                >
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={isOn}
+                        onChange={(_, checked) => handleTypeToggle(type.type, checked)}
+                        data-testid={`oauth-app-type-${type.type}`}
+                      />
+                    }
+                    label={<Typography variant="labelMedium">{type.label}</Typography>}
+                  />
+                  {!isOn ? (
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.typeOff}
+                    >
+                      Off: {type.label} credentials cannot use this app.
+                    </Typography>
+                  ) : type.options ? (
+                    <>
+                      <FormGroup
+                        row
+                        sx={styles.scopeOptions}
+                      >
+                        {type.options.map(option => (
+                          <ScopeOption
+                            key={option.value}
+                            option={option}
+                            checked={scopes.includes(option.value)}
+                            onToggle={(scope, checked) => handleScopeToggle(type.type, scope, checked)}
+                          />
+                        ))}
+                      </FormGroup>
+                      {missingScopes.includes(type.type) && (
+                        <Typography
+                          variant="bodySmall"
+                          color="error"
+                          data-testid={`oauth-app-scopes-error-${type.type}`}
+                        >
+                          Select at least one scope, or switch {type.label} off.
+                        </Typography>
+                      )}
+                    </>
+                  ) : (
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder={type.default_scopes?.length ? `e.g. ${type.default_scopes.join(' ')}` : ''}
+                      helperText={
+                        type.default_scopes?.length
+                          ? `Space-separated scopes. Empty uses ${type.default_scopes.join(' ')}`
+                          : 'Space-separated scopes'
+                      }
+                      inputProps={{ 'data-testid': `oauth-app-scopes-${type.type}` }}
+                      value={scopes.join(' ')}
+                      onChange={event => handleScopesText(type.type, event.target.value)}
+                    />
+                  )}
+                </Box>
+              );
+            })}
             <FormControlLabel
               control={
                 <Switch
-                  size="small"
-                  checked={form.credential_types.includes(group.type)}
-                  onChange={(_, checked) => handleTypeToggle(group.type, checked)}
-                  data-testid={`oauth-app-type-${group.type}`}
+                  checked={form.auto_refresh_token}
+                  onChange={(_, checked) => setField('auto_refresh_token', checked)}
                 />
               }
-              label={<Typography variant="labelMedium">{group.label}</Typography>}
+              label="Auto refresh token (offline_access): keep users signed in"
             />
-            {!form.credential_types.includes(group.type) ? (
-              <Typography
-                variant="bodySmall"
-                sx={styles.typeOff}
-              >
-                Off: {group.label} credentials cannot use this app.
-              </Typography>
-            ) : group.options ? (
-              <FormGroup
-                row
-                sx={styles.scopeOptions}
-              >
-                {group.options.map(scope => (
-                  <FormControlLabel
-                    key={scope}
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={(form.scopes[group.type] || []).includes(scope)}
-                        onChange={(_, checked) => handleScopeToggle(group.type, scope, checked)}
-                      />
-                    }
-                    label={scope}
-                  />
-                ))}
-              </FormGroup>
-            ) : (
-              <TextField
-                size="small"
-                fullWidth
-                placeholder={group.placeholder}
-                helperText={
-                  group.hint ? `${provider.freeScopesHint}. ${group.hint}` : provider.freeScopesHint
-                }
-                inputProps={{ 'data-testid': `oauth-app-scopes-${group.type}` }}
-                value={(form.scopes[group.type] || []).join(' ')}
-                onChange={event => handleScopesText(group.type, event.target.value)}
-              />
-            )}
-          </Box>
-        ))}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={form.auto_refresh_token}
-              onChange={(_, checked) => setField('auto_refresh_token', checked)}
-            />
-          }
-          label="Auto refresh token (offline_access): keep users signed in"
-        />
-        <Typography
-          variant="bodySmall"
-          sx={styles.hint}
-        >
-          {form.auto_refresh_token
-            ? 'Sign-in asks for offline_access, so users stay signed in and scheduled runs can use a saved login.'
-            : 'Sign-in does not ask for offline_access: users sign in again about every hour, and scheduled runs cannot use a saved login.'}
-        </Typography>
+            <Typography
+              variant="bodySmall"
+              sx={styles.hint}
+            >
+              {form.auto_refresh_token
+                ? 'Sign-in asks for offline_access, so users stay signed in and scheduled runs can use a saved login.'
+                : 'Sign-in does not ask for offline_access: users sign in again about every hour, and scheduled runs cannot use a saved login.'}
+            </Typography>
+          </>
+        )}
       </DialogContent>
       {checkResult && (
         <Alert
@@ -499,6 +523,11 @@ const oauthAppDialogStyles = () => ({
   },
   checkButton: {
     marginRight: 'auto',
+  },
+  loading: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '1rem',
   },
   hint: ({ palette }) => ({
     color: palette.text.metrics,
