@@ -118,11 +118,12 @@ const setup = (initialValues = SAVED_VALUES) => {
 const blockHeader = title => screen.getByText(title).closest('[role="button"]');
 
 describe('Schedules page', () => {
-  it('sits directly after Skills Configuration in the Features navigation', () => {
+  it('sits directly after Notifications in the Features navigation', () => {
     const ids = FEATURES_SECTIONS.map(section => section.id);
     const schedules = FEATURES_SECTIONS.find(section => section.id === 'schedules');
 
-    expect(ids.indexOf('schedules')).toBe(ids.indexOf('skills') + 1);
+    expect(ids.indexOf('notifications')).toBe(ids.indexOf('skills') + 1);
+    expect(ids.indexOf('schedules')).toBe(ids.indexOf('notifications') + 1);
     expect(schedules.title).toBe('Schedules');
     expect(schedules.backendSectionIds).toEqual(['schedules']);
   });

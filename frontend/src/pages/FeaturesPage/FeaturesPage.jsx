@@ -17,6 +17,7 @@ import { CostBudgetsSection } from './components/CostBudgetsSection';
 import { CustomThemeSection } from './components/CustomThemeSection';
 import { HelpCenterSection } from './components/HelpCenterSection';
 import McpConfigurationSection from './components/McpConfigurationSection';
+import { NotificationsSection } from './components/NotificationsSection';
 import PublishingSection from './components/PublishingSection';
 import { SchedulesSection } from './components/SchedulesSection';
 import { SkillsConfigurationSection } from './components/SkillsConfigurationSection';
@@ -69,6 +70,9 @@ const FeaturesPage = memo(() => {
   });
   const resourcesDraft = useConfigSectionDraft('resources', { skip: !usesSection('resources') });
   const skillsDraft = useConfigSectionDraft('skills', { skip: !usesSection('skills') });
+  const notificationsDraft = useConfigSectionDraft('notifications', {
+    skip: !usesSection('notifications'),
+  });
   const schedulesDraft = useConfigSectionDraft('schedules', { skip: !usesSection('schedules') });
   const webhooksDraft = useConfigSectionDraft('webhooks', { skip: !usesSection('webhooks') });
 
@@ -83,6 +87,7 @@ const FeaturesPage = memo(() => {
       supportDraft,
       resourcesDraft,
       skillsDraft,
+      notificationsDraft,
       schedulesDraft,
       webhooksDraft,
     ],
@@ -96,6 +101,7 @@ const FeaturesPage = memo(() => {
       supportDraft,
       resourcesDraft,
       skillsDraft,
+      notificationsDraft,
       schedulesDraft,
       webhooksDraft,
     ],
@@ -136,6 +142,10 @@ const FeaturesPage = memo(() => {
   );
   const schedulesFields = useMemo(
     () => schemasData?.sections?.find(s => s.id === 'schedules')?.fields || [],
+    [schemasData],
+  );
+  const notificationsFields = useMemo(
+    () => schemasData?.sections?.find(s => s.id === 'notifications')?.fields || [],
     [schemasData],
   );
   const webhooksFields = useMemo(
@@ -323,6 +333,16 @@ const FeaturesPage = memo(() => {
             <SkillsConfigurationSection
               skillsDraft={skillsDraft}
               skillsFields={skillsFields}
+              initialBlock={deepLinkBlock}
+            />
+          </Box>
+        );
+      case 'notifications':
+        return (
+          <Box sx={styles.formScroll}>
+            <NotificationsSection
+              notificationsDraft={notificationsDraft}
+              notificationsFields={notificationsFields}
               initialBlock={deepLinkBlock}
             />
           </Box>
