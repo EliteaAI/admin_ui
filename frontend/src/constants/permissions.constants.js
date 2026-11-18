@@ -103,6 +103,11 @@ export const PERMISSIONS = {
     view: 'models.admin.audit_trail.view',
   },
 
+  // Project and user lifecycle audit (view + CSV export)
+  lifecycleAudit: {
+    view: 'models.admin.lifecycle_audit.view',
+  },
+
   // Project / user LLM spend budgets
   budgets: {
     view: 'models.admin.project_budgets.view',
@@ -180,6 +185,7 @@ export const SIDEBAR_PERMISSIONS = {
   configuration: [PERMISSIONS.runtime.plugins],
   features: [PERMISSIONS.runtime.plugins],
   'audit-trail': [PERMISSIONS.auditTrail.view],
+  'lifecycle-audit': [PERMISSIONS.lifecycleAudit.view],
   'schedules-tasks': [PERMISSIONS.scheduling.view, PERMISSIONS.runtime.plugins],
   reports: [PERMISSIONS.surveys.reports],
   governance: [
@@ -222,6 +228,7 @@ export const ROUTE_PERMISSIONS = {
   '/configuration': SIDEBAR_PERMISSIONS.configuration,
   '/features': SIDEBAR_PERMISSIONS.configuration,
   '/audit-trail': SIDEBAR_PERMISSIONS['audit-trail'],
+  '/audit': SIDEBAR_PERMISSIONS['lifecycle-audit'],
   '/schedules-tasks': SIDEBAR_PERMISSIONS['schedules-tasks'],
   '/reports': SIDEBAR_PERMISSIONS.reports,
   '/governance': SIDEBAR_PERMISSIONS.governance,

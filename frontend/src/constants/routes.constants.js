@@ -11,6 +11,7 @@ export const RouteDefinitions = {
   ModelPrices: '/model-prices',
   AppRequests: '/app-requests',
   AuditTrail: '/audit-trail',
+  LifecycleAudit: '/audit',
   SchedulesTasks: '/schedules-tasks',
   Configuration: '/configuration',
   Features: '/features',

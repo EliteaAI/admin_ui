@@ -15,6 +15,7 @@ import { BudgetsPage } from '@/pages/BudgetsPage';
 import { ConfigurationPage } from '@/pages/ConfigurationPage';
 import { FeaturesPage } from '@/pages/FeaturesPage';
 import { GovernancePage } from '@/pages/GovernancePage';
+import { LifecycleAuditPage } from '@/pages/LifecycleAuditPage';
 import { LiteLLMPage } from '@/pages/LiteLLMPage';
 import { ModelPricesPage } from '@/pages/ModelPricesPage';
 import { PlatformDimensionsPage } from '@/pages/PlatformDimensionsPage';
@@ -86,6 +87,10 @@ const router = createBrowserRouter(
       <Route
         path={RouteDefinitions.AuditTrail}
         element={guard(RouteDefinitions.AuditTrail, <AuditTrailPage />)}
+      />
+      <Route
+        path={RouteDefinitions.LifecycleAudit}
+        element={guard(RouteDefinitions.LifecycleAudit, <LifecycleAuditPage />)}
       />
       <Route
         path={RouteDefinitions.SchedulesTasks}

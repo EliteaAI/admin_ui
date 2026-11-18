@@ -18,6 +18,7 @@ export const adminApi = createApi({
     'Roles',
     'Permissions',
     'AuditTrail',
+    'LifecycleAudit',
     'Projects',
     'Schedules',
     'Tasks',

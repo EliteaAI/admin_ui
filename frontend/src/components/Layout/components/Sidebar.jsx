@@ -135,6 +135,12 @@ const BOTTOM_MENU_ITEMS = [
     url: RouteDefinitions.AuditTrail,
   },
   {
+    id: 'lifecycle-audit',
+    label: 'Audit',
+    icon: FactCheckIcon,
+    url: RouteDefinitions.LifecycleAudit,
+  },
+  {
     id: 'governance',
     label: 'Governance',
     icon: GovernanceIcon,
