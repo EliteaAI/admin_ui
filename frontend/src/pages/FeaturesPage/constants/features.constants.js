@@ -2,6 +2,7 @@ import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalance
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import ExtensionIcon from '@mui/icons-material/ExtensionOutlined';
 import MenuBookIcon from '@mui/icons-material/MenuBookOutlined';
+import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import PollOutlinedIcon from '@mui/icons-material/PollOutlined';
 import PublishIcon from '@mui/icons-material/PublishOutlined';
@@ -31,6 +32,12 @@ export const FEATURES_SECTIONS = [
     title: 'Skills Configuration',
     icon: AutoAwesomeOutlinedIcon,
     backendSectionIds: ['skills'],
+  },
+  {
+    id: 'notifications',
+    title: 'Notifications',
+    icon: NotificationsOutlinedIcon,
+    backendSectionIds: ['notifications'],
   },
   {
     id: 'schedules',
