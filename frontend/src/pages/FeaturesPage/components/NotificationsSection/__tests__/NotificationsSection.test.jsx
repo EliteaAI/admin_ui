@@ -29,6 +29,13 @@ const NOTIFICATION_FIELDS = [
     type: 'boolean',
     section: 'notifications',
   },
+  {
+    key: 'digest_enabled',
+    title: 'Enable notification digests',
+    path: 'notifications.digest.enabled',
+    type: 'boolean',
+    section: 'notifications',
+  },
 ];
 
 const Harness = ({ onChange }) => {
@@ -77,8 +84,10 @@ describe('Notifications section', () => {
     await user.click(projectMembership);
 
     const switches = screen.getAllByRole('switch');
+    expect(switches).toHaveLength(2);
     expect(switches[0]).toBeChecked();
     expect(switches[1]).not.toBeChecked();
+    expect(screen.queryByText('Enable notification digests')).not.toBeInTheDocument();
   });
 
   it('edits the removal notification setting through the shared draft', async () => {
