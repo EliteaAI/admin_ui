@@ -30,7 +30,9 @@ import {
   credentialTypeLabels,
   emptyForm,
   formScopes,
+  parseScopes,
   providerOf,
+  scopesFieldText,
   toForm,
   typesMissingScopes,
 } from '@/pages/ConfigurationPage/components/OAuthAppsSection/helpers/oauthApps.helpers';
@@ -55,6 +57,8 @@ const OAuthAppDialog = memo(props => {
   const [replaceSecret, setReplaceSecret] = useState(false);
   const [error, setError] = useState('');
   const [checkResult, setCheckResult] = useState(null);
+  // Free-text scope fields as typed, per credential type
+  const [scopeTexts, setScopeTexts] = useState({});
 
   const [createApp, { isLoading: isCreating }] = useOAuthAppCreateMutation();
   const [updateApp, { isLoading: isUpdating }] = useOAuthAppUpdateMutation();
@@ -70,6 +74,7 @@ const OAuthAppDialog = memo(props => {
       const loaded = toForm(providers, app);
       setForm(loaded);
       setInitialForm(loaded);
+      setScopeTexts({});
       setReplaceSecret(!app);
       setError('');
       setCheckResult(null);
@@ -116,14 +121,10 @@ const OAuthAppDialog = memo(props => {
     [provider],
   );
 
-  const handleScopesText = useCallback(
-    (type, text) =>
-      setForm(prev => ({
-        ...prev,
-        scopes: { ...prev.scopes, [type]: text.split(/[\s,]+/).filter(Boolean) },
-      })),
-    [],
-  );
+  const handleScopesText = useCallback((type, text) => {
+    setScopeTexts(prev => ({ ...prev, [type]: text }));
+    setForm(prev => ({ ...prev, scopes: { ...prev.scopes, [type]: parseScopes(text) } }));
+  }, []);
 
   const handleClose = useCallback(() => {
     if (!isSaving) onClose();
@@ -430,7 +431,7 @@ const OAuthAppDialog = memo(props => {
                           : 'Space-separated scopes'
                       }
                       inputProps={{ 'data-testid': `oauth-app-scopes-${type.type}` }}
-                      value={scopes.join(' ')}
+                      value={scopesFieldText(scopeTexts[type.type], scopes)}
                       onChange={event => handleScopesText(type.type, event.target.value)}
                     />
                   )}
