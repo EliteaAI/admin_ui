@@ -31,6 +31,13 @@ export const typesMissingScopes = (provider, form) =>
     .filter(type => !(form.scopes[type.type] ?? []).length)
     .map(type => type.type);
 
+export const parseScopes = text => text.split(/[\s,]+/).filter(Boolean);
+
+// The free-text scope field shows what was typed while it still parses to the form's scopes, so a space or
+// comma before the next scope is kept; once the scopes change elsewhere (load, defaults) it shows them instead
+export const scopesFieldText = (typed, scopes) =>
+  typed != null && parseScopes(typed).join(' ') === scopes.join(' ') ? typed : scopes.join(' ');
+
 export const emptyForm = provider => ({
   provider: provider?.id ?? '',
   name: '',

@@ -4,7 +4,9 @@ import {
   defaultCredentialTypes,
   emptyForm,
   formScopes,
+  parseScopes,
   providerOf,
+  scopesFieldText,
   toForm,
   typesMissingScopes,
 } from '@/pages/ConfigurationPage/components/OAuthAppsSection/helpers/oauthApps.helpers';
@@ -74,5 +76,25 @@ describe('oauthApps helpers', () => {
     const form = { ...emptyForm(PROVIDER), scopes: { chat: [], files: [], raw: [] } };
     expect(typesMissingScopes(PROVIDER, form)).toEqual(['chat', 'files']);
     expect(typesMissingScopes(PROVIDER, { ...form, credential_types: ['files', 'raw'] })).toEqual(['files']);
+  });
+});
+
+describe('free-text scope field', () => {
+  it('splits on spaces and commas', () => {
+    expect(parseScopes(' User.Read,  Mail.Read  Files.Read ')).toEqual([
+      'User.Read',
+      'Mail.Read',
+      'Files.Read',
+    ]);
+  });
+
+  it('keeps the space or comma typed before the next scope', () => {
+    expect(scopesFieldText('User.Read ', ['User.Read'])).toBe('User.Read ');
+    expect(scopesFieldText('User.Read,', ['User.Read'])).toBe('User.Read,');
+  });
+
+  it('shows the form scopes when nothing was typed or they changed elsewhere', () => {
+    expect(scopesFieldText(undefined, ['User.Read'])).toBe('User.Read');
+    expect(scopesFieldText('', ['User.Read', 'Mail.Read'])).toBe('User.Read Mail.Read');
   });
 });
