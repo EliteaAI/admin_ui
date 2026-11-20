@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmailOutlined';
+import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
 import DataUsageOutlinedIcon from '@mui/icons-material/DataUsageOutlined';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
@@ -39,6 +40,10 @@ const ChatConfigurationSection = memo(props => {
   );
   const nextInputFields = useMemo(
     () => guardrailsFields.filter(f => f.path?.startsWith('next_input_suggestion_guardrail.')),
+    [guardrailsFields],
+  );
+  const codeModeFields = useMemo(
+    () => guardrailsFields.filter(f => f.path?.startsWith('code_mode_experimental.')),
     [guardrailsFields],
   );
   const conversationStartersFields = useMemo(
@@ -125,8 +130,29 @@ const ChatConfigurationSection = memo(props => {
           />
         ),
       },
+      {
+        id: 'code_mode',
+        title: 'Code Mode (beta)',
+        icon: CodeOutlinedIcon,
+        count: codeModeFields.length,
+        content: (
+          <GuardrailsSection
+            fields={codeModeFields}
+            values={guardrailsDraft.values}
+            onChange={guardrailsDraft.onChange}
+          />
+        ),
+      },
     ],
-    [voiceDraft, mentionsDraft, guardrailsDraft, midturnFields, nextInputFields, conversationStartersFields],
+    [
+      voiceDraft,
+      mentionsDraft,
+      guardrailsDraft,
+      midturnFields,
+      nextInputFields,
+      conversationStartersFields,
+      codeModeFields,
+    ],
   );
 
   return (

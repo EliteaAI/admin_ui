@@ -99,6 +99,7 @@ export const LEGACY_SECTION_REDIRECTS = {
   chat_mentions: { page: 'chat_configuration', block: 'chat_mentions' },
   midturn_injection: { page: 'chat_configuration', block: 'midturn_injection' },
   next_input_suggestion: { page: 'chat_configuration', block: 'next_input_suggestion' },
+  code_mode: { page: 'chat_configuration', block: 'code_mode' },
   agent_publishing: { page: 'publishing', block: 'agent_publishing' },
   skill_publishing: { page: 'publishing', block: 'skill_publishing' },
   model_prices_source: { page: 'cost_budgets', block: 'model_prices_source' },

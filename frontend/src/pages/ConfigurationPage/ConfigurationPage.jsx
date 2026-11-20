@@ -72,6 +72,7 @@ const FEATURES_GUARDRAILS_PREFIXES = [
   'publishing_guardrail.',
   'skill_publishing_guardrail.',
   'midturn_injection_guardrail.',
+  'code_mode_experimental.',
   'next_input_suggestion_guardrail.',
   'conversation_starters_guardrail.',
 ];
