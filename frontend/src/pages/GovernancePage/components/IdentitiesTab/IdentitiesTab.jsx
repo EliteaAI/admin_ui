@@ -153,7 +153,12 @@ const IdentitiesTab = memo(() => {
     ({ outcome, row, action }) => {
       setConfirmTarget(null);
       setActivateRow(null);
-      if (outcome === 'stale') {
+      if (outcome === 'changed') {
+        // (#7228) the agent was brought up to date after the dialog was opened
+        showWarning(
+          `The agent of ${rowTitle(row)} changed since you opened it. The list is up to date now; review it again.`,
+        );
+      } else if (outcome === 'stale') {
         showWarning(
           `${rowTitle(row)} was changed by someone else. The list is up to date now; check its state and try again.`,
         );

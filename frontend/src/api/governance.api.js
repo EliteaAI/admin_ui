@@ -113,7 +113,8 @@ const governanceApi = adminApi.injectEndpoints({
       invalidatesTags: ['AgentIdentities'],
     }),
 
-    // The body is { action, expected_state }; approval_ref and policy_revision go with `activate` only.
+    // The body is { action, expected_state }; approval_ref, policy_revision and platform_operations (the approved
+    // subset of the proposal) go with `activate` only.
     // A refused change (for example CONCURRENT_CHANGE) invalidates the tag too, so the list is read again.
     agentIdentityAction: build.mutation({
       query: ({ projectId, bindingId, ...body }) => ({
