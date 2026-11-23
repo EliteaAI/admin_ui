@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { MenuItem, Select, TextField } from '@mui/material';
 
@@ -33,10 +33,24 @@ const SchemaField = memo(props => {
 
   // A nullable number cleared by the user means "no value" (e.g. unlimited), not 0
   const nullable = Array.isArray(field.value_schema?.type) && field.value_schema.type.includes('null');
+  // What the number field shows while it is being edited; null shows the form value
+  const [numberText, setNumberText] = useState(null);
   const handleNumberChange = useCallback(
-    e => onChange(e.target.value === '' && nullable ? null : Number(e.target.value)),
+    e => {
+      const text = e.target.value;
+      setNumberText(text);
+      // An empty field (cleared, or text that is not a number such as a space) is never 0: it is null when
+      // the field allows no value, otherwise the last number stays in the form
+      if (text === '') {
+        if (nullable) onChange(null);
+        return;
+      }
+      onChange(Number(text));
+    },
     [onChange, nullable],
   );
+  const handleNumberBlur = useCallback(() => setNumberText(null), []);
+  const numberMissing = numberText === '' && !nullable;
 
   const styles = schemaFieldStyles();
 
@@ -105,8 +119,11 @@ const SchemaField = memo(props => {
           fullWidth
           size="small"
           type="number"
-          value={value ?? ''}
+          value={numberText ?? value ?? ''}
           onChange={handleNumberChange}
+          onBlur={handleNumberBlur}
+          error={numberMissing}
+          helperText={numberMissing ? 'Enter a number' : undefined}
           inputProps={{ min: field.minimum, max: field.maximum }}
           placeholder="Enter number..."
           sx={styles.textField}
@@ -122,7 +139,9 @@ const SchemaField = memo(props => {
             suggestions={suggestions}
             labels={suggestionLabels}
             literal={format === 'regex_list'}
-            placeholder={format === 'regex_list' ? 'Type a regular expression and press Enter to add' : undefined}
+            placeholder={
+              format === 'regex_list' ? 'Type a regular expression and press Enter to add' : undefined
+            }
           />
         );
       }
