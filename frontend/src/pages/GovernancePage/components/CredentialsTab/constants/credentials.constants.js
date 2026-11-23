@@ -26,7 +26,7 @@ export const SELF_APPROVAL_HINT =
 export const OWNER_ONLY_HINT = 'Only the owner sets a personal value, from their own Credentials page.';
 
 const MIGRATION_TASK = 'create_credential_governance_tables';
-export const MIGRATION_HINT = `Personal credentials need a database update first. Run the admin task ${MIGRATION_TASK} under System → Tasks, then try again.`;
+export const MIGRATION_HINT = `Personal credentials need a database update first. Run the admin task ${MIGRATION_TASK} under Administration → System Tasks, then try again.`;
 
 // The row-menu actions in the order they are offered, and what each does and says when it worked.
 export const ACTION_ORDER = [

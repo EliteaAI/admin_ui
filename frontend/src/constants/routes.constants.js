@@ -17,4 +17,7 @@ export const RouteDefinitions = {
   Features: '/features',
   Reports: '/reports',
   Governance: '/governance',
+  Authentication: '/authentication',
+  ScimProvisioning: '/scim-provisioning',
+  Guardrails: '/guardrails',
 };

@@ -46,7 +46,7 @@ const getDefaultFilters = () => {
 };
 
 const LifecycleAuditPage = memo(() => {
-  usePageTitle('Audit');
+  usePageTitle('Membership Audit');
 
   const styles = lifecycleAuditPageStyles();
 
@@ -184,7 +184,7 @@ const LifecycleAuditPage = memo(() => {
   return (
     <DrawerPage>
       <DrawerPageHeader
-        title="Audit"
+        title="Membership Audit"
         tabs={tabs}
         showSearchInput
         search={search}

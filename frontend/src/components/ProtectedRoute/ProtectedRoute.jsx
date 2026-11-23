@@ -4,21 +4,29 @@ import { Navigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { ROUTE_PERMISSIONS, SIDEBAR_PERMISSIONS } from '@/constants/permissions.constants';
+import {
+  ROUTE_PERMISSIONS,
+  SIDEBAR_PERMISSIONS,
+  SIDEBAR_REQUIRE_ALL_PERMISSIONS,
+} from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 
 const ProtectedRoute = memo(props => {
   const { children, path } = props;
-  const { hasAnyPermission } = useCheckPermission();
+  const { hasAnyPermission, hasAllPermissions, hasSidebarAccess } = useCheckPermission();
 
   const styles = protectedRouteStyles();
 
   const requiredPerms = ROUTE_PERMISSIONS[path];
 
-  if (!requiredPerms || hasAnyPermission(requiredPerms)) return children;
+  // A route key is its path without the leading slash, like the sidebar keys
+  const requiredAll = SIDEBAR_REQUIRE_ALL_PERMISSIONS[path.slice(1)];
+  const allowed = !requiredPerms || (hasAnyPermission(requiredPerms) && hasAllPermissions(requiredAll));
+
+  if (allowed) return children;
 
   const sidebarKeys = Object.keys(SIDEBAR_PERMISSIONS);
-  const firstAllowed = sidebarKeys.find(key => hasAnyPermission(SIDEBAR_PERMISSIONS[key]));
+  const firstAllowed = sidebarKeys.find(hasSidebarAccess);
 
   if (firstAllowed)
     return (

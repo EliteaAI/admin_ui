@@ -19,7 +19,13 @@ const SchedulesSection = memo(props => {
     () =>
       SCHEDULES_CARDS.map(card => ({
         ...card,
-        fields: card.fieldKeys.map(key => schedulesFields.find(f => f.key === key)).filter(Boolean),
+        fields: card.fieldKeys
+          .map(key => {
+            const field = schedulesFields.find(f => f.key === key);
+            const title = card.fieldTitles?.[key];
+            return field && title ? { ...field, title } : field;
+          })
+          .filter(Boolean),
       })),
     [schedulesFields],
   );
@@ -31,7 +37,7 @@ const SchedulesSection = memo(props => {
           key={card.id}
           icon={card.icon}
           title={card.title}
-          count={card.fields.length}
+          count={card.settingsCount ?? card.fields.length}
           expanded={!!expanded[card.id]}
           sectionId={card.id}
           onToggle={toggle}

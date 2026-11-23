@@ -1,7 +1,9 @@
+import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
+import store from '@/store';
 import getDesignTokens from '@/theme/main.theme';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
@@ -9,8 +11,10 @@ import RestoreProjectDialog from '../RestoreProjectDialog';
 
 const mocks = vi.hoisted(() => ({ restore: vi.fn() }));
 
+// The synchronous answer is tested here; the background job query is not followed
 vi.mock('@/api/projectBackup.api', () => ({
   useProjectRestoreMutation: () => [mocks.restore, { isLoading: false }],
+  useProjectRestoreJobQuery: () => ({ data: undefined, error: undefined }),
 }));
 vi.mock('@/hooks/useCheckPermission.hooks', () => ({
   useCheckPermission: () => ({ hasPermission: () => true }),
@@ -23,13 +27,15 @@ const refusal = payload => ({ unwrap: () => Promise.reject({ status: 409, data: 
 
 const renderDialog = () =>
   render(
-    <ThemeProvider theme={theme}>
-      <RestoreProjectDialog
-        open
-        onClose={vi.fn()}
-        project={{ id: 10, name: 'Team Project' }}
-      />
-    </ThemeProvider>,
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <RestoreProjectDialog
+          open
+          onClose={vi.fn()}
+          project={{ id: 10, name: 'Team Project' }}
+        />
+      </ThemeProvider>
+    </Provider>,
   );
 
 const fileInput = () => document.querySelector('input[type="file"]');

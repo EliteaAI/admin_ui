@@ -227,7 +227,7 @@ describe('storage not set up', () => {
     const { user } = await setup(makeSettings({ table_present: false, read: 'missing_table' }));
 
     expect(screen.getByTestId('governance-table-missing')).toHaveTextContent(
-      'Run the task create_governance_settings_tables under System → Tasks.',
+      'Run the task create_governance_settings_tables under Administration → System Tasks.',
     );
 
     await pickMode(user, 'audit_only');

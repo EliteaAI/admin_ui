@@ -157,7 +157,7 @@ describe('lifecycle audit wiring', () => {
 
   it('gates the route and sidebar item with the lifecycle audit permission', () => {
     expect(RouteDefinitions.LifecycleAudit).toBe('/audit');
-    expect(SIDEBAR_PERMISSIONS['lifecycle-audit']).toEqual([PERMISSIONS.lifecycleAudit.view]);
+    expect(SIDEBAR_PERMISSIONS.audit).toEqual([PERMISSIONS.lifecycleAudit.view]);
     expect(ROUTE_PERMISSIONS['/audit']).toEqual([PERMISSIONS.lifecycleAudit.view]);
   });
 });

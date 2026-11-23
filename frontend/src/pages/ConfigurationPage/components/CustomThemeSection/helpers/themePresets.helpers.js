@@ -1,4 +1,4 @@
-import { THEME_PRESETS } from '@/pages/FeaturesPage/components/CustomThemeSection/constants/themePresets.constants';
+import { THEME_PRESETS } from '@/pages/ConfigurationPage/components/CustomThemeSection/constants/themePresets.constants';
 
 /**
  * Deep-compare two palette values (plain objects and primitives), ignoring key order

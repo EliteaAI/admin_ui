@@ -83,7 +83,7 @@ const describeSync = result => {
 const PlatformDimensionsPage = memo(() => {
   const styles = useMemo(() => platformDimensionsPageStyles(), []);
 
-  usePageTitle('Platform dimensions');
+  usePageTitle('Platform Dimensions');
 
   const { hasPermission } = useCheckPermission();
   const canCreate = hasPermission(PERMISSIONS.platformDimensions.create);
@@ -351,7 +351,7 @@ const PlatformDimensionsPage = memo(() => {
     <>
       <DrawerPage>
         <DrawerPageHeader
-          title="Platform dimensions"
+          title="Platform Dimensions"
           showSearchInput
           search={search}
           onSearchChange={setSearch}

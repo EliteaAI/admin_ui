@@ -9,9 +9,7 @@ import {
   WARNING_DISMISSIBLE_FIELD,
   WARNING_THRESHOLD_FIELDS,
 } from '@/pages/FeaturesPage/components/CostBudgetsSection/constants/costBudgets.constants';
-import { complexityThresholdErrors } from '@/pages/FeaturesPage/components/CostBudgetsSection/helpers/complexity.helpers';
 
-import ComplexitySettings from './ComplexitySettings';
 import ModeOffConfirmDialog from './ModeOffConfirmDialog';
 
 const MODE_OPTIONS = [
@@ -118,18 +116,13 @@ const CostBudgets = memo(props => {
     [values],
   );
 
-  const complexityErrors = useMemo(() => complexityThresholdErrors(values), [values]);
-
   // Save lives in the parent, so invalid input has to be reported upwards
   useEffect(() => {
     if (!onValidityChange) return;
 
-    const invalid =
-      budgetsOn &&
-      (Object.values(thresholdErrors).some(Boolean) ||
-        (complexityEnabled && Object.values(complexityErrors).some(Boolean)));
+    const invalid = budgetsOn && Object.values(thresholdErrors).some(Boolean);
     onValidityChange(!invalid);
-  }, [budgetsOn, thresholdErrors, complexityEnabled, complexityErrors, onValidityChange]);
+  }, [budgetsOn, thresholdErrors, onValidityChange]);
 
   return (
     <Box sx={styles.root}>
@@ -315,14 +308,6 @@ const CostBudgets = memo(props => {
         </Box>
       )}
 
-      <ComplexitySettings
-        values={values}
-        onChange={onChange}
-        budgetsOn={budgetsOn}
-        errors={complexityErrors}
-        cardStyles={styles}
-      />
-
       <ModeOffConfirmDialog
         open={confirmOffOpen}
         onConfirm={handleConfirmOff}
@@ -335,7 +320,7 @@ const CostBudgets = memo(props => {
 CostBudgets.displayName = 'CostBudgets';
 
 /** @type {MuiSx} */
-const costBudgetsStyles = () => ({
+export const costBudgetsStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',

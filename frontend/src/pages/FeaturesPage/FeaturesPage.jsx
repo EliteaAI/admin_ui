@@ -1,4 +1,6 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+
+import { useNavigate } from 'react-router-dom';
 
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { Alert, Box, Button, ButtonBase, CircularProgress, Snackbar, Typography } from '@mui/material';
@@ -10,30 +12,41 @@ import {
 } from '@/api/configuration.api';
 import { DrawerPage } from '@/components/DrawerPage';
 import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { RouteDefinitions } from '@/constants/routes.constants';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import { ChatConfigurationSection } from './components/ChatConfigurationSection';
 import { CostBudgetsSection } from './components/CostBudgetsSection';
-import { CustomThemeSection } from './components/CustomThemeSection';
-import { HelpCenterSection } from './components/HelpCenterSection';
 import McpConfigurationSection from './components/McpConfigurationSection';
 import { NotificationsSection } from './components/NotificationsSection';
 import PublishingSection from './components/PublishingSection';
 import { SchedulesSection } from './components/SchedulesSection';
 import { SkillsConfigurationSection } from './components/SkillsConfigurationSection';
-import SupportAssistant from './components/SupportAssistant';
-import { SurveysSection } from './components/SurveysSection';
 import { WebhooksSection } from './components/WebhooksSection';
-import { FEATURES_SECTIONS, LEGACY_SECTION_REDIRECTS } from './constants/features.constants';
+import {
+  FEATURES_SECTIONS,
+  LEGACY_SECTION_REDIRECTS,
+  MOVED_TO_CONFIGURATION,
+} from './constants/features.constants';
 import {
   cleanValuesForSave,
   mergeRequiredRestarts,
+  resolveMovedSection,
   resolveSectionFromHash,
 } from './helpers/features.helpers';
 import { useConfigSectionDraft } from './hooks/useConfigSectionDraft.hooks';
 
 const FeaturesPage = memo(() => {
   const styles = featuresPageStyles();
+  const navigate = useNavigate();
+
+  // Old links to sections that moved to Configuration open them there. Replace, so Back doesn't return here.
+  const [movedSection] = useState(() =>
+    resolveMovedSection(window.location.hash.slice(1), MOVED_TO_CONFIGURATION),
+  );
+  useEffect(() => {
+    if (movedSection) navigate(`${RouteDefinitions.Configuration}#${movedSection}`, { replace: true });
+  }, [movedSection, navigate]);
 
   // Old links to sections that are now blocks open the parent page with that block expanded
   const [initialTarget] = useState(() =>
@@ -42,7 +55,6 @@ const FeaturesPage = memo(() => {
   const [activeSection, setActiveSection] = useState(initialTarget.page);
   const [deepLinkBlock, setDeepLinkBlock] = useState(initialTarget.block);
 
-  const addSurveyRef = useRef(null);
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -58,17 +70,14 @@ const FeaturesPage = memo(() => {
   const { data: schemasData } = useConfigSchemasQuery();
 
   // One draft per backend config section; only the sections the active page edits are fetched
-  const usesSection = sectionId => activeDef.backendSectionIds.includes(sectionId);
+  const usesSection = sectionId => !movedSection && activeDef.backendSectionIds.includes(sectionId);
   const guardrailsDraft = useConfigSectionDraft('guardrails', { skip: !usesSection('guardrails') });
   const voiceDraft = useConfigSectionDraft('voice_features', { skip: !usesSection('voice_features') });
   const mentionsDraft = useConfigSectionDraft('chat_mentions', { skip: !usesSection('chat_mentions') });
   const budgetsDraft = useConfigSectionDraft('cost_budgets', { skip: !usesSection('cost_budgets') });
   const toolSpendDraft = useConfigSectionDraft('tool_spend', { skip: !usesSection('tool_spend') });
   const toolPricingDraft = useConfigSectionDraft('tool_pricing', { skip: !usesSection('tool_pricing') });
-  const supportDraft = useConfigSectionDraft('support_assistant', {
-    skip: !usesSection('support_assistant'),
-  });
-  const resourcesDraft = useConfigSectionDraft('resources', { skip: !usesSection('resources') });
+  const usageDraft = useConfigSectionDraft('Usage', { skip: !usesSection('Usage') });
   const skillsDraft = useConfigSectionDraft('skills', { skip: !usesSection('skills') });
   const notificationsDraft = useConfigSectionDraft('notifications', {
     skip: !usesSection('notifications'),
@@ -84,8 +93,7 @@ const FeaturesPage = memo(() => {
       budgetsDraft,
       toolSpendDraft,
       toolPricingDraft,
-      supportDraft,
-      resourcesDraft,
+      usageDraft,
       skillsDraft,
       notificationsDraft,
       schedulesDraft,
@@ -98,8 +106,7 @@ const FeaturesPage = memo(() => {
       budgetsDraft,
       toolSpendDraft,
       toolPricingDraft,
-      supportDraft,
-      resourcesDraft,
+      usageDraft,
       skillsDraft,
       notificationsDraft,
       schedulesDraft,
@@ -114,9 +121,10 @@ const FeaturesPage = memo(() => {
   const isDirty = activeDrafts.some(draft => draft.isDirty);
   const isLoading = activeDrafts.some(draft => draft.isLoading);
 
+  // While redirecting to Configuration, the hash must stay on the target, not be overwritten with a Features section
   useEffect(() => {
-    window.location.hash = activeSection;
-  }, [activeSection]);
+    if (!movedSection) window.location.hash = activeSection;
+  }, [activeSection, movedSection]);
 
   const [saveValues, { isLoading: saving }] = useConfigValuesSaveMutation();
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
@@ -134,6 +142,11 @@ const FeaturesPage = memo(() => {
   );
   const toolPricingFields = useMemo(
     () => schemasData?.sections?.find(s => s.id === 'tool_pricing')?.fields || [],
+    [schemasData],
+  );
+  // Missing when the usage plugin is not running: Cost & Usage then has no Usage blocks
+  const usageFields = useMemo(
+    () => schemasData?.sections?.find(s => s.id === 'Usage')?.fields,
     [schemasData],
   );
   const skillsFields = useMemo(
@@ -265,14 +278,6 @@ const FeaturesPage = memo(() => {
       );
 
     switch (activeSection) {
-      case 'surveys':
-        return <SurveysSection addRef={addSurveyRef} />;
-      case 'custom_theme':
-        return (
-          <Box sx={styles.formScroll}>
-            <CustomThemeSection />
-          </Box>
-        );
       case 'mcp_configuration':
         return (
           <Box sx={styles.formScroll}>
@@ -313,17 +318,10 @@ const FeaturesPage = memo(() => {
               toolPricingDraft={toolPricingDraft}
               toolSpendFields={toolSpendFields}
               toolPricingFields={toolPricingFields}
+              usageDraft={usageDraft}
+              usageFields={usageFields}
               onValidityChange={setSectionValid}
               initialBlock={deepLinkBlock}
-            />
-          </Box>
-        );
-      case 'help_center':
-        return (
-          <Box sx={styles.formScroll}>
-            <HelpCenterSection
-              values={resourcesDraft.values}
-              onChange={resourcesDraft.onChange}
             />
           </Box>
         );
@@ -367,28 +365,19 @@ const FeaturesPage = memo(() => {
             />
           </Box>
         );
-      case 'support_assistant':
-        return (
-          <Box sx={styles.formScroll}>
-            <SupportAssistant
-              values={supportDraft.values}
-              onChange={supportDraft.onChange}
-            />
-          </Box>
-        );
       default:
         return null;
     }
   };
+
+  // Redirecting to Configuration: render nothing for this one commit
+  if (movedSection) return null;
 
   return (
     <DrawerPage sx={{ overflow: 'hidden' }}>
       <DrawerPageHeader
         title="Features"
         showBorder
-        showAddButton={activeSection === 'surveys'}
-        onAdd={() => addSurveyRef.current?.()}
-        addButtonTooltip="Add survey"
       />
 
       <Box sx={styles.content}>
@@ -418,55 +407,53 @@ const FeaturesPage = memo(() => {
         <Box sx={styles.formArea}>
           {renderContent()}
 
-          {!activeDef.selfSaving && (
-            <Box sx={styles.actionBar}>
-              <Box sx={styles.actionButtons}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={handleDiscard}
-                  disabled={!isDirty || saving}
-                  sx={styles.discardButton}
-                >
-                  Discard
-                </Button>
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={handleSave}
-                  disabled={!isDirty || saving || !sectionValid}
-                  sx={styles.saveButton}
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </Button>
-              </Box>
-
-              {pendingRestarts.length > 0 && (
-                <Box sx={styles.restartBar}>
-                  <Typography
-                    variant="caption"
-                    sx={styles.restartLabel}
-                  >
-                    Reload required:
-                  </Typography>
-                  {pendingRestarts.map(entry => (
-                    <Button
-                      key={entry.pylon_id}
-                      size="small"
-                      variant="outlined"
-                      color="warning"
-                      startIcon={<RestartAltIcon sx={{ fontSize: '0.875rem' }} />}
-                      onClick={() => handleReload(entry.pylon_id, entry.plugins)}
-                      disabled={restarting}
-                      sx={styles.restartButton}
-                    >
-                      {entry.plugins?.length ? entry.plugins.join(', ') : entry.pylon_id}
-                    </Button>
-                  ))}
-                </Box>
-              )}
+          <Box sx={styles.actionBar}>
+            <Box sx={styles.actionButtons}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={handleDiscard}
+                disabled={!isDirty || saving}
+                sx={styles.discardButton}
+              >
+                Discard
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={handleSave}
+                disabled={!isDirty || saving || !sectionValid}
+                sx={styles.saveButton}
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </Button>
             </Box>
-          )}
+
+            {pendingRestarts.length > 0 && (
+              <Box sx={styles.restartBar}>
+                <Typography
+                  variant="caption"
+                  sx={styles.restartLabel}
+                >
+                  Reload required:
+                </Typography>
+                {pendingRestarts.map(entry => (
+                  <Button
+                    key={entry.pylon_id}
+                    size="small"
+                    variant="outlined"
+                    color="warning"
+                    startIcon={<RestartAltIcon sx={{ fontSize: '0.875rem' }} />}
+                    onClick={() => handleReload(entry.pylon_id, entry.plugins)}
+                    disabled={restarting}
+                    sx={styles.restartButton}
+                  >
+                    {entry.plugins?.length ? entry.plugins.join(', ') : entry.pylon_id}
+                  </Button>
+                ))}
+              </Box>
+            )}
+          </Box>
         </Box>
       </Box>
 
