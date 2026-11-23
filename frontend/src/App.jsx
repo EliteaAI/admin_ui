@@ -98,7 +98,7 @@ const router = createBrowserRouter(
       />
       <Route
         path={RouteDefinitions.Configuration}
-        element={guard(RouteDefinitions.Configuration, <ConfigurationPage />)}
+        element={guard(RouteDefinitions.Configuration, <ConfigurationPage key="configuration" />)}
       />
       <Route
         path={RouteDefinitions.Features}
@@ -114,15 +114,33 @@ const router = createBrowserRouter(
       />
       <Route
         path={RouteDefinitions.Authentication}
-        element={guard(RouteDefinitions.Authentication, <ConfigurationPage sectionId="auth" />)}
+        element={guard(
+          RouteDefinitions.Authentication,
+          <ConfigurationPage
+            key="auth"
+            sectionId="auth"
+          />,
+        )}
       />
       <Route
         path={RouteDefinitions.ScimProvisioning}
-        element={guard(RouteDefinitions.ScimProvisioning, <ConfigurationPage sectionId="scim" />)}
+        element={guard(
+          RouteDefinitions.ScimProvisioning,
+          <ConfigurationPage
+            key="scim"
+            sectionId="scim"
+          />,
+        )}
       />
       <Route
         path={RouteDefinitions.Guardrails}
-        element={guard(RouteDefinitions.Guardrails, <ConfigurationPage sectionId="guardrails" />)}
+        element={guard(
+          RouteDefinitions.Guardrails,
+          <ConfigurationPage
+            key="guardrails"
+            sectionId="guardrails"
+          />,
+        )}
       />
       <Route
         path="*"

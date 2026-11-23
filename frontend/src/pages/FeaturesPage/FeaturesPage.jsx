@@ -70,7 +70,7 @@ const FeaturesPage = memo(() => {
   const { data: schemasData } = useConfigSchemasQuery();
 
   // One draft per backend config section; only the sections the active page edits are fetched
-  const usesSection = sectionId => activeDef.backendSectionIds.includes(sectionId);
+  const usesSection = sectionId => !movedSection && activeDef.backendSectionIds.includes(sectionId);
   const guardrailsDraft = useConfigSectionDraft('guardrails', { skip: !usesSection('guardrails') });
   const voiceDraft = useConfigSectionDraft('voice_features', { skip: !usesSection('voice_features') });
   const mentionsDraft = useConfigSectionDraft('chat_mentions', { skip: !usesSection('chat_mentions') });
@@ -121,9 +121,10 @@ const FeaturesPage = memo(() => {
   const isDirty = activeDrafts.some(draft => draft.isDirty);
   const isLoading = activeDrafts.some(draft => draft.isLoading);
 
+  // While redirecting to Configuration, the hash must stay on the target, not be overwritten with a Features section
   useEffect(() => {
-    window.location.hash = activeSection;
-  }, [activeSection]);
+    if (!movedSection) window.location.hash = activeSection;
+  }, [activeSection, movedSection]);
 
   const [saveValues, { isLoading: saving }] = useConfigValuesSaveMutation();
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
@@ -368,6 +369,9 @@ const FeaturesPage = memo(() => {
         return null;
     }
   };
+
+  // Redirecting to Configuration: render nothing for this one commit
+  if (movedSection) return null;
 
   return (
     <DrawerPage sx={{ overflow: 'hidden' }}>

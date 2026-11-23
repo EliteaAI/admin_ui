@@ -219,6 +219,7 @@ const ConfigurationPage = memo(props => {
 
   const {
     data: valuesData,
+    currentData: valuesCurrentData,
     isFetching: valuesFetching,
     isLoading: valuesLoading,
   } = useConfigValuesQuery(
@@ -493,8 +494,9 @@ const ConfigurationPage = memo(props => {
                 );
               case 'support_assistant':
               case 'resources':
-                // Only the first load blocks the page: a refetch after Save must not remount the blocks
-                return valuesLoading ? (
+                // Wait for this section's own values: RTK keeps the previous section's data while a new one loads,
+                // and a refetch after Save must not remount the blocks
+                return valuesFetching && !valuesCurrentData ? (
                   <Box sx={styles.loadingContainer}>
                     <CircularProgress size={24} />
                   </Box>
