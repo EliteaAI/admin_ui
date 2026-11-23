@@ -32,7 +32,7 @@ const NEW_SURVEY = {
 };
 
 /**
- * SurveysSection – used inside FeaturesPage as a sub-section.
+ * SurveysSection – used inside ConfigurationPage as a sub-section.
  * Shows table of surveys; clicking a row opens an edit form.
  */
 const SurveysSection = memo(props => {

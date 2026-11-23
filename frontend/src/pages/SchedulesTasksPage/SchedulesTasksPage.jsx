@@ -24,7 +24,7 @@ const tabFromHash = () => {
 const SchedulesTasksPage = memo(() => {
   const styles = schedulesTasksPageStyles();
 
-  usePageTitle('Schedules & Tasks');
+  usePageTitle('System Tasks');
 
   const { hasPermission } = useCheckPermission();
 
@@ -80,7 +80,7 @@ const SchedulesTasksPage = memo(() => {
   return (
     <DrawerPage sx={{ overflow: 'hidden' }}>
       <DrawerPageHeader
-        title="System"
+        title="System Tasks"
         tabs={tabsElement}
         showBorder
         showSearchInput={activeTab === 'schedules' || activeTab === 'tasks' || activeTab === 'active-tasks'}

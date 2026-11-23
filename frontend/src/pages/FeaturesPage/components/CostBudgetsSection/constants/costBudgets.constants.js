@@ -80,10 +80,12 @@ export const COMPLEXITY_PINNED_FIELDS = COMPLEXITY_LEVELS.map(level => ({
   title: levelTitle(level),
 }));
 
-// Mode select, the apply-defaults, dismissible and complexity toggles, plus every limit and threshold field
-export const COST_BUDGETS_SETTINGS_COUNT =
-  4 +
-  DEFAULT_LIMIT_FIELDS.length +
-  WARNING_THRESHOLD_FIELDS.length +
-  COMPLEXITY_DEFAULT_FIELDS.length +
-  COMPLEXITY_PINNED_FIELDS.length;
+// Mode select, the apply-defaults and dismissible toggles, plus every limit and warning threshold field
+export const COST_BUDGETS_SETTINGS_COUNT = 3 + DEFAULT_LIMIT_FIELDS.length + WARNING_THRESHOLD_FIELDS.length;
+
+// The complexity switch and every threshold field. The retention fields come from the Usage section.
+export const COMPLEXITY_CARD_SETTINGS_COUNT =
+  1 + COMPLEXITY_DEFAULT_FIELDS.length + COMPLEXITY_PINNED_FIELDS.length;
+
+// Usage fields that belong to Complexity Settings; every other Usage field is a metering setting
+export const COMPLEXITY_USAGE_FIELD_PREFIX = 'usage_complexity_';

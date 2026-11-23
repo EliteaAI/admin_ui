@@ -2,7 +2,11 @@ import { useCallback, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { ADMIN_ROLES } from '@/constants/permissions.constants';
+import {
+  ADMIN_ROLES,
+  SIDEBAR_PERMISSIONS,
+  SIDEBAR_REQUIRE_ALL_PERMISSIONS,
+} from '@/constants/permissions.constants';
 
 export const useCheckPermission = () => {
   const permissions = useSelector(state => state.user.permissions);
@@ -30,6 +34,16 @@ export const useCheckPermission = () => {
       return permissionsToCheck.every(permission => permissions.includes(permission));
     },
     [permissions],
+  );
+
+  // A sidebar entry (and its route) needs any of its SIDEBAR_PERMISSIONS and, where listed, all of SIDEBAR_REQUIRE_ALL_PERMISSIONS
+  const hasSidebarAccess = useCallback(
+    key => {
+      const anyOf = SIDEBAR_PERMISSIONS[key];
+      if (anyOf && !hasAnyPermission(anyOf)) return false;
+      return hasAllPermissions(SIDEBAR_REQUIRE_ALL_PERMISSIONS[key]);
+    },
+    [hasAnyPermission, hasAllPermissions],
   );
 
   const hasRole = useCallback(
@@ -68,6 +82,7 @@ export const useCheckPermission = () => {
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
+    hasSidebarAccess,
     hasRole,
     hasAnyRole,
     isSuperAdmin,

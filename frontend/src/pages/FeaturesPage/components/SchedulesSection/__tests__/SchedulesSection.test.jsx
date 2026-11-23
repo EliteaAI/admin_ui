@@ -118,25 +118,24 @@ const setup = (initialValues = SAVED_VALUES) => {
 const blockHeader = title => screen.getByText(title).closest('[role="button"]');
 
 describe('Schedules page', () => {
-  it('sits directly after Notifications in the Features navigation', () => {
+  it('sits between Cost & Usage and Webhooks in the Features navigation', () => {
     const ids = FEATURES_SECTIONS.map(section => section.id);
     const schedules = FEATURES_SECTIONS.find(section => section.id === 'schedules');
 
-    expect(ids.indexOf('notifications')).toBe(ids.indexOf('skills') + 1);
-    expect(ids.indexOf('schedules')).toBe(ids.indexOf('notifications') + 1);
+    expect(ids.indexOf('schedules')).toBe(ids.indexOf('cost_budgets') + 1);
+    expect(ids.indexOf('webhooks')).toBe(ids.indexOf('schedules') + 1);
     expect(schedules.title).toBe('Schedules');
     expect(schedules.backendSectionIds).toEqual(['schedules']);
   });
 
-  it('shows five collapsed cards in order with their setting counts', () => {
+  it('shows four collapsed cards in order with their setting counts', () => {
     setup();
 
     const cards = [
       ['Schedule Settings', '6 settings'],
-      ['Agent Schedules', '1 setting'],
+      ['Agent Schedules', '2 settings'],
       ['Pipeline Schedules', '3 settings'],
       ['Index Schedules', '5 settings'],
-      ['Agent Evaluation', '2 settings'],
     ];
     const headers = screen.getAllByRole('button');
 
@@ -182,16 +181,43 @@ describe('Schedules page', () => {
     expect(screen.getByDisplayValue('0 * * * *')).toBeInTheDocument();
   });
 
-  it('shows the evaluation cron only once scheduled evaluation is on', async () => {
+  it('has no separate Agent Evaluation card', () => {
+    setup();
+
+    expect(screen.queryByText('Agent Evaluation')).not.toBeInTheDocument();
+  });
+
+  it('shows the evaluation switch under the agent scheduling switch, titled for scheduling', async () => {
+    const { user } = setup();
+    await user.click(blockHeader('Agent Schedules'));
+
+    const titles = screen
+      .getAllByRole('switch')
+      .map(toggle => toggle.getAttribute('aria-label') ?? toggle.closest('label')?.textContent);
+
+    expect(screen.getByText('Agent schedules enabled')).toBeInTheDocument();
+    expect(screen.getByText('Agent Evaluation Scheduling Enabled')).toBeInTheDocument();
+    expect(screen.queryByText('Scheduled evaluation enabled')).not.toBeInTheDocument();
+    expect(titles).toHaveLength(2);
+    expect(
+      screen
+        .getByText('Agent schedules enabled')
+        .compareDocumentPosition(screen.getByText('Agent Evaluation Scheduling Enabled')),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('keeps the evaluation switch off by default and shows its cron only once it is on', async () => {
     const { onChange, user } = setup();
-    await user.click(blockHeader('Agent Evaluation'));
+    await user.click(blockHeader('Agent Schedules'));
 
     expect(screen.queryByDisplayValue('17 2 * * 0')).not.toBeInTheDocument();
+    expect(screen.queryByText('Agent Evaluation Scheduling Cron')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('switch'));
+    await user.click(screen.getAllByRole('switch').at(-1));
 
     expect(onChange).toHaveBeenLastCalledWith('eval_auto_run_enabled', true);
     expect(screen.getByDisplayValue('17 2 * * 0')).toBeInTheDocument();
+    expect(screen.getByText('Agent Evaluation Scheduling Cron')).toBeInTheDocument();
   });
 
   it('keeps the webhook settings out of the schedules cards', () => {

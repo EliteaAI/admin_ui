@@ -1,3 +1,6 @@
+/** Returns the Configuration section id a #<id> link now points to, or null when the section stayed on Features. */
+export const resolveMovedSection = (hash, moved) => moved[hash] ?? null;
+
 /** Resolves the URL hash to a nav page, and the block to expand when it is a former standalone section. */
 export const resolveSectionFromHash = (hash, sections, redirects) => {
   const redirect = redirects[hash];

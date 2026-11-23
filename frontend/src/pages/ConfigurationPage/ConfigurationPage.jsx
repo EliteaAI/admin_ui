@@ -1,5 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import AppRegistrationIcon from '@mui/icons-material/AppRegistrationOutlined';
 import CampaignIcon from '@mui/icons-material/CampaignOutlined';
@@ -8,11 +10,15 @@ import ConstructionIcon from '@mui/icons-material/ConstructionOutlined';
 import DnsIcon from '@mui/icons-material/DnsOutlined';
 import GroupsIcon from '@mui/icons-material/GroupsOutlined';
 import LockIcon from '@mui/icons-material/LockOutlined';
+import MenuBookIcon from '@mui/icons-material/MenuBookOutlined';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeartOutlined';
+import PaletteIcon from '@mui/icons-material/PaletteOutlined';
+import PollIcon from '@mui/icons-material/PollOutlined';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import SecurityIcon from '@mui/icons-material/SecurityOutlined';
 import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent';
 import SettingsIcon from '@mui/icons-material/SettingsOutlined';
+import SupportAgentIcon from '@mui/icons-material/SupportAgentOutlined';
 import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
 
 import {
@@ -25,15 +31,20 @@ import { DrawerPage } from '@/components/DrawerPage';
 import { DrawerPageHeader } from '@/components/DrawerPageHeader';
 import { GuardrailsSection, SchemaForm } from '@/components/SchemaForm';
 import { CONFIG_SECTION_PERMISSIONS } from '@/constants/permissions.constants';
+import { RouteDefinitions } from '@/constants/routes.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import { AdvancedSection } from './components/AdvancedSection';
 import { BannersSection } from './components/BannersSection';
+import { CustomThemeSection } from './components/CustomThemeSection';
+import { HelpCenterSection } from './components/HelpCenterSection';
 import { MaintenanceSection } from './components/MaintenanceSection';
 import { OAuthAppsSection } from './components/OAuthAppsSection';
 import { ScimSection } from './components/ScimSection';
 import { ServiceDescriptorsSection } from './components/ServiceDescriptorsSection';
+import SupportAssistant from './components/SupportAssistant';
+import { SurveysSection } from './components/SurveysSection';
 
 const SECTION_ICONS = {
   guardrails: SecurityIcon,
@@ -48,11 +59,14 @@ const SECTION_ICONS = {
   maintenance: ConstructionIcon,
   dedicated_banner: CampaignIcon,
   advanced: CodeIcon,
+  support_assistant: SupportAgentIcon,
+  resources: MenuBookIcon,
+  surveys: PollIcon,
+  custom_theme: PaletteIcon,
 };
 
 const MOVED_TO_FEATURES = [
-  'resources',
-  'support_assistant',
+  'Usage',
   'voice_features',
   'chat_mentions',
   'cost_budgets',
@@ -85,7 +99,31 @@ const SELF_MANAGED_SECTIONS = [
   'dedicated_banner',
   'oauth_apps',
   'scim',
+  'surveys',
+  'custom_theme',
 ];
+
+// The backend names these sections "Advanced" and "Resources"; the admin sees the names below
+const SECTION_TITLES = {
+  advanced: 'Pylons & Plugins',
+  resources: 'Help Center',
+};
+
+// Sections that became their own pages. Old #<id> links on /configuration redirect to the new route.
+const SECTION_ROUTES = {
+  auth: RouteDefinitions.Authentication,
+  scim: RouteDefinitions.ScimProvisioning,
+  guardrails: RouteDefinitions.Guardrails,
+  Usage: `${RouteDefinitions.Features}#usage_settings`,
+};
+
+const NO_PLUGIN_CONFIG_SECTIONS = ['dedicated_banner', 'oauth_apps', 'scim', 'surveys', 'custom_theme'];
+
+const SINGLE_SECTION_TITLES = {
+  auth: 'Authentication',
+  scim: 'SCIM Provisioning',
+  guardrails: 'Guardrails',
+};
 
 const SECTION_ORDER = [
   'advanced',
@@ -93,21 +131,29 @@ const SECTION_ORDER = [
   'dedicated_banner',
   'mcp_servers',
   'oauth_apps',
-  'scim',
-  'guardrails',
-  'observability',
-  'runtime',
-  'auth',
   'service_descriptors',
+  'runtime',
+  'observability',
+  'support_assistant',
+  'resources',
+  'surveys',
+  'custom_theme',
 ];
 
-const ConfigurationPage = memo(() => {
-  const styles = configurationPageStyles();
+const ConfigurationPage = memo(props => {
+  // With sectionId the page shows that one section on its own route: no sub-menu, no URL hash
+  const { sectionId } = props;
 
-  const [activeSection, setActiveSection] = useState(() => window.location.hash.slice(1) || null);
+  const styles = configurationPageStyles();
+  const navigate = useNavigate();
+
+  const [activeSection, setActiveSection] = useState(() =>
+    sectionId ? sectionId : window.location.hash.slice(1) || null,
+  );
   const { hasAnyPermission } = useCheckPermission();
   const [localValues, setLocalValues] = useState({});
   const [bannersDirty, setBannersDirty] = useState(false);
+  const addSurveyRef = useRef(null);
   const [pendingRestarts, setPendingRestarts] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -119,18 +165,21 @@ const ConfigurationPage = memo(() => {
   const { data: schemasData, isLoading: schemasLoading } = useConfigSchemasQuery();
 
   const sections = useMemo(() => {
-    const serverSections = (schemasData?.sections || []).filter(
-      s => s.id !== 'litellm' && !MOVED_TO_FEATURES.includes(s.id),
-    );
+    const serverSections = (schemasData?.sections || [])
+      .filter(s => s.id !== 'litellm' && !MOVED_TO_FEATURES.includes(s.id))
+      .map(s => (SECTION_TITLES[s.id] ? { ...s, title: SECTION_TITLES[s.id] } : s));
 
     const allSections = [
       ...serverSections,
       { id: 'oauth_apps', title: 'OAuth Apps' },
       { id: 'scim', title: 'SCIM Provisioning' },
       { id: 'service_descriptors', title: 'Service Descriptors' },
+      { id: 'surveys', title: 'Surveys' },
+      { id: 'custom_theme', title: 'Custom Theme' },
     ];
 
     const filtered = allSections.filter(s => {
+      if (sectionId ? s.id !== sectionId : s.id in SECTION_ROUTES) return false;
       const requiredPerms = CONFIG_SECTION_PERMISSIONS[s.id];
       if (!requiredPerms) return true;
       return hasAnyPermission(requiredPerms);
@@ -141,15 +190,23 @@ const ConfigurationPage = memo(() => {
       const indexB = SECTION_ORDER.indexOf(b.id);
       return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
     });
-  }, [schemasData, hasAnyPermission]);
+  }, [schemasData, hasAnyPermission, sectionId]);
+
+  // Old #auth, #scim and #guardrails links open the new pages. Replace, so Back doesn't return here.
+  // Runs before the fallback below, which would otherwise swap the hash for Advanced.
+  const redirectRoute = !sectionId && SECTION_ROUTES[window.location.hash.slice(1)];
+  useEffect(() => {
+    if (redirectRoute) navigate(redirectRoute, { replace: true });
+  }, [redirectRoute, navigate]);
 
   // Sync active section to URL hash
   useEffect(() => {
-    if (activeSection) window.location.hash = activeSection;
-  }, [activeSection]);
+    if (activeSection && !sectionId && !redirectRoute) window.location.hash = activeSection;
+  }, [activeSection, sectionId, redirectRoute]);
 
   // Set Advanced as default on load, validate hash section exists
   useEffect(() => {
+    if (sectionId || redirectRoute) return;
     if (schemasLoading || sections.length === 0) return;
     if (!activeSection) {
       const advancedSection = sections.find(s => s.id === 'advanced');
@@ -158,7 +215,7 @@ const ConfigurationPage = memo(() => {
       const advancedSection = sections.find(s => s.id === 'advanced');
       setActiveSection(advancedSection?.id || sections[0].id);
     }
-  }, [sections, activeSection, schemasLoading]);
+  }, [sections, activeSection, schemasLoading, sectionId, redirectRoute]);
 
   const {
     data: valuesData,
@@ -166,9 +223,9 @@ const ConfigurationPage = memo(() => {
     isLoading: valuesLoading,
   } = useConfigValuesQuery(
     { sectionId: activeSection },
-    // Banners and OAuth apps have their own storage, so these sections have no plugin-config values to load
+    // These sections have their own storage, so they have no plugin-config values to load
     {
-      skip: !activeSection || ['dedicated_banner', 'oauth_apps', 'scim'].includes(activeSection),
+      skip: !activeSection || NO_PLUGIN_CONFIG_SECTIONS.includes(activeSection),
       refetchOnMountOrArgChange: true,
     },
   );
@@ -223,10 +280,11 @@ const ConfigurationPage = memo(() => {
 
   // Set dynamic page title based on current section
   const pageTitle = useMemo(() => {
+    if (sectionId) return activeSection_?.title || '';
     if (activeSection_?.title) return `Configuration: ${activeSection_.title}`;
 
     return 'Configuration';
-  }, [activeSection_]);
+  }, [activeSection_, sectionId]);
 
   usePageTitle(pageTitle);
 
@@ -235,7 +293,7 @@ const ConfigurationPage = memo(() => {
   }, []);
 
   const handleSectionChange = useCallback(
-    sectionId => {
+    nextSectionId => {
       if (isDirty || bannersDirty) {
         const confirmed = window.confirm('You have unsaved changes. Discard them?');
         if (!confirmed) return;
@@ -243,11 +301,15 @@ const ConfigurationPage = memo(() => {
       // The banner section skips the values query, so discarded edits must be dropped here
       setLocalValues(serverValuesRef.current);
       setBannersDirty(false);
-      setActiveSection(sectionId);
+      setActiveSection(nextSectionId);
       setPendingRestarts([]);
     },
     [isDirty, bannersDirty],
   );
+
+  const handleAddSurvey = useCallback(() => {
+    addSurveyRef.current?.();
+  }, []);
 
   const handleDiscard = useCallback(() => {
     setLocalValues(serverValuesRef.current);
@@ -329,11 +391,17 @@ const ConfigurationPage = memo(() => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
+  // The header names the page; a single-section page is titled after its section
+  const headerTitle = sectionId ? SINGLE_SECTION_TITLES[sectionId] : 'Configuration';
+
+  // The old section is not shown, not even for one render: it would load data for a page we are leaving
+  if (redirectRoute) return null;
+
   if (schemasLoading) {
     return (
       <DrawerPage>
         <DrawerPageHeader
-          title="Configuration"
+          title={headerTitle}
           showBorder
         />
         <Box sx={styles.loadingContainer}>
@@ -346,33 +414,38 @@ const ConfigurationPage = memo(() => {
   return (
     <DrawerPage sx={{ overflow: 'hidden' }}>
       <DrawerPageHeader
-        title="Configuration"
+        title={headerTitle}
         showBorder
+        showAddButton={activeSection === 'surveys'}
+        onAdd={handleAddSurvey}
+        addButtonTooltip="Add survey"
       />
 
       <Box sx={styles.content}>
         {/* Section sidebar */}
-        <Box sx={styles.sectionSidebar}>
-          {sections.map(section => {
-            const IconComponent = SECTION_ICONS[section.id] || SettingsIcon;
-            const isActive = activeSection === section.id;
-            return (
-              <Box
-                key={section.id}
-                onClick={() => handleSectionChange(section.id)}
-                sx={styles.sectionItem(isActive)}
-              >
-                <IconComponent sx={{ fontSize: '1rem' }} />
-                <Typography
-                  variant="body2"
-                  sx={styles.sectionItemText(isActive)}
+        {!sectionId && (
+          <Box sx={styles.sectionSidebar}>
+            {sections.map(section => {
+              const IconComponent = SECTION_ICONS[section.id] || SettingsIcon;
+              const isActive = activeSection === section.id;
+              return (
+                <Box
+                  key={section.id}
+                  onClick={() => handleSectionChange(section.id)}
+                  sx={styles.sectionItem(isActive)}
                 >
-                  {section.title}
-                </Typography>
-              </Box>
-            );
-          })}
-        </Box>
+                  <IconComponent sx={{ fontSize: '1rem' }} />
+                  <Typography
+                    variant="body2"
+                    sx={styles.sectionItemText(isActive)}
+                  >
+                    {section.title}
+                  </Typography>
+                </Box>
+              );
+            })}
+          </Box>
+        )}
 
         {/* Form content */}
         <Box sx={styles.formArea}>
@@ -408,6 +481,36 @@ const ConfigurationPage = memo(() => {
                 return (
                   <Box sx={styles.formScroll}>
                     <ScimSection />
+                  </Box>
+                );
+              case 'surveys':
+                return <SurveysSection addRef={addSurveyRef} />;
+              case 'custom_theme':
+                return (
+                  <Box sx={styles.formScroll}>
+                    <CustomThemeSection />
+                  </Box>
+                );
+              case 'support_assistant':
+              case 'resources':
+                // Only the first load blocks the page: a refetch after Save must not remount the blocks
+                return valuesLoading ? (
+                  <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <Box sx={styles.formScroll}>
+                    {activeSection === 'resources' ? (
+                      <HelpCenterSection
+                        values={localValues}
+                        onChange={handleFieldChange}
+                      />
+                    ) : (
+                      <SupportAssistant
+                        values={localValues}
+                        onChange={handleFieldChange}
+                      />
+                    )}
                   </Box>
                 );
               case 'guardrails': {

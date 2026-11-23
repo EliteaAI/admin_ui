@@ -121,7 +121,7 @@ const OverviewTab = memo(props => {
           {canOpenSchedules ? (
             <Link
               component={RouterLink}
-              to={`${RouteDefinitions.Features}#schedules`}
+              to={`${RouteDefinitions.Features}#agent_evaluation`}
               variant="bodySmall"
               data-testid="eval-auto-schedules-link"
             >

@@ -1,5 +1,4 @@
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
-import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import ManageSearchOutlinedIcon from '@mui/icons-material/ManageSearchOutlined';
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
@@ -24,7 +23,14 @@ export const SCHEDULES_CARDS = [
     id: 'agent_schedules',
     title: 'Agent Schedules',
     icon: SmartToyOutlinedIcon,
-    fieldKeys: ['agent_scheduling_enabled'],
+    fieldKeys: ['agent_scheduling_enabled', 'eval_auto_run_enabled', 'eval_auto_run_cron'],
+    // The evaluation cron belongs to its switch and only shows once the switch is on, so the card counts two switches
+    settingsCount: 2,
+    // Frontend-only titles: the backend schema keeps calling the evaluation switch "Scheduled Agent Evaluation Enabled"
+    fieldTitles: {
+      eval_auto_run_enabled: 'Agent Evaluation Scheduling Enabled',
+      eval_auto_run_cron: 'Agent Evaluation Scheduling Cron',
+    },
   },
   {
     id: 'pipeline_schedules',
@@ -43,11 +49,5 @@ export const SCHEDULES_CARDS = [
       'index_scheduling_enabled',
       'index_scheduling_cron',
     ],
-  },
-  {
-    id: 'agent_evaluation',
-    title: 'Agent Evaluation',
-    icon: FactCheckOutlinedIcon,
-    fieldKeys: ['eval_auto_run_enabled', 'eval_auto_run_cron'],
   },
 ];

@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { Box, Typography } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
-import { getNestedValue } from '@/pages/FeaturesPage/components/CustomThemeSection/helpers/nestedValue.helpers';
+import { getNestedValue } from '@/pages/ConfigurationPage/components/CustomThemeSection/helpers/nestedValue.helpers';
 
 import ColorPickerField from './ColorPickerField';
 

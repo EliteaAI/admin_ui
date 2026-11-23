@@ -3,23 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import BudgetsIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
-import AssignmentIcon from '@mui/icons-material/AssignmentOutlined';
-import FactCheckIcon from '@mui/icons-material/FactCheckOutlined';
-import FolderIcon from '@mui/icons-material/FolderOutlined';
-import GovernanceIcon from '@mui/icons-material/GppGoodOutlined';
-import HistoryIcon from '@mui/icons-material/HistoryOutlined';
-import ModelTrainingIcon from '@mui/icons-material/ModelTrainingOutlined';
-import PeopleIcon from '@mui/icons-material/PeopleOutline';
-import PriceChangeIcon from '@mui/icons-material/PriceChangeOutlined';
-import RuleOutlinedIcon from '@mui/icons-material/RuleOutlined';
-import ScheduleIcon from '@mui/icons-material/ScheduleOutlined';
-import SecurityIcon from '@mui/icons-material/SecurityOutlined';
-import SettingsIcon from '@mui/icons-material/SettingsOutlined';
-import SummarizeOutlinedIcon from '@mui/icons-material/SummarizeOutlined';
 import TravelExploreIcon from '@mui/icons-material/TravelExploreOutlined';
-import TuneIcon from '@mui/icons-material/TuneOutlined';
-import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import {
   Box,
   Divider,
@@ -35,161 +19,60 @@ import {
 import { useToolSpendFeaturesQuery } from '@/api/budgets.api';
 import { ArrowLeftIcon, ArrowRightIcon, EliteAIcon, LogoutIcon } from '@/components/Icons';
 import { COLLAPSED_DRAWER_WIDTH, DRAWER_WIDTH } from '@/components/Layout/constants/layout.constants';
+import { MENU_GROUPS } from '@/components/Layout/constants/menu.constants';
 import { SIDEBAR_PERMISSIONS } from '@/constants/permissions.constants';
 import { RouteDefinitions } from '@/constants/routes.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
-import { toggleSidebarCollapsed } from '@/store';
+import { setSidebarGroupOpen, toggleSidebarCollapsed } from '@/store';
 
+import SidebarGroup from './SidebarGroup';
+import SidebarMenuItem from './SidebarMenuItem';
 import ThemeModeToggle from './ThemeModeToggle';
 import UserAvatar from './UserAvatar';
 
-const TOP_MENU_ITEMS = [
-  {
-    id: 'users',
-    label: 'Users',
-    icon: PeopleIcon,
-    url: RouteDefinitions.Users,
-  },
-  {
-    id: 'roles',
-    label: 'Roles',
-    icon: SecurityIcon,
-    url: RouteDefinitions.Roles,
-  },
-  {
-    id: 'projects',
-    label: 'Projects',
-    icon: FolderIcon,
-    url: RouteDefinitions.Projects,
-  },
-  {
-    id: 'budgets',
-    label: 'Budgets',
-    icon: BudgetsIcon,
-    url: RouteDefinitions.Budgets,
-  },
-  {
-    id: 'platform-dimensions',
-    label: 'Eval Dimensions',
-    icon: RuleOutlinedIcon,
-    url: RouteDefinitions.PlatformDimensions,
-  },
-  {
-    id: 'agent-evaluation',
-    label: 'Agent Evaluation',
-    icon: FactCheckIcon,
-    url: RouteDefinitions.AgentEvaluation,
-  },
-  {
-    id: 'secrets',
-    label: 'Secrets',
-    icon: VpnKeyOutlinedIcon,
-    url: RouteDefinitions.Secrets,
-  },
-  {
-    id: 'litellm',
-    label: 'LiteLLM',
-    icon: ModelTrainingIcon,
-    url: RouteDefinitions.LiteLLM,
-  },
-  {
-    id: 'model-prices',
-    label: 'Model Prices',
-    icon: PriceChangeIcon,
-    url: RouteDefinitions.ModelPrices,
-  },
-  {
-    id: 'app-requests',
-    label: 'App Requests',
-    icon: AssignmentIcon,
-    url: RouteDefinitions.AppRequests,
-  },
-  {
-    id: 'reports',
-    label: 'Reports',
-    icon: SummarizeOutlinedIcon,
-    url: RouteDefinitions.Reports,
-  },
-];
-
 const TOOL_SPEND_SEGMENT = 'tool-spend';
 const TOOL_SPEND_ID_PREFIX = `${TOOL_SPEND_SEGMENT}-`;
-
-const BOTTOM_MENU_ITEMS = [
-  {
-    id: 'configuration',
-    label: 'Configuration',
-    icon: SettingsIcon,
-    url: RouteDefinitions.Configuration,
-  },
-  {
-    id: 'features',
-    label: 'Features',
-    icon: TuneIcon,
-    url: RouteDefinitions.Features,
-  },
-  {
-    id: 'audit-trail',
-    label: 'Audit Trail',
-    icon: HistoryIcon,
-    url: RouteDefinitions.AuditTrail,
-  },
-  {
-    id: 'lifecycle-audit',
-    label: 'Audit',
-    icon: FactCheckIcon,
-    url: RouteDefinitions.LifecycleAudit,
-  },
-  {
-    id: 'governance',
-    label: 'Governance',
-    icon: GovernanceIcon,
-    url: RouteDefinitions.Governance,
-  },
-  {
-    id: 'schedules-tasks',
-    label: 'System',
-    icon: ScheduleIcon,
-    url: RouteDefinitions.SchedulesTasks,
-  },
-];
 
 const Sidebar = memo(() => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
+  const sidebarGroupsOpen = useSelector(state => state.settings.sidebarGroupsOpen);
   const socketConnected = useSelector(state => state.settings.socketConnected);
   const user = useSelector(state => state.user.user);
-  const { hasAnyPermission } = useCheckPermission();
+  const { hasAnyPermission, hasSidebarAccess } = useCheckPermission();
   const styles = sidebarStyles(sideBarCollapsed, socketConnected);
   const [anchorEl, setAnchorEl] = useState(null);
 
   const canViewBudgets = hasAnyPermission(SIDEBAR_PERMISSIONS.budgets);
   const { data: toolSpendFeatures } = useToolSpendFeaturesQuery(undefined, { skip: !canViewBudgets });
 
-  // One entry per Tool Spend feature right after Budgets
-  const filteredTopMenuItems = useMemo(() => {
-    const featureItems = (canViewBudgets ? toolSpendFeatures || [] : []).map(item => ({
-      // Prefixed so a feature name can never collide with a fixed entry's id or React key
-      id: `${TOOL_SPEND_ID_PREFIX}${item.feature}`,
-      label: item.label,
-      icon: TravelExploreIcon,
-      url: `${RouteDefinitions.ToolSpend}/${item.feature}`,
-    }));
-    return TOP_MENU_ITEMS.filter(item => {
-      const required = SIDEBAR_PERMISSIONS[item.id];
-      return !required || hasAnyPermission(required);
-    }).flatMap(item => (item.id === 'budgets' ? [item, ...featureItems] : [item]));
-  }, [hasAnyPermission, canViewBudgets, toolSpendFeatures]);
+  const isVisible = useCallback(item => hasSidebarAccess(item.id), [hasSidebarAccess]);
 
-  const filteredBottomMenuItems = useMemo(
+  // One entry per Tool Spend feature right after Budgets, wherever Budgets sits
+  const withToolSpendItems = useCallback(
+    items => {
+      const featureItems = (canViewBudgets ? toolSpendFeatures || [] : []).map(item => ({
+        // Prefixed so a feature name can never collide with a fixed entry's id or React key
+        id: `${TOOL_SPEND_ID_PREFIX}${item.feature}`,
+        label: item.label,
+        icon: TravelExploreIcon,
+        url: `${RouteDefinitions.ToolSpend}/${item.feature}`,
+      }));
+      return items.flatMap(item => (item.id === 'budgets' ? [item, ...featureItems] : [item]));
+    },
+    [canViewBudgets, toolSpendFeatures],
+  );
+
+  // A group with no visible entry is not rendered, heading included
+  const visibleGroups = useMemo(
     () =>
-      BOTTOM_MENU_ITEMS.filter(item => {
-        const required = SIDEBAR_PERMISSIONS[item.id];
-        return !required || hasAnyPermission(required);
-      }),
-    [hasAnyPermission],
+      MENU_GROUPS.map(group => ({
+        ...group,
+        items: withToolSpendItems(group.items.filter(isVisible)),
+      })).filter(group => group.items.length > 0),
+    [isVisible, withToolSpendItems],
   );
 
   const isActiveTab = useCallback(
@@ -204,11 +87,23 @@ const Sidebar = memo(() => {
     [location.pathname],
   );
 
+  const activeGroupId = useMemo(
+    () => visibleGroups.find(group => group.items.some(item => isActiveTab(item.id)))?.id ?? null,
+    [visibleGroups, isActiveTab],
+  );
+
   const handleItemClick = useCallback(
     url => {
       navigate(url);
     },
     [navigate],
+  );
+
+  const handleGroupToggle = useCallback(
+    (groupId, open) => {
+      dispatch(setSidebarGroupOpen({ groupId, open }));
+    },
+    [dispatch],
   );
 
   const handleUserMenuOpen = useCallback(event => {
@@ -229,40 +124,34 @@ const Sidebar = memo(() => {
   }, [dispatch]);
 
   const renderMenuItem = useCallback(
-    tab => {
-      const IconComponent = tab.icon;
-      const isActive = isActiveTab(tab.id);
-      return (
-        <Box
-          key={tab.id}
-          onClick={() => handleItemClick(tab.url)}
-          sx={styles.menuItem(isActive)}
+    item => (
+      <SidebarMenuItem
+        key={item.id}
+        item={item}
+        isActive={isActiveTab(item.id)}
+        collapsed={sideBarCollapsed}
+        onSelect={handleItemClick}
+      />
+    ),
+    [isActiveTab, sideBarCollapsed, handleItemClick],
+  );
+
+  const renderedGroups = useMemo(
+    () =>
+      visibleGroups.map((group, index) => (
+        <SidebarGroup
+          key={group.id}
+          group={group}
+          expanded={group.id === activeGroupId || sidebarGroupsOpen[group.id] === true}
+          locked={group.id === activeGroupId}
+          collapsed={sideBarCollapsed}
+          showDivider={index > 0}
+          onToggle={handleGroupToggle}
         >
-          <Box sx={styles.iconWrapper(isActive)}>
-            <IconComponent sx={{ fontSize: '0.875rem' }} />
-          </Box>
-          {!sideBarCollapsed && (
-            <Typography
-              variant="labelSmall"
-              sx={styles.menuItemText(isActive)}
-            >
-              {tab.label}
-            </Typography>
-          )}
-        </Box>
-      );
-    },
-    [isActiveTab, styles, handleItemClick, sideBarCollapsed],
-  );
-
-  const renderedTopTabs = useMemo(
-    () => filteredTopMenuItems.map(renderMenuItem),
-    [renderMenuItem, filteredTopMenuItems],
-  );
-
-  const renderedBottomTabs = useMemo(
-    () => filteredBottomMenuItems.map(renderMenuItem),
-    [renderMenuItem, filteredBottomMenuItems],
+          {group.items.map(renderMenuItem)}
+        </SidebarGroup>
+      )),
+    [visibleGroups, activeGroupId, sidebarGroupsOpen, sideBarCollapsed, handleGroupToggle, renderMenuItem],
   );
 
   const userName = user?.name || 'Admin';
@@ -297,11 +186,9 @@ const Sidebar = memo(() => {
           {!sideBarCollapsed && <ThemeModeToggle />}
         </Box>
 
-        <Box sx={styles.topMenuContainer}>{renderedTopTabs}</Box>
+        <Box sx={styles.topMenuContainer}>{renderedGroups}</Box>
 
         <Box sx={styles.bottomSection}>
-          <Divider sx={styles.divider} />
-          <Box sx={styles.bottomMenuContainer}>{renderedBottomTabs}</Box>
           <Divider sx={styles.divider} />
 
           <Box sx={styles.userSection}>
@@ -462,24 +349,18 @@ const sidebarStyles = (collapsed, socketConnected) => ({
     paddingLeft: '0.75rem',
     paddingRight: '0.75rem',
     boxSizing: 'border-box',
-    gap: '0.5rem',
+    gap: '0.75rem',
     maxWidth: '100%',
+    flex: '1 1 auto',
+    minHeight: 0,
+    overflowY: 'auto',
   },
 
   bottomSection: {
-    flex: 1,
+    flex: '0 0 auto',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-end',
-  },
-
-  bottomMenuContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '0.5rem 0.75rem',
-    boxSizing: 'border-box',
-    gap: '0.5rem',
-    maxWidth: '100%',
   },
 
   divider: ({ palette }) => ({
@@ -534,47 +415,6 @@ const sidebarStyles = (collapsed, socketConnected) => ({
     minWidth: '1rem !important',
     marginRight: '0.75rem',
   },
-
-  menuItem:
-    isActive =>
-    ({ palette }) => ({
-      padding: collapsed ? '0.5rem' : '0.5rem 1rem',
-      justifyContent: collapsed ? 'center' : 'flex-start',
-      gap: '0.5rem',
-      display: 'flex',
-      alignItems: 'center',
-      width: '100%',
-      maxWidth: '100%',
-      height: '2rem',
-      background: isActive
-        ? palette.background.userInputBackgroundActive
-        : palette.background.conversation.normal,
-      borderRadius: '0.375rem',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease-in-out',
-      boxSizing: 'border-box',
-      '&:hover': {
-        backgroundColor: palette.background.conversation.hover,
-      },
-    }),
-
-  iconWrapper:
-    isActive =>
-    ({ palette }) => ({
-      display: 'flex',
-      alignItems: 'center',
-      minWidth: '0.875rem',
-      color: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
-      '& svg': {
-        fill: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
-      },
-    }),
-
-  menuItemText:
-    isActive =>
-    ({ palette }) => ({
-      color: isActive ? palette.text.secondary : palette.text.metrics,
-    }),
 });
 
 export default Sidebar;

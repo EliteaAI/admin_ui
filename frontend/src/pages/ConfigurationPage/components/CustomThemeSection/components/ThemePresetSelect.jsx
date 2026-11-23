@@ -7,8 +7,8 @@ import { Box, Chip, FormControl, InputLabel, MenuItem, Select, Tooltip, Typograp
 import {
   PRESET_SWATCH_PATHS,
   THEME_PRESETS,
-} from '@/pages/FeaturesPage/components/CustomThemeSection/constants/themePresets.constants';
-import { getNestedValue } from '@/pages/FeaturesPage/components/CustomThemeSection/helpers/nestedValue.helpers';
+} from '@/pages/ConfigurationPage/components/CustomThemeSection/constants/themePresets.constants';
+import { getNestedValue } from '@/pages/ConfigurationPage/components/CustomThemeSection/helpers/nestedValue.helpers';
 
 const ThemePresetSelect = memo(props => {
   const { mode, value, isModified, onSelect, disabled } = props;

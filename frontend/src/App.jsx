@@ -113,6 +113,18 @@ const router = createBrowserRouter(
         element={guard(RouteDefinitions.Governance, <GovernancePage />)}
       />
       <Route
+        path={RouteDefinitions.Authentication}
+        element={guard(RouteDefinitions.Authentication, <ConfigurationPage sectionId="auth" />)}
+      />
+      <Route
+        path={RouteDefinitions.ScimProvisioning}
+        element={guard(RouteDefinitions.ScimProvisioning, <ConfigurationPage sectionId="scim" />)}
+      />
+      <Route
+        path={RouteDefinitions.Guardrails}
+        element={guard(RouteDefinitions.Guardrails, <ConfigurationPage sectionId="guardrails" />)}
+      />
+      <Route
         path="*"
         element={<NotFound />}
       />

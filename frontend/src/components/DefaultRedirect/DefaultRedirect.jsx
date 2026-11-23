@@ -7,10 +7,10 @@ import { RouteDefinitions } from '@/constants/routes.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 
 const DefaultRedirect = memo(() => {
-  const { hasAnyPermission } = useCheckPermission();
+  const { hasSidebarAccess } = useCheckPermission();
 
   const sidebarKeys = Object.keys(SIDEBAR_PERMISSIONS);
-  const firstAllowed = sidebarKeys.find(key => hasAnyPermission(SIDEBAR_PERMISSIONS[key]));
+  const firstAllowed = sidebarKeys.find(hasSidebarAccess);
 
   return (
     <Navigate

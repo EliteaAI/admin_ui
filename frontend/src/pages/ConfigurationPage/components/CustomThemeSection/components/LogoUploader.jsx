@@ -20,7 +20,7 @@ import {
   LOGO_ALLOWED_TYPES,
   LOGO_MAX_SIZE_BYTES,
   LOGO_MAX_SIZE_LABEL,
-} from '@/pages/FeaturesPage/components/CustomThemeSection/constants/customTheme.constants';
+} from '@/pages/ConfigurationPage/components/CustomThemeSection/constants/customTheme.constants';
 
 const LogoUploader = memo(props => {
   const { logoUrl, onUpload, onDelete, onError, isUploading, isDeleting } = props;

@@ -78,7 +78,10 @@ describe('the schedule', () => {
   it('links to Features → Schedules only with the runtime permission', async () => {
     await setup({ permissions: [VIEW, PERMISSIONS.runtime.plugins] });
 
-    expect(screen.getByTestId('eval-auto-schedules-link')).toHaveAttribute('href', '/features#schedules');
+    expect(screen.getByTestId('eval-auto-schedules-link')).toHaveAttribute(
+      'href',
+      '/features#agent_evaluation',
+    );
   });
 
   it('asks for no schedules without the scheduling permission', async () => {

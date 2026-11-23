@@ -9,7 +9,7 @@ import { Box, Chip, IconButton, Popover, TextField, Tooltip, Typography } from '
 import {
   isGradient,
   isValidColor,
-} from '@/pages/FeaturesPage/components/CustomThemeSection/helpers/color.helpers';
+} from '@/pages/ConfigurationPage/components/CustomThemeSection/helpers/color.helpers';
 import { Sketch } from '@uiw/react-color';
 
 const ColorPickerField = memo(props => {
