@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 import store from '@/store';
 import getDesignTokens from '@/theme/main.theme';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import ConfigurationPage from '../ConfigurationPage';
 
@@ -38,7 +38,9 @@ const mocks = vi.hoisted(() => {
     fields_meta: {},
   };
   const valuesResponse = { data: values, currentData: values, isFetching: false, isLoading: false };
-  return { schemas, valuesResponse };
+  // What RTK Query returns while the same section refetches after Save: the previous data stays as currentData
+  const refetchingResponse = { ...valuesResponse, isFetching: true };
+  return { schemas, settledResponse: valuesResponse, valuesResponse, refetchingResponse };
 });
 
 vi.mock('@/api/configuration.api', async importOriginal => ({
@@ -53,25 +55,30 @@ vi.mock('@/hooks/useCheckPermission.hooks', () => ({
   useCheckPermission: () => ({ hasAnyPermission: () => true }),
 }));
 
-afterEach(() => window.history.replaceState(null, '', window.location.pathname));
+afterEach(() => {
+  mocks.valuesResponse = mocks.settledResponse;
+  window.history.replaceState(null, '', window.location.pathname);
+});
+
+const renderPage = () => (
+  <Provider store={store}>
+    <ThemeProvider theme={createTheme(getDesignTokens('dark'))}>
+      <MemoryRouter initialEntries={['/configuration']}>
+        <Routes>
+          <Route
+            path="*"
+            element={<ConfigurationPage />}
+          />
+        </Routes>
+      </MemoryRouter>
+    </ThemeProvider>
+  </Provider>
+);
 
 describe('Runtime section', () => {
   it('groups the settings into a Pylon Indexer card and a Pylon Main card, collapsed by default', () => {
     window.history.replaceState(null, '', '#runtime');
-    render(
-      <Provider store={store}>
-        <ThemeProvider theme={createTheme(getDesignTokens('dark'))}>
-          <MemoryRouter initialEntries={['/configuration']}>
-            <Routes>
-              <Route
-                path="*"
-                element={<ConfigurationPage />}
-              />
-            </Routes>
-          </MemoryRouter>
-        </ThemeProvider>
-      </Provider>,
-    );
+    render(renderPage());
 
     const indexerHeader = screen.getByRole('button', { name: /Pylon Indexer/ });
     const mainHeader = screen.getByRole('button', { name: /Pylon Main/ });
@@ -80,5 +87,20 @@ describe('Runtime section', () => {
     expect(mainHeader).toHaveAttribute('aria-expanded', 'false');
     expect(indexerHeader.textContent).toContain('2 settings');
     expect(mainHeader.textContent).toContain('1 setting');
+  });
+
+  it('keeps an expanded card open while its values refetch after Save', () => {
+    window.history.replaceState(null, '', '#runtime');
+    const { rerender } = render(renderPage());
+    fireEvent.click(screen.getByRole('button', { name: /Pylon Indexer/ }));
+    expect(screen.getByRole('button', { name: /Pylon Indexer/ })).toHaveAttribute('aria-expanded', 'true');
+
+    mocks.valuesResponse = mocks.refetchingResponse;
+    rerender(renderPage());
+    expect(screen.getByRole('button', { name: /Pylon Indexer/ })).toHaveAttribute('aria-expanded', 'true');
+
+    mocks.valuesResponse = mocks.settledResponse;
+    rerender(renderPage());
+    expect(screen.getByRole('button', { name: /Pylon Indexer/ })).toHaveAttribute('aria-expanded', 'true');
   });
 });

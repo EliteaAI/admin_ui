@@ -518,7 +518,8 @@ const ConfigurationPage = memo(props => {
                 );
               case 'runtime':
               case 'observability':
-                return valuesFetching ? (
+                // A refetch after Save keeps the cards mounted, so an expanded card stays open
+                return valuesFetching && !valuesCurrentData ? (
                   <Box sx={styles.loadingContainer}>
                     <CircularProgress size={24} />
                   </Box>
