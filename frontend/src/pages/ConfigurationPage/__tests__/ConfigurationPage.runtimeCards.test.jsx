@@ -32,9 +32,25 @@ const mocks = vi.hoisted(() => {
       pylon_id: 'pylon_indexer_1a2b3c4d-1111-2222-3333-444444444444',
     },
   ];
-  const schemas = { data: { sections: [{ id: 'runtime', title: 'Runtime', fields: RUNTIME_FIELDS }] } };
+  // Observability has a Pylon Indexer card on the same instance as Runtime's, so both sections share one card id
+  const OBSERVABILITY_FIELDS = [
+    {
+      key: 'tracing_enabled',
+      title: 'Tracing',
+      type: 'boolean',
+      pylon_id: 'pylon_indexer_1a2b3c4d-1111-2222-3333-444444444444',
+    },
+  ];
+  const schemas = {
+    data: {
+      sections: [
+        { id: 'runtime', title: 'Runtime', fields: RUNTIME_FIELDS },
+        { id: 'observability', title: 'Observability', fields: OBSERVABILITY_FIELDS },
+      ],
+    },
+  };
   const values = {
-    values: { reload_enabled: true, sdk_dev_reload: false, task_queue_debug: false },
+    values: { reload_enabled: true, sdk_dev_reload: false, task_queue_debug: false, tracing_enabled: true },
     fields_meta: {},
   };
   const valuesResponse = { data: values, currentData: values, isFetching: false, isLoading: false };
@@ -102,5 +118,18 @@ describe('Runtime section', () => {
     mocks.valuesResponse = mocks.settledResponse;
     rerender(renderPage());
     expect(screen.getByRole('button', { name: /Pylon Indexer/ })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('starts the cards collapsed when switching to another section, even with the same pylon', () => {
+    window.history.replaceState(null, '', '#runtime');
+    render(renderPage());
+    fireEvent.click(screen.getByRole('button', { name: /Pylon Indexer/ }));
+    expect(screen.getByRole('button', { name: /Pylon Indexer/ })).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.click(screen.getByText('Observability'));
+    expect(screen.getByRole('button', { name: /Pylon Indexer/ })).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(screen.getByText('Runtime'));
+    expect(screen.getByRole('button', { name: /Pylon Indexer/ })).toHaveAttribute('aria-expanded', 'false');
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { DEFAULT_PYLON_CARD_ICON } from '@/pages/ConfigurationPage/components/PylonCardsSection/constants/pylonCards.constants';
 import { buildPylonCards } from '@/pages/ConfigurationPage/components/PylonCardsSection/helpers/pylonCards.helpers';
 
 const INDEXER = 'pylon_indexer_1a2b3c4d-1111-2222-3333-444444444444';
@@ -92,5 +93,26 @@ describe('buildPylonCards', () => {
     const cards = buildPylonCards(fields, {}, RUNTIME_LIKE);
 
     expect(cards.map(card => card.title)).toEqual(['Pylon Indexer (1a2b3c4d)', 'Pylon Indexer (aaaaaaaa)']);
+  });
+
+  it('matches docker-compose pylon ids, which use hyphens, to the same cards and setting order', () => {
+    const hyphenIndexer = 'pylon-indexer_1a2b3c4d-1111-2222-3333-444444444444';
+    const hyphenMain = 'pylon-main_9f8e7d6c-1111-2222-3333-555555555555';
+    const fields = [
+      setting('Indexer Tasks', hyphenIndexer),
+      setting('Show Analytics', hyphenMain),
+      setting('Task Queue Debug', hyphenIndexer),
+      setting('SDK Hot Reload', hyphenIndexer),
+    ];
+
+    const cards = buildPylonCards(fields, {}, RUNTIME_LIKE);
+
+    expect(cards.map(card => card.title)).toEqual(['Pylon Indexer', 'Pylon Main']);
+    expect(cards[0].fields.map(field => field.title)).toEqual([
+      'SDK Hot Reload',
+      'Task Queue Debug',
+      'Indexer Tasks',
+    ]);
+    expect(cards[0].icon).not.toBe(DEFAULT_PYLON_CARD_ICON);
   });
 });

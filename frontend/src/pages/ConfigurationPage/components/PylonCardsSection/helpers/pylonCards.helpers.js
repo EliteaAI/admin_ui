@@ -23,14 +23,19 @@ export const buildPylonCards = (fields, values, cardDefinitions) => {
   const pylonIds = [...new Set(visibleFields.map(field => field.pylon_id))];
   const labels = buildPylonLabels(pylonIds);
 
-  const groups = pylonIds.map(pylonId => ({
-    pylonId,
-    baseName: pylonBaseName(pylonId),
-    fields: visibleFields.filter(field => field.pylon_id === pylonId),
-  }));
+  const groups = pylonIds.map(pylonId => {
+    const baseName = pylonBaseName(pylonId);
+    return {
+      pylonId,
+      baseName,
+      // Docker-compose deployments name pylons with hyphens (pylon-indexer), the constants use underscores
+      pylonType: baseName.replaceAll('-', '_'),
+      fields: visibleFields.filter(field => field.pylon_id === pylonId),
+    };
+  });
 
   const toCard = (group, fieldOrder = []) => {
-    const meta = PYLON_CARD_META[group.baseName];
+    const meta = PYLON_CARD_META[group.pylonType];
     // Two instances of one pylon get their UUID prefix as a suffix, e.g. "Pylon Indexer (1a2b3c4d)"
     const suffix = (labels[group.pylonId] ?? group.baseName).slice(group.baseName.length);
     return {
@@ -43,11 +48,11 @@ export const buildPylonCards = (fields, values, cardDefinitions) => {
 
   const declaredCards = cardDefinitions.flatMap(definition =>
     groups
-      .filter(group => group.baseName === definition.pylon)
+      .filter(group => group.pylonType === definition.pylon)
       .map(group => toCard(group, definition.fieldOrder)),
   );
   const undeclaredCards = groups
-    .filter(group => !cardDefinitions.some(definition => definition.pylon === group.baseName))
+    .filter(group => !cardDefinitions.some(definition => definition.pylon === group.pylonType))
     .map(group => toCard(group));
 
   return [...declaredCards, ...undeclaredCards];

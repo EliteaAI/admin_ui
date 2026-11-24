@@ -526,6 +526,7 @@ const ConfigurationPage = memo(props => {
                 ) : (
                   <Box sx={styles.formScroll}>
                     <PylonCardsSection
+                      key={activeSection}
                       sectionId={activeSection}
                       fields={activeFields}
                       values={localValues}
