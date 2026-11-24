@@ -3,7 +3,7 @@ import { memo, useCallback } from 'react';
 import RestoreIcon from '@mui/icons-material/RestoreOutlined';
 import { Box, Chip, IconButton, Switch, Tooltip, Typography } from '@mui/material';
 
-import { isJsonEditor } from '@/components/SchemaForm/helpers/schemaForm.helpers';
+import { isJsonEditor } from '@/helpers/schemaForm.helpers';
 
 import SchemaField from './SchemaField';
 

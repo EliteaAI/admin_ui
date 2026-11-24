@@ -6,7 +6,7 @@ import { Box } from '@mui/material';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { AgentIcon } from '@/components/Icons';
 import { GuardrailsSection } from '@/components/SchemaForm';
-import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.hooks';
+import { useExpandedBlocks } from '@/hooks/useExpandedBlocks.hooks';
 
 const PUBLISHING_BLOCKS = [
   {

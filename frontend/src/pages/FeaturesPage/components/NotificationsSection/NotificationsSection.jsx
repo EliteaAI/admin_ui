@@ -5,7 +5,7 @@ import { Box } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { GuardrailsSection } from '@/components/SchemaForm';
-import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.hooks';
+import { useExpandedBlocks } from '@/hooks/useExpandedBlocks.hooks';
 
 const PROJECT_MEMBERSHIP_FIELD_KEYS = ['project_membership_on_added', 'project_membership_on_removed'];
 

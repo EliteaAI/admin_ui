@@ -41,6 +41,7 @@ import { CustomThemeSection } from './components/CustomThemeSection';
 import { HelpCenterSection } from './components/HelpCenterSection';
 import { MaintenanceSection } from './components/MaintenanceSection';
 import { OAuthAppsSection } from './components/OAuthAppsSection';
+import { PylonCardsSection } from './components/PylonCardsSection';
 import { ScimSection } from './components/ScimSection';
 import { ServiceDescriptorsSection } from './components/ServiceDescriptorsSection';
 import SupportAssistant from './components/SupportAssistant';
@@ -513,6 +514,23 @@ const ConfigurationPage = memo(props => {
                         onChange={handleFieldChange}
                       />
                     )}
+                  </Box>
+                );
+              case 'runtime':
+              case 'observability':
+                return valuesFetching ? (
+                  <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <Box sx={styles.formScroll}>
+                    <PylonCardsSection
+                      sectionId={activeSection}
+                      fields={activeFields}
+                      values={localValues}
+                      sectionDescription={activeSectionDescription}
+                      onChange={handleFieldChange}
+                    />
                   </Box>
                 );
               case 'guardrails': {
