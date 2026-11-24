@@ -9,7 +9,7 @@ import { Box } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { GuardrailsSection } from '@/components/SchemaForm';
-import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.hooks';
+import { useExpandedBlocks } from '@/hooks/useExpandedBlocks.hooks';
 
 import ComplexityBlock from './components/ComplexityBlock';
 import CostBudgets from './components/CostBudgets';

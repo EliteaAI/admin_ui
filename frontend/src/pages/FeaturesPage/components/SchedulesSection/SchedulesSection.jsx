@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { GuardrailsSection } from '@/components/SchemaForm';
-import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.hooks';
+import { useExpandedBlocks } from '@/hooks/useExpandedBlocks.hooks';
 
 import { SCHEDULES_CARDS } from './constants/schedules.constants';
 

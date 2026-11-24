@@ -2,9 +2,10 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { buildPylonLabels, isFieldVisible } from '@/helpers/schemaForm.helpers';
+
 import ActionFieldCard from './components/ActionFieldCard';
 import FieldCard from './components/FieldCard';
-import { buildPylonLabels } from './helpers/schemaForm.helpers';
 
 const SchemaForm = memo(props => {
   const { fields, values, sectionDescription, onChange, onAction } = props;
@@ -12,17 +13,7 @@ const SchemaForm = memo(props => {
   const styles = schemaFormStyles();
 
   const visibleFields = useMemo(() => {
-    return fields.filter(field => {
-      if (!field.visible_when) return true;
-      const conditions = Array.isArray(field.visible_when) ? field.visible_when : [field.visible_when];
-      return conditions.every(({ field: condField, value: condValue }) => {
-        const currentValue = values[condField];
-        if (typeof currentValue === 'string' && typeof condValue === 'string') {
-          return currentValue.toLowerCase() === condValue.toLowerCase();
-        }
-        return currentValue === condValue;
-      });
-    });
+    return fields.filter(field => isFieldVisible(field, values));
   }, [fields, values]);
 
   const pylonGroups = useMemo(() => {

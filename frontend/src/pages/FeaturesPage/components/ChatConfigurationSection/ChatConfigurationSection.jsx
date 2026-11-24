@@ -12,7 +12,7 @@ import { Box } from '@mui/material';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { ModelIcon } from '@/components/Icons';
 import { GuardrailsSection } from '@/components/SchemaForm';
-import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.hooks';
+import { useExpandedBlocks } from '@/hooks/useExpandedBlocks.hooks';
 
 import AutoRoutingSettings from './components/AutoRoutingSettings';
 import ChatMentions from './components/ChatMentions';
