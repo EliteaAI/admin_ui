@@ -126,6 +126,7 @@ const ChatConfigurationSection = memo(props => {
           <GuardrailsSection
             fields={conversationStartersFields}
             values={guardrailsDraft.values}
+            restoreToDefault
             onChange={guardrailsDraft.onChange}
           />
         ),
