@@ -22,6 +22,7 @@ import { PERMISSIONS } from '@/constants/permissions.constants';
 import { RouteDefinitions } from '@/constants/routes.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import {
+  ITEM_MODE_OPTIONS,
   STATUS_CONFIG,
   STATUS_OPTIONS,
   describeCron,
@@ -32,7 +33,6 @@ import {
 import HistoryConsentsSection from './HistoryConsentsSection';
 
 const RUN_SCHEDULE = 'eval_auto_run';
-const MODES = ['live', 'history'];
 // Why a run-now was refused; any other reason is shown as the backend sent it.
 const REFUSAL_MESSAGES = {
   maintenance: 'The platform is in maintenance mode, so no evaluation can start.',
@@ -213,20 +213,25 @@ const OverviewTab = memo(props => {
       <Box sx={styles.modeSection}>
         <Typography variant="headingSmall">By mode</Typography>
         <Box sx={styles.cards}>
-          {MODES.map(mode => (
+          {ITEM_MODE_OPTIONS.map(mode => (
             <Card
               key={mode}
               variant="outlined"
-              sx={[styles.card, styles.cardAction]}
-              data-testid={`eval-auto-mode-count-${mode}`}
+              sx={styles.card}
             >
-              <Typography variant="headingLarge">{modeCounts[mode] ?? '-'}</Typography>
-              <Typography
-                variant="bodySmall"
-                color="text.secondary"
+              <CardActionArea
+                sx={styles.cardAction}
+                onClick={() => onOpenAgents(null, mode)}
+                data-testid={`eval-auto-mode-count-${mode}`}
               >
-                {modeLabel(mode)}
-              </Typography>
+                <Typography variant="headingLarge">{modeCounts[mode] ?? '-'}</Typography>
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                >
+                  {modeLabel(mode)}
+                </Typography>
+              </CardActionArea>
             </Card>
           ))}
         </Box>

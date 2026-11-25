@@ -19,19 +19,22 @@ const HISTORY_PATH = `${ITEMS_PATH}/4/21`;
 
 const listOf = (items, total = items.length) => ok({ total, items, job: makeJob() });
 
-const setup = async ({ items = [makeItem()], total, status = '', extra = {} } = {}) => {
+const setup = async ({ items = [makeItem()], total, status = '', mode = '', extra = {} } = {}) => {
   const onStatusChange = vi.fn();
+  const onModeChange = vi.fn();
   const calls = mockApi({ [`GET ${ITEMS_PATH}`]: listOf(items, total), ...extra });
   const user = userEvent.setup();
   renderWithProviders(
     <AgentsTab
       status={status}
       onStatusChange={onStatusChange}
+      mode={mode}
+      onModeChange={onModeChange}
     />,
     { permissions: [VIEW] },
   );
   await screen.findByTestId('eval-auto-agents');
-  return { calls, user, onStatusChange };
+  return { calls, user, onStatusChange, onModeChange };
 };
 
 const listCalls = calls => calls.filter(call => call.path === ITEMS_PATH);
@@ -165,6 +168,16 @@ describe('filters', () => {
         offset: '0',
       }),
     );
+  });
+
+  it('sends the mode the overview picked, and reports a new pick to the page', async () => {
+    const { calls, user, onModeChange } = await setup({ mode: 'history' });
+
+    await waitFor(() => expect(listCalls(calls).at(-1).params.mode).toBe('history'));
+
+    await user.click(screen.getByTestId('eval-auto-mode-filter'));
+    await user.click(await screen.findByTestId('eval-auto-mode-option-live'));
+    expect(onModeChange).toHaveBeenCalledWith('live');
   });
 
   it('sends a project id only once it is a positive integer', async () => {

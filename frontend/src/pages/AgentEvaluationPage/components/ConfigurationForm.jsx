@@ -47,19 +47,34 @@ const toForm = saved => ({
 const toNumber = (value, fallback) =>
   value === '' || Number.isNaN(Number(value)) ? fallback : Number(value);
 
+// The history fields are hidden in live mode, so an edit made there before switching back is not sent.
+const toHistorySettings = (form, saved) =>
+  readsHistory(form.mode)
+    ? {
+        history_version: form.history_version,
+        history_strategy: form.history_strategy,
+        ...Object.fromEntries(HISTORY_NUMBER_FIELDS.map(([key]) => [key, toNumber(form[key], saved[key])])),
+      }
+    : {};
+
 const toSettings = (form, saved) => ({
   project_scope_mode: form.project_scope_mode,
   project_ids: parseProjectIds(form.projectIdsText),
   include_personal_projects: form.include_personal_projects,
   dataset_policy: form.dataset_policy,
   mode: form.mode,
-  history_version: form.history_version,
-  history_strategy: form.history_strategy,
-  ...Object.fromEntries(
-    [...NUMBER_FIELDS, ...HISTORY_NUMBER_FIELDS].map(([key]) => [key, toNumber(form[key], saved[key])]),
-  ),
+  ...toHistorySettings(form, saved),
+  ...Object.fromEntries(NUMBER_FIELDS.map(([key]) => [key, toNumber(form[key], saved[key])])),
   window: toWindow(form.windowStart, form.windowEnd),
 });
+
+// The server lowers min turns to max turns; say so before saving rather than after.
+const historyHint = (key, form, saved, fallback) => {
+  if (key !== 'history_min_turns') return fallback;
+  const minTurns = toNumber(form.history_min_turns, saved.history_min_turns);
+  const maxTurns = toNumber(form.history_max_turns, saved.history_max_turns);
+  return minTurns > maxTurns ? `Will be saved as ${maxTurns}, the max turns per agent` : fallback;
+};
 
 const ConfigurationForm = memo(props => {
   const { saved: stored } = props;
@@ -242,7 +257,7 @@ const ConfigurationForm = memo(props => {
                 value={form[key]}
                 onChange={event => setField(key, event.target.value)}
                 disabled={!canEdit}
-                helperText={hint ?? `${min}–${max}`}
+                helperText={historyHint(key, form, saved, hint ?? `${min}–${max}`)}
                 slotProps={{ htmlInput: { min, max, step, 'data-testid': `eval-auto-field-${key}` } }}
               />
             ))}

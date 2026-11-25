@@ -90,8 +90,25 @@ describe('history evaluation', () => {
     expect(screen.getByTestId('eval-auto-mode-count-history')).toHaveTextContent('History');
   });
 
+  it('opens the agents tab filtered to a mode on click', async () => {
+    const { user, onOpenAgents } = await setup();
+
+    await waitFor(() => expect(screen.getByTestId('eval-auto-mode-count-history')).toHaveTextContent('3'));
+    await user.click(screen.getByTestId('eval-auto-mode-count-history'));
+    expect(onOpenAgents).toHaveBeenCalledWith(null, 'history');
+  });
+
+  it('reads the projects only when asked to', async () => {
+    const { calls, user } = await setup();
+
+    expect(calls.some(call => call.path === CONSENTS_PATH)).toBe(false);
+    await user.click(screen.getByTestId('eval-auto-history-consents-show'));
+    expect(await screen.findByTestId('eval-auto-history-consent-4')).toBeInTheDocument();
+  });
+
   it('lists the projects that allow it, with whether each is in scope', async () => {
-    await setup();
+    const { user } = await setup();
+    await user.click(screen.getByTestId('eval-auto-history-consents-show'));
 
     expect(await screen.findByTestId('eval-auto-history-consent-4')).toHaveTextContent('Support');
     expect(screen.getByTestId('eval-auto-history-consent-4')).toHaveTextContent('In scope');
@@ -99,13 +116,15 @@ describe('history evaluation', () => {
   });
 
   it('says when no project allows it', async () => {
-    await setup({ consents: ok({ total: 0, projects: [] }) });
+    const { user } = await setup({ consents: ok({ total: 0, projects: [] }) });
+    await user.click(screen.getByTestId('eval-auto-history-consents-show'));
 
     expect(await screen.findByTestId('eval-auto-history-consents-empty')).toBeInTheDocument();
   });
 
   it('says when the projects could not be loaded', async () => {
-    await setup({ consents: fail(500, { error: 'boom' }) });
+    const { user } = await setup({ consents: fail(500, { error: 'boom' }) });
+    await user.click(screen.getByTestId('eval-auto-history-consents-show'));
 
     expect(await screen.findByText('Could not load the projects.')).toBeInTheDocument();
   });

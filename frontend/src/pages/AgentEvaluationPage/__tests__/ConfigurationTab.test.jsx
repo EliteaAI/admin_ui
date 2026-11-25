@@ -227,6 +227,31 @@ describe('evaluation mode', () => {
     expect(screen.getByText('1 – max turns per agent')).toBeInTheDocument();
   });
 
+  it('drops a history edit made before switching back to live', async () => {
+    const { calls, user } = await setup();
+
+    await user.click(screen.getByTestId('eval-auto-mode'));
+    await user.click(await screen.findByTestId('eval-auto-mode-hybrid'));
+    const field = screen.getByTestId('eval-auto-field-history_min_turns');
+    await user.clear(field);
+    await user.type(field, '5');
+    await user.click(screen.getByTestId('eval-auto-mode'));
+    await user.click(await screen.findByTestId('eval-auto-mode-live'));
+
+    expect(screen.getByTestId('eval-auto-settings-save')).toBeDisabled();
+    expect(calls.some(call => call.method === 'PUT')).toBe(false);
+  });
+
+  it('says when the minimum turns will be lowered to the maximum', async () => {
+    const { user } = await setup(makeSettings({ mode: 'history' }));
+
+    const field = screen.getByTestId('eval-auto-field-history_min_turns');
+    await user.clear(field);
+    await user.type(field, '40');
+
+    expect(screen.getByText(/Will be saved as 10/)).toBeInTheDocument();
+  });
+
   it('loads a stored history mode with its version and sampling', async () => {
     await setup(makeSettings({ mode: 'history', history_version: 'any', history_strategy: 'recent' }));
 

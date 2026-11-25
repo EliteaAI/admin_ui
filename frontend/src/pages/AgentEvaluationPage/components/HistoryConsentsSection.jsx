@@ -1,13 +1,16 @@
-import { memo } from 'react';
+import { memo, useCallback, useState } from 'react';
 
-import { Box, Chip, List, ListItem, Skeleton, Typography } from '@mui/material';
+import { Box, Button, Chip, List, ListItem, Skeleton, Typography } from '@mui/material';
 
 import { useEvalAutoHistoryConsentsQuery } from '@/api/evalAuto.api';
 
+/** The consent list reads every project's settings, so it loads only when asked for. */
 const HistoryConsentsSection = memo(() => {
   const styles = historyConsentsSectionStyles();
 
-  const { data, isLoading, isError } = useEvalAutoHistoryConsentsQuery();
+  const [shown, setShown] = useState(false);
+  const show = useCallback(() => setShown(true), []);
+  const { data, isLoading, isError } = useEvalAutoHistoryConsentsQuery(undefined, { skip: !shown });
   const projects = data?.projects ?? [];
 
   return (
@@ -23,6 +26,18 @@ const HistoryConsentsSection = memo(() => {
         Project admins turn this on in their project settings. History and hybrid modes score only these
         projects from their chats.
       </Typography>
+      {!shown && (
+        <Box>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={show}
+            data-testid="eval-auto-history-consents-show"
+          >
+            Show projects
+          </Button>
+        </Box>
+      )}
       {isLoading && (
         <Skeleton
           variant="rectangular"
@@ -37,7 +52,7 @@ const HistoryConsentsSection = memo(() => {
           Could not load the projects.
         </Typography>
       )}
-      {!isLoading && !isError && !projects.length && (
+      {shown && !isLoading && !isError && !projects.length && (
         <Typography
           variant="bodySmall"
           color="text.secondary"

@@ -157,6 +157,9 @@ const MODE_LABELS = {
   history: 'History',
 };
 
+// The mode an item ran in; a hybrid item is stored as whichever it ended up using.
+export const ITEM_MODE_OPTIONS = Object.keys(MODE_LABELS);
+
 export const modeLabel = mode => (mode ? (MODE_LABELS[mode] ?? mode) : '-');
 
 /**
