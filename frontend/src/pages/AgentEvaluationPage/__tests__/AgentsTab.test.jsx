@@ -102,6 +102,43 @@ describe('the table', () => {
   });
 });
 
+describe('the mode column', () => {
+  it('labels a history result and sums up its turns on hover', async () => {
+    await setup({
+      items: [
+        makeItem(),
+        makeItem({
+          id: 12,
+          mode: 'history',
+          history: { window_days: 28, sampled: 6, eligible: 9, conversations: 3, users: 2 },
+        }),
+      ],
+    });
+
+    expect(await screen.findByTestId('eval-auto-mode-11')).toHaveTextContent('Live');
+    const history = screen.getByTestId('eval-auto-mode-12');
+    expect(history).toHaveTextContent('History');
+    expect(history).toHaveAttribute('title', '6 turns · 3 chats · 28 days');
+    expect(screen.getByTestId('eval-auto-mode-summary-12')).toHaveTextContent('6 turns · 3 chats · 28 days');
+  });
+
+  it('sums up no turns for a hybrid result that fell back to live, or one without enough history', async () => {
+    const history = { window_days: 28, sampled: 0, eligible: 2, conversations: 1, users: 1 };
+    await setup({
+      items: [
+        makeItem({ id: 13, mode: 'live', history }),
+        makeItem({ id: 14, mode: 'history', status: 'not_evaluated', reason_code: 'NO_TRAFFIC', history }),
+      ],
+    });
+
+    expect(await screen.findByTestId('eval-auto-mode-13')).toHaveTextContent('Live');
+    expect(screen.getByTestId('eval-auto-mode-13')).toHaveAttribute('title', '');
+    expect(screen.queryByTestId('eval-auto-mode-summary-13')).not.toBeInTheDocument();
+    expect(screen.getByTestId('eval-auto-mode-14')).toHaveTextContent('History');
+    expect(screen.queryByTestId('eval-auto-mode-summary-14')).not.toBeInTheDocument();
+  });
+});
+
 describe('filters', () => {
   it('reports a picked status to the page', async () => {
     const { user, onStatusChange } = await setup();
@@ -159,6 +196,31 @@ describe('the history drawer', () => {
     await within(history).findByTestId('eval-auto-history-9');
     expect(within(history).getByTestId('eval-auto-history-11')).toBeInTheDocument();
     expect(within(history).getByText('Warning')).toBeInTheDocument();
+  });
+
+  it('shows the mode of each run, with the turns a history run scored', async () => {
+    const { user } = await setup({
+      extra: {
+        [`GET ${HISTORY_PATH}`]: ok({
+          total: 2,
+          rows: [
+            makeItem({
+              id: 13,
+              mode: 'history',
+              history: { window_days: 28, sampled: 6, eligible: 9, conversations: 3, users: 2 },
+            }),
+            makeItem(),
+          ],
+        }),
+      },
+    });
+
+    await user.click(await screen.findByTestId('eval-auto-agent-open-11'));
+
+    expect(await screen.findByTestId('eval-auto-history-mode-13')).toHaveTextContent(
+      'History · 6 turns · 3 chats · 28 days',
+    );
+    expect(screen.getByTestId('eval-auto-history-mode-11')).toHaveTextContent(/^Live$/);
   });
 
   it('says how many results the drawer leaves out, and labels a run still in progress', async () => {

@@ -18,13 +18,23 @@ import { useEvalAutoSettingsUpdateMutation } from '@/api/evalAuto.api';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import {
+  HISTORY_NUMBER_FIELDS,
+  HISTORY_STRATEGY_OPTIONS,
+  HISTORY_VERSION_OPTIONS,
+  MODE_OPTIONS,
   NUMBER_FIELDS,
   POLICY_OPTIONS,
   SCOPE_OPTIONS,
   changedSettings,
   parseProjectIds,
+  readsHistory,
   toWindow,
 } from '@/pages/AgentEvaluationPage/helpers/evalAuto.helpers';
+
+import SettingSelect from './SettingSelect';
+
+// Settings saved before history evaluation existed carry no mode; they run live.
+const withDefaults = stored => ({ mode: 'live', ...stored });
 
 const toForm = saved => ({
   ...saved,
@@ -42,18 +52,24 @@ const toSettings = (form, saved) => ({
   project_ids: parseProjectIds(form.projectIdsText),
   include_personal_projects: form.include_personal_projects,
   dataset_policy: form.dataset_policy,
-  ...Object.fromEntries(NUMBER_FIELDS.map(([key]) => [key, toNumber(form[key], saved[key])])),
+  mode: form.mode,
+  history_version: form.history_version,
+  history_strategy: form.history_strategy,
+  ...Object.fromEntries(
+    [...NUMBER_FIELDS, ...HISTORY_NUMBER_FIELDS].map(([key]) => [key, toNumber(form[key], saved[key])]),
+  ),
   window: toWindow(form.windowStart, form.windowEnd),
 });
 
 const ConfigurationForm = memo(props => {
-  const { saved } = props;
+  const { saved: stored } = props;
 
   const styles = configurationFormStyles();
 
   const { hasPermission } = useCheckPermission();
   const canEdit = hasPermission(PERMISSIONS.evalAuto.edit);
 
+  const saved = useMemo(() => withDefaults(stored), [stored]);
   const [form, setForm] = useState(() => toForm(saved));
   const [notice, setNotice] = useState(null);
   const [update, { isLoading: isSaving }] = useEvalAutoSettingsUpdateMutation();
@@ -68,7 +84,7 @@ const ConfigurationForm = memo(props => {
     try {
       // The server clamps out-of-range numbers, so the form shows what it actually stored.
       const effective = await update(changes).unwrap();
-      setForm(toForm(effective));
+      setForm(toForm(withDefaults(effective)));
       setNotice({ severity: 'success', message: 'Settings saved.' });
     } catch (err) {
       setNotice({ severity: 'error', message: err?.data?.error ?? 'Failed to save the settings.' });
@@ -172,6 +188,67 @@ const ConfigurationForm = memo(props => {
           ))}
         </Select>
       </FormControl>
+
+      <Typography variant="headingSmall">Mode</Typography>
+      <SettingSelect
+        id="eval-auto-mode-label"
+        label="Evaluation mode"
+        value={form.mode}
+        options={MODE_OPTIONS}
+        onChange={value => setField('mode', value)}
+        disabled={!canEdit}
+        sx={styles.wideSelect}
+        testId="eval-auto-mode"
+      />
+      {readsHistory(form.mode) && (
+        <>
+          <Alert
+            severity="info"
+            data-testid="eval-auto-history-consent-note"
+          >
+            Only projects whose admins turned on evaluation from chat history are scored from history. In
+            history mode the others are Not Evaluated; in hybrid mode they run live. Chat text stays visible
+            to the chat author and project admins only.
+          </Alert>
+          <Box sx={styles.row}>
+            <SettingSelect
+              id="eval-auto-history-version-label"
+              label="Turns from"
+              value={form.history_version}
+              options={HISTORY_VERSION_OPTIONS}
+              onChange={value => setField('history_version', value)}
+              disabled={!canEdit}
+              sx={styles.select}
+              testId="eval-auto-history-version"
+            />
+            <SettingSelect
+              id="eval-auto-history-strategy-label"
+              label="Sampling"
+              value={form.history_strategy}
+              options={HISTORY_STRATEGY_OPTIONS}
+              onChange={value => setField('history_strategy', value)}
+              disabled={!canEdit}
+              sx={styles.select}
+              testId="eval-auto-history-strategy"
+            />
+          </Box>
+          <Box sx={styles.grid}>
+            {HISTORY_NUMBER_FIELDS.map(([key, label, min, max, step, hint]) => (
+              <TextField
+                key={key}
+                size="small"
+                type="number"
+                label={label}
+                value={form[key]}
+                onChange={event => setField(key, event.target.value)}
+                disabled={!canEdit}
+                helperText={hint ?? `${min}–${max}`}
+                slotProps={{ htmlInput: { min, max, step, 'data-testid': `eval-auto-field-${key}` } }}
+              />
+            ))}
+          </Box>
+        </>
+      )}
 
       <Typography variant="headingSmall">Limits and thresholds</Typography>
       <Box sx={styles.grid}>

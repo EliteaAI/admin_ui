@@ -18,6 +18,7 @@ const REASON_LABELS = {
   OWNER_UNAVAILABLE: 'Owner cannot run it',
   BUDGET_BLOCKED: 'Budget exhausted',
   NO_DATASET: 'No dataset',
+  NO_TRAFFIC: 'Not enough chat history',
   OTHER: 'Other',
 };
 
@@ -41,6 +42,22 @@ export const POLICY_OPTIONS = [
   { value: 'platform_only', label: 'Platform health check only' },
 ];
 
+export const MODE_OPTIONS = [
+  { value: 'live', label: 'Live: run the agent on its dataset' },
+  { value: 'history', label: 'History: score stored chat turns, never run the agent' },
+  { value: 'hybrid', label: 'Hybrid: history first, live when there is too little' },
+];
+
+export const HISTORY_VERSION_OPTIONS = [
+  { value: 'default', label: 'Default version only' },
+  { value: 'any', label: 'Any version' },
+];
+
+export const HISTORY_STRATEGY_OPTIONS = [
+  { value: 'stratified', label: 'Spread across conversations and users' },
+  { value: 'recent', label: 'Most recent first' },
+];
+
 // [key, label, min, max, step] — the bounds match the backend's clamping.
 export const NUMBER_FIELDS = [
   ['max_agents_per_job', 'Max agents per job', 1, 10000, 1],
@@ -52,6 +69,20 @@ export const NUMBER_FIELDS = [
   ['coverage_threshold', 'Warn below coverage (%)', 0, 100, 1],
   ['classify_threshold', 'Not Evaluated when errored cases exceed (share)', 0, 1, 0.05],
 ];
+
+// Shown only when the mode reads history; the bounds match eval_auto_rules._BOUNDS. The optional sixth
+// entry replaces the min–max hint when the server clamps further.
+export const HISTORY_NUMBER_FIELDS = [
+  ['history_window_days', 'Look back (days)', 1, 90, 1],
+  ['history_max_turns', 'Max turns per agent', 1, 50, 1],
+  ['history_min_turns', 'Min turns to score', 1, 50, 1, '1 – max turns per agent'],
+  ['history_max_turns_per_conversation', 'Max turns per conversation', 1, 10, 1],
+  ['history_max_share_per_user', 'Max share of turns from one user', 0.1, 1, 0.01],
+  ['max_concurrent_history_runs', 'Concurrent history runs', 1, 20, 1],
+  ['history_reevaluate_after_days', 'Re-evaluate from history after (days)', 1, 90, 1],
+];
+
+export const readsHistory = mode => mode === 'history' || mode === 'hybrid';
 
 export const describeCron = expr => {
   if (!expr) return '';
@@ -119,6 +150,28 @@ export const stateLabel = state => STATE_LABELS[state] ?? null;
 const TRIGGER_LABELS = {
   scheduled: 'Schedule',
   manual: 'Run now',
+};
+
+const MODE_LABELS = {
+  live: 'Live',
+  history: 'History',
+};
+
+export const modeLabel = mode => (mode ? (MODE_LABELS[mode] ?? mode) : '-');
+
+/**
+ * "12 turns · 5 chats · 28 days" for an item scored from history, else null. A hybrid item that fell back
+ * to live, or one Not Evaluated for too little traffic, can still carry the history it looked at.
+ */
+export const historySummary = item => {
+  const history = item?.history;
+  if (item?.mode !== 'history' || item.status === 'not_evaluated' || !history) return null;
+  const turns = history.sampled || history.eligible || 0;
+  const parts = [`${turns} turn${turns === 1 ? '' : 's'}`];
+  if (history.conversations)
+    parts.push(`${history.conversations} chat${history.conversations === 1 ? '' : 's'}`);
+  if (history.window_days) parts.push(`${history.window_days} days`);
+  return parts.join(' · ');
 };
 
 export const triggerLabel = trigger => (trigger ? (TRIGGER_LABELS[trigger] ?? trigger) : '-');

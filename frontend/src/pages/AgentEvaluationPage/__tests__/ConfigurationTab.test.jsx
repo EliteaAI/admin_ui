@@ -177,3 +177,61 @@ describe('saving', () => {
     expect(screen.getByTestId('eval-auto-settings-save')).toBeDisabled();
   });
 });
+
+describe('evaluation mode', () => {
+  it('hides the history settings in live mode', async () => {
+    await setup();
+
+    expect(screen.getByTestId('eval-auto-mode')).toHaveTextContent('Live');
+    expect(screen.queryByTestId('eval-auto-history-consent-note')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('eval-auto-field-history_window_days')).not.toBeInTheDocument();
+  });
+
+  it('shows the consent note and the history settings once hybrid is picked, and saves them', async () => {
+    const { calls, user } = await setup();
+
+    await user.click(screen.getByTestId('eval-auto-mode'));
+    await user.click(await screen.findByTestId('eval-auto-mode-hybrid'));
+
+    expect(screen.getByTestId('eval-auto-history-consent-note')).toBeInTheDocument();
+    const field = screen.getByTestId('eval-auto-field-history_min_turns');
+    expect(field).toHaveValue(3);
+
+    await user.clear(field);
+    await user.type(field, '5');
+    await user.click(screen.getByTestId('eval-auto-settings-save'));
+
+    await waitFor(() => expect(putCalls(calls)).toHaveLength(1));
+    expect(putCalls(calls)[0].body).toEqual({ mode: 'hybrid', history_min_turns: 5 });
+  });
+
+  it('renders settings saved before history existed and sends no history keys', async () => {
+    const legacy = Object.fromEntries(
+      Object.entries(makeSettings()).filter(([key]) => key !== 'mode' && !key.includes('history')),
+    );
+    const { calls, user } = await setup(legacy);
+
+    expect(screen.getByTestId('eval-auto-mode')).toHaveTextContent('Live');
+    const field = screen.getByTestId('eval-auto-field-max_agents_per_job');
+    await user.clear(field);
+    await user.type(field, '7');
+    await user.click(screen.getByTestId('eval-auto-settings-save'));
+
+    await waitFor(() => expect(putCalls(calls)).toHaveLength(1));
+    expect(putCalls(calls)[0].body).toEqual({ max_agents_per_job: 7 });
+  });
+
+  it('hints that the minimum turns cannot exceed the maximum', async () => {
+    await setup(makeSettings({ mode: 'history' }));
+
+    expect(screen.getByText('1 – max turns per agent')).toBeInTheDocument();
+  });
+
+  it('loads a stored history mode with its version and sampling', async () => {
+    await setup(makeSettings({ mode: 'history', history_version: 'any', history_strategy: 'recent' }));
+
+    expect(screen.getByTestId('eval-auto-history-consent-note')).toBeInTheDocument();
+    expect(screen.getByTestId('eval-auto-history-version')).toHaveTextContent('Any version');
+    expect(screen.getByTestId('eval-auto-history-strategy')).toHaveTextContent('Most recent first');
+  });
+});

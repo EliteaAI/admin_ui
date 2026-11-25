@@ -8,6 +8,8 @@ import {
   formatCoverage,
   formatDate,
   formatScore,
+  historySummary,
+  modeLabel,
   reasonLabel,
   stateLabel,
   tierLabel,
@@ -123,6 +125,16 @@ const AgentHistoryDrawer = memo(props => {
               {tierLabel(row.dataset_tier)}
               {row.eval_run_id ? ` · run ${row.eval_run_id}` : ''}
             </Typography>
+            {row.mode && (
+              <Typography
+                variant="bodySmall"
+                sx={styles.muted}
+                data-testid={`eval-auto-history-mode-${row.id}`}
+              >
+                {modeLabel(row.mode)}
+                {historySummary(row) ? ` · ${historySummary(row)}` : ''}
+              </Typography>
+            )}
             {row.reason_code && (
               <Typography
                 variant="bodySmall"

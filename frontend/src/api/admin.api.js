@@ -55,6 +55,7 @@ export const adminApi = createApi({
     'EvalAutoSettings',
     'EvalAutoItems',
     'EvalAutoDataset',
+    'EvalAutoHistoryConsents',
   ],
   endpoints: () => ({}),
 });
