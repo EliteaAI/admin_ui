@@ -53,3 +53,37 @@ export const isJsonEditor = field => {
     return true;
   return false;
 };
+
+const WHOLE_NUMBER_RE = /^-?\d+(\.0*)?$/;
+
+const isWithinBounds = (number, { minimum, maximum, exclusiveMinimum, exclusiveMaximum }) =>
+  (minimum === undefined || number >= minimum) &&
+  (maximum === undefined || number <= maximum) &&
+  (exclusiveMinimum === undefined || number > exclusiveMinimum) &&
+  (exclusiveMaximum === undefined || number < exclusiveMaximum);
+
+const describeAllowedNumber = (type, { minimum, maximum, exclusiveMinimum, exclusiveMaximum }) => {
+  const kind = type === 'integer' ? 'a whole number' : 'a number';
+  if (minimum !== undefined && maximum !== undefined) return `Enter ${kind} from ${minimum} to ${maximum}`;
+  const limits = [
+    minimum !== undefined && `of at least ${minimum}`,
+    exclusiveMinimum !== undefined && `greater than ${exclusiveMinimum}`,
+    maximum !== undefined && `of at most ${maximum}`,
+    exclusiveMaximum !== undefined && `less than ${exclusiveMaximum}`,
+  ].filter(Boolean);
+  return [`Enter ${kind}`, limits.join(' and ')].filter(Boolean).join(' ');
+};
+
+export const isNumberText = (type, text) =>
+  type === 'integer' ? WHOLE_NUMBER_RE.test(text) : text !== '' && Number.isFinite(Number(text));
+
+export const getNumberFieldError = (field, input) => {
+  if (input === null || input === undefined) return null;
+  const schema = field.value_schema ?? {};
+  const nullable = Array.isArray(schema.type) && schema.type.includes('null');
+  const text = String(input).trim();
+  if (text === '' && nullable) return null;
+  return isNumberText(field.type, text) && isWithinBounds(Number(text), schema)
+    ? null
+    : describeAllowedNumber(field.type, schema);
+};

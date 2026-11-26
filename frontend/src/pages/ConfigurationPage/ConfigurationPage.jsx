@@ -29,10 +29,11 @@ import {
 } from '@/api/configuration.api';
 import { DrawerPage } from '@/components/DrawerPage';
 import { DrawerPageHeader } from '@/components/DrawerPageHeader';
-import { GuardrailsSection, SchemaForm } from '@/components/SchemaForm';
+import { FieldErrorsContext, GuardrailsSection, SchemaForm } from '@/components/SchemaForm';
 import { CONFIG_SECTION_PERMISSIONS } from '@/constants/permissions.constants';
 import { RouteDefinitions } from '@/constants/routes.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { useFieldErrors } from '@/hooks/useFieldErrors.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import { AdvancedSection } from './components/AdvancedSection';
@@ -278,7 +279,8 @@ const ConfigurationPage = memo(props => {
     [invalidFields],
   );
 
-  const canSave = isDirty || invalidFields.length > 0;
+  const { hasFieldErrors, reportFieldError } = useFieldErrors();
+  const canSave = (isDirty || invalidFields.length > 0) && !hasFieldErrors;
 
   // Set dynamic page title based on current section
   const pageTitle = useMemo(() => {
@@ -451,126 +453,128 @@ const ConfigurationPage = memo(props => {
 
         {/* Form content */}
         <Box sx={styles.formArea}>
-          {(() => {
-            switch (activeSection) {
-              case 'advanced':
-                return (
-                  <Box sx={styles.formScroll}>
-                    <AdvancedSection />
-                  </Box>
-                );
-              case 'maintenance':
-                return (
-                  <Box sx={styles.formScroll}>
-                    <MaintenanceSection />
-                  </Box>
-                );
-              case 'service_descriptors':
-                return (
-                  <Box sx={[styles.formScroll, styles.noPadding]}>
-                    <ServiceDescriptorsSection />
-                  </Box>
-                );
-              case 'dedicated_banner':
-                return <BannersSection onDirtyChange={setBannersDirty} />;
-              case 'oauth_apps':
-                return (
-                  <Box sx={styles.formScroll}>
-                    <OAuthAppsSection />
-                  </Box>
-                );
-              case 'scim':
-                return (
-                  <Box sx={styles.formScroll}>
-                    <ScimSection />
-                  </Box>
-                );
-              case 'surveys':
-                return <SurveysSection addRef={addSurveyRef} />;
-              case 'custom_theme':
-                return (
-                  <Box sx={styles.formScroll}>
-                    <CustomThemeSection />
-                  </Box>
-                );
-              case 'support_assistant':
-              case 'resources':
-                // Wait for this section's own values: RTK keeps the previous section's data while a new one loads,
-                // and a refetch after Save must not remount the blocks
-                return valuesFetching && !valuesCurrentData ? (
-                  <Box sx={styles.loadingContainer}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.formScroll}>
-                    {activeSection === 'resources' ? (
-                      <HelpCenterSection
+          <FieldErrorsContext.Provider value={reportFieldError}>
+            {(() => {
+              switch (activeSection) {
+                case 'advanced':
+                  return (
+                    <Box sx={styles.formScroll}>
+                      <AdvancedSection />
+                    </Box>
+                  );
+                case 'maintenance':
+                  return (
+                    <Box sx={styles.formScroll}>
+                      <MaintenanceSection />
+                    </Box>
+                  );
+                case 'service_descriptors':
+                  return (
+                    <Box sx={[styles.formScroll, styles.noPadding]}>
+                      <ServiceDescriptorsSection />
+                    </Box>
+                  );
+                case 'dedicated_banner':
+                  return <BannersSection onDirtyChange={setBannersDirty} />;
+                case 'oauth_apps':
+                  return (
+                    <Box sx={styles.formScroll}>
+                      <OAuthAppsSection />
+                    </Box>
+                  );
+                case 'scim':
+                  return (
+                    <Box sx={styles.formScroll}>
+                      <ScimSection />
+                    </Box>
+                  );
+                case 'surveys':
+                  return <SurveysSection addRef={addSurveyRef} />;
+                case 'custom_theme':
+                  return (
+                    <Box sx={styles.formScroll}>
+                      <CustomThemeSection />
+                    </Box>
+                  );
+                case 'support_assistant':
+                case 'resources':
+                  // Wait for this section's own values: RTK keeps the previous section's data while a new one loads,
+                  // and a refetch after Save must not remount the blocks
+                  return valuesFetching && !valuesCurrentData ? (
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  ) : (
+                    <Box sx={styles.formScroll}>
+                      {activeSection === 'resources' ? (
+                        <HelpCenterSection
+                          values={localValues}
+                          onChange={handleFieldChange}
+                        />
+                      ) : (
+                        <SupportAssistant
+                          values={localValues}
+                          onChange={handleFieldChange}
+                        />
+                      )}
+                    </Box>
+                  );
+                case 'runtime':
+                case 'observability':
+                  // A refetch after Save keeps the cards mounted, so an expanded card stays open
+                  return valuesFetching && !valuesCurrentData ? (
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  ) : (
+                    <Box sx={styles.formScroll}>
+                      <PylonCardsSection
+                        key={activeSection}
+                        sectionId={activeSection}
+                        fields={activeFields}
                         values={localValues}
+                        sectionDescription={activeSectionDescription}
                         onChange={handleFieldChange}
                       />
-                    ) : (
-                      <SupportAssistant
+                    </Box>
+                  );
+                case 'guardrails': {
+                  const guardrailsFields = activeFields.filter(
+                    f => !FEATURES_GUARDRAILS_PREFIXES.some(p => f.path?.startsWith(p)),
+                  );
+                  return valuesLoading ? (
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  ) : (
+                    <Box sx={styles.formScroll}>
+                      <GuardrailsSection
+                        fields={guardrailsFields}
                         values={localValues}
+                        sectionDescription={activeSectionDescription}
                         onChange={handleFieldChange}
                       />
-                    )}
-                  </Box>
-                );
-              case 'runtime':
-              case 'observability':
-                // A refetch after Save keeps the cards mounted, so an expanded card stays open
-                return valuesFetching && !valuesCurrentData ? (
-                  <Box sx={styles.loadingContainer}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.formScroll}>
-                    <PylonCardsSection
-                      key={activeSection}
-                      sectionId={activeSection}
-                      fields={activeFields}
-                      values={localValues}
-                      sectionDescription={activeSectionDescription}
-                      onChange={handleFieldChange}
-                    />
-                  </Box>
-                );
-              case 'guardrails': {
-                const guardrailsFields = activeFields.filter(
-                  f => !FEATURES_GUARDRAILS_PREFIXES.some(p => f.path?.startsWith(p)),
-                );
-                return valuesLoading ? (
-                  <Box sx={styles.loadingContainer}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.formScroll}>
-                    <GuardrailsSection
-                      fields={guardrailsFields}
-                      values={localValues}
-                      sectionDescription={activeSectionDescription}
-                      onChange={handleFieldChange}
-                    />
-                  </Box>
-                );
+                    </Box>
+                  );
+                }
+                default:
+                  return valuesFetching ? (
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  ) : (
+                    <Box sx={styles.formScroll}>
+                      <SchemaForm
+                        fields={activeFields}
+                        values={localValues}
+                        sectionDescription={activeSectionDescription}
+                        onChange={handleFieldChange}
+                      />
+                    </Box>
+                  );
               }
-              default:
-                return valuesFetching ? (
-                  <Box sx={styles.loadingContainer}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.formScroll}>
-                    <SchemaForm
-                      fields={activeFields}
-                      values={localValues}
-                      sectionDescription={activeSectionDescription}
-                      onChange={handleFieldChange}
-                    />
-                  </Box>
-                );
-            }
-          })()}
+            })()}
+          </FieldErrorsContext.Provider>
 
           {/* Action bar */}
           {!SELF_MANAGED_SECTIONS.includes(activeSection) && (

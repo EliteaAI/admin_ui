@@ -128,6 +128,7 @@ const GuardrailsSection = memo(props => {
           count={section.fields.length}
           expanded={!!expandedSections[section.id]}
           onToggle={() => toggleSection(section.id)}
+          keepMounted
         >
           {section.fields.map(field => (
             <GuardrailsFieldCard

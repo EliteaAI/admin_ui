@@ -1,2 +1,3 @@
 export { default as GuardrailsSection } from './GuardrailsSection';
 export { default as SchemaForm } from './SchemaForm';
+export { FieldErrorsContext } from './fieldErrors.context';

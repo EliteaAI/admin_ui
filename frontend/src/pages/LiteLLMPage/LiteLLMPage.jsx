@@ -12,9 +12,10 @@ import {
 import { useTaskStartMutation } from '@/api/tasks.api';
 import { DrawerPage } from '@/components/DrawerPage';
 import { DrawerPageHeader } from '@/components/DrawerPageHeader';
-import { SchemaForm } from '@/components/SchemaForm';
+import { FieldErrorsContext, SchemaForm } from '@/components/SchemaForm';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+import { useFieldErrors } from '@/hooks/useFieldErrors.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 const LiteLLMPage = memo(() => {
@@ -49,6 +50,7 @@ const LiteLLMPage = memo(() => {
   }, [valuesData]);
 
   const [saveValues, { isLoading: saving }] = useConfigValuesSaveMutation();
+  const { hasFieldErrors, reportFieldError } = useFieldErrors();
   const [restartPylon, { isLoading: restarting }] = useConfigRestartMutation();
   const [startTask] = useTaskStartMutation();
 
@@ -200,13 +202,15 @@ const LiteLLMPage = memo(() => {
           </Box>
         ) : (
           <Box sx={styles.formScroll}>
-            <SchemaForm
-              fields={fields}
-              values={localValues}
-              sectionDescription={sectionDescription}
-              onChange={handleFieldChange}
-              onAction={handleAction}
-            />
+            <FieldErrorsContext.Provider value={reportFieldError}>
+              <SchemaForm
+                fields={fields}
+                values={localValues}
+                sectionDescription={sectionDescription}
+                onChange={handleFieldChange}
+                onAction={handleAction}
+              />
+            </FieldErrorsContext.Provider>
           </Box>
         )}
 
@@ -226,7 +230,7 @@ const LiteLLMPage = memo(() => {
                 size="small"
                 variant="contained"
                 onClick={handleSave}
-                disabled={!isDirty || saving}
+                disabled={!isDirty || saving || hasFieldErrors}
                 sx={styles.saveButton}
               >
                 {saving ? 'Saving...' : 'Save'}

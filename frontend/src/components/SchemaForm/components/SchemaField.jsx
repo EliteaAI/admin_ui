@@ -1,9 +1,11 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useContext, useEffect, useId, useState } from 'react';
 
 import { MenuItem, Select, TextField } from '@mui/material';
 
 import { useConfigSuggestionsQuery } from '@/api/configuration.api';
+import { getNumberFieldError, isNumberText } from '@/helpers/schemaForm.helpers';
 
+import { FieldErrorsContext } from '../fieldErrors.context';
 import ArrayChipsInput from './ArrayChipsInput';
 import JsonEditorField from './JsonEditorField';
 import MapEditor from './MapEditor';
@@ -33,24 +35,38 @@ const SchemaField = memo(props => {
 
   // A nullable number cleared by the user means "no value" (e.g. unlimited), not 0
   const nullable = Array.isArray(field.value_schema?.type) && field.value_schema.type.includes('null');
-  // What the number field shows while it is being edited; null shows the form value
-  const [numberText, setNumberText] = useState(null);
+  const [numberCleared, setNumberCleared] = useState(false);
+  const [typedValue, setTypedValue] = useState();
   const handleNumberChange = useCallback(
     e => {
       const text = e.target.value;
-      setNumberText(text);
       // An empty field (cleared, or text that is not a number such as a space) is never 0: it is null when
       // the field allows no value, otherwise the last number stays in the form
       if (text === '') {
         if (nullable) onChange(null);
+        else setNumberCleared(true);
         return;
       }
-      onChange(Number(text));
+      setNumberCleared(false);
+      const typed = isNumberText(type, text) ? Number(text) : text;
+      setTypedValue(typed);
+      onChange(typed);
     },
-    [onChange, nullable],
+    [onChange, nullable, type],
   );
-  const handleNumberBlur = useCallback(() => setNumberText(null), []);
-  const numberMissing = numberText === '' && !nullable;
+  const handleNumberBlur = useCallback(() => setNumberCleared(false), []);
+  const numberShown = numberCleared ? '' : value;
+  const isNumberField = type === 'integer' || type === 'number';
+  const numberError = isNumberField ? getNumberFieldError(field, numberShown) : null;
+  const numberBlocksSave = numberCleared || (value === typedValue && !!numberError);
+
+  const reportFieldError = useContext(FieldErrorsContext);
+  const fieldId = useId();
+  useEffect(() => {
+    if (!reportFieldError) return undefined;
+    reportFieldError(fieldId, numberBlocksSave);
+    return () => reportFieldError(fieldId, false);
+  }, [reportFieldError, fieldId, numberBlocksSave]);
 
   const styles = schemaFieldStyles();
 
@@ -119,11 +135,11 @@ const SchemaField = memo(props => {
           fullWidth
           size="small"
           type="number"
-          value={numberText ?? value ?? ''}
+          value={numberShown ?? ''}
           onChange={handleNumberChange}
           onBlur={handleNumberBlur}
-          error={numberMissing}
-          helperText={numberMissing ? 'Enter a number' : undefined}
+          error={!!numberError}
+          helperText={numberError ?? undefined}
           inputProps={{ min: field.minimum, max: field.maximum }}
           placeholder="Enter number..."
           sx={styles.textField}
