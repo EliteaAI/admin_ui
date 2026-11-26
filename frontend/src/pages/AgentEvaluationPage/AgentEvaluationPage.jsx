@@ -26,6 +26,7 @@ const AgentEvaluationPage = memo(() => {
 
   const [activeTab, setActiveTab] = useState(() => tabFromHash());
   const [statusFilter, setStatusFilter] = useState('');
+  const [modeFilter, setModeFilter] = useState('');
 
   useEffect(() => {
     window.location.hash = activeTab;
@@ -39,9 +40,10 @@ const AgentEvaluationPage = memo(() => {
 
   const handleTabChange = useCallback((_, value) => setActiveTab(value), []);
 
-  // A counter on the overview opens the agents tab filtered to that status.
-  const openAgents = useCallback(status => {
+  // A counter on the overview opens the agents tab filtered to that status or mode.
+  const openAgents = useCallback((status, mode) => {
     setStatusFilter(status ?? '');
+    setModeFilter(mode ?? '');
     setActiveTab('agents');
   }, []);
 
@@ -85,6 +87,8 @@ const AgentEvaluationPage = memo(() => {
         <AgentsTab
           status={statusFilter}
           onStatusChange={setStatusFilter}
+          mode={modeFilter}
+          onModeChange={setModeFilter}
         />
       )}
       {activeTab === 'configuration' && <ConfigurationTab />}

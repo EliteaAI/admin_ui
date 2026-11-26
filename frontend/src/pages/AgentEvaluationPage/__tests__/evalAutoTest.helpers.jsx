@@ -19,6 +19,7 @@ export const RUN = PERMISSIONS.evalAuto.run;
 export const SETTINGS_PATH = '/admin/eval_auto/administration';
 export const DATASET_PATH = '/admin/eval_auto_dataset/administration';
 export const ITEMS_PATH = '/admin/eval_auto_items/administration';
+export const CONSENTS_PATH = '/admin/eval_auto_history_consents/administration';
 export const SCHEDULES_PATH = '/scheduling/schedules/administration/0';
 
 // The real store and RTK Query run; only the network is replaced
@@ -85,6 +86,16 @@ export const makeSettings = (overrides = {}) => ({
   coverage_threshold: 80.0,
   classify_threshold: 0.5,
   reevaluate_after_days: 28,
+  mode: 'live',
+  history_window_days: 28,
+  history_max_turns: 10,
+  history_min_turns: 3,
+  history_version: 'default',
+  history_strategy: 'stratified',
+  history_max_turns_per_conversation: 2,
+  history_max_share_per_user: 0.34,
+  max_concurrent_history_runs: 4,
+  history_reevaluate_after_days: 7,
   window: null,
   ...overrides,
 });
@@ -107,7 +118,8 @@ export const makeItem = (overrides = {}) => ({
   coverage: 100,
   dataset_tier: 'agent_suite',
   trigger: 'scheduled',
-  mode: 'full',
+  mode: 'live',
+  history: null,
   attempts: 1,
   created_at: '2026-11-11T02:00:00+00:00',
   finished_at: '2026-11-11T02:05:00+00:00',

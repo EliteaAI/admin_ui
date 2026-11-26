@@ -4,8 +4,11 @@ import {
   changedSettings,
   cleanProbes,
   formatCoverage,
+  historySummary,
+  modeLabel,
   parseProjectIds,
   probesChanged,
+  readsHistory,
   resyncMessage,
   runUrl,
   stateLabel,
@@ -82,6 +85,37 @@ describe('labels', () => {
     expect(triggerLabel('manual')).toBe('Run now');
     expect(triggerLabel('other')).toBe('other');
     expect(triggerLabel(null)).toBe('-');
+  });
+});
+
+describe('mode', () => {
+  it('names the mode, falling back to the raw value', () => {
+    expect(modeLabel('live')).toBe('Live');
+    expect(modeLabel('history')).toBe('History');
+    expect(modeLabel('other')).toBe('other');
+    expect(modeLabel(null)).toBe('-');
+  });
+
+  it('reads history only in history and hybrid modes', () => {
+    expect(readsHistory('history')).toBe(true);
+    expect(readsHistory('hybrid')).toBe(true);
+    expect(readsHistory('live')).toBe(false);
+  });
+
+  it('sums up a history result, preferring the sampled turns', () => {
+    const scored = history => ({ mode: 'history', status: 'passed', history });
+    expect(historySummary(null)).toBeNull();
+    expect(historySummary(scored({ sampled: 6, eligible: 9, conversations: 3, window_days: 28 }))).toBe(
+      '6 turns · 3 chats · 28 days',
+    );
+    expect(historySummary(scored({ sampled: 0, eligible: 1, conversations: 1 }))).toBe('1 turn · 1 chat');
+  });
+
+  it('has no summary for an item that was not scored from history', () => {
+    const history = { sampled: 0, eligible: 2, conversations: 1, window_days: 28 };
+    expect(historySummary({ mode: 'live', status: 'passed', history })).toBeNull();
+    expect(historySummary({ mode: 'history', status: 'not_evaluated', history })).toBeNull();
+    expect(historySummary({ mode: 'history', status: 'passed', history: null })).toBeNull();
   });
 });
 

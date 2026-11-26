@@ -6,9 +6,11 @@ import { useEvalAutoItemsQuery } from '@/api/evalAuto.api';
 import { GridTableContainer } from '@/components/GridTable';
 import { useDebounceValue } from '@/hooks/useDebounceValue.hooks';
 import {
+  ITEM_MODE_OPTIONS,
   REASON_OPTIONS,
   STATUS_CONFIG,
   STATUS_OPTIONS,
+  modeLabel,
   reasonLabel,
 } from '@/pages/AgentEvaluationPage/helpers/evalAuto.helpers';
 
@@ -19,9 +21,9 @@ const DEFAULT_PAGE_SIZE = 20;
 // Matches the admin API's limit, so a pasted long string never turns into a 400.
 const SEARCH_MAX_LENGTH = 200;
 
-/** Each agent's latest scheduled result, filtered by name, status, reason and project, with one agent's history in a drawer. */
+/** Each agent's latest scheduled result, filtered by name, status, reason, mode and project, with one agent's history in a drawer. */
 const AgentsTab = memo(props => {
-  const { status, onStatusChange } = props;
+  const { status, onStatusChange, mode = '', onModeChange } = props;
 
   const styles = agentsTabStyles();
 
@@ -39,7 +41,7 @@ const AgentsTab = memo(props => {
     /^\d+$/.test(debouncedProject) && Number(debouncedProject) > 0 ? Number(debouncedProject) : null;
 
   const { data, isLoading, isError } = useEvalAutoItemsQuery(
-    { projectId, status, reason, search, limit: pageSize, offset: page * pageSize },
+    { projectId, status, reason, mode, search, limit: pageSize, offset: page * pageSize },
     { refetchOnMountOrArgChange: true },
   );
   const rows = data?.items ?? [];
@@ -57,6 +59,14 @@ const AgentsTab = memo(props => {
     setReason(event.target.value);
     setPage(0);
   }, []);
+
+  const handleModeChange = useCallback(
+    event => {
+      onModeChange(event.target.value);
+      setPage(0);
+    },
+    [onModeChange],
+  );
 
   const handleSearchChange = useCallback(event => {
     setSearchText(event.target.value);
@@ -79,7 +89,7 @@ const AgentsTab = memo(props => {
   let emptyMessage = null;
   if (!isLoading && !isError && rows.length === 0) {
     emptyMessage =
-      status || reason || search || projectId
+      status || reason || mode || search || projectId
         ? 'No agents match the filters.'
         : 'No agent has been evaluated on schedule yet.';
   }
@@ -153,6 +163,37 @@ const AgentsTab = memo(props => {
               data-testid={`eval-auto-reason-option-${option}`}
             >
               {reasonLabel(option)}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <FormControl
+        size="small"
+        sx={styles.filter}
+      >
+        <InputLabel
+          shrink
+          id="eval-auto-mode-label"
+        >
+          Mode
+        </InputLabel>
+        <Select
+          labelId="eval-auto-mode-label"
+          label="Mode"
+          value={mode}
+          onChange={handleModeChange}
+          displayEmpty
+          notched
+          SelectDisplayProps={{ 'data-testid': 'eval-auto-mode-filter' }}
+        >
+          <MenuItem value="">Any mode</MenuItem>
+          {ITEM_MODE_OPTIONS.map(option => (
+            <MenuItem
+              key={option}
+              value={option}
+              data-testid={`eval-auto-mode-option-${option}`}
+            >
+              {modeLabel(option)}
             </MenuItem>
           ))}
         </Select>

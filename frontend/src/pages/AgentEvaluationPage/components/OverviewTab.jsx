@@ -22,11 +22,15 @@ import { PERMISSIONS } from '@/constants/permissions.constants';
 import { RouteDefinitions } from '@/constants/routes.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
 import {
+  ITEM_MODE_OPTIONS,
   STATUS_CONFIG,
   STATUS_OPTIONS,
   describeCron,
   formatDate,
+  modeLabel,
 } from '@/pages/AgentEvaluationPage/helpers/evalAuto.helpers';
+
+import HistoryConsentsSection from './HistoryConsentsSection';
 
 const RUN_SCHEDULE = 'eval_auto_run';
 // Why a run-now was refused; any other reason is shown as the backend sent it.
@@ -52,6 +56,8 @@ const OverviewTab = memo(props => {
   const warning = useEvalAutoItemsQuery({ status: 'warning', limit: 1, offset: 0 });
   const failed = useEvalAutoItemsQuery({ status: 'failed', limit: 1, offset: 0 });
   const notEvaluated = useEvalAutoItemsQuery({ status: 'not_evaluated', limit: 1, offset: 0 });
+  const live = useEvalAutoItemsQuery({ mode: 'live', limit: 1, offset: 0 });
+  const history = useEvalAutoItemsQuery({ mode: 'history', limit: 1, offset: 0 });
   const { data: schedules, isLoading: schedulesLoading } = useScheduleListQuery(undefined, {
     skip: !canSeeSchedules,
   });
@@ -66,6 +72,10 @@ const OverviewTab = memo(props => {
       not_evaluated: notEvaluated.data?.total,
     }),
     [passed.data, warning.data, failed.data, notEvaluated.data],
+  );
+  const modeCounts = useMemo(
+    () => ({ live: live.data?.total, history: history.data?.total }),
+    [live.data, history.data],
   );
   const job = passed.data?.job;
   const schedule = useMemo(() => (schedules?.rows ?? []).find(row => row.name === RUN_SCHEDULE), [schedules]);
@@ -200,6 +210,35 @@ const OverviewTab = memo(props => {
         ))}
       </Box>
 
+      <Box sx={styles.modeSection}>
+        <Typography variant="headingSmall">By mode</Typography>
+        <Box sx={styles.cards}>
+          {ITEM_MODE_OPTIONS.map(mode => (
+            <Card
+              key={mode}
+              variant="outlined"
+              sx={styles.card}
+            >
+              <CardActionArea
+                sx={styles.cardAction}
+                onClick={() => onOpenAgents(null, mode)}
+                data-testid={`eval-auto-mode-count-${mode}`}
+              >
+                <Typography variant="headingLarge">{modeCounts[mode] ?? '-'}</Typography>
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                >
+                  {modeLabel(mode)}
+                </Typography>
+              </CardActionArea>
+            </Card>
+          ))}
+        </Box>
+      </Box>
+
+      <HistoryConsentsSection />
+
       <Snackbar
         open={!!notice}
         autoHideDuration={6000}
@@ -249,6 +288,11 @@ const overviewTabStyles = () => ({
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(12rem, 1fr))',
     gap: '1rem',
+  },
+  modeSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
   },
   card: {
     borderRadius: '0.5rem',

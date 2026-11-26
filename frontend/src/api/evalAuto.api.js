@@ -3,6 +3,7 @@ import { adminApi } from './admin.api';
 const SETTINGS_BASE = '/admin/eval_auto/administration';
 const ITEMS_BASE = '/admin/eval_auto_items/administration';
 const DATASET_BASE = '/admin/eval_auto_dataset/administration';
+const CONSENTS_BASE = '/admin/eval_auto_history_consents/administration';
 
 const evalAutoApi = adminApi.injectEndpoints({
   endpoints: build => ({
@@ -22,12 +23,13 @@ const evalAutoApi = adminApi.injectEndpoints({
     }),
 
     evalAutoItems: build.query({
-      query: ({ projectId, status, reason, search, limit, offset } = {}) => ({
+      query: ({ projectId, status, reason, mode, search, limit, offset } = {}) => ({
         url: ITEMS_BASE,
         params: {
           ...(projectId && { project_id: projectId }),
           ...(status && { status }),
           ...(reason && { reason }),
+          ...(mode && { mode }),
           ...(search && { search }),
           limit,
           offset,
@@ -39,6 +41,11 @@ const evalAutoApi = adminApi.injectEndpoints({
     evalAutoHistory: build.query({
       query: ({ projectId, applicationId }) => ({ url: `${ITEMS_BASE}/${projectId}/${applicationId}` }),
       providesTags: ['EvalAutoItems'],
+    }),
+
+    evalAutoHistoryConsents: build.query({
+      query: () => ({ url: CONSENTS_BASE }),
+      providesTags: ['EvalAutoHistoryConsents'],
     }),
 
     evalAutoDataset: build.query({
@@ -63,6 +70,7 @@ export const {
   useEvalAutoRunNowMutation,
   useEvalAutoItemsQuery,
   useEvalAutoHistoryQuery,
+  useEvalAutoHistoryConsentsQuery,
   useEvalAutoDatasetQuery,
   useEvalAutoDatasetUpdateMutation,
   useEvalAutoDatasetResyncMutation,

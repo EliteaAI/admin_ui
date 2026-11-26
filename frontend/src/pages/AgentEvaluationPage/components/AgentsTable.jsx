@@ -10,6 +10,8 @@ import {
   formatCoverage,
   formatDate,
   formatScore,
+  historySummary,
+  modeLabel,
   reasonLabel,
   runUrl,
   tierLabel,
@@ -29,6 +31,7 @@ const COLUMNS = [
   { field: 'coverage', label: 'Coverage', width: '6rem', hideBelow: 800 },
   { field: 'dataset_tier', label: 'Dataset', width: '1.2fr', hideBelow: 1000 },
   { field: 'reason_code', label: 'Reason', width: '1.2fr', hideBelow: 900 },
+  { field: 'mode', label: 'Mode', width: '6rem', hideBelow: 1000 },
   { field: 'trigger', label: 'Trigger', width: '6rem', hideBelow: 1300 },
   { field: 'finished_at', label: 'Finished', width: '1.1fr', hideBelow: 1100 },
   { field: 'eval_run_id', label: 'Run', width: '5rem' },
@@ -82,6 +85,28 @@ const AgentsTable = memo(props => {
               {row.owner_id ? String(row.owner_id) : '-'}
             </Typography>
           );
+        case 'mode': {
+          const summary = historySummary(row);
+          return (
+            <Box
+              sx={styles.mode}
+              title={summary ?? ''}
+              data-testid={`eval-auto-mode-${row.id}`}
+            >
+              <Typography variant="bodySmall">{modeLabel(row.mode)}</Typography>
+              {summary && (
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  sx={styles.reason}
+                  data-testid={`eval-auto-mode-summary-${row.id}`}
+                >
+                  {summary}
+                </Typography>
+              )}
+            </Box>
+          );
+        }
         case 'trigger':
           return triggerLabel(row.trigger);
         case 'status':
@@ -179,7 +204,13 @@ const agentsTableStyles = () => ({
   runLink: {
     fontSize: '0.875rem',
   },
+  mode: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+  },
   reason: {
+    maxWidth: '100%',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',

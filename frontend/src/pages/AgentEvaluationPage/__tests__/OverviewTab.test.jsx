@@ -6,6 +6,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import {
+  CONSENTS_PATH,
   ITEMS_PATH,
   RUN,
   SCHEDULES_PATH,
@@ -19,12 +20,28 @@ import {
 } from './evalAutoTest.helpers';
 
 const TOTALS = { passed: 7, warning: 2, failed: 1, not_evaluated: 4 };
+const MODE_TOTALS = { live: 11, history: 3 };
+const CONSENTS = {
+  total: 2,
+  projects: [
+    { project_id: 4, name: 'Support', in_scope: true },
+    { project_id: 9, name: 'Sales', in_scope: false },
+  ],
+};
 
-const setup = async ({ permissions = [VIEW, RUN], job = makeJob(), schedule, extra = {} } = {}) => {
+const setup = async ({
+  permissions = [VIEW, RUN],
+  job = makeJob(),
+  schedule,
+  consents = ok(CONSENTS),
+  extra = {},
+} = {}) => {
   const onOpenAgents = vi.fn();
   const calls = mockApi({
-    [`GET ${ITEMS_PATH}`]: ({ params }) => ok({ total: TOTALS[params.status], items: [], job }),
+    [`GET ${ITEMS_PATH}`]: ({ params }) =>
+      ok({ total: params.mode ? MODE_TOTALS[params.mode] : TOTALS[params.status], items: [], job }),
     [`GET ${SCHEDULES_PATH}`]: ok({ rows: schedule ? [schedule] : [] }),
+    [`GET ${CONSENTS_PATH}`]: consents,
     ...extra,
   });
   const user = userEvent.setup();
@@ -61,6 +78,55 @@ describe('counters', () => {
     await setup({ job: null });
 
     expect(await screen.findByText('No job has run yet.')).toBeInTheDocument();
+  });
+});
+
+describe('history evaluation', () => {
+  it('counts the latest results per mode', async () => {
+    await setup();
+
+    await waitFor(() => expect(screen.getByTestId('eval-auto-mode-count-live')).toHaveTextContent('11'));
+    expect(screen.getByTestId('eval-auto-mode-count-history')).toHaveTextContent('3');
+    expect(screen.getByTestId('eval-auto-mode-count-history')).toHaveTextContent('History');
+  });
+
+  it('opens the agents tab filtered to a mode on click', async () => {
+    const { user, onOpenAgents } = await setup();
+
+    await waitFor(() => expect(screen.getByTestId('eval-auto-mode-count-history')).toHaveTextContent('3'));
+    await user.click(screen.getByTestId('eval-auto-mode-count-history'));
+    expect(onOpenAgents).toHaveBeenCalledWith(null, 'history');
+  });
+
+  it('reads the projects only when asked to', async () => {
+    const { calls, user } = await setup();
+
+    expect(calls.some(call => call.path === CONSENTS_PATH)).toBe(false);
+    await user.click(screen.getByTestId('eval-auto-history-consents-show'));
+    expect(await screen.findByTestId('eval-auto-history-consent-4')).toBeInTheDocument();
+  });
+
+  it('lists the projects that allow it, with whether each is in scope', async () => {
+    const { user } = await setup();
+    await user.click(screen.getByTestId('eval-auto-history-consents-show'));
+
+    expect(await screen.findByTestId('eval-auto-history-consent-4')).toHaveTextContent('Support');
+    expect(screen.getByTestId('eval-auto-history-consent-4')).toHaveTextContent('In scope');
+    expect(screen.getByTestId('eval-auto-history-consent-9')).toHaveTextContent('Out of scope');
+  });
+
+  it('says when no project allows it', async () => {
+    const { user } = await setup({ consents: ok({ total: 0, projects: [] }) });
+    await user.click(screen.getByTestId('eval-auto-history-consents-show'));
+
+    expect(await screen.findByTestId('eval-auto-history-consents-empty')).toBeInTheDocument();
+  });
+
+  it('says when the projects could not be loaded', async () => {
+    const { user } = await setup({ consents: fail(500, { error: 'boom' }) });
+    await user.click(screen.getByTestId('eval-auto-history-consents-show'));
+
+    expect(await screen.findByText('Could not load the projects.')).toBeInTheDocument();
   });
 });
 

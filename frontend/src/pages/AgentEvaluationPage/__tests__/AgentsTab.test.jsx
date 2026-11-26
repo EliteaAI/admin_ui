@@ -19,19 +19,22 @@ const HISTORY_PATH = `${ITEMS_PATH}/4/21`;
 
 const listOf = (items, total = items.length) => ok({ total, items, job: makeJob() });
 
-const setup = async ({ items = [makeItem()], total, status = '', extra = {} } = {}) => {
+const setup = async ({ items = [makeItem()], total, status = '', mode = '', extra = {} } = {}) => {
   const onStatusChange = vi.fn();
+  const onModeChange = vi.fn();
   const calls = mockApi({ [`GET ${ITEMS_PATH}`]: listOf(items, total), ...extra });
   const user = userEvent.setup();
   renderWithProviders(
     <AgentsTab
       status={status}
       onStatusChange={onStatusChange}
+      mode={mode}
+      onModeChange={onModeChange}
     />,
     { permissions: [VIEW] },
   );
   await screen.findByTestId('eval-auto-agents');
-  return { calls, user, onStatusChange };
+  return { calls, user, onStatusChange, onModeChange };
 };
 
 const listCalls = calls => calls.filter(call => call.path === ITEMS_PATH);
@@ -102,6 +105,43 @@ describe('the table', () => {
   });
 });
 
+describe('the mode column', () => {
+  it('labels a history result and sums up its turns on hover', async () => {
+    await setup({
+      items: [
+        makeItem(),
+        makeItem({
+          id: 12,
+          mode: 'history',
+          history: { window_days: 28, sampled: 6, eligible: 9, conversations: 3, users: 2 },
+        }),
+      ],
+    });
+
+    expect(await screen.findByTestId('eval-auto-mode-11')).toHaveTextContent('Live');
+    const history = screen.getByTestId('eval-auto-mode-12');
+    expect(history).toHaveTextContent('History');
+    expect(history).toHaveAttribute('title', '6 turns · 3 chats · 28 days');
+    expect(screen.getByTestId('eval-auto-mode-summary-12')).toHaveTextContent('6 turns · 3 chats · 28 days');
+  });
+
+  it('sums up no turns for a hybrid result that fell back to live, or one without enough history', async () => {
+    const history = { window_days: 28, sampled: 0, eligible: 2, conversations: 1, users: 1 };
+    await setup({
+      items: [
+        makeItem({ id: 13, mode: 'live', history }),
+        makeItem({ id: 14, mode: 'history', status: 'not_evaluated', reason_code: 'NO_TRAFFIC', history }),
+      ],
+    });
+
+    expect(await screen.findByTestId('eval-auto-mode-13')).toHaveTextContent('Live');
+    expect(screen.getByTestId('eval-auto-mode-13')).toHaveAttribute('title', '');
+    expect(screen.queryByTestId('eval-auto-mode-summary-13')).not.toBeInTheDocument();
+    expect(screen.getByTestId('eval-auto-mode-14')).toHaveTextContent('History');
+    expect(screen.queryByTestId('eval-auto-mode-summary-14')).not.toBeInTheDocument();
+  });
+});
+
 describe('filters', () => {
   it('reports a picked status to the page', async () => {
     const { user, onStatusChange } = await setup();
@@ -128,6 +168,16 @@ describe('filters', () => {
         offset: '0',
       }),
     );
+  });
+
+  it('sends the mode the overview picked, and reports a new pick to the page', async () => {
+    const { calls, user, onModeChange } = await setup({ mode: 'history' });
+
+    await waitFor(() => expect(listCalls(calls).at(-1).params.mode).toBe('history'));
+
+    await user.click(screen.getByTestId('eval-auto-mode-filter'));
+    await user.click(await screen.findByTestId('eval-auto-mode-option-live'));
+    expect(onModeChange).toHaveBeenCalledWith('live');
   });
 
   it('sends a project id only once it is a positive integer', async () => {
@@ -159,6 +209,31 @@ describe('the history drawer', () => {
     await within(history).findByTestId('eval-auto-history-9');
     expect(within(history).getByTestId('eval-auto-history-11')).toBeInTheDocument();
     expect(within(history).getByText('Warning')).toBeInTheDocument();
+  });
+
+  it('shows the mode of each run, with the turns a history run scored', async () => {
+    const { user } = await setup({
+      extra: {
+        [`GET ${HISTORY_PATH}`]: ok({
+          total: 2,
+          rows: [
+            makeItem({
+              id: 13,
+              mode: 'history',
+              history: { window_days: 28, sampled: 6, eligible: 9, conversations: 3, users: 2 },
+            }),
+            makeItem(),
+          ],
+        }),
+      },
+    });
+
+    await user.click(await screen.findByTestId('eval-auto-agent-open-11'));
+
+    expect(await screen.findByTestId('eval-auto-history-mode-13')).toHaveTextContent(
+      'History · 6 turns · 3 chats · 28 days',
+    );
+    expect(screen.getByTestId('eval-auto-history-mode-11')).toHaveTextContent(/^Live$/);
   });
 
   it('says how many results the drawer leaves out, and labels a run still in progress', async () => {
