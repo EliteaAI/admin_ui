@@ -12,7 +12,9 @@ import {
 } from '@/api/configuration.api';
 import { DrawerPage } from '@/components/DrawerPage';
 import { DrawerPageHeader } from '@/components/DrawerPageHeader';
+import { FieldErrorsContext } from '@/components/SchemaForm';
 import { RouteDefinitions } from '@/constants/routes.constants';
+import { useFieldErrors } from '@/hooks/useFieldErrors.hooks';
 import { usePageTitle } from '@/hooks/usePageTitle.hooks';
 
 import { ChatConfigurationSection } from './components/ChatConfigurationSection';
@@ -168,6 +170,7 @@ const FeaturesPage = memo(() => {
 
   // Sections with their own field validation report upwards so Save can block
   const [sectionValid, setSectionValid] = useState(true);
+  const { hasFieldErrors, reportFieldError } = useFieldErrors();
 
   const handleSectionChange = useCallback(
     sectionId => {
@@ -405,7 +408,9 @@ const FeaturesPage = memo(() => {
         </Box>
 
         <Box sx={styles.formArea}>
-          {renderContent()}
+          <FieldErrorsContext.Provider value={reportFieldError}>
+            {renderContent()}
+          </FieldErrorsContext.Provider>
 
           <Box sx={styles.actionBar}>
             <Box sx={styles.actionButtons}>
@@ -422,7 +427,7 @@ const FeaturesPage = memo(() => {
                 size="small"
                 variant="contained"
                 onClick={handleSave}
-                disabled={!isDirty || saving || !sectionValid}
+                disabled={!isDirty || saving || !sectionValid || hasFieldErrors}
                 sx={styles.saveButton}
               >
                 {saving ? 'Saving...' : 'Save'}

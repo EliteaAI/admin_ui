@@ -1,12 +1,15 @@
+import { useState } from 'react';
+
 import { Provider } from 'react-redux';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-import { GuardrailsSection } from '@/components/SchemaForm';
+import { FieldErrorsContext, GuardrailsSection } from '@/components/SchemaForm';
+import { useFieldErrors } from '@/hooks/useFieldErrors.hooks';
 import store from '@/store';
 import getDesignTokens from '@/theme/main.theme';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 const theme = createTheme(getDesignTokens('dark'));
@@ -98,5 +101,48 @@ describe('restore to the built-in default', () => {
     renderSection({ fields: [RULES_FIELD], values: { publish_validation_rules: 'Built-in rules' } });
 
     expect(restoreButton('publish_validation_rules')).toBeDisabled();
+  });
+});
+
+const TIMEOUT_FIELD = {
+  key: 'input_guardrail_timeout_ms',
+  type: 'integer',
+  title: 'Input Guardrail Timeout',
+  path: 'input_guardrail.timeout_ms',
+  minimum: 10,
+  maximum: 5000,
+  value_schema: { type: 'integer', minimum: 10, maximum: 5000 },
+};
+
+const GuardrailsWithSave = () => {
+  const { hasFieldErrors, reportFieldError } = useFieldErrors();
+  const [values, setValues] = useState({ input_guardrail_timeout_ms: 200 });
+  const handleChange = (key, value) => setValues(prev => ({ ...prev, [key]: value }));
+  return (
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <FieldErrorsContext.Provider value={reportFieldError}>
+          <GuardrailsSection
+            fields={[TIMEOUT_FIELD]}
+            values={values}
+            onChange={handleChange}
+          />
+        </FieldErrorsContext.Provider>
+        <button disabled={hasFieldErrors}>Save</button>
+      </ThemeProvider>
+    </Provider>
+  );
+};
+
+// #7747: collapsing a group must not hide an invalid value from Save
+describe('grouped number field', () => {
+  it('keeps Save blocked after the group with the invalid value is collapsed', async () => {
+    render(<GuardrailsWithSave />);
+    await userEvent.click(screen.getByText('Input Guardrail'));
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '0' } });
+    await userEvent.click(screen.getByText('Input Guardrail'));
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
   });
 });
