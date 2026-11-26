@@ -72,10 +72,10 @@ const configurationApi = adminApi.injectEndpoints({
     }),
 
     runtimePluginUpdate: build.mutation({
-      query: ({ pluginName, pylonIds }) => ({
+      query: ({ pluginName, pylonIds, force = false }) => ({
         url: `${V2_BASE}/admin/runtime_plugin/administration/${pluginName}`,
         method: 'PUT',
-        body: { pylon_ids: pylonIds },
+        body: { pylon_ids: pylonIds, force },
       }),
     }),
 
