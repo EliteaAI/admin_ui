@@ -9,9 +9,12 @@ export const modeLabel = mode => MODE_LABELS[mode] ?? mode;
 
 export const rowTitle = row => `${row.application?.name ?? 'Agent'} ${row.version?.name ?? ''}`.trim();
 
-// The backend refuses an approval by the operator who created the identity or last changed its state
-const isOwnApproval = (row, userId) =>
-  userId != null && [row.created_by?.id, row.state_changed_by?.id].some(id => id != null && id === userId);
+// The backend refuses an approval by the operator who made the current request (#7228): who last changed its state,
+// else who created it. A creator who did not make the current request may approve it.
+const isOwnApproval = (row, userId) => {
+  const requester = row.state_changed_by?.id ?? row.created_by?.id;
+  return userId != null && requester != null && requester === userId;
+};
 
 /**
  * The actions the menu offers for a row: those valid from its state that the operator may run.
