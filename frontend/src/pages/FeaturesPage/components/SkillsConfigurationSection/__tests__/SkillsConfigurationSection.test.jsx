@@ -94,12 +94,12 @@ const setup = (initialValues = SAVED_VALUES) => {
 const blockHeader = title => screen.getByText(title).closest('[role="button"]');
 
 describe('Skills Configuration page', () => {
-  it('sits directly after Chat Configuration in the Features navigation', () => {
+  it('sits directly after Chat in the Features navigation', () => {
     const ids = FEATURES_SECTIONS.map(section => section.id);
     const skills = FEATURES_SECTIONS.find(section => section.id === 'skills');
 
     expect(ids.indexOf('skills')).toBe(ids.indexOf('chat_configuration') + 1);
-    expect(skills.title).toBe('Skills Configuration');
+    expect(skills.title).toBe('Skills');
     expect(skills.backendSectionIds).toEqual(['skills']);
   });
 

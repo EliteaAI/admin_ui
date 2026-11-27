@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { Box, Chip, Switch, Typography } from '@mui/material';
 
-import { isJsonEditor } from '@/components/SchemaForm/helpers/schemaForm.helpers';
+import { isJsonEditor } from '@/helpers/schemaForm.helpers';
 
 import SchemaField from './SchemaField';
 

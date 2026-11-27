@@ -8,12 +8,14 @@ import { NotFound } from '@/components/NotFound';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { RouteDefinitions } from '@/constants/routes.constants';
 import { getEnvVar } from '@/helpers/env.helpers';
+import { AgentEvaluationPage } from '@/pages/AgentEvaluationPage';
 import { AppRequestsPage } from '@/pages/AppRequestsPage';
 import { AuditTrailPage } from '@/pages/AuditTrailPage';
 import { BudgetsPage } from '@/pages/BudgetsPage';
 import { ConfigurationPage } from '@/pages/ConfigurationPage';
 import { FeaturesPage } from '@/pages/FeaturesPage';
 import { GovernancePage } from '@/pages/GovernancePage';
+import { LifecycleAuditPage } from '@/pages/LifecycleAuditPage';
 import { LiteLLMPage } from '@/pages/LiteLLMPage';
 import { ModelPricesPage } from '@/pages/ModelPricesPage';
 import { PlatformDimensionsPage } from '@/pages/PlatformDimensionsPage';
@@ -63,6 +65,10 @@ const router = createBrowserRouter(
         element={guard(RouteDefinitions.PlatformDimensions, <PlatformDimensionsPage />)}
       />
       <Route
+        path={RouteDefinitions.AgentEvaluation}
+        element={guard(RouteDefinitions.AgentEvaluation, <AgentEvaluationPage />)}
+      />
+      <Route
         path={RouteDefinitions.Secrets}
         element={guard(RouteDefinitions.Secrets, <SecretsPage />)}
       />
@@ -83,12 +89,16 @@ const router = createBrowserRouter(
         element={guard(RouteDefinitions.AuditTrail, <AuditTrailPage />)}
       />
       <Route
+        path={RouteDefinitions.LifecycleAudit}
+        element={guard(RouteDefinitions.LifecycleAudit, <LifecycleAuditPage />)}
+      />
+      <Route
         path={RouteDefinitions.SchedulesTasks}
         element={guard(RouteDefinitions.SchedulesTasks, <SchedulesTasksPage />)}
       />
       <Route
         path={RouteDefinitions.Configuration}
-        element={guard(RouteDefinitions.Configuration, <ConfigurationPage />)}
+        element={guard(RouteDefinitions.Configuration, <ConfigurationPage key="configuration" />)}
       />
       <Route
         path={RouteDefinitions.Features}
@@ -101,6 +111,36 @@ const router = createBrowserRouter(
       <Route
         path={RouteDefinitions.Governance}
         element={guard(RouteDefinitions.Governance, <GovernancePage />)}
+      />
+      <Route
+        path={RouteDefinitions.Authentication}
+        element={guard(
+          RouteDefinitions.Authentication,
+          <ConfigurationPage
+            key="auth"
+            sectionId="auth"
+          />,
+        )}
+      />
+      <Route
+        path={RouteDefinitions.ScimProvisioning}
+        element={guard(
+          RouteDefinitions.ScimProvisioning,
+          <ConfigurationPage
+            key="scim"
+            sectionId="scim"
+          />,
+        )}
+      />
+      <Route
+        path={RouteDefinitions.Guardrails}
+        element={guard(
+          RouteDefinitions.Guardrails,
+          <ConfigurationPage
+            key="guardrails"
+            sectionId="guardrails"
+          />,
+        )}
       />
       <Route
         path="*"

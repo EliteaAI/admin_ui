@@ -4,6 +4,7 @@ import BlockOutlined from '@mui/icons-material/BlockOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import CloudDownloadOutlined from '@mui/icons-material/CloudDownloadOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DriveFileRenameOutlineOutlined from '@mui/icons-material/DriveFileRenameOutlineOutlined';
 import PersonAddAlt1Outlined from '@mui/icons-material/PersonAddAlt1Outlined';
 import SettingsBackupRestoreOutlined from '@mui/icons-material/SettingsBackupRestoreOutlined';
 import TimelineOutlined from '@mui/icons-material/TimelineOutlined';
@@ -69,6 +70,7 @@ const ProjectsTable = memo(props => {
     onSelectionChange,
     onDelete,
     onAddAdmin,
+    onRename,
     onSuspend,
     onActivity,
     onBackup,
@@ -133,7 +135,27 @@ const ProjectsTable = memo(props => {
   );
 
   const renderCell = useCallback(
-    (column, value) => {
+    (column, value, row) => {
+      if (column.field === 'name' && row?.scim_managed) {
+        return (
+          <Box sx={styles.nameCell}>
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+              sx={styles.cellText}
+            >
+              {value || '-'}
+            </Typography>
+            <Tooltip title="Linked to an Entra ID group: members synced from the group are managed in Entra ID">
+              <Chip
+                label="Entra"
+                size="small"
+                variant="outlined"
+              />
+            </Tooltip>
+          </Box>
+        );
+      }
       if (column.field === 'status') {
         const cfg = STATUS_CONFIG[value] || STATUS_CONFIG.pending;
         return (
@@ -200,6 +222,16 @@ const ProjectsTable = memo(props => {
       const isSuspended = row.status === 'suspended';
       return (
         <Box sx={styles.actionsRow}>
+          {onRename && (
+            <Tooltip title="Rename project">
+              <IconButton
+                size="small"
+                onClick={() => onRename(row)}
+              >
+                <DriveFileRenameOutlineOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           {onAddAdmin && (
             <Tooltip title="Add admin">
               <IconButton
@@ -268,7 +300,7 @@ const ProjectsTable = memo(props => {
         </Box>
       );
     },
-    [styles, onDelete, onAddAdmin, onSuspend, onActivity, onBackup, onRestore],
+    [styles, onDelete, onAddAdmin, onRename, onSuspend, onActivity, onBackup, onRestore],
   );
 
   if (isFetching) {
@@ -349,6 +381,12 @@ const projectsTableStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  nameCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: 0,
   },
   actionsRow: {
     display: 'flex',

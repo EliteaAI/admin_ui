@@ -3,7 +3,16 @@ import { adminApi } from './admin.api';
 const budgetsApi = adminApi.injectEndpoints({
   endpoints: build => ({
     projectBudgetList: build.query({
-      query: ({ limit = 20, offset = 0, search, sort_by, sort_order, project_type, feature } = {}) => ({
+      query: ({
+        limit = 20,
+        offset = 0,
+        search,
+        sort_by,
+        sort_order,
+        project_type,
+        feature,
+        period,
+      } = {}) => ({
         url: '/elitea_core/project_budgets/administration',
         params: {
           limit,
@@ -13,6 +22,7 @@ const budgetsApi = adminApi.injectEndpoints({
           ...(sort_order && { sort_order }),
           ...(project_type && { project_type }),
           ...(feature && { feature }),
+          ...(period && { period }),
         },
       }),
       providesTags: ['Budgets'],

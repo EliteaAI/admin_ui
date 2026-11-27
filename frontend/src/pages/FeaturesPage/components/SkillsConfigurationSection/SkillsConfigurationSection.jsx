@@ -6,7 +6,7 @@ import { Box } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { GuardrailsSection } from '@/components/SchemaForm';
-import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.hooks';
+import { useExpandedBlocks } from '@/hooks/useExpandedBlocks.hooks';
 
 import ProjectSkillAccess from './components/ProjectSkillAccess';
 import { SKILL_LIMIT_FIELD_KEYS } from './constants/skillsConfiguration.constants';

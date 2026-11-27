@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import BlockOutlined from '@mui/icons-material/BlockOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import TimelineOutlined from '@mui/icons-material/TimelineOutlined';
 import { Box, Chip, IconButton, MenuItem, Select, Skeleton, Tooltip, Typography } from '@mui/material';
 
@@ -263,15 +264,29 @@ const UsersTable = memo(props => {
               </IconButton>
             </Tooltip>
           )}
-          {onDelete && (
-            <Tooltip title="Delete user">
-              <IconButton
-                size="small"
-                onClick={() => onDelete([row.id])}
+          {row.scim_provisioned ? (
+            <Tooltip title="Provisioned from Entra ID: remove the user from the enterprise app there">
+              <Box
+                component="span"
+                sx={styles.syncIconWrapper}
               >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+                <SyncOutlined
+                  fontSize="small"
+                  sx={styles.syncIcon}
+                />
+              </Box>
             </Tooltip>
+          ) : (
+            onDelete && (
+              <Tooltip title="Delete user">
+                <IconButton
+                  size="small"
+                  onClick={() => onDelete([row.id])}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )
           )}
         </Box>
       );
@@ -362,6 +377,17 @@ const usersTableStyles = () => ({
     display: 'flex',
     gap: '0.125rem',
   },
+  syncIconWrapper: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '1.875rem',
+    height: '1.875rem',
+  },
+  syncIcon: ({ palette }) => ({
+    color: palette.icon.fill.default,
+    flexShrink: 0,
+  }),
   suspendedRow: ({ palette }) => ({
     opacity: 0.5,
     backgroundColor: palette.background.subtle.default,

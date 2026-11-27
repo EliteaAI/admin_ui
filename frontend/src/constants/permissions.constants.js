@@ -72,6 +72,11 @@ export const PERMISSIONS = {
     edit: 'configuration.oauth_apps.edit',
   },
 
+  // SCIM provisioning of IdP groups into projects
+  scim: {
+    manage: 'admin.scim.manage',
+  },
+
   // LiteLLM section
   litellm: {
     section: 'configuration.litellm',
@@ -98,6 +103,11 @@ export const PERMISSIONS = {
     view: 'models.admin.audit_trail.view',
   },
 
+  // Project and user lifecycle audit (view + CSV export)
+  lifecycleAudit: {
+    view: 'models.admin.lifecycle_audit.view',
+  },
+
   // Project / user LLM spend budgets
   budgets: {
     view: 'models.admin.project_budgets.view',
@@ -110,6 +120,13 @@ export const PERMISSIONS = {
     create: 'configuration.evaluation.platform_dimensions.create',
     edit: 'configuration.evaluation.platform_dimensions.edit',
     delete: 'configuration.evaluation.platform_dimensions.delete',
+  },
+
+  // Environment-wide scheduled agent evaluation
+  evalAuto: {
+    view: 'configuration.evaluation.auto.view',
+    edit: 'configuration.evaluation.auto.edit',
+    run: 'configuration.evaluation.auto.run',
   },
 
   // Surveys
@@ -160,6 +177,7 @@ export const SIDEBAR_PERMISSIONS = {
   projects: [PERMISSIONS.projects.list],
   budgets: [PERMISSIONS.budgets.view],
   'platform-dimensions': [PERMISSIONS.platformDimensions.view],
+  'agent-evaluation': [PERMISSIONS.evalAuto.view],
   secrets: [PERMISSIONS.secrets.list, PERMISSIONS.secrets.create],
   litellm: [PERMISSIONS.litellm.section],
   'model-prices': [PERMISSIONS.modelPrices.view],
@@ -167,6 +185,7 @@ export const SIDEBAR_PERMISSIONS = {
   configuration: [PERMISSIONS.runtime.plugins],
   features: [PERMISSIONS.runtime.plugins],
   'audit-trail': [PERMISSIONS.auditTrail.view],
+  audit: [PERMISSIONS.lifecycleAudit.view],
   'schedules-tasks': [PERMISSIONS.scheduling.view, PERMISSIONS.runtime.plugins],
   reports: [PERMISSIONS.surveys.reports],
   governance: [
@@ -174,6 +193,18 @@ export const SIDEBAR_PERMISSIONS = {
     PERMISSIONS.governance.bindings.view,
     PERMISSIONS.credentials.view,
   ],
+  // New entries go last: the first key a user can access is their landing page (DefaultRedirect, ProtectedRoute)
+  authentication: [PERMISSIONS.runtime.plugins],
+  'scim-provisioning': [PERMISSIONS.runtime.plugins],
+  guardrails: [PERMISSIONS.runtime.plugins],
+};
+
+/**
+ * Entries that need ALL of the listed permissions, on top of the any-of check in SIDEBAR_PERMISSIONS.
+ * Keyed like SIDEBAR_PERMISSIONS, which is also the route path without the leading slash.
+ */
+export const SIDEBAR_REQUIRE_ALL_PERMISSIONS = {
+  'scim-provisioning': [PERMISSIONS.runtime.plugins, PERMISSIONS.scim.manage],
 };
 
 /**
@@ -186,6 +217,7 @@ export const CONFIG_SECTION_PERMISSIONS = {
   service_descriptors: [PERMISSIONS.configuration.serviceDescriptors],
   dedicated_banner: [PERMISSIONS.banners.manage],
   oauth_apps: [PERMISSIONS.oauthApps.view],
+  scim: [PERMISSIONS.scim.manage],
 };
 
 /**
@@ -200,6 +232,7 @@ export const ROUTE_PERMISSIONS = {
   '/budgets': SIDEBAR_PERMISSIONS.budgets,
   '/tool-spend': SIDEBAR_PERMISSIONS.budgets,
   '/platform-dimensions': SIDEBAR_PERMISSIONS['platform-dimensions'],
+  '/agent-evaluation': SIDEBAR_PERMISSIONS['agent-evaluation'],
   '/secrets': SIDEBAR_PERMISSIONS.secrets,
   '/litellm': SIDEBAR_PERMISSIONS.litellm,
   '/model-prices': SIDEBAR_PERMISSIONS['model-prices'],
@@ -207,7 +240,11 @@ export const ROUTE_PERMISSIONS = {
   '/configuration': SIDEBAR_PERMISSIONS.configuration,
   '/features': SIDEBAR_PERMISSIONS.configuration,
   '/audit-trail': SIDEBAR_PERMISSIONS['audit-trail'],
+  '/audit': SIDEBAR_PERMISSIONS.audit,
   '/schedules-tasks': SIDEBAR_PERMISSIONS['schedules-tasks'],
   '/reports': SIDEBAR_PERMISSIONS.reports,
   '/governance': SIDEBAR_PERMISSIONS.governance,
+  '/authentication': SIDEBAR_PERMISSIONS.authentication,
+  '/scim-provisioning': SIDEBAR_PERMISSIONS['scim-provisioning'],
+  '/guardrails': SIDEBAR_PERMISSIONS.guardrails,
 };

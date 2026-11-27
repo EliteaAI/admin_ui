@@ -4,6 +4,7 @@ import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ClearAllOutlinedIcon from '@mui/icons-material/ClearAllOutlined';
 import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
+import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
@@ -11,7 +12,21 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import { Alert, Box, Button, Chip, CircularProgress, Collapse, Snackbar, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Snackbar,
+  Typography,
+} from '@mui/material';
 
 import {
   useConfigRestartMutation,
@@ -78,6 +93,8 @@ const AdvancedSection = memo(() => {
   const [logsPylonId, setLogsPylonId] = useState(null);
   const [pluginStates, setPluginStates] = useState(loadPluginStates);
   const [updatingAllPylons, setUpdatingAllPylons] = useState({});
+  const [redownloadTarget, setRedownloadTarget] = useState(null);
+  const [redownloadOpen, setRedownloadOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -266,7 +283,7 @@ const AdvancedSection = memo(() => {
   );
 
   const handleUpdatePlugin = useCallback(
-    async (pluginName, pylonId) => {
+    async (pluginName, pylonId, force = false) => {
       const key = pluginKey(pylonId, pluginName);
       setPluginStates(prev => ({
         ...prev,
@@ -276,6 +293,7 @@ const AdvancedSection = memo(() => {
         const result = await updatePlugin({
           pluginName,
           pylonIds: [pylonId],
+          force,
         }).unwrap();
         if (result.ok) {
           setSnackbar({
@@ -316,7 +334,20 @@ const AdvancedSection = memo(() => {
   const handleUpdateAllPlugins = useCallback(
     async (pylonId, plugins) => {
       setUpdatingAllPylons(prev => ({ ...prev, [pylonId]: true }));
-      const names = plugins.map(p => p.name);
+      const states = plugins.map(p => pluginStates[pluginKey(pylonId, p.name)] || {});
+      const names = plugins
+        .filter((p, i) => versionsMatch(p.local_version, states[i].repoVersion) === false)
+        .map(p => p.name);
+      if (!names.length) {
+        setUpdatingAllPylons(prev => ({ ...prev, [pylonId]: false }));
+        const checked = states.some(ps => ps.repoVersion);
+        setSnackbar({
+          open: true,
+          message: checked ? 'All plugins are up to date' : 'Press Check Updates first',
+          severity: checked ? 'success' : 'info',
+        });
+        return;
+      }
       const results = await Promise.allSettled(
         names.map(async name => {
           const key = pluginKey(pylonId, name);
@@ -363,13 +394,18 @@ const AdvancedSection = memo(() => {
       } else {
         setSnackbar({
           open: true,
-          message: `Update requested for all ${succeeded} plugins on ${pylonId} \u2014 wait for downloads, then press Restart`,
+          message: `Update requested for ${succeeded} plugin(s) on ${pylonId} \u2014 wait for it to finish, then press Restart`,
           severity: 'success',
         });
       }
     },
-    [updatePlugin],
+    [updatePlugin, pluginStates],
   );
+
+  const handleConfirmRedownload = useCallback(() => {
+    if (redownloadTarget) handleUpdatePlugin(redownloadTarget.name, redownloadTarget.pylonId, true);
+    setRedownloadOpen(false);
+  }, [redownloadTarget, handleUpdatePlugin]);
 
   const handleCloseSnackbar = useCallback(() => {
     setSnackbar(prev => ({ ...prev, open: false }));
@@ -500,7 +536,7 @@ const AdvancedSection = memo(() => {
                     onClick={() => handleUpdateAllPlugins(pylonId, plugins)}
                     sx={styles.pylonConfigButton}
                   >
-                    Update all
+                    Update outdated
                   </Button>
                 )}
                 {restartNeeded && (
@@ -627,6 +663,20 @@ const AdvancedSection = memo(() => {
                             sx={styles.updateChip}
                           />
                         ) : null}
+                        {ALWAYS_SHOW_PLUGIN_UPDATE && !ps.updating && (
+                          <Button
+                            size="small"
+                            title="Replace plugin files from the repository even if unchanged"
+                            startIcon={<CloudSyncOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
+                            onClick={() => {
+                              setRedownloadTarget({ name: plugin.name, pylonId: plugin.pylon_id });
+                              setRedownloadOpen(true);
+                            }}
+                            sx={styles.actionButton}
+                          >
+                            Redownload
+                          </Button>
+                        )}
                       </Box>
                     </Box>
                   );
@@ -648,6 +698,28 @@ const AdvancedSection = memo(() => {
         pylonId={logsPylonId}
         onClose={handleCloseLogsDrawer}
       />
+
+      <Dialog
+        open={redownloadOpen}
+        onClose={() => setRedownloadOpen(false)}
+      >
+        <DialogTitle>Redownload {redownloadTarget?.name}?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Plugin files will be replaced from the repository even if the version is unchanged. Use this to
+            repair a damaged plugin. Restart the pylon after it finishes.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRedownloadOpen(false)}>Cancel</Button>
+          <Button
+            color="error"
+            onClick={handleConfirmRedownload}
+          >
+            Redownload
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}

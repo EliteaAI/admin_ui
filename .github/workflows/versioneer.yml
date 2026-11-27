@@ -4,8 +4,9 @@ on:
   workflow_run:
     workflows: ["Build"]
     types: [completed]
-    branches: [main, 'release/**']
-  workflow_dispatch:
+    branches:
+      - main
+      - 'release/**'
 
 permissions:
   contents: write

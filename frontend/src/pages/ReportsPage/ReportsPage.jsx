@@ -73,7 +73,7 @@ const DATE_PRESETS = [
 const ReportsPage = memo(() => {
   const styles = reportsPageStyles();
 
-  usePageTitle('Reports');
+  usePageTitle('Survey Reports');
 
   const { data: surveys = [], isLoading: surveysLoading } = useSurveyListQuery();
   const [triggerAnswers, { isFetching }] = useLazySurveyAnswersQuery();
@@ -192,7 +192,7 @@ const ReportsPage = memo(() => {
   return (
     <DrawerPage>
       <DrawerPageHeader
-        title="Reports"
+        title="Survey Reports"
         showBorder
         extraContent={generateButton}
       />

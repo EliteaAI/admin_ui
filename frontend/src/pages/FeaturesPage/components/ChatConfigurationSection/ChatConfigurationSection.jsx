@@ -1,16 +1,18 @@
 import { memo, useMemo } from 'react';
 
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmailOutlined';
+import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
 import DataUsageOutlinedIcon from '@mui/icons-material/DataUsageOutlined';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import QuickreplyOutlinedIcon from '@mui/icons-material/QuickreplyOutlined';
 import RecordVoiceOverOutlinedIcon from '@mui/icons-material/RecordVoiceOverOutlined';
 import { Box } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { ModelIcon } from '@/components/Icons';
 import { GuardrailsSection } from '@/components/SchemaForm';
-import { useExpandedBlocks } from '@/pages/FeaturesPage/hooks/useExpandedBlocks.hooks';
+import { useExpandedBlocks } from '@/hooks/useExpandedBlocks.hooks';
 
 import AutoRoutingSettings from './components/AutoRoutingSettings';
 import ChatMentions from './components/ChatMentions';
@@ -38,6 +40,14 @@ const ChatConfigurationSection = memo(props => {
   );
   const nextInputFields = useMemo(
     () => guardrailsFields.filter(f => f.path?.startsWith('next_input_suggestion_guardrail.')),
+    [guardrailsFields],
+  );
+  const codeModeFields = useMemo(
+    () => guardrailsFields.filter(f => f.path?.startsWith('code_mode_experimental.')),
+    [guardrailsFields],
+  );
+  const conversationStartersFields = useMemo(
+    () => guardrailsFields.filter(f => f.path?.startsWith('conversation_starters_guardrail.')),
     [guardrailsFields],
   );
 
@@ -107,8 +117,43 @@ const ChatConfigurationSection = memo(props => {
           />
         ),
       },
+      {
+        id: 'conversation_starters',
+        title: 'Chat Starters',
+        icon: QuickreplyOutlinedIcon,
+        count: conversationStartersFields.length,
+        content: (
+          <GuardrailsSection
+            fields={conversationStartersFields}
+            values={guardrailsDraft.values}
+            restoreToDefault
+            onChange={guardrailsDraft.onChange}
+          />
+        ),
+      },
+      {
+        id: 'code_mode',
+        title: 'Code Mode (beta)',
+        icon: CodeOutlinedIcon,
+        count: codeModeFields.length,
+        content: (
+          <GuardrailsSection
+            fields={codeModeFields}
+            values={guardrailsDraft.values}
+            onChange={guardrailsDraft.onChange}
+          />
+        ),
+      },
     ],
-    [voiceDraft, mentionsDraft, guardrailsDraft, midturnFields, nextInputFields],
+    [
+      voiceDraft,
+      mentionsDraft,
+      guardrailsDraft,
+      midturnFields,
+      nextInputFields,
+      conversationStartersFields,
+      codeModeFields,
+    ],
   );
 
   return (

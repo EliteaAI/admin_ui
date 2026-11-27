@@ -1,6 +1,7 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined';
 import {
@@ -17,9 +18,17 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useProjectRestoreMutation } from '@/api/projectBackup.api';
+import { adminApi } from '@/api/admin.api';
+import { useProjectRestoreJobQuery, useProjectRestoreMutation } from '@/api/projectBackup.api';
 import { PERMISSIONS } from '@/constants/permissions.constants';
 import { useCheckPermission } from '@/hooks/useCheckPermission.hooks';
+
+const JOB_POLL_MS = 2000;
+
+const errorMessage = data => {
+  const message = data?.error ?? 'Restore failed.';
+  return data?.detail ? `${message}: ${data.detail}` : message;
+};
 
 const formatSize = bytes => {
   if (!bytes) return '0 B';
@@ -31,6 +40,14 @@ const formatSize = bytes => {
     unit += 1;
   }
   return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
+};
+
+const skillFilesSummaryText = summary => {
+  const files = summary?.skill_files;
+  if (!files?.total) return '';
+  if (files.unchecked) return `Skill files: ${files.total} not checked (storage unavailable)`;
+  const text = `Skill files: ${files.total} total, ${files.present} present, ${files.uploaded} uploaded, ${files.missing} missing`;
+  return files.missing_paths?.length ? `${text} (${files.missing_paths.join(', ')})` : text;
 };
 
 const RestoreProjectDialog = memo(props => {
@@ -52,7 +69,37 @@ const RestoreProjectDialog = memo(props => {
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
 
-  const [restoreProject, { isLoading }] = useProjectRestoreMutation();
+  const [jobId, setJobId] = useState(null);
+
+  const dispatch = useDispatch();
+  const [restoreProject, { isLoading: isStarting }] = useProjectRestoreMutation();
+  const { data: job, error: jobError } = useProjectRestoreJobQuery(
+    { projectId: project?.id, jobId },
+    { skip: !jobId, pollingInterval: JOB_POLL_MS },
+  );
+  const isLoading = isStarting || !!jobId;
+
+  useEffect(() => {
+    if (!jobId || job?.job_id !== jobId) return;
+    if (job.status === 'done') {
+      setJobId(null);
+      setResult(job.result);
+      if (job.result?.artifact) setArtifact(job.result.artifact);
+      dispatch(adminApi.util.invalidateTags(['Projects']));
+    } else if (job.status === 'failed') {
+      setJobId(null);
+      setError(errorMessage(job));
+      if (job.artifact) setArtifact(job.artifact);
+      if (job.result) setResult(job);
+    }
+  }, [jobId, job, dispatch]);
+
+  // A job that can not be read any more is not followed forever; a network blip is retried
+  useEffect(() => {
+    if (!jobId || !jobError || jobError.status === 'FETCH_ERROR') return;
+    setJobId(null);
+    setError(errorMessage(jobError.data) || 'The restore status could not be read.');
+  }, [jobId, jobError]);
 
   const canFull = useMemo(() => hasPermission(PERMISSIONS.projects.restore.full), [hasPermission]);
 
@@ -75,11 +122,13 @@ const RestoreProjectDialog = memo(props => {
     if (inputRef.current) inputRef.current.value = '';
   }, []);
 
+  // A running restore keeps going on the server; closing only stops following it here
   const handleClose = useCallback(() => {
-    if (isLoading) return;
+    if (isStarting) return;
+    setJobId(null);
     reset();
     onClose();
-  }, [isLoading, reset, onClose]);
+  }, [isStarting, reset, onClose]);
 
   const handleFileChange = useCallback(event => {
     setError('');
@@ -103,18 +152,23 @@ const RestoreProjectDialog = memo(props => {
         dryRun,
         allowProjectMismatch: allowMismatch,
       }).unwrap();
-      setResult(response);
       if (response?.artifact) setArtifact(response.artifact);
+      // A backend without restore jobs answers with the synchronous result
+      if (!response?.job_id) {
+        setResult(response);
+        dispatch(adminApi.util.invalidateTags(['Projects']));
+        return;
+      }
+      setJobId(response.job_id);
     } catch (err) {
-      const message = err?.data?.error ?? err?.error ?? 'Restore failed.';
-      const detail = err?.data?.detail;
-      setError(detail ? `${message}: ${detail}` : message);
+      setError(err?.data ? errorMessage(err.data) : (err?.error ?? 'Restore failed.'));
       // A project mismatch comes back as 409 with the artifact the backend read,
       // so the confirmation checkbox below can be offered
       if (err?.data?.artifact) setArtifact(err.data.artifact);
       if (err?.data?.result) setResult(err.data);
     }
   }, [
+    dispatch,
     restoreProject,
     project,
     file,
@@ -128,6 +182,7 @@ const RestoreProjectDialog = memo(props => {
   ]);
 
   const summary = result?.result;
+  const skillFilesSummary = skillFilesSummaryText(summary);
   const blockedByMismatch = isMismatch && !allowMismatch;
 
   // A backup taken before a migration carries columns this project no longer
@@ -196,7 +251,7 @@ const RestoreProjectDialog = memo(props => {
           <input
             ref={inputRef}
             type="file"
-            accept=".enc,.sql,text/plain,application/sql,application/octet-stream"
+            accept=".enc,.sql,.zip,text/plain,application/sql,application/zip,application/octet-stream"
             hidden
             onChange={handleFileChange}
           />
@@ -318,6 +373,17 @@ const RestoreProjectDialog = memo(props => {
           />
         </Box>
 
+        {isMismatch && !truncate && !fullMode && (
+          <Alert
+            severity="warning"
+            sx={styles.gapBelowSmall}
+            data-testid="project-restore-merge-warning"
+          >
+            Merging a backup of another project can attach its agent and skill versions to this project&apos;s
+            own. Restore it into a new project, or check &quot;Empty target tables first&quot;.
+          </Alert>
+        )}
+
         {truncate && !fullMode && (
           <Alert
             severity="warning"
@@ -361,6 +427,15 @@ const RestoreProjectDialog = memo(props => {
                     {summary.dropped_values ? ` (${summary.dropped_values} values not restored)` : ''}
                   </Box>
                 )}
+                {!!skillFilesSummary && (
+                  <Box
+                    component="div"
+                    sx={styles.summaryBody}
+                    data-testid="project-restore-skill-files-summary"
+                  >
+                    {skillFilesSummary}
+                  </Box>
+                )}
                 {filledColumns.length > 0 && (
                   <Box
                     component="div"
@@ -389,7 +464,7 @@ const RestoreProjectDialog = memo(props => {
         <Button
           onClick={handleClose}
           variant="text"
-          disabled={isLoading}
+          disabled={isStarting}
         >
           Close
         </Button>

@@ -1,12 +1,16 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, MenuItem, Select, Switch, TextField, Typography } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Box, MenuItem, Select, Switch, TextField, Tooltip, Typography } from '@mui/material';
 
 import {
+  COMPLEXITY_ENABLED_FIELD,
   DEFAULT_LIMIT_FIELDS,
   WARNING_DISMISSIBLE_FIELD,
   WARNING_THRESHOLD_FIELDS,
 } from '@/pages/FeaturesPage/components/CostBudgetsSection/constants/costBudgets.constants';
+
+import ModeOffConfirmDialog from './ModeOffConfirmDialog';
 
 const MODE_OPTIONS = [
   {
@@ -27,6 +31,9 @@ const MODE_OPTIONS = [
 ];
 
 const DEFAULT_WARNING_PCT = 80;
+
+const MODE_TOOLTIP =
+  'Metering also feeds Agent & Pipeline Complexity scoring, which stops while the mode is off.';
 
 /** Empty, non-numeric or out-of-range values must block Save rather than persist. */
 const warningPctError = value => {
@@ -52,7 +59,24 @@ const CostBudgets = memo(props => {
 
   const activeMode = MODE_OPTIONS.find(o => o.value === mode) || MODE_OPTIONS[0];
 
-  const handleModeChange = useCallback(e => onChange('usage_mode', e.target.value), [onChange]);
+  const complexityEnabled = !!values?.[COMPLEXITY_ENABLED_FIELD.key];
+  const [confirmOffOpen, setConfirmOffOpen] = useState(false);
+
+  // Turning metering off silently freezes complexity scores, so ask first
+  const handleModeChange = useCallback(
+    e => {
+      if (e.target.value === 'off' && complexityEnabled) setConfirmOffOpen(true);
+      else onChange('usage_mode', e.target.value);
+    },
+    [onChange, complexityEnabled],
+  );
+
+  const handleConfirmOff = useCallback(() => {
+    setConfirmOffOpen(false);
+    onChange('usage_mode', 'off');
+  }, [onChange]);
+
+  const handleCancelOff = useCallback(() => setConfirmOffOpen(false), []);
 
   const handleToggleDefaults = useCallback(
     e => onChange('cost_budgets_defaults_enabled', e.target.checked),
@@ -114,12 +138,25 @@ const CostBudgets = memo(props => {
       <Box sx={styles.card}>
         <Box sx={styles.cardRow}>
           <Box sx={[styles.cardLabel, { width: '100%' }]}>
-            <Typography
-              variant="body2"
-              sx={styles.cardTitle}
-            >
-              Cost Budgets Mode
-            </Typography>
+            <Box sx={styles.titleRow}>
+              <Typography
+                variant="body2"
+                sx={styles.cardTitle}
+              >
+                Cost Budgets Mode
+              </Typography>
+              <Tooltip
+                title={MODE_TOOLTIP}
+                arrow
+                placement="top"
+              >
+                <InfoOutlinedIcon
+                  sx={styles.infoIcon}
+                  aria-label="Cost Budgets Mode also feeds Complexity"
+                  data-testid="mode-info-icon"
+                />
+              </Tooltip>
+            </Box>
             <Typography
               variant="caption"
               sx={styles.cardHint}
@@ -132,6 +169,7 @@ const CostBudgets = memo(props => {
               onChange={handleModeChange}
               sx={styles.select}
               fullWidth
+              data-testid="usage-mode-select"
             >
               {MODE_OPTIONS.map(option => (
                 <MenuItem
@@ -269,6 +307,12 @@ const CostBudgets = memo(props => {
           </Box>
         </Box>
       )}
+
+      <ModeOffConfirmDialog
+        open={confirmOffOpen}
+        onConfirm={handleConfirmOff}
+        onClose={handleCancelOff}
+      />
     </Box>
   );
 });
@@ -276,7 +320,7 @@ const CostBudgets = memo(props => {
 CostBudgets.displayName = 'CostBudgets';
 
 /** @type {MuiSx} */
-const costBudgetsStyles = () => ({
+export const costBudgetsStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -308,6 +352,16 @@ const costBudgetsStyles = () => ({
     fontWeight: 600,
     fontSize: '0.875rem',
   },
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+  infoIcon: ({ palette }) => ({
+    fontSize: '0.875rem',
+    color: palette.text.secondary,
+    cursor: 'help',
+  }),
   cardHint: ({ palette }) => ({
     color: palette.text.metrics,
     fontSize: '0.75rem',

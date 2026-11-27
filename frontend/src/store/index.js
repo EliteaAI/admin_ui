@@ -20,5 +20,11 @@ const store = configureStore({
 });
 
 export default store;
-export { setMode, setSocketConnected, toggleMode, toggleSidebarCollapsed } from './settings.slice';
+export {
+  setMode,
+  setSidebarGroupOpen,
+  setSocketConnected,
+  toggleMode,
+  toggleSidebarCollapsed,
+} from './settings.slice';
 export { setPermissions, setRoles, setUser } from './user.slice';

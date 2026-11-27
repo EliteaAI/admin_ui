@@ -152,6 +152,11 @@ const darkPalette = {
         hover: blue24,
       },
     },
+    // Rows of a dropdown/list the user can pick: hover, and the one currently chosen
+    interactiveItem: {
+      hover: white10,
+      active: blue10,
+    },
     button: {
       default: white10,
       normal: white10,

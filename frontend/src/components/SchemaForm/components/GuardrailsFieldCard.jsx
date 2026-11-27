@@ -3,23 +3,24 @@ import { memo, useCallback } from 'react';
 import RestoreIcon from '@mui/icons-material/RestoreOutlined';
 import { Box, Chip, IconButton, Switch, Tooltip, Typography } from '@mui/material';
 
-import { isJsonEditor } from '@/components/SchemaForm/helpers/schemaForm.helpers';
+import { isJsonEditor } from '@/helpers/schemaForm.helpers';
 
 import SchemaField from './SchemaField';
 
 const GuardrailsFieldCard = memo(props => {
-  const { field, values, onChange } = props;
+  const { field, values, restoreToDefault = false, onChange } = props;
 
   const isBoolean = field.type === 'boolean';
-  const hasBuiltinDefault = typeof field.builtin_default === 'string' && field.builtin_default.length > 0;
-  const atBuiltinDefault = hasBuiltinDefault && (values[field.key] || '') === field.builtin_default;
+  const restoreValue = field.builtin_default || (restoreToDefault ? field.default : undefined);
+  const hasRestoreValue = restoreValue !== undefined && restoreValue !== '';
+  const atRestoreValue = hasRestoreValue && (values[field.key] ?? '') === restoreValue;
   const expandable = isJsonEditor(field);
 
   const handleSwitchChange = useCallback(e => onChange(field.key, e.target.checked), [onChange, field.key]);
 
   const handleRestoreDefault = useCallback(
-    () => onChange(field.key, field.builtin_default),
-    [onChange, field.key, field.builtin_default],
+    () => onChange(field.key, restoreValue),
+    [onChange, field.key, restoreValue],
   );
 
   const handleValueChange = useCallback(val => onChange(field.key, val), [onChange, field.key]);
@@ -53,17 +54,15 @@ const GuardrailsFieldCard = memo(props => {
             size="small"
           />
         )}
-        {!isBoolean && hasBuiltinDefault && (
+        {!isBoolean && hasRestoreValue && (
           <Tooltip
-            title={
-              atBuiltinDefault ? 'Already matches the built-in defaults' : 'Restore to built-in defaults'
-            }
+            title={atRestoreValue ? 'Already matches the built-in defaults' : 'Restore to built-in defaults'}
             placement="top"
           >
             <Box component="span">
               <IconButton
                 size="small"
-                disabled={atBuiltinDefault}
+                disabled={atRestoreValue}
                 onClick={handleRestoreDefault}
                 aria-label={`restore-default-${field.key}`}
               >

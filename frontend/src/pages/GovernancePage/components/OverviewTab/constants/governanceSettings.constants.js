@@ -73,9 +73,9 @@ export const FALLBACK_DESCRIPTIONS = {
     unavailable:
       'Governance is on but a required service is unavailable. Governed runs are being refused. Fix the failed check or switch to Off.',
     table_missing:
-      'Settings storage is not set up. Run the task create_governance_settings_tables under System → Tasks.',
+      'Settings storage is not set up. Run the task create_governance_settings_tables under Administration → System Tasks.',
     column_missing:
-      'Settings storage needs an update. Run the task create_governance_settings_tables under System → Tasks.',
+      'Settings storage needs an update. Run the task create_governance_settings_tables under Administration → System Tasks.',
   },
   checks: {
     identity_verifier: 'The user identity verifier is not configured.',
@@ -85,7 +85,7 @@ export const FALLBACK_DESCRIPTIONS = {
     credential_facts: 'Credential services are not loaded.',
     master_key: 'The secrets master key is not set.',
     settings_table:
-      'Settings storage is not set up. Run the task create_governance_settings_tables under System → Tasks.',
+      'Settings storage is not set up. Run the task create_governance_settings_tables under Administration → System Tasks.',
     corporate_vault: 'Corporate Vault is not configured; only database-stored credentials can be registered.',
     governed_worker: 'No worker that can run governed agents is online right now.',
   },

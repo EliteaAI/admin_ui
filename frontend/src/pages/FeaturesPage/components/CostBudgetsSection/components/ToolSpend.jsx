@@ -4,13 +4,21 @@ import { Box, Typography } from '@mui/material';
 
 import { useToolSpendFeaturesQuery } from '@/api/budgets.api';
 import FieldCard from '@/components/SchemaForm/components/FieldCard';
+import { getNumberFieldError } from '@/helpers/schemaForm.helpers';
 
 import { groupToolSpendFields, toolSpendFieldError } from '../helpers/toolSpend.helpers';
 
 // Schema-driven: a new feature or backend in admin_schema shows up here without frontend changes
 const ToolSpend = memo(props => {
-  const { spendFields, pricingFields, spendValues, pricingValues, onSpendChange, onPricingChange, onValidityChange } =
-    props;
+  const {
+    spendFields,
+    pricingFields,
+    spendValues,
+    pricingValues,
+    onSpendChange,
+    onPricingChange,
+    onValidityChange,
+  } = props;
 
   const styles = toolSpendStyles();
 
@@ -40,7 +48,7 @@ const ToolSpend = memo(props => {
         values={values || {}}
         onChange={onChange}
       />
-      {errors[field.key] && (
+      {errors[field.key] && !getNumberFieldError(field, values?.[field.key]) && (
         <Typography
           variant="caption"
           color="error"

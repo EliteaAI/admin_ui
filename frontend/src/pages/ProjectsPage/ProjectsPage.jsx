@@ -19,6 +19,7 @@ import CreateProjectDialog from './components/CreateProjectDialog';
 import DeleteProjectDialog from './components/DeleteProjectDialog';
 import { ProjectActivityDrawer } from './components/ProjectActivityDrawer';
 import ProjectsTable from './components/ProjectsTable';
+import RenameProjectDialog from './components/RenameProjectDialog';
 import RestoreProjectDialog from './components/RestoreProjectDialog';
 
 const PROJECT_TYPES = ['team', 'personal'];
@@ -55,6 +56,7 @@ const ProjectsPage = memo(() => {
   // New action state
   const [addAdminOpen, setAddAdminOpen] = useState(false);
   const [addAdminProject, setAddAdminProject] = useState(null);
+  const [renameProject, setRenameProject] = useState(null);
   const [activityOpen, setActivityOpen] = useState(false);
   const [activityProject, setActivityProject] = useState(null);
   const [backupOpen, setBackupOpen] = useState(false);
@@ -155,6 +157,9 @@ const ProjectsPage = memo(() => {
     setAddAdminOpen(false);
     setAddAdminProject(null);
   }, []);
+
+  const handleRename = useCallback(project => setRenameProject(project), []);
+  const handleRenameClose = useCallback(() => setRenameProject(null), []);
 
   // Suspend handler
   const handleSuspend = useCallback(
@@ -337,6 +342,7 @@ const ProjectsPage = memo(() => {
               onSelectionChange={canEdit ? setSelectedIds : undefined}
               onDelete={canEdit ? handleDelete : undefined}
               onAddAdmin={canEdit ? handleAddAdmin : undefined}
+              onRename={canEdit ? handleRename : undefined}
               onSuspend={canEdit ? handleSuspend : undefined}
               onActivity={handleActivity}
               onBackup={canBackup ? handleBackup : undefined}
@@ -359,6 +365,11 @@ const ProjectsPage = memo(() => {
         open={addAdminOpen}
         onClose={handleAddAdminClose}
         project={addAdminProject}
+      />
+      <RenameProjectDialog
+        open={Boolean(renameProject)}
+        onClose={handleRenameClose}
+        project={renameProject}
       />
       <ProjectActivityDrawer
         open={activityOpen}

@@ -1,0 +1,53 @@
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import ManageSearchOutlinedIcon from '@mui/icons-material/ManageSearchOutlined';
+import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
+import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
+
+// Cards in display order, each with its field keys in display order. The backend section
+// holds the fields in schema order, so the lists here decide what a card shows.
+export const SCHEDULES_CARDS = [
+  {
+    id: 'schedule_settings',
+    title: 'Schedule Settings',
+    icon: TuneOutlinedIcon,
+    fieldKeys: [
+      'schedules_min_interval_minutes',
+      'schedules_max_enabled_per_project',
+      'schedules_dispatch_cap',
+      'schedules_stale_run_minutes',
+      'schedules_max_parallel_runs',
+      'schedules_approval_wait_hours',
+    ],
+  },
+  {
+    id: 'agent_schedules',
+    title: 'Agent Schedules',
+    icon: SmartToyOutlinedIcon,
+    fieldKeys: ['agent_scheduling_enabled', 'eval_auto_run_enabled', 'eval_auto_run_cron'],
+    // The evaluation cron belongs to its switch and only shows once the switch is on, so the card counts two switches
+    settingsCount: 2,
+    // Frontend-only titles: the backend schema keeps calling the evaluation switch "Scheduled Agent Evaluation Enabled"
+    fieldTitles: {
+      eval_auto_run_enabled: 'Agent Evaluation Scheduling Enabled',
+      eval_auto_run_cron: 'Agent Evaluation Scheduling Cron',
+    },
+  },
+  {
+    id: 'pipeline_schedules',
+    title: 'Pipeline Schedules',
+    icon: AccountTreeOutlinedIcon,
+    fieldKeys: ['pipeline_scheduling_enabled', 'pipeline_scheduling_cron', 'schedules_legacy_step_enabled'],
+  },
+  {
+    id: 'index_schedules',
+    title: 'Index Schedules',
+    icon: ManageSearchOutlinedIcon,
+    fieldKeys: [
+      'toolkit_index_scheduling_enabled',
+      'toolkit_index_min_interval_minutes',
+      'legacy_index_step_enabled',
+      'index_scheduling_enabled',
+      'index_scheduling_cron',
+    ],
+  },
+];

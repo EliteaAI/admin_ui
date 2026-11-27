@@ -30,3 +30,12 @@ export const usageColor = percent => {
   if (percent >= 80) return 'warning';
   return 'success';
 };
+
+/** Spend that could not be read is not $0.00. */
+export const formatPeriodSpend = (row, notAvailable) => {
+  if (row?.spend_available === false || row?.spend === null) {
+    return notAvailable;
+  }
+
+  return formatMoney(row?.spend, row?.currency);
+};

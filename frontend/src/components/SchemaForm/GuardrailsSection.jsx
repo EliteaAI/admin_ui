@@ -43,7 +43,7 @@ const sectionClaimsField = (section, field) =>
   (section.pathPrefix ? field.path?.startsWith(section.pathPrefix) : false);
 
 const GuardrailsSection = memo(props => {
-  const { fields, values, sectionDescription, onChange } = props;
+  const { fields, values, sectionDescription, restoreToDefault, onChange } = props;
 
   const styles = guardrailsSectionStyles();
 
@@ -128,12 +128,14 @@ const GuardrailsSection = memo(props => {
           count={section.fields.length}
           expanded={!!expandedSections[section.id]}
           onToggle={() => toggleSection(section.id)}
+          keepMounted
         >
           {section.fields.map(field => (
             <GuardrailsFieldCard
               key={field.key}
               field={field}
               values={values}
+              restoreToDefault={restoreToDefault}
               onChange={onChange}
             />
           ))}
@@ -147,6 +149,7 @@ const GuardrailsSection = memo(props => {
               key={field.key}
               field={field}
               values={values}
+              restoreToDefault={restoreToDefault}
               onChange={onChange}
             />
           ))}
