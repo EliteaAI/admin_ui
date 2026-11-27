@@ -52,6 +52,7 @@ const Harness = ({ initialValues, onChange }) => {
     <ChatConfigurationSection
       voiceDraft={EMPTY_DRAFT}
       mentionsDraft={EMPTY_DRAFT}
+      sharingDraft={EMPTY_DRAFT}
       guardrailsDraft={guardrailsDraft}
       guardrailsFields={GUARDRAILS_FIELDS}
     />

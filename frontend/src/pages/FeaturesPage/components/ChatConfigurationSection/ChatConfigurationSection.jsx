@@ -7,6 +7,7 @@ import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import QuickreplyOutlinedIcon from '@mui/icons-material/QuickreplyOutlined';
 import RecordVoiceOverOutlinedIcon from '@mui/icons-material/RecordVoiceOverOutlined';
+import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
 import { Box } from '@mui/material';
 
 import { CollapsibleSection } from '@/components/CollapsibleSection';
@@ -16,6 +17,7 @@ import { useExpandedBlocks } from '@/hooks/useExpandedBlocks.hooks';
 
 import AutoRoutingSettings from './components/AutoRoutingSettings';
 import ChatMentions from './components/ChatMentions';
+import ChatSharing from './components/ChatSharing';
 import ManualContextTokensSettings from './components/ManualContextTokensSettings';
 import VoiceFeatures from './components/VoiceFeatures';
 import { TRIGGER_FIELDS } from './constants/chatConfiguration.constants';
@@ -26,9 +28,11 @@ const AUTO_ROUTING_SETTINGS_COUNT = 3;
 // Fixed toggle cards, not schema-driven: "Voice Features Enabled" and "Temporarily Disable Voice Features"
 const VOICE_FEATURES_SETTINGS_COUNT = 2;
 const MANUAL_CONTEXT_TOKENS_SETTINGS_COUNT = 1;
+// Fixed toggle card: "Enable External Chat Sharing"
+const CHAT_SHARING_SETTINGS_COUNT = 1;
 
 const ChatConfigurationSection = memo(props => {
-  const { voiceDraft, mentionsDraft, guardrailsDraft, guardrailsFields, initialBlock } = props;
+  const { voiceDraft, mentionsDraft, sharingDraft, guardrailsDraft, guardrailsFields, initialBlock } = props;
 
   const styles = chatConfigurationSectionStyles();
 
@@ -81,6 +85,18 @@ const ChatConfigurationSection = memo(props => {
           <ChatMentions
             values={mentionsDraft.values}
             onChange={mentionsDraft.onChange}
+          />
+        ),
+      },
+      {
+        id: 'chat_sharing',
+        title: 'Chat Sharing',
+        icon: ShareOutlinedIcon,
+        count: CHAT_SHARING_SETTINGS_COUNT,
+        content: (
+          <ChatSharing
+            values={sharingDraft.values}
+            onChange={sharingDraft.onChange}
           />
         ),
       },
@@ -148,6 +164,7 @@ const ChatConfigurationSection = memo(props => {
     [
       voiceDraft,
       mentionsDraft,
+      sharingDraft,
       guardrailsDraft,
       midturnFields,
       nextInputFields,

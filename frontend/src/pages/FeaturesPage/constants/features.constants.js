@@ -14,7 +14,7 @@ export const FEATURES_SECTIONS = [
     id: 'chat_configuration',
     title: 'Chat',
     icon: ChatBubbleOutlineOutlinedIcon,
-    backendSectionIds: ['voice_features', 'chat_mentions', 'guardrails'],
+    backendSectionIds: ['voice_features', 'chat_mentions', 'chat_sharing', 'guardrails'],
   },
   {
     id: 'skills',
@@ -66,6 +66,7 @@ export const LEGACY_SECTION_REDIRECTS = {
   auto_routing: { page: 'chat_configuration', block: 'auto_routing' },
   voice_features: { page: 'chat_configuration', block: 'voice_features' },
   chat_mentions: { page: 'chat_configuration', block: 'chat_mentions' },
+  chat_sharing: { page: 'chat_configuration', block: 'chat_sharing' },
   midturn_injection: { page: 'chat_configuration', block: 'midturn_injection' },
   next_input_suggestion: { page: 'chat_configuration', block: 'next_input_suggestion' },
   code_mode: { page: 'chat_configuration', block: 'code_mode' },
