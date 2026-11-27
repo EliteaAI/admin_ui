@@ -76,6 +76,7 @@ const FeaturesPage = memo(() => {
   const guardrailsDraft = useConfigSectionDraft('guardrails', { skip: !usesSection('guardrails') });
   const voiceDraft = useConfigSectionDraft('voice_features', { skip: !usesSection('voice_features') });
   const mentionsDraft = useConfigSectionDraft('chat_mentions', { skip: !usesSection('chat_mentions') });
+  const sharingDraft = useConfigSectionDraft('chat_sharing', { skip: !usesSection('chat_sharing') });
   const budgetsDraft = useConfigSectionDraft('cost_budgets', { skip: !usesSection('cost_budgets') });
   const toolSpendDraft = useConfigSectionDraft('tool_spend', { skip: !usesSection('tool_spend') });
   const toolPricingDraft = useConfigSectionDraft('tool_pricing', { skip: !usesSection('tool_pricing') });
@@ -92,6 +93,7 @@ const FeaturesPage = memo(() => {
       guardrailsDraft,
       voiceDraft,
       mentionsDraft,
+      sharingDraft,
       budgetsDraft,
       toolSpendDraft,
       toolPricingDraft,
@@ -105,6 +107,7 @@ const FeaturesPage = memo(() => {
       guardrailsDraft,
       voiceDraft,
       mentionsDraft,
+      sharingDraft,
       budgetsDraft,
       toolSpendDraft,
       toolPricingDraft,
@@ -296,6 +299,7 @@ const FeaturesPage = memo(() => {
             <ChatConfigurationSection
               voiceDraft={voiceDraft}
               mentionsDraft={mentionsDraft}
+              sharingDraft={sharingDraft}
               guardrailsDraft={guardrailsDraft}
               guardrailsFields={guardrailsFields}
               initialBlock={deepLinkBlock}

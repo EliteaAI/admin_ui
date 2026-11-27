@@ -71,6 +71,7 @@ const MOVED_TO_FEATURES = [
   'Usage',
   'voice_features',
   'chat_mentions',
+  'chat_sharing',
   'cost_budgets',
   'tool_spend',
   'tool_pricing',
